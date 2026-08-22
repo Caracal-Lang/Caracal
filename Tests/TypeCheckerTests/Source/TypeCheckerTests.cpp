@@ -3,7 +3,7 @@
 #include <Caracal/CompilationContext.h>
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
-#include <Caracal/Debug/ParseTreePrinter.h>
+#include <Caracal/Debug/ParseTreePrinterOld.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <Caracal/Text/File.h>
@@ -53,7 +53,7 @@ static void FileTests(
         CaraTest::fail();// ("Type checking failed");
     }
 
-    Caracal::ParseTreePrinter printer{ *parseTrees[0], &compilationContext.semanticContext()};
+    Caracal::ParseTreePrinterOld printer{ *parseTrees[0], &compilationContext.semanticContext()};
     const auto output = printer.prettyPrint();
 
     CaraTest::isTrue(!diagnostics.hasErrors());

@@ -4,6 +4,7 @@
 #include <Caracal/Defines.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
+#include <Caracal/Syntax/NodeBuffer.h>
 #include <Caracal/Syntax/ParseTree.h>
 #include <Caracal/Syntax/Token.h>
 #include <Caracal/Syntax/TokenBuffer.h>
@@ -29,6 +30,10 @@ namespace Caracal
         u16 fileId = 0;
         bool wasProcessed = false;
         SourceTextSharedPtr source;
+        // TokenBuffer tokenBuffer;
+        NodeBuffer nodeBuffer;
+
+        // TODO remove this once we switch over to the new parser
         ParseTree* parseTree = nullptr;
     };
 

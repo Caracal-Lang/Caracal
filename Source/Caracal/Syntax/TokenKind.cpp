@@ -1,4 +1,4 @@
-﻿#include <Caracal/Syntax/TokenKind.h>
+#include <Caracal/Syntax/TokenKind.h>
 #include <unordered_map>
 
 std::string stringify(TokenKind kind)
@@ -42,6 +42,9 @@ std::string stringify(TokenKind kind)
         { TokenKind::CloseBracket,    std::string_view("CloseBracket") },
 
         { TokenKind::Identifier,        std::string_view("Identifier") },
+        { TokenKind::PrivateIdentifier, std::string_view("PrivateIdentifier") },
+        { TokenKind::InitKeyword,       std::string_view("InitKeyword") },
+        { TokenKind::NewKeyword,        std::string_view("NewKeyword") },
         { TokenKind::Number,            std::string_view("Number") },
         { TokenKind::String,            std::string_view("String") },
                                         
@@ -69,46 +72,4 @@ std::string stringify(TokenKind kind)
 
     TODO("String for TokenKind value was not defined yet");
     return std::string();
-}
-
-i32 unaryOperatorPrecedence(TokenKind kind)
-{
-    switch (kind)
-    {
-        case TokenKind::RefKeyword:
-            return 7;
-        case TokenKind::Bang:
-        case TokenKind::Minus:
-            return 6;
-        default:
-            return 0;
-    }
-}
-
-i32 binaryOperatorPrecedence(TokenKind kind)
-{
-    switch (kind)
-    {
-        case TokenKind::Star:
-        case TokenKind::PercentStar:
-        case TokenKind::Slash:
-            return 4;
-        case TokenKind::Plus:
-        case TokenKind::PercentPlus:
-        case TokenKind::Minus:
-        case TokenKind::PercentMinus:
-            return 3;
-        case TokenKind::EqualEqual:
-        case TokenKind::BangEqual:
-        case TokenKind::LessThan:
-        case TokenKind::LessThanEqual:
-        case TokenKind::GreaterThan:
-        case TokenKind::GreaterThanEqual:
-            return 2;
-        case TokenKind::AndKeyword:
-        case TokenKind::OrKeyword:
-            return 1;
-        default:
-            return 0;
-    }
 }

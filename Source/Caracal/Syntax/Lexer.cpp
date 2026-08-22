@@ -62,6 +62,9 @@ namespace Caracal
     // switch on the length to reduce the possible keywords
     static TokenKind IdentifierKind(const char* start, i32 length) noexcept
     {
+        if (start[0] == '_')
+            return TokenKind::PrivateIdentifier;
+
         switch (length)
         {
             case 2:
@@ -80,6 +83,8 @@ namespace Caracal
                     return TokenKind::AndKeyword;
                 if (EqualsKeyword<"ref">(start))
                     return TokenKind::RefKeyword;
+                if (EqualsKeyword<"new">(start))
+                    return TokenKind::NewKeyword;
                 break;
             }
             case 4:
@@ -94,6 +99,8 @@ namespace Caracal
                     return TokenKind::SkipKeyword;
                 if (EqualsKeyword<"true">(start))
                     return TokenKind::TrueKeyword;
+                if (EqualsKeyword<"init">(start))
+                    return TokenKind::InitKeyword;
                 break;
             }
             case 5:
@@ -252,6 +259,7 @@ namespace Caracal
                 case '\0':
                 {
                     AddTokenKindAndAdvance(tokenBuffer, source, currentIndex, TokenKind::EndOfFile, 0);
+                    tokenBuffer.finalizePadding();
                     return tokenBuffer;
                 }
                 case '+':

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/Syntax/ArrayTypeKind.h>
 #include <Caracal/Syntax/NumberLiteral.h>
 #include <Caracal/Syntax/TypeNameNode.h>
 
@@ -8,13 +9,6 @@
 
 namespace Caracal
 {
-    enum class ArrayTypeKind
-    {
-        Slice,
-        Fixed,
-        Dynamic,
-    };
-
     class CARACAL_API ArrayTypeNameNode final : public TypeNameNode
     {
     public:

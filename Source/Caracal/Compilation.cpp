@@ -4,6 +4,7 @@
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeChecker.h>
 #include <Caracal/Syntax/Parser.h>
+#include <Caracal/Syntax/ParserOld.h>
 #include <Caracal/Text/File.h>
 #include <Caracal/Text/SourceEncoding.h>
 
@@ -29,8 +30,12 @@ namespace Caracal
             return;
         }
 
-        auto parseTree = parse(tokens, diagnostics);
+        auto parseTree = parseOld(tokens, diagnostics);
         compilationContext.storeParseTree(unit, std::move(parseTree));
+
+        // TODO remove the old parser once we use the nodebuffer for the whole pipeline
+        DiagnosticsBag flatParseDiagnostics{};
+        unit.nodeBuffer = parse(tokens, flatParseDiagnostics);
     }
 
     std::vector<std::string> collectPreludeSources(const std::filesystem::path& preludeDirectory) noexcept
@@ -107,7 +112,14 @@ namespace Caracal
         loadPrelude(compilationContext, collectPreludeSources(preludeDirectory));
     }
 
-    ParseTreeUPtr parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
+    ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
+    {
+        CARACAL_ZONE_NAMED("parseOld");
+        ParserOld parser{ tokens, diagnostics };
+        return parser.parse();
+    }
+
+    NodeBuffer parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
     {
         CARACAL_ZONE_NAMED("parse");
         Parser parser{ tokens, diagnostics };

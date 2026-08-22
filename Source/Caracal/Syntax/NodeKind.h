@@ -1,16 +1,18 @@
 ﻿#pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/Defines.h>
 #include <string>
 
 namespace Caracal
 {
-    enum class NodeKind
+    enum class NodeKind : u8
     {
         Unknown,
         Error,
 
         ConstantDeclaration,
+        InitConstantDeclaration,
         VariableDeclaration,
         TypeFieldDeclaration,
         EnumFieldDeclaration,
@@ -22,6 +24,7 @@ namespace Caracal
         TypeDefinitionStatement,
         MethodDefinitionStatement,
         IfStatement,
+        TrailingIfStatement,
         WhileStatement,
         BreakStatement,
         SkipStatement,
@@ -33,6 +36,8 @@ namespace Caracal
         NameExpression,
         FunctionCallExpression,
         MemberAccessExpression,
+
+        NamedArgument,
 
         DiscardLiteral,
         BoolLiteral,

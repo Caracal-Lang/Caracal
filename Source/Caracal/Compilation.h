@@ -20,7 +20,8 @@ namespace Caracal
     CARACAL_API void loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory);
 
     CARACAL_API TokenBuffer lex(const SourceTextSharedPtr& source, DiagnosticsBag& diagnostics, u16 fileId = 0) noexcept;
-    CARACAL_API ParseTreeUPtr parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept;
+    CARACAL_API ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept;
+    CARACAL_API NodeBuffer parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept;
     CARACAL_API void lexAndParse(CompilationContext& compilationContext, DiagnosticsBag& diagnostics);
     CARACAL_API bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass = false) noexcept;
     CARACAL_API bool optimize(const CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass = false);

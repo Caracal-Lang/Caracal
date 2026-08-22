@@ -1,157 +1,24 @@
-#include <Caracal/Constants.h>
-#include <Caracal/Syntax/AssignmentStatement.h>
-#include <Caracal/Syntax/BinaryExpression.h>
-#include <Caracal/Syntax/BoolLiteral.h>
-#include <Caracal/Syntax/BreakStatement.h>
-#include <Caracal/Syntax/ConstantDeclaration.h>
-#include <Caracal/Syntax/DiscardLiteral.h>
-#include <Caracal/Syntax/EnumDefinitionStatement.h>
-#include <Caracal/Syntax/ArrayLiteral.h>
-#include <Caracal/Syntax/ArrayTypeNameNode.h>
-#include <Caracal/Syntax/ErrorExpression.h>
-#include <Caracal/Syntax/ExpressionStatement.h>
-#include <Caracal/Syntax/FunctionCallExpression.h>
-#include <Caracal/Syntax/FunctionDefinitionStatement.h>
-#include <Caracal/Syntax/GroupingExpression.h>
-#include <Caracal/Syntax/IfStatement.h>
-#include <Caracal/Syntax/MemberAccessExpression.h>
-#include <Caracal/Syntax/MethodDefinitionStatement.h>
-#include <Caracal/Syntax/NameExpression.h>
 #include <Caracal/Syntax/Parser.h>
-#include <Caracal/Syntax/ReturnStatement.h>
-#include <Caracal/Syntax/SkipStatement.h>
-#include <Caracal/Syntax/StringLiteral.h>
-#include <Caracal/Syntax/TypeDefinitionStatement.h>
-#include <Caracal/Syntax/TypeFieldDeclaration.h>
-#include <Caracal/Syntax/UnaryExpression.h>
-#include <Caracal/Syntax/VariableDeclaration.h>
-#include <Caracal/Syntax/WhileStatement.h>
+
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <string>
 
 namespace Caracal
 {
-    static SourceLocation GetAnnotationLocation(const AnnotationNode* annotation, const TokenBuffer& tokens)
-    {
-        const auto hashLocation = tokens.getSourceLocation(annotation->hashToken());
-        const auto nameLocation = tokens.getSourceLocation(annotation->nameToken());
-        return { hashLocation.startIndex, nameLocation.endIndex };
-    }
-
-    static AnnotationKind ParseAnnotationKind(std::string_view name)
-    {
-        if (name == ExternAnnotationName)
-        {
-            return AnnotationKind::Extern;
-        }
-
-        if (name == FlagAnnotationName)
-        {
-            return AnnotationKind::Flag;
-        }
-
-        if (name == StepAnnotationName)
-        {
-            return AnnotationKind::Step;
-        }
-
-        if (name == BuiltinAnnotationName)
-        {
-            return AnnotationKind::Builtin;
-        }
-
-        return AnnotationKind::Error;
-    }
-
-    static std::string ReplaceEscapeSequences(std::string_view input)
-    {
-        std::string result;
-        result.reserve(input.size());
-
-        for (size_t index = 0; index < input.size(); index++)
-        {
-            const auto character = input[index];
-            if (character != '\\' || index + 1 == input.size())
-            {
-                result.push_back(character);
-                continue;
-            }
-
-            index++;
-            const auto escapedCharacter = input[index];
-            switch (escapedCharacter)
-            {
-                case '\'':
-                {
-                    result.push_back('\'');
-                    break;
-                }
-                case '\"':
-                {
-                    result.push_back('\"');
-                    break;
-                }
-                case 'a':
-                {
-                    result.push_back('\a');
-                    break;
-                }
-                case 'b':
-                {
-                    result.push_back('\b');
-                    break;
-                }
-                case 'f':
-                {
-                    result.push_back('\f');
-                    break;
-                }
-                case 'n':
-                {
-                    result.push_back('\n');
-                    break;
-                }
-                case 'r':
-                {
-                    result.push_back('\r');
-                    break;
-                }
-                case 't':
-                {
-                    result.push_back('\t');
-                    break;
-                }
-                case 'v':
-                {
-                    result.push_back('\v');
-                    break;
-                }
-                case '\\':
-                {
-                    result.push_back('\\');
-                    break;
-                }
-                default:
-                {
-                    // unknown escapes stay verbatim
-                    result.push_back('\\');
-                    result.push_back(escapedCharacter);
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
-
     Parser::Parser(const TokenBuffer& tokens, DiagnosticsBag& diagnostics)
         : m_tokens{ tokens }
         , m_diagnostics{ diagnostics }
         , m_currentIndex{ 0 }
+        // double the capacity for safe error recovery bounds
+        , m_nodeBuffer{ std::max(2 * static_cast<u32>(tokens.size()), 16U) }
     {
     }
 
-    ParseTreeUPtr Parser::parse()
+    NodeBuffer Parser::parse()
     {
-        auto statements = parseStatements(StatementScope::Global);
+        parseStatements(StatementScope::Global);
 
         flushDanglingAnnotations();
 
@@ -161,12 +28,88 @@ namespace Caracal
             m_diagnostics.addExtraTokensRemainingError(m_tokens.source(), location);
         }
 
-        return std::make_unique<ParseTree>(std::move(m_tokens), std::move(statements));
+        return std::move(m_nodeBuffer);
     }
 
-    std::vector<StatementUPtr> Parser::parseStatements(StatementScope scope)
+    void Parser::append(NodeKind kind, u32 mainToken, u32 subtreeStart)
     {
-        std::vector<StatementUPtr> statements{};
+        if (m_nodeBuffer.nodeCount() >= m_nodeBuffer.capacity())
+        {
+            std::cerr << "Parser: node capacity exceeded\n";
+            std::abort();
+        }
+
+        m_nodeBuffer.append(kind, mainToken, m_nodeBuffer.nodeCount() - subtreeStart + 1);
+    }
+
+    void Parser::appendNode(NodeKind kind, u32 mainToken)
+    {
+        append(kind, mainToken, m_nodeBuffer.nodeCount());
+    }
+
+    NodeKind Parser::lastKind() const noexcept
+    {
+        return m_nodeBuffer.kind(m_nodeBuffer.nodeCount() - 1);
+    }
+
+    SourceLocation Parser::tokenRangeLocation(i32 firstToken, i32 lastToken) const
+    {
+        const auto& firstLocation = m_tokens.getSourceLocation(m_tokens.getToken(firstToken));
+        const auto& lastLocation = m_tokens.getSourceLocation(m_tokens.getToken(lastToken));
+        return SourceLocation{ firstLocation.startIndex, lastLocation.endIndex };
+    }
+
+    SourceLocation Parser::annotationLocation(u32 nameToken) const
+    {
+        // the annotation location includes hash and name
+        return tokenRangeLocation(static_cast<i32>(nameToken) - 1, static_cast<i32>(nameToken));
+    }
+
+    SourceLocation Parser::typeNameLocation(u32 typeNameIndex) const
+    {
+        // mirrors TypeNameNode/ArrayTypeNameNode::sourceLocation: an optional leading
+        // ref widens the start, an array type ends at its matching close bracket
+        const auto mainToken = m_nodeBuffer.mainToken(typeNameIndex);
+        auto firstToken = static_cast<i32>(mainToken);
+        if (firstToken > 0 && m_tokens.getToken(firstToken - 1).kind == TokenKind::RefKeyword)
+        {
+            firstToken--;
+        }
+
+        if (m_nodeBuffer.kind(typeNameIndex) != NodeKind::ArrayTypeNameNode)
+        {
+            return tokenRangeLocation(firstToken, static_cast<i32>(mainToken));
+        }
+
+        auto lastToken = static_cast<i32>(mainToken);
+        auto depth = 0;
+        while (true)
+        {
+            const auto token = m_tokens.getToken(lastToken);
+            if (token.kind == TokenKind::OpenBracket)
+            {
+                depth++;
+            }
+            else if (token.kind == TokenKind::CloseBracket)
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    break;
+                }
+            }
+            else if (token.kind == TokenKind::EndOfFile)
+            {
+                break;
+            }
+            lastToken++;
+        }
+
+        return tokenRangeLocation(firstToken, lastToken);
+    }
+
+    void Parser::parseStatements(StatementScope scope)
+    {
         auto current = currentToken();
         while (true)
         {
@@ -182,9 +125,8 @@ namespace Caracal
 
                     // annotations arent allowed here but we want to continue parsing to catch other diagnostics
                     buildAnnotationNode(scope);
-                    const auto location = GetAnnotationLocation(m_currentAnnotations.back().get(), m_tokens);
-                    m_diagnostics.addAnnotationNotAllowedHereError(m_tokens.source(), location);
-                    m_currentAnnotations.pop_back();
+                    m_diagnostics.addAnnotationNotAllowedHereError(m_tokens.source(), annotationLocation(m_pendingAnnotations.back()));
+                    m_pendingAnnotations.pop_back();
                     break;
                 }
                 case TokenKind::CloseBrace:
@@ -201,20 +143,20 @@ namespace Caracal
                 }
                 case TokenKind::EndOfFile:
                 {
-                    return statements;
+                    return;
                 }
                 default:
                 {
-                    statements.push_back(parseStatement(scope));
+                    parseStatement(scope);
                     break;
                 }
             }
-            
+
             current = currentToken();
         }
     }
 
-    StatementUPtr Parser::parseStatement(StatementScope scope)
+    void Parser::parseStatement(StatementScope scope)
     {
         const auto current = currentToken();
         switch (current.kind)
@@ -223,11 +165,13 @@ namespace Caracal
             {
                 if (scope == StatementScope::Global)
                 {
-                    return parseFunctionDefinitionStatement();
+                    parseFunctionDefinitionStatement();
+                    return;
                 }
                 else if (scope == StatementScope::Type)
                 {
-                    return parseMethodDefinitionStatement();
+                    parseMethodDefinitionStatement();
+                    return;
                 }
                 break;
             }
@@ -235,7 +179,8 @@ namespace Caracal
             {
                 if (scope == StatementScope::Global)
                 {
-                    return parseEnumDefinitionStatement();
+                    parseEnumDefinitionStatement();
+                    return;
                 }
                 break;
             }
@@ -243,7 +188,8 @@ namespace Caracal
             {
                 if (scope == StatementScope::Global)
                 {
-                    return parseTypeDefinitionStatement();
+                    parseTypeDefinitionStatement();
+                    return;
                 }
                 break;
             }
@@ -251,16 +197,17 @@ namespace Caracal
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseIfStatement(scope);
+                    parseIfStatement(scope);
+                    return;
                 }
-
                 break;
             }
             case TokenKind::WhileKeyword:
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseWhileStatement(scope);
+                    parseWhileStatement(scope);
+                    return;
                 }
                 break;
             }
@@ -268,7 +215,8 @@ namespace Caracal
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseBreakStatement();
+                    parseBreakStatement();
+                    return;
                 }
                 break;
             }
@@ -276,7 +224,8 @@ namespace Caracal
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseSkipStatement();
+                    parseSkipStatement();
+                    return;
                 }
                 break;
             }
@@ -284,7 +233,8 @@ namespace Caracal
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseReturnStatement(scope);
+                    parseReturnStatement(scope);
+                    return;
                 }
                 break;
             }
@@ -292,7 +242,12 @@ namespace Caracal
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
                 {
-                    return parseBlockNode(scope);
+                    const auto subtreeStart = m_nodeBuffer.nodeCount();
+                    auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+                    parseStatements(scope);
+                    static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+                    append(NodeKind::BlockNode, tokenIndexOf(openBracket), subtreeStart);
+                    return;
                 }
                 break;
             }
@@ -306,33 +261,62 @@ namespace Caracal
             }
             case TokenKind::Underscore:
             case TokenKind::Identifier:
+            case TokenKind::PrivateIdentifier:
+            case TokenKind::InitKeyword:
+            case TokenKind::NewKeyword:
             {
-                auto expression = parseExpression(scope);
+                const auto subtreeStart = m_nodeBuffer.nodeCount();
+
+                // directly checking for underscore increased parsing performance
+                const auto next = nextToken();
+                if (next.kind == TokenKind::Colon || next.kind == TokenKind::Equal)
+                {
+                    advanceCurrentIndex();
+                    if (current.kind == TokenKind::Underscore)
+                    {
+                        appendNode(NodeKind::DiscardLiteral, tokenIndexOf(current));
+                    }
+                    else
+                    {
+                        appendNode(NodeKind::NameExpression, tokenIndexOf(current));
+                    }
+                }
+                else
+                {
+                    parseExpression(scope);
+                }
+
+                const auto expressionKind = lastKind();
                 if (currentToken().kind == TokenKind::Colon)
                 {
                     if (scope == StatementScope::Global || scope == StatementScope::Function || scope == StatementScope::Method)
                     {
-                        return parseConstantOrVariableDeclaration(std::move(expression), scope);
+                        parseConstantOrVariableDeclaration(subtreeStart, scope);
+                        return;
                     }
-                    else if (scope == StatementScope::Type && expression->kind() == NodeKind::NameExpression)
+                    else if (scope == StatementScope::Type && expressionKind == NodeKind::NameExpression)
                     {
-                        return parseTypeFieldDeclaration(std::move(expression));
-                    }
-                    break;
-                }
-                if ((expression->kind() == NodeKind::NameExpression || expression->kind() == NodeKind::BinaryExpression || expression->kind() == NodeKind::MemberAccessExpression || expression->kind() == NodeKind::DiscardLiteral) && currentToken().kind == TokenKind::Equal)
-                {
-                    if (scope == StatementScope::Function || scope == StatementScope::Method)
-                    {
-                        return parseAssignmentStatement(std::move(expression), scope);
+                        parseTypeFieldDeclaration(subtreeStart);
+                        return;
                     }
                     break;
                 }
-                if (expression->kind() == NodeKind::FunctionCallExpression || expression->kind() == NodeKind::BinaryExpression || expression->kind() == NodeKind::MemberAccessExpression)
+                if ((expressionKind == NodeKind::NameExpression || expressionKind == NodeKind::BinaryExpression || expressionKind == NodeKind::MemberAccessExpression || expressionKind == NodeKind::DiscardLiteral) && currentToken().kind == TokenKind::Equal)
                 {
                     if (scope == StatementScope::Function || scope == StatementScope::Method)
                     {
-                        return parseExpressionStatement(std::move(expression));
+                        parseAssignmentStatement(subtreeStart, scope);
+                        return;
+                    }
+                    break;
+                }
+                if (expressionKind == NodeKind::FunctionCallExpression || expressionKind == NodeKind::BinaryExpression || expressionKind == NodeKind::MemberAccessExpression)
+                {
+                    if (scope == StatementScope::Function || scope == StatementScope::Method)
+                    {
+                        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
+                        append(NodeKind::ExpressionStatement, tokenIndexOf(semicolon), subtreeStart);
+                        return;
                     }
                     break;
                 }
@@ -357,7 +341,8 @@ namespace Caracal
             m_diagnostics.addUnexpectedStatementTokenError(m_tokens.source(), location, current.kind);
         }
 
-        auto errorExpression = std::make_unique<ErrorExpression>(current);
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        appendNode(NodeKind::Error, tokenIndexOf(current));
 
         if (current.kind != TokenKind::CloseBrace && current.kind != TokenKind::EndOfFile)
         {
@@ -365,169 +350,142 @@ namespace Caracal
             synchronizeToNextStatement();
         }
 
-        return std::make_unique<ExpressionStatement>(std::move(errorExpression), Token::ToError(current));
+        append(NodeKind::ExpressionStatement, tokenIndexOf(current), subtreeStart);
     }
 
-    StatementUPtr Parser::parseExpressionStatement(ExpressionUPtr&& expression)
+    void Parser::parseFunctionDefinitionStatement()
     {
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-
-        return std::make_unique<ExpressionStatement>(std::move(expression), semicolon);
-    }
-
-    StatementUPtr Parser::parseFunctionDefinitionStatement()
-    {
-        auto keyword = advanceOnMatch(TokenKind::DefKeyword);
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        auto name = m_tokens.getLexeme(nameToken);
-        if (name.starts_with('_'))
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        static_cast<void>(advanceOnMatch(TokenKind::DefKeyword));
+        auto nameToken = advanceOnIdentifier();
+        if (nameToken.kind == TokenKind::PrivateIdentifier)
         {
             m_diagnostics.addPrivateFreeFunctionError(
                 m_tokens.source(),
                 m_tokens.getSourceLocation(nameToken));
         }
 
-        auto parameters = parseParametersNode(StatementScope::Function);
-        auto returnTypes = parseReturnTypesNode();
-        auto body = parseFunctionBody();
+        parseParametersNode(StatementScope::Function);
+        parseReturnTypesNode();
 
-        auto annotations = takeCurrentAnnotations();
+        {
+            const auto bodyStart = m_nodeBuffer.nodeCount();
+            auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+            parseStatements(StatementScope::Function);
+            static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+            append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
+        }
 
-        return std::make_unique<FunctionDefinitionStatement>(keyword, nameToken, name, std::move(parameters), std::move(returnTypes), std::move(body), std::move(annotations));
+        m_pendingAnnotations.clear();
+        append(NodeKind::FunctionDefinitionStatement, tokenIndexOf(nameToken), subtreeStart);
     }
 
-    StatementUPtr Parser::parseConstantOrVariableDeclaration(ExpressionUPtr&& leftExpression, StatementScope scope)
+    void Parser::parseConstantOrVariableDeclaration(u32 subtreeStart, StatementScope scope)
     {
+        const auto leftExpression = m_nodeBuffer.nodeCount() - 1;
         auto firstColon = advanceOnMatch(TokenKind::Colon);
 
-        std::optional<TypeNameNodeUPtr> explicitType;
+        auto explicitType = InvalidTokenIndex;
         auto currentTokenKind = currentToken().kind;
         if (currentTokenKind != TokenKind::Colon && currentTokenKind != TokenKind::Equal)
         {
-            explicitType = parseTypeNameNode();
+            parseTypeNameNode();
+            explicitType = m_nodeBuffer.nodeCount() - 1;
         }
-        
+
         auto secondToken = advanceOnMatch(TokenKind::Colon, TokenKind::Equal);
         auto afterSecondToken = currentToken();
-        auto isInitDeclaration = afterSecondToken.kind == TokenKind::Identifier && m_tokens.getLexeme(afterSecondToken) == "init";
+        auto isInitDeclaration = afterSecondToken.kind == TokenKind::InitKeyword;
         if (secondToken.kind == TokenKind::Colon && isInitDeclaration)
         {
-            auto initKeyword = advanceOnMatch(TokenKind::Identifier);
-            auto initType = parseTypeNameNode();
-            auto semicolon = advanceOnMatch(TokenKind::Semicolon);
+            static_cast<void>(advanceOnMatch(TokenKind::InitKeyword));
+            parseTypeNameNode();
+            const auto initType = m_nodeBuffer.nodeCount() - 1;
+            static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
 
-            if (explicitType.has_value())
+            if (explicitType != InvalidTokenIndex)
             {
                 auto constantName = std::string("name");
-                if (leftExpression->kind() == NodeKind::NameExpression)
+                if (m_nodeBuffer.kind(leftExpression) == NodeKind::NameExpression)
                 {
-                    constantName = static_cast<NameExpression*>(leftExpression.get())->name();
+                    const auto nameTokenIndex = static_cast<i32>(m_nodeBuffer.mainToken(leftExpression));
+                    const auto nameToken = m_tokens.getToken(nameTokenIndex);
+                    constantName = std::string(m_tokens.getLexeme(nameToken));
                 }
 
+                const auto initTypeNameTokenIndex = static_cast<i32>(m_nodeBuffer.mainToken(initType));
+                const auto initTypeNameToken = m_tokens.getToken(initTypeNameTokenIndex);
                 m_diagnostics.addExplicitTypeOnInitConstantError(
                     m_tokens.source(),
-                    explicitType.value()->sourceLocation(m_tokens),
+                    typeNameLocation(explicitType),
                     constantName,
-                    initType->name());
+                    std::string(m_tokens.getLexeme(initTypeNameToken)));
             }
 
-            auto annotations = std::vector<AnnotationNodeUPtr>{};
-            if (scope == StatementScope::Global)
-            {
-                annotations = takeCurrentAnnotations();
-            }
-
-            return std::make_unique<ConstantDeclaration>(
-                std::move(leftExpression),
-                firstColon,
-                secondToken,
-                initKeyword,
-                std::move(initType),
-                semicolon,
-                scope == StatementScope::Global,
-                std::move(annotations));
+            m_pendingAnnotations.clear();
+            append(NodeKind::InitConstantDeclaration, tokenIndexOf(firstColon), subtreeStart);
+            return;
         }
 
-        auto rightExpression = parseExpression(scope);
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
+        parseExpression(scope);
+        static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
 
+        m_pendingAnnotations.clear();
         if (secondToken.kind == TokenKind::Colon)
         {
-            auto isGlobalConstant = scope == StatementScope::Global;
-            auto annotations = std::vector<AnnotationNodeUPtr>{};
-            if (scope == StatementScope::Global)
-            {
-                annotations = takeCurrentAnnotations();
-            }
-
-            return std::make_unique<ConstantDeclaration>(std::move(leftExpression), firstColon, std::move(explicitType), secondToken, std::move(rightExpression), semicolon, isGlobalConstant, std::move(annotations));
+            append(NodeKind::ConstantDeclaration, tokenIndexOf(firstColon), subtreeStart);
         }
         else
         {
-            auto annotations = std::vector<AnnotationNodeUPtr>{};
-            if (scope == StatementScope::Global)
-            {
-                annotations = takeCurrentAnnotations();
-            }
-
-            return std::make_unique<VariableDeclaration>(std::move(leftExpression), firstColon, std::move(explicitType), secondToken, std::move(rightExpression), semicolon, std::move(annotations));
+            append(NodeKind::VariableDeclaration, tokenIndexOf(firstColon), subtreeStart);
         }
     }
 
-    StatementUPtr Parser::parseAssignmentStatement(ExpressionUPtr&& leftExpression, StatementScope scope)
+    void Parser::parseAssignmentStatement(u32 subtreeStart, StatementScope scope)
     {
         auto equal = advanceOnMatch(TokenKind::Equal);
-        auto rightExpression = parseExpression(scope);
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-     
-        return std::make_unique<AssignmentStatement>(std::move(leftExpression), equal, std::move(rightExpression), semicolon);
+        parseExpression(scope);
+        static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+
+        append(NodeKind::AssignmentStatement, tokenIndexOf(equal), subtreeStart);
     }
 
-    StatementUPtr Parser::parseEnumDefinitionStatement()
+    void Parser::parseEnumDefinitionStatement()
     {
-        auto keyword = advanceOnMatch(TokenKind::EnumKeyword);
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        auto name = m_tokens.getLexeme(nameToken);
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        static_cast<void>(advanceOnMatch(TokenKind::EnumKeyword));
+        auto nameToken = advanceOnIdentifier();
 
-        auto current = currentToken();
-        std::optional<Token> colonToken;
-        std::optional<TypeNameNodeUPtr> baseType;
-        if (current.kind == TokenKind::Colon)
+        if (currentToken().kind == TokenKind::Colon)
         {
-            colonToken = advanceOnMatch(TokenKind::Colon);
-            baseType = parseTypeNameNode();
+            static_cast<void>(advanceOnMatch(TokenKind::Colon));
+            parseTypeNameNode();
         }
-    
-        auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
-        auto enumFields = parseEnumFields();
-        auto closeBracket = advanceOnMatch(TokenKind::CloseBrace);
 
-        auto annotations = takeCurrentAnnotations();
+        static_cast<void>(advanceOnMatch(TokenKind::OpenBrace));
+        parseEnumFields();
+        static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
 
-        return std::make_unique<EnumDefinitionStatement>(keyword, nameToken, name, colonToken, std::move(baseType), openBracket, std::move(enumFields), closeBracket, std::move(annotations));
+        m_pendingAnnotations.clear();
+        append(NodeKind::EnumDefinitionStatement, tokenIndexOf(nameToken), subtreeStart);
     }
 
-    std::vector<EnumFieldDeclarationUPtr> Parser::parseEnumFields()
+    void Parser::parseEnumFields()
     {
-        std::vector<EnumFieldDeclarationUPtr> fields;
         auto current = currentToken();
         while (current.kind != TokenKind::CloseBrace && current.kind != TokenKind::EndOfFile)
         {
-            if (current.kind == TokenKind::Identifier)
+            if (isIdentifierKind(current.kind))
             {
-                auto nameToken = advanceOnMatch(TokenKind::Identifier);
-                auto name = m_tokens.getLexeme(nameToken);
+                const auto subtreeStart = m_nodeBuffer.nodeCount();
+                auto nameToken = advanceOnIdentifier();
                 if (currentToken().kind == TokenKind::Colon && nextToken().kind == TokenKind::Colon)
                 {
-                    auto colon1 = advanceOnMatch(TokenKind::Colon);
-                    auto colon2 = advanceOnMatch(TokenKind::Colon);
-                    auto valueExpression = parseExpression(StatementScope::Enum);
-                    fields.push_back(std::make_unique<EnumFieldDeclaration>(nameToken, name, colon1, colon2, std::move(valueExpression)));
+                    static_cast<void>(advanceOnMatch(TokenKind::Colon));
+                    static_cast<void>(advanceOnMatch(TokenKind::Colon));
+                    parseExpression(StatementScope::Enum);
                 }
-                else
-                {
-                    fields.push_back(std::make_unique<EnumFieldDeclaration>(nameToken, name));
-                }
+                append(NodeKind::EnumFieldDeclaration, tokenIndexOf(nameToken), subtreeStart);
             }
             else
             {
@@ -537,289 +495,215 @@ namespace Caracal
             }
             current = currentToken();
         }
-        return fields;
     }
 
-    StatementUPtr Parser::parseTypeDefinitionStatement()
+    void Parser::parseTypeDefinitionStatement()
     {
-        auto keyword = advanceOnMatch(TokenKind::TypeKeyword);
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        auto name = m_tokens.getLexeme(nameToken);
-        auto annotations = takeCurrentAnnotations();
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        static_cast<void>(advanceOnMatch(TokenKind::TypeKeyword));
+        auto nameToken = advanceOnIdentifier();
+        m_pendingAnnotations.clear();
 
-        std::optional<ParametersNodeUPtr> maybeParameters;
         if (currentToken().kind == TokenKind::OpenParenthesis)
         {
-            maybeParameters = parseParametersNode(StatementScope::Type);
+            parseParametersNode(StatementScope::Type);
         }
 
-        auto body = parseTypeBody();
+        {
+            const auto bodyStart = m_nodeBuffer.nodeCount();
+            auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+            parseStatements(StatementScope::Type);
+            static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+            append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
+        }
 
-        return std::make_unique<TypeDefinitionStatement>(keyword, nameToken, name, std::move(maybeParameters), std::move(body), std::move(annotations));
+        append(NodeKind::TypeDefinitionStatement, tokenIndexOf(nameToken), subtreeStart);
     }
 
-    StatementUPtr Parser::parseTypeFieldDeclaration(ExpressionUPtr&& leftExpression)
+    void Parser::parseTypeFieldDeclaration(u32 subtreeStart)
     {
-        // the left expression is always a NameExpression
-        auto nameExpression = std::unique_ptr<NameExpression>(static_cast<NameExpression*>(leftExpression.release()));
+        const auto leftExpression = m_nodeBuffer.nodeCount() - 1;
         auto firstColon = advanceOnMatch(TokenKind::Colon);
-        
-        std::optional<TypeNameNodeUPtr> explicitType;
+
+        auto explicitType = InvalidTokenIndex;
         auto currentTokenKind = currentToken().kind;
         if (currentTokenKind != TokenKind::Colon && currentTokenKind != TokenKind::Equal)
         {
-            explicitType = parseTypeNameNode();
+            parseTypeNameNode();
+            explicitType = m_nodeBuffer.nodeCount() - 1;
         }
 
         const auto current = currentToken();
         if (current.kind != TokenKind::Colon && current.kind != TokenKind::Equal)
         {
-            auto fieldLocation = nameExpression->sourceLocation(m_tokens);
-            if (explicitType.has_value())
-                fieldLocation.endIndex = explicitType.value()->sourceLocation(m_tokens).endIndex;
+            const auto fieldNameTokenIndex = static_cast<i32>(m_nodeBuffer.mainToken(leftExpression));
+            const auto fieldNameToken = m_tokens.getToken(fieldNameTokenIndex);
+            auto fieldLocation = m_tokens.getSourceLocation(fieldNameToken);
+            if (explicitType != InvalidTokenIndex)
+            {
+                fieldLocation.endIndex = typeNameLocation(explicitType).endIndex;
+            }
             else
+            {
                 fieldLocation.endIndex = m_tokens.getSourceLocation(firstColon).endIndex;
+            }
 
-            m_diagnostics.addUninitializedTypeFieldError(m_tokens.source(), fieldLocation, nameExpression->name());
-            return std::make_unique<TypeFieldDeclaration>(std::move(nameExpression), firstColon, std::move(explicitType), Token::ToError(current), std::make_unique<ErrorExpression>(current), false);
+            const auto fieldName = m_tokens.getLexeme(fieldNameToken);
+            m_diagnostics.addUninitializedTypeFieldError(m_tokens.source(), fieldLocation, std::string(fieldName));
+
+            appendNode(NodeKind::Error, tokenIndexOf(current));
+            append(NodeKind::TypeFieldDeclaration, tokenIndexOf(firstColon), subtreeStart);
+            return;
         }
 
-        auto secondToken = advanceOnMatch(TokenKind::Colon, TokenKind::Equal);
-        auto rightExpression = parseExpression(StatementScope::Type);
-        auto isConstant = secondToken.kind == TokenKind::Colon;
+        static_cast<void>(advanceOnMatch(TokenKind::Colon, TokenKind::Equal));
+        parseExpression(StatementScope::Type);
 
-        return std::make_unique<TypeFieldDeclaration>(std::move(nameExpression), firstColon, std::move(explicitType), secondToken, std::move(rightExpression), isConstant);
+        append(NodeKind::TypeFieldDeclaration, tokenIndexOf(firstColon), subtreeStart);
     }
 
-    StatementUPtr Parser::parseMethodDefinitionStatement()
+    void Parser::parseMethodDefinitionStatement()
     {
-        auto modifier = MethodModifier::Public;
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto keyword = advanceOnMatch(TokenKind::DefKeyword);
-        auto methodNameNode = parseMethodNameNode();
-        auto parameters = parseParametersNode(StatementScope::Method);
-        auto returnTypes = parseReturnTypesNode();
-        auto body = parseMethodBody();
+        const auto methodNameIndex = parseMethodNameNode();
+        parseParametersNode(StatementScope::Method);
+        parseReturnTypesNode();
 
-        if(methodNameNode->hasTypeName())
         {
-            // Methods defined as "def Type.function()" are considered static
-            modifier = MethodModifier::Static;
+            const auto bodyStart = m_nodeBuffer.nodeCount();
+            auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+            parseStatements(StatementScope::Method);
+            static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+            append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
         }
 
-        const auto& methodName = methodNameNode->methodName();
+        const auto methodNameTokenIndex = static_cast<i32>(m_nodeBuffer.mainToken(methodNameIndex));
+        const auto methodNameToken = m_tokens.getToken(methodNameTokenIndex);
+        const auto methodName = m_tokens.getLexeme(methodNameToken);
+        const auto hasTypeName = m_nodeBuffer.methodHasTypeName(m_tokens, methodNameIndex);
         const auto isPrivate = methodName.starts_with('_');
-        if(modifier == MethodModifier::Public && isPrivate)
-        {
-            modifier = MethodModifier::Private;
-        }
-        else if (modifier == MethodModifier::Static && isPrivate)
+        if (isPrivate && hasTypeName)
         {
             m_diagnostics.addPrivateStaticMethodError(
                 m_tokens.source(),
-                m_tokens.getSourceLocation(methodNameNode->methodNameToken()));
+                m_tokens.getSourceLocation(methodNameToken));
         }
 
-        auto specialFunctionType = SpecialFunctionType::None;
-        if (!methodNameNode->hasTypeName() && methodName == "new")
-        {
-            specialFunctionType = SpecialFunctionType::Constructor;
-        }
-
-        auto annotations = takeCurrentAnnotations();
-        return std::make_unique<MethodDefinitionStatement>(
-            keyword,
-            std::move(methodNameNode),
-            std::move(parameters),
-            std::move(returnTypes),
-            std::move(body),
-            modifier,
-            specialFunctionType,
-            std::move(annotations));
-    }
-    
-    BlockNodeUPtr Parser::parseFunctionBody()
-    {
-        return parseBlockNode(StatementScope::Function);
+        m_pendingAnnotations.clear();
+        append(NodeKind::MethodDefinitionStatement, tokenIndexOf(keyword), subtreeStart);
     }
 
-    BlockNodeUPtr Parser::parseTypeBody()
+    void Parser::parseIfStatement(StatementScope scope)
     {
-        return parseBlockNode(StatementScope::Type);
-    }
-
-    BlockNodeUPtr Parser::parseMethodBody()
-    {
-        return parseBlockNode(StatementScope::Method);
-    }
-
-    BlockNodeUPtr Parser::parseBlockNode(StatementScope scope)
-    {
-        auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
-        auto statements = parseStatements(scope);
-        auto closeBracket = advanceOnMatch(TokenKind::CloseBrace);
-
-        return std::make_unique<BlockNode>(openBracket, std::move(statements), closeBracket);
-    }
-
-    ParameterNodeUPtr Parser::parseParameterNode(StatementScope scope)
-    {
-        if (currentToken().kind == TokenKind::Identifier)
-        {
-            auto nameToken = advanceOnMatch(TokenKind::Identifier);
-            auto name = m_tokens.getLexeme(nameToken);
-            auto colon = advanceOnMatch(TokenKind::Colon);
-            auto typeName = parseTypeNameNode();
-
-            ExpressionUPtr defaultValue;
-            if (currentToken().kind == TokenKind::Equal)
-            {
-                advanceOnMatch(TokenKind::Equal);
-                // always parse with method scope so leading-dot member access reaches the type checker, which rejects it with T0076
-                defaultValue = parseExpression(StatementScope::Method);
-            }
-
-            return std::make_unique<ParameterNode>(nameToken, name, colon, std::move(typeName), false, std::move(defaultValue));
-        }
-        else
-        {
-            auto ellipsis = advanceOnMatch(TokenKind::Ellipsis);
-            auto fakeTypeName = std::make_unique<TypeNameNode>(std::nullopt, ellipsis, "...");
-
-            return std::make_unique<ParameterNode>(ellipsis, "varargs", ellipsis, std::move(fakeTypeName), true);
-        }
-    }
-
-    NumberLiteralUPtr Parser::parseNumberLiteral()
-    {
-        auto literal = advanceOnMatch(TokenKind::Number);
-        auto singleQuote = tryMatchKind(TokenKind::SingleQuote);
-        std::optional<TypeNameNodeUPtr> explicitType;
-        if (singleQuote.has_value())
-        {
-            explicitType = parseTypeNameNode();
-        }
-
-        const auto lexeme = m_tokens.getLexeme(literal);
-        return std::make_unique<NumberLiteral>(literal, lexeme, singleQuote, std::move(explicitType));
-    }
-
-    StringLiteralUPtr Parser::parseStringLiteral()
-    {
-        auto literal = advanceOnMatch(TokenKind::String);
-
-        const auto lexeme = m_tokens.getLexeme(literal);
-        const auto withoutQuotes = lexeme.substr(1, lexeme.size() - 2);
-        const auto escapedContent = ReplaceEscapeSequences(withoutQuotes);
-
-        return std::make_unique<StringLiteral>(literal, escapedContent);
-    }
-
-    StatementUPtr Parser::parseIfStatement(StatementScope scope)
-    {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto ifKeyword = advanceOnMatch(TokenKind::IfKeyword);
-        auto condition = parseExpression(scope, true, false);
-        auto trueStatement = parseStatement(scope);
+        parseExpression(scope, true, false);
+        parseStatement(scope);
 
         if (currentToken().kind == TokenKind::ElseKeyword)
         {
-            auto elseKeyword = advanceOnMatch(TokenKind::ElseKeyword);
-            auto falseStatement = parseStatement(scope);
-            return std::make_unique<IfStatement>(ifKeyword, std::move(condition), std::move(trueStatement), elseKeyword, std::move(falseStatement));
+            static_cast<void>(advanceOnMatch(TokenKind::ElseKeyword));
+            parseStatement(scope);
         }
 
-        return std::make_unique<IfStatement>(ifKeyword, std::move(condition), std::move(trueStatement));
+        append(NodeKind::IfStatement, tokenIndexOf(ifKeyword), subtreeStart);
     }
 
-    StatementUPtr Parser::parseWhileStatement(StatementScope scope)
+    void Parser::parseWhileStatement(StatementScope scope)
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto whileKeyword = advanceOnMatch(TokenKind::WhileKeyword);
-        auto condition = parseExpression(scope, true, false);
-        auto trueStatement = parseStatement(scope);
+        parseExpression(scope, true, false);
+        parseStatement(scope);
 
-        return std::make_unique<WhileStatement>(whileKeyword, std::move(condition), std::move(trueStatement));
+        append(NodeKind::WhileStatement, tokenIndexOf(whileKeyword), subtreeStart);
     }
 
-    StatementUPtr Parser::parseBreakStatement()
+    void Parser::parseBreakStatement()
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto keyword = advanceOnMatch(TokenKind::BreakKeyword);
 
         // parse trailing if statement like "break if condition;"
-        if(currentToken().kind == TokenKind::IfKeyword)
+        if (currentToken().kind == TokenKind::IfKeyword)
         {
             auto ifKeyword = advanceOnMatch(TokenKind::IfKeyword);
-            auto condition = parseExpression(StatementScope::Function, true, false);
-            auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-            auto breakStatement = std::make_unique<BreakStatement>(keyword, semicolon);
-            return std::make_unique<IfStatement>(ifKeyword, std::move(condition), std::move(breakStatement));
+            appendNode(NodeKind::BreakStatement, tokenIndexOf(keyword));
+            parseExpression(StatementScope::Function, true, false);
+            static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+            append(NodeKind::TrailingIfStatement, tokenIndexOf(ifKeyword), subtreeStart);
+            return;
         }
 
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-        return std::make_unique<BreakStatement>(keyword, semicolon);
+        static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+        appendNode(NodeKind::BreakStatement, tokenIndexOf(keyword));
     }
 
-    StatementUPtr Parser::parseSkipStatement()
+    void Parser::parseSkipStatement()
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto keyword = advanceOnMatch(TokenKind::SkipKeyword);
 
         // parse trailing if statement like "skip if condition;"
-        if(currentToken().kind == TokenKind::IfKeyword)
+        if (currentToken().kind == TokenKind::IfKeyword)
         {
             auto ifKeyword = advanceOnMatch(TokenKind::IfKeyword);
-            auto condition = parseExpression(StatementScope::Function, true, false);
-            auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-            auto skipStatement = std::make_unique<SkipStatement>(keyword, semicolon);
-
-            return std::make_unique<IfStatement>(ifKeyword, std::move(condition), std::move(skipStatement));
+            appendNode(NodeKind::SkipStatement, tokenIndexOf(keyword));
+            parseExpression(StatementScope::Function, true, false);
+            static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+            append(NodeKind::TrailingIfStatement, tokenIndexOf(ifKeyword), subtreeStart);
+            return;
         }
 
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-        return std::make_unique<SkipStatement>(keyword, semicolon);
+        static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+        appendNode(NodeKind::SkipStatement, tokenIndexOf(keyword));
     }
-    
-    StatementUPtr Parser::parseReturnStatement(StatementScope scope)
+
+    void Parser::parseReturnStatement(StatementScope scope)
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto returnKeyword = advanceOnMatch(TokenKind::ReturnKeyword);
-        std::optional<ExpressionUPtr> expression;
         if (currentToken().kind != TokenKind::Semicolon && currentToken().kind != TokenKind::IfKeyword)
         {
-            expression = parseExpression(scope);
+            parseExpression(scope);
         }
 
         // parse trailing if statement like "return expression if condition;"
         if (currentToken().kind == TokenKind::IfKeyword)
         {
             auto ifKeyword = advanceOnMatch(TokenKind::IfKeyword);
-            auto condition = parseExpression(scope, true, false);
-            auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-            auto returnStatement = std::make_unique<ReturnStatement>(returnKeyword, std::move(expression), semicolon);
-
-            return std::make_unique<IfStatement>(ifKeyword, std::move(condition), std::move(returnStatement));
+            append(NodeKind::ReturnStatement, tokenIndexOf(returnKeyword), subtreeStart);
+            parseExpression(scope, true, false);
+            static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+            append(NodeKind::TrailingIfStatement, tokenIndexOf(ifKeyword), subtreeStart);
+            return;
         }
 
-        auto semicolon = advanceOnMatch(TokenKind::Semicolon);
-        return std::make_unique<ReturnStatement>(returnKeyword, std::move(expression), semicolon);
+        static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
+        append(NodeKind::ReturnStatement, tokenIndexOf(returnKeyword), subtreeStart);
     }
 
-    ExpressionUPtr Parser::parseExpression(StatementScope scope, bool stopAtLineBreak, bool allowLineBreakBeforeDot)
+    void Parser::parseExpression(StatementScope scope, bool stopAtLineBreak, bool allowLineBreakBeforeDot)
     {
-        return parseBinaryExpression(0, scope, stopAtLineBreak, allowLineBreakBeforeDot);
+        parseBinaryExpression(0, scope, stopAtLineBreak, allowLineBreakBeforeDot);
     }
 
-    ExpressionUPtr Parser::parseBinaryExpression(i32 parentPrecedence, StatementScope scope, bool stopAtLineBreak, bool allowLineBreakBeforeDot)
+    void Parser::parseBinaryExpression(i32 parentPrecedence, StatementScope scope, bool stopAtLineBreak, bool allowLineBreakBeforeDot)
     {
-        ExpressionUPtr left{};
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto unaryOperatorToken = currentToken();
 
         auto unaryPrecedence = unaryOperatorPrecedence(unaryOperatorToken.kind);
         if (unaryPrecedence == 0 || unaryPrecedence < parentPrecedence)
         {
-            left = parsePostfixExpression(scope, allowLineBreakBeforeDot);
+            parsePostfixExpression(scope, allowLineBreakBeforeDot);
         }
         else
         {
             advanceCurrentIndex();
-            auto expression = parseBinaryExpression(unaryPrecedence, scope, stopAtLineBreak, allowLineBreakBeforeDot);
-            left = std::make_unique<UnaryExpression>(unaryOperatorToken, std::move(expression));
+            parseBinaryExpression(unaryPrecedence, scope, stopAtLineBreak, allowLineBreakBeforeDot);
+            append(NodeKind::UnaryExpression, tokenIndexOf(unaryOperatorToken), subtreeStart);
         }
 
         while (true)
@@ -828,11 +712,11 @@ namespace Caracal
             if (binaryOperatorToken.kind == TokenKind::EndOfFile)
                 break;
 
-            if (stopAtLineBreak && hasLeadingLineBreak(binaryOperatorToken))
-                break;
-
             auto binaryPrecedence = binaryOperatorPrecedence(binaryOperatorToken.kind);
             if (binaryPrecedence == 0 || binaryPrecedence <= parentPrecedence)
+                break;
+
+            if (stopAtLineBreak && hasLeadingLineBreak(binaryOperatorToken))
                 break;
 
             // TODO remove this once we got both wrapping and non-wrapping operators working
@@ -847,16 +731,75 @@ namespace Caracal
             }
 
             advanceCurrentIndex();
-            auto right = parseBinaryExpression(binaryPrecedence, scope, stopAtLineBreak, allowLineBreakBeforeDot);
-            left = std::make_unique<BinaryExpression>(std::move(left), binaryOperatorToken, std::move(right));
+            parseBinaryExpression(binaryPrecedence, scope, stopAtLineBreak, allowLineBreakBeforeDot);
+            append(NodeKind::BinaryExpression, tokenIndexOf(binaryOperatorToken), subtreeStart);
         }
-
-        return left;
     }
 
-    ExpressionUPtr Parser::parsePostfixExpression(StatementScope scope, bool allowLineBreakBeforeDot)
+    void Parser::parsePostfixExpression(StatementScope scope, bool allowLineBreakBeforeDot)
     {
-        auto left = parsePrimaryExpression(scope);
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+
+        // single token operands append directly instead of walking the primary
+        // expression call chain, anything else takes the full path
+        // this increased parsing performance
+        const auto current = currentToken();
+        switch (current.kind)
+        {
+            case TokenKind::Identifier:
+            case TokenKind::PrivateIdentifier:
+            case TokenKind::InitKeyword:
+            case TokenKind::NewKeyword:
+            {
+                if (nextToken().kind == TokenKind::OpenParenthesis)
+                {
+                    parsePrimaryExpression(scope);
+                }
+                else
+                {
+                    advanceCurrentIndex();
+                    appendNode(NodeKind::NameExpression, tokenIndexOf(current));
+                }
+                break;
+            }
+            case TokenKind::Number:
+            {
+                if (nextToken().kind == TokenKind::SingleQuote)
+                {
+                    parsePrimaryExpression(scope);
+                }
+                else
+                {
+                    advanceCurrentIndex();
+                    appendNode(NodeKind::NumberLiteral, tokenIndexOf(current));
+                }
+                break;
+            }
+            case TokenKind::TrueKeyword:
+            case TokenKind::FalseKeyword:
+            {
+                advanceCurrentIndex();
+                appendNode(NodeKind::BoolLiteral, tokenIndexOf(current));
+                break;
+            }
+            case TokenKind::String:
+            {
+                advanceCurrentIndex();
+                appendNode(NodeKind::StringLiteral, tokenIndexOf(current));
+                break;
+            }
+            case TokenKind::Underscore:
+            {
+                advanceCurrentIndex();
+                appendNode(NodeKind::DiscardLiteral, tokenIndexOf(current));
+                break;
+            }
+            default:
+            {
+                parsePrimaryExpression(scope);
+                break;
+            }
+        }
 
         while (currentToken().kind == TokenKind::Dot)
         {
@@ -865,14 +808,12 @@ namespace Caracal
                 break;
 
             advanceCurrentIndex();
-            auto right = parseFunctionCallOrNameExpression(scope);
-            left = std::make_unique<BinaryExpression>(std::move(left), dotToken, std::move(right));
+            parseFunctionCallOrNameExpression(scope);
+            append(NodeKind::BinaryExpression, tokenIndexOf(dotToken), subtreeStart);
         }
-
-        return left;
     }
 
-    ExpressionUPtr Parser::parsePrimaryExpression(StatementScope scope)
+    void Parser::parsePrimaryExpression(StatementScope scope)
     {
         auto current = currentToken();
         switch (current.kind)
@@ -880,43 +821,50 @@ namespace Caracal
             case TokenKind::Underscore:
             {
                 advanceCurrentIndex();
-                return std::make_unique<DiscardLiteral>(current);
+                appendNode(NodeKind::DiscardLiteral, tokenIndexOf(current));
+                return;
             }
             case TokenKind::Identifier:
+            case TokenKind::PrivateIdentifier:
+            case TokenKind::InitKeyword:
+            case TokenKind::NewKeyword:
             {
-                return parseFunctionCallOrNameExpression(scope);
+                parseFunctionCallOrNameExpression(scope);
+                return;
             }
             case TokenKind::TrueKeyword:
-            {
-                advanceCurrentIndex();
-                return std::make_unique<BoolLiteral>(current, true);
-            }
             case TokenKind::FalseKeyword:
             {
                 advanceCurrentIndex();
-                return std::make_unique<BoolLiteral>(current, false);
+                appendNode(NodeKind::BoolLiteral, tokenIndexOf(current));
+                return;
             }
             case TokenKind::Number:
             {
-                return parseNumberLiteral();
+                parseNumberLiteral();
+                return;
             }
             case TokenKind::String:
             {
-                return parseStringLiteral();
+                parseStringLiteral();
+                return;
             }
             case TokenKind::OpenBracket:
             {
-                return parseArrayLiteralExpression(scope);
+                parseArrayLiteralExpression(scope);
+                return;
             }
             case TokenKind::OpenParenthesis:
             {
-                return parseGroupingExpression(scope);
+                parseGroupingExpression(scope);
+                return;
             }
             case TokenKind::Dot:
             {
                 if (scope == StatementScope::Method)
                 {
-                    return parseMemberAccessExpression();
+                    parseMemberAccessExpression();
+                    return;
                 }
                 [[fallthrough]];
             }
@@ -930,44 +878,44 @@ namespace Caracal
                     advanceCurrentIndex();
                 }
 
-                return std::make_unique<ErrorExpression>(current);
+                appendNode(NodeKind::Error, tokenIndexOf(current));
+                return;
             }
         }
     }
 
     bool Parser::hasLeadingLineBreak(const Token& token) const noexcept
     {
-        const auto trivia = m_tokens.getTrivia(token);
-        return trivia.find('\n') != std::string_view::npos || trivia.find('\r') != std::string_view::npos;
+        return m_tokens.hasLineBreakInLeadingTrivia(token);
     }
-    
-    ExpressionUPtr Parser::parseGroupingExpression(StatementScope scope)
+
+    void Parser::parseGroupingExpression(StatementScope scope)
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto openParenthesis = advanceOnMatch(TokenKind::OpenParenthesis);
-        auto expression = parseExpression(scope);
-        auto closeParenthesis = advanceOnMatch(TokenKind::CloseParenthesis);
+        parseExpression(scope);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
 
-        return std::make_unique<GroupingExpression>(openParenthesis, std::move(expression), closeParenthesis);
+        append(NodeKind::GroupingExpression, tokenIndexOf(openParenthesis), subtreeStart);
     }
 
-    ExpressionUPtr Parser::parseArrayLiteralExpression(StatementScope scope)
+    void Parser::parseArrayLiteralExpression(StatementScope scope)
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto openBracket = advanceOnMatch(TokenKind::OpenBracket);
 
-        std::vector<ExpressionUPtr> elements;
-        std::optional<Token> ellipsisToken{};
         auto current = currentToken();
         while (current.kind != TokenKind::CloseBracket && current.kind != TokenKind::EndOfFile)
         {
             if (current.kind == TokenKind::Ellipsis)
             {
                 // a trailing ellipsis marks a dynamic array literal and must be the last entry
-                ellipsisToken = advanceOnMatch(TokenKind::Ellipsis);
+                static_cast<void>(advanceOnMatch(TokenKind::Ellipsis));
                 break;
             }
 
             const auto positionBeforeElement = m_currentIndex;
-            elements.push_back(parseExpression(scope));
+            parseExpression(scope);
 
             if (currentToken().kind == TokenKind::Comma)
             {
@@ -981,91 +929,84 @@ namespace Caracal
             current = currentToken();
         }
 
-        auto closeBracket = advanceOnMatch(TokenKind::CloseBracket);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseBracket));
 
-        return std::make_unique<ArrayLiteral>(openBracket, std::move(elements), ellipsisToken, closeBracket);
+        append(NodeKind::ArrayLiteral, tokenIndexOf(openBracket), subtreeStart);
     }
 
-    ExpressionUPtr Parser::parseMemberAccessExpression()
+    void Parser::parseMemberAccessExpression()
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto dotToken = advanceOnMatch(TokenKind::Dot);
-        auto expression = parseFunctionCallOrNameExpression(StatementScope::Method);
-     
-        return std::make_unique<MemberAccessExpression>(dotToken, std::move(expression));
+        parseFunctionCallOrNameExpression(StatementScope::Method);
+
+        append(NodeKind::MemberAccessExpression, tokenIndexOf(dotToken), subtreeStart);
     }
 
-    NameExpressionUPtr Parser::parseNameExpression()
+    void Parser::parseNameExpression()
     {
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        const auto name = m_tokens.getLexeme(nameToken);
-        return std::make_unique<NameExpression>(nameToken, name);
+        auto nameToken = advanceOnIdentifier();
+        appendNode(NodeKind::NameExpression, tokenIndexOf(nameToken));
     }
 
-    ExpressionUPtr Parser::parseFunctionCallOrNameExpression(StatementScope scope)
+    void Parser::parseFunctionCallOrNameExpression(StatementScope scope)
     {
         auto next = nextToken();
         if (next.kind == TokenKind::OpenParenthesis)
         {
-            return parseFunctionCallExpression(scope);
+            parseFunctionCallExpression(scope);
         }
         else
         {
-            return parseNameExpression();
+            parseNameExpression();
         }
     }
 
-    ExpressionUPtr Parser::parseFunctionCallExpression(StatementScope scope)
+    void Parser::parseFunctionCallExpression(StatementScope scope)
     {
-        auto nameExpression = parseNameExpression();
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        parseNameExpression();
 
         auto openParenthesis = advanceOnMatch(TokenKind::OpenParenthesis);
-        std::vector<Argument> arguments;
-        parseArgumentList(scope, arguments);
-        auto closeParenthesis = advanceOnMatch(TokenKind::CloseParenthesis);
+        parseArgumentList(scope);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
 
-        return std::make_unique<FunctionCallExpression>(std::move(nameExpression), openParenthesis, std::move(arguments), closeParenthesis);
+        append(NodeKind::FunctionCallExpression, tokenIndexOf(openParenthesis), subtreeStart);
     }
 
-    TypeNameNodeUPtr Parser::parseTypeNameNode()
+    void Parser::parseTypeNameNode()
     {
-        auto refToken = tryMatchKind(TokenKind::RefKeyword);
+        static_cast<void>(tryMatchKind(TokenKind::RefKeyword));
         if (currentToken().kind == TokenKind::OpenBracket)
         {
-            return parseArrayTypeNameNode(refToken);
+            parseArrayTypeNameNode();
+            return;
         }
 
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        auto name = m_tokens.getLexeme(nameToken);
-        return std::make_unique<TypeNameNode>(refToken, nameToken, name);
+        auto nameToken = advanceOnIdentifier();
+        appendNode(NodeKind::TypeNameNode, tokenIndexOf(nameToken));
     }
 
-    TypeNameNodeUPtr Parser::parseArrayTypeNameNode(const std::optional<Token>& refToken)
+    void Parser::parseArrayTypeNameNode()
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto openBracket = advanceOnMatch(TokenKind::OpenBracket);
-        auto elementType = parseTypeNameNode();
-
-        auto arrayKind = ArrayTypeKind::Slice;
-        std::optional<Token> semicolonToken{};
-        NumberLiteralUPtr lengthLiteral{};
-        std::optional<Token> underscoreToken{};
+        parseTypeNameNode();
 
         if (currentToken().kind == TokenKind::Semicolon)
         {
-            semicolonToken = advanceOnMatch(TokenKind::Semicolon);
+            static_cast<void>(advanceOnMatch(TokenKind::Semicolon));
             if (currentToken().kind == TokenKind::Number)
             {
-                arrayKind = ArrayTypeKind::Fixed;
-                lengthLiteral = parseNumberLiteral();
+                parseNumberLiteral();
             }
             else if (currentToken().kind == TokenKind::Underscore)
             {
-                arrayKind = ArrayTypeKind::Dynamic;
-                underscoreToken = advanceOnMatch(TokenKind::Underscore);
+                static_cast<void>(advanceOnMatch(TokenKind::Underscore));
             }
             else
             {
                 m_diagnostics.addExpectedArrayLengthError(m_tokens.source(), m_tokens.getSourceLocation(currentToken()));
-                arrayKind = ArrayTypeKind::Fixed;
                 if (currentToken().kind != TokenKind::CloseBracket && currentToken().kind != TokenKind::EndOfFile)
                 {
                     advanceCurrentIndex();
@@ -1073,45 +1014,56 @@ namespace Caracal
             }
         }
 
-        auto closeBracket = advanceOnMatch(TokenKind::CloseBracket);
-        return std::make_unique<ArrayTypeNameNode>(
-            refToken,
-            openBracket,
-            std::move(elementType),
-            arrayKind,
-            semicolonToken,
-            std::move(lengthLiteral),
-            underscoreToken,
-            closeBracket);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseBracket));
+        append(NodeKind::ArrayTypeNameNode, tokenIndexOf(openBracket), subtreeStart);
     }
 
-    MethodNameNodeUPtr Parser::parseMethodNameNode()
+    u32 Parser::parseMethodNameNode()
     {
-        auto firstNameToken = advanceOnMatch(TokenKind::Identifier);
-        auto firstName = m_tokens.getLexeme(firstNameToken);
+        auto firstNameToken = advanceOnIdentifier();
         auto dotToken = tryMatchKind(TokenKind::Dot);
         if (dotToken.has_value())
         {
-            auto secondNameToken = advanceOnMatch(TokenKind::Identifier);
-            auto secondName = m_tokens.getLexeme(secondNameToken);
-            return std::make_unique<MethodNameNode>(firstNameToken, firstName, dotToken.value(), secondNameToken, secondName);
+            auto secondNameToken = advanceOnIdentifier();
+            appendNode(NodeKind::MethodNameNode, tokenIndexOf(secondNameToken));
+            return m_nodeBuffer.nodeCount() - 1;
         }
 
-        return std::make_unique<MethodNameNode>(firstNameToken, firstName);
+        appendNode(NodeKind::MethodNameNode, tokenIndexOf(firstNameToken));
+        return m_nodeBuffer.nodeCount() - 1;
     }
 
-    ParametersNodeUPtr Parser::parseParametersNode(StatementScope scope)
+    void Parser::parseParametersNode(StatementScope scope)
     {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto openParenthesis = advanceOnMatch(TokenKind::OpenParenthesis);
 
-        std::vector<ParameterNodeUPtr> parameters;
         auto current = currentToken();
         while (current.kind != TokenKind::CloseParenthesis && current.kind != TokenKind::EndOfFile)
         {
             const auto positionBeforeParameter = m_currentIndex;
-            if (current.kind == TokenKind::Identifier || current.kind == TokenKind::Ellipsis)
+            if (isIdentifierKind(current.kind))
             {
-                parameters.push_back(parseParameterNode(scope));
+                const auto parameterStart = m_nodeBuffer.nodeCount();
+                auto nameToken = advanceOnIdentifier();
+                static_cast<void>(advanceOnMatch(TokenKind::Colon));
+                parseTypeNameNode();
+
+                if (currentToken().kind == TokenKind::Equal)
+                {
+                    static_cast<void>(advanceOnMatch(TokenKind::Equal));
+                    // parse with method scope so member access reaches the type checker, which rejects it
+                    parseExpression(StatementScope::Method);
+                }
+
+                append(NodeKind::ParameterNode, tokenIndexOf(nameToken), parameterStart);
+            }
+            else if (current.kind == TokenKind::Ellipsis)
+            {
+                const auto parameterStart = m_nodeBuffer.nodeCount();
+                auto ellipsis = advanceOnMatch(TokenKind::Ellipsis);
+                appendNode(NodeKind::TypeNameNode, tokenIndexOf(ellipsis));
+                append(NodeKind::ParameterNode, tokenIndexOf(ellipsis), parameterStart);
             }
 
             if (currentToken().kind == TokenKind::Comma)
@@ -1134,53 +1086,54 @@ namespace Caracal
             }
             current = currentToken();
         }
-        
-        auto closeParenthesis = advanceOnMatch(TokenKind::CloseParenthesis);
 
-        return std::make_unique<ParametersNode>(openParenthesis, std::move(parameters), closeParenthesis);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
+
+        append(NodeKind::ParametersNode, tokenIndexOf(openParenthesis), subtreeStart);
     }
 
-    ReturnTypesNodeUPtr Parser::parseReturnTypesNode()
+    void Parser::parseReturnTypesNode()
     {
-        std::vector<TypeNameNodeUPtr> returnTypes;
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
         auto current = currentToken();
         if (current.kind != TokenKind::OpenBrace)
         {
-            auto typeName = parseTypeNameNode();
-            returnTypes.push_back(std::move(typeName));
+            parseTypeNameNode();
 
             // TODO multiple return types
         }
 
-        return std::make_unique<ReturnTypesNode>(std::move(returnTypes));
+        append(NodeKind::ReturnTypesNode, InvalidTokenIndex, subtreeStart);
     }
 
-    void Parser::parseArgumentList(StatementScope scope, std::vector<Argument>& arguments)
+    void Parser::parseArgumentList(StatementScope scope)
     {
         auto seenNamed = false;
         auto reportedPositionalAfterNamed = false;
         auto current = currentToken();
         while (current.kind != TokenKind::CloseParenthesis && current.kind != TokenKind::EndOfFile)
         {
-            if (current.kind == TokenKind::Identifier && nextToken().kind == TokenKind::Equal)
+            if (isIdentifierKind(current.kind) && nextToken().kind == TokenKind::Equal)
             {
-                auto nameToken = advanceOnMatch(TokenKind::Identifier);
-                auto argumentName = m_tokens.getLexeme(nameToken);
-                advanceOnMatch(TokenKind::Equal);
-                auto value = parseExpression(scope);
-                arguments.emplace_back(nameToken, argumentName, std::move(value));
+                const auto subtreeStart = m_nodeBuffer.nodeCount();
+                auto nameToken = advanceOnIdentifier();
+                static_cast<void>(advanceOnMatch(TokenKind::Equal));
+                parseExpression(scope);
+                append(NodeKind::NamedArgument, tokenIndexOf(nameToken), subtreeStart);
                 seenNamed = true;
             }
             else
             {
-                auto value = parseExpression(scope);
+                const auto firstValueToken = m_currentIndex;
+                parseExpression(scope);
                 // positional arguments must be before named ones, flag the first error but keep parsing for recovery
                 if (seenNamed && !reportedPositionalAfterNamed)
                 {
-                    m_diagnostics.addPositionalArgumentAfterNamedError(m_tokens.source(), value->sourceLocation(m_tokens));
+                    m_diagnostics.addPositionalArgumentAfterNamedError(
+                        m_tokens.source(),
+                        tokenRangeLocation(firstValueToken, m_currentIndex - 1));
                     reportedPositionalAfterNamed = true;
                 }
-                arguments.emplace_back(std::move(value));
             }
 
             if (currentToken().kind == TokenKind::Comma)
@@ -1191,80 +1144,65 @@ namespace Caracal
         }
     }
 
-    void Parser::buildAnnotationNode(StatementScope scope)
+    void Parser::parseNumberLiteral()
     {
-        auto hashToken = advanceOnMatch(TokenKind::Hash);
-        auto nameToken = advanceOnMatch(TokenKind::Identifier);
-        auto name = m_tokens.getLexeme(nameToken);
-
-        std::optional<Token> openParenthesis;
-        std::optional<Token> closeParenthesis;
-        std::vector<Argument> arguments;
-        if (currentToken().kind == TokenKind::OpenParenthesis)
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        auto literal = advanceOnMatch(TokenKind::Number);
+        auto singleQuote = tryMatchKind(TokenKind::SingleQuote);
+        if (singleQuote.has_value())
         {
-            openParenthesis = advanceOnMatch(TokenKind::OpenParenthesis);
-            parseArgumentList(scope, arguments);
-            closeParenthesis = advanceOnMatch(TokenKind::CloseParenthesis);
+            parseTypeNameNode();
         }
 
-        m_currentAnnotations.push_back(std::make_unique<AnnotationNode>(
-            ParseAnnotationKind(name),
-            hashToken,
-            nameToken,
-            name,
-            std::move(openParenthesis),
-            std::move(arguments),
-            std::move(closeParenthesis)));
+        append(NodeKind::NumberLiteral, tokenIndexOf(literal), subtreeStart);
     }
 
-    std::vector<AnnotationNodeUPtr> Parser::takeCurrentAnnotations()
+    void Parser::parseStringLiteral()
     {
-        auto annotations = std::move(m_currentAnnotations);
-        m_currentAnnotations.clear();
-        return annotations;
+        auto literal = advanceOnMatch(TokenKind::String);
+        appendNode(NodeKind::StringLiteral, tokenIndexOf(literal));
+    }
+
+    void Parser::buildAnnotationNode(StatementScope scope)
+    {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        static_cast<void>(advanceOnMatch(TokenKind::Hash));
+        auto nameToken = advanceOnIdentifier();
+
+        if (currentToken().kind == TokenKind::OpenParenthesis)
+        {
+            static_cast<void>(advanceOnMatch(TokenKind::OpenParenthesis));
+            parseArgumentList(scope);
+            static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
+        }
+
+        append(NodeKind::AnnotationNode, tokenIndexOf(nameToken), subtreeStart);
+        m_pendingAnnotations.push_back(tokenIndexOf(nameToken));
     }
 
     void Parser::flushDanglingAnnotations()
     {
-        for (const auto& annotation : m_currentAnnotations)
+        for (const auto nameToken : m_pendingAnnotations)
         {
             m_diagnostics.addDanglingAnnotationError(
                 m_tokens.source(),
-                GetAnnotationLocation(annotation.get(), m_tokens));
+                annotationLocation(nameToken));
         }
-        m_currentAnnotations.clear();
+        m_pendingAnnotations.clear();
     }
 
-    Token Parser::advanceOnMatch(TokenKind kind)
+    Token Parser::reportExpectedToken(TokenKind kind, const Token& current)
     {
-        auto current = currentToken();
-        if (current.kind == kind)
-        {
-            advanceCurrentIndex();
-            return current;
-        }
-        else
-        {
-            const auto& location = m_tokens.getSourceLocation(current);
-            m_diagnostics.addExpectedTokenError(m_tokens.source(), location, kind, current.kind);
-            return Token::ToError(current);
-        }
+        const auto& location = m_tokens.getSourceLocation(current);
+        m_diagnostics.addExpectedTokenError(m_tokens.source(), location, kind, current.kind);
+        return Token::ToError(current);
     }
 
-    Token Parser::advanceOnMatch(TokenKind kind1, TokenKind kind2)
+    Token Parser::reportExpectedToken(TokenKind kind1, TokenKind kind2, const Token& current)
     {
-        auto current = currentToken();
-        if (current.kind == kind1 || current.kind == kind2)
-        {
-            advanceCurrentIndex();
-            return current;
-        }
-        else
-        {
-            const auto& location = m_tokens.getSourceLocation(current);
-            m_diagnostics.addExpectedTokenError(m_tokens.source(), location, kind1, kind2, current.kind);
-            return Token::ToError(current);
-        }
+        const auto& location = m_tokens.getSourceLocation(current);
+        m_diagnostics.addExpectedTokenError(m_tokens.source(), location, kind1, kind2, current.kind);
+        return Token::ToError(current);
     }
 
     std::optional<Token> Parser::tryMatchKind(TokenKind kind)
@@ -1321,22 +1259,7 @@ namespace Caracal
 
     Token Parser::peek(i32 offset)
     {
-        auto index = m_currentIndex + offset;
-        if (index >= m_tokens.size())
-            return Token{ .kind = TokenKind::EndOfFile };
-
-        return m_tokens.getToken(index);
+        // we dont need the bounds check, the buffer has extra padding
+        return m_tokens.getToken(m_currentIndex + offset);
     }
 }
-
-//
-//i32 Parser::lineDistanceSinceLastToken()
-//{
-//    auto lastToken = peek(-1);
-//    auto current = currentToken();
-//    auto& lastTokenLocation = m_tokens.getSourceLocation(lastToken);
-//    auto& currentTokenLocation = m_tokens.getSourceLocation(current);
-//
-//    //return currentTokenLocation.startLine - lastTokenLocation.endLine;
-//    return 0;
-//}

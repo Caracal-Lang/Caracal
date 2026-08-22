@@ -121,7 +121,7 @@ static std::vector<std::tuple<std::string>> IgnoresWhitespaces_Data()
     };
 }
 
-static void Identifiers(const std::string& input, const std::string_view& expectedLexeme)
+static void Identifiers(const std::string& input, const std::string_view& expectedLexeme, TokenKind expectedKind)
 {
     const auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -134,27 +134,31 @@ static void Identifiers(const std::string& input, const std::string_view& expect
     const auto endTime = std::chrono::high_resolution_clock::now();
     std::cout << "      lex(): " << CaraTest::stringify(endTime - startTime) << std::endl;
 
-    CaraTest::areEqual(TokenKind::Identifier, token.kind);
+    CaraTest::areEqual(expectedKind, token.kind);
+    CaraTest::isTrue(isIdentifierKind(token.kind));
     const auto lexeme = tokens.getLexeme(token);
     CaraTest::areEqual(expectedLexeme, lexeme);
 }
 
-static std::vector<std::tuple<std::string, std::string_view>> Identifiers_Data()
+static std::vector<std::tuple<std::string, std::string_view, TokenKind>> Identifiers_Data()
 {
     return {
-        std::make_tuple("x", "x"),
-        std::make_tuple("foo", "foo"),
-        std::make_tuple(" bar ", "bar"),
-        std::make_tuple("i32", "i32"),
-        std::make_tuple("use", "use"),
-        std::make_tuple("class", "class"),
-        std::make_tuple("define", "define"),
-        std::make_tuple(" _name", "_name"),
-        std::make_tuple("m_index", "m_index"),
-        std::make_tuple("_10", "_10"),
-        std::make_tuple("\n returned", "returned"),
-        std::make_tuple("enumeration", "enumeration"),
-        std::make_tuple("init", "init"),
+        std::make_tuple("x", "x", TokenKind::Identifier),
+        std::make_tuple("foo", "foo", TokenKind::Identifier),
+        std::make_tuple(" bar ", "bar", TokenKind::Identifier),
+        std::make_tuple("i32", "i32", TokenKind::Identifier),
+        std::make_tuple("use", "use", TokenKind::Identifier),
+        std::make_tuple("class", "class", TokenKind::Identifier),
+        std::make_tuple("define", "define", TokenKind::Identifier),
+        std::make_tuple(" _name", "_name", TokenKind::PrivateIdentifier),
+        std::make_tuple("m_index", "m_index", TokenKind::Identifier),
+        std::make_tuple("_10", "_10", TokenKind::PrivateIdentifier),
+        std::make_tuple("\n returned", "returned", TokenKind::Identifier),
+        std::make_tuple("enumeration", "enumeration", TokenKind::Identifier),
+        std::make_tuple("init", "init", TokenKind::InitKeyword),
+        std::make_tuple("new", "new", TokenKind::NewKeyword),
+        std::make_tuple("initial", "initial", TokenKind::Identifier),
+        std::make_tuple("news", "news", TokenKind::Identifier),
     };
 }
 

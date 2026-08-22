@@ -11,6 +11,7 @@ namespace Caracal
             { NodeKind::Error,                          std::string_view("Error") },
 
             { NodeKind::ConstantDeclaration,            std::string_view("ConstantDeclaration") },
+            { NodeKind::InitConstantDeclaration,        std::string_view("InitConstantDeclaration") },
             { NodeKind::VariableDeclaration,            std::string_view("VariableDeclaration") },
             { NodeKind::TypeFieldDeclaration,           std::string_view("TypeFieldDeclaration") },
             { NodeKind::EnumFieldDeclaration,           std::string_view("EnumFieldDeclaration") },
@@ -22,6 +23,7 @@ namespace Caracal
             { NodeKind::TypeDefinitionStatement,        std::string_view("TypeDefinitionStatement") },
             { NodeKind::MethodDefinitionStatement,      std::string_view("MethodDefinitionStatement") },
             { NodeKind::IfStatement,                    std::string_view("IfStatement") },
+            { NodeKind::TrailingIfStatement,            std::string_view("TrailingIfStatement") },
             { NodeKind::WhileStatement,                 std::string_view("WhileStatement") },
             { NodeKind::BreakStatement,                 std::string_view("BreakStatement") },
             { NodeKind::SkipStatement,                  std::string_view("SkipStatement") },
@@ -33,6 +35,7 @@ namespace Caracal
             { NodeKind::NameExpression,                 std::string_view("NameExpression") },
             { NodeKind::FunctionCallExpression,         std::string_view("FunctionCallExpression") },
             { NodeKind::MemberAccessExpression,         std::string_view("MemberAccessExpression") },
+            { NodeKind::NamedArgument,                  std::string_view("NamedArgument") },
 
             { NodeKind::DiscardLiteral,                 std::string_view("DiscardLiteral") },
             { NodeKind::BoolLiteral,                    std::string_view("BoolLiteral") },

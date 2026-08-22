@@ -9,8 +9,8 @@ namespace Caracal
         , m_fileId{ fileId }
         , m_firstTokenStart{ firstTokenStart }
     {
-        // one entry per source byte plus the EOF token
-        const auto capacity = source->text.size() + 1;
+        // extra padding so that we can avoid bounds check in peek()
+        const auto capacity = source->text.size() + 3;
         m_kinds = std::make_unique_for_overwrite<TokenKind[]>(capacity);
         m_locationStorage = std::make_unique_for_overwrite<u8[]>(capacity * sizeof(SourceLocation));
         m_sourceLocations = reinterpret_cast<SourceLocation*>(m_locationStorage.get());
@@ -44,11 +44,6 @@ namespace Caracal
         return m_source;
     }
 
-    u16 TokenBuffer::fileId() const noexcept
-    {
-        return m_fileId;
-    }
-
     Token TokenBuffer::getLastToken() const noexcept
     {
         return getToken(m_count - 1);
@@ -75,24 +70,6 @@ namespace Caracal
         }
 
         return m_sourceLocations[token.index];
-    }
-
-    std::string_view TokenBuffer::getTrivia(const Token& token) const noexcept
-    {
-        if (token.index < 0 || token.index >= m_count)
-            return {};
-
-        auto start = m_firstTokenStart;
-        if (token.index > 0)
-        {
-            start = m_sourceLocations[token.index - 1].endIndex;
-        }
-
-        const auto end = m_sourceLocations[token.index].startIndex;
-        if (end <= start)
-            return {};
-
-        return std::string_view(m_source->text).substr(start, end - start);
     }
 
 }
