@@ -12,6 +12,10 @@
         "strategy": "external",
         "value": "x64"
       },
+      "toolset": {
+        "strategy": "external",
+        "value": "host=x64,version=14.44"
+      },
       "binaryDir": "${sourceDir}/bin/${presetName}",
       "generator": "Ninja",
       "name": "basePreset",
