@@ -9,5 +9,5 @@
 
 namespace Caracal
 {
-    [[nodiscard]] CARACAL_API std::string prettyPrint(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module);
+    [[nodiscard]] CARACAL_API std::string prettyPrint(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module, u16 fileId = 0);
 }

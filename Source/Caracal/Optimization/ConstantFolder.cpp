@@ -428,7 +428,7 @@ namespace Caracal
                 auto folded = FoldResult{ FoldResultKind::NotFoldable, FoldValue{} };
                 if (definition->intrinsicKind() == IntrinsicKind::BitNot)
                 {
-                    folded = FoldBitNot(*firstValue);
+                    folded = foldBitNot(*firstValue);
                 }
                 else
                 {
@@ -447,27 +447,27 @@ namespace Caracal
                     {
                         case IntrinsicKind::BitAnd:
                         {
-                            folded = FoldBitAnd(*firstValue, *secondValue);
+                            folded = foldBitAnd(*firstValue, *secondValue);
                             break;
                         }
                         case IntrinsicKind::BitOr:
                         {
-                            folded = FoldBitOr(*firstValue, *secondValue);
+                            folded = foldBitOr(*firstValue, *secondValue);
                             break;
                         }
                         case IntrinsicKind::BitXor:
                         {
-                            folded = FoldBitXor(*firstValue, *secondValue);
+                            folded = foldBitXor(*firstValue, *secondValue);
                             break;
                         }
                         case IntrinsicKind::ShiftLeft:
                         {
-                            folded = FoldShiftLeft(*firstValue, *secondValue);
+                            folded = foldShiftLeft(*firstValue, *secondValue);
                             break;
                         }
                         case IntrinsicKind::ShiftRight:
                         {
-                            folded = FoldShiftRight(*firstValue, *secondValue);
+                            folded = foldShiftRight(*firstValue, *secondValue);
                             break;
                         }
                         default:
@@ -522,7 +522,7 @@ namespace Caracal
                             if (call->functionType() != Type::Undefined())
                             {
                                 const auto* definition = m_module.tryGetFunctionDefinition(call->functionType());
-                                if (definition != nullptr && IsBitwiseIntrinsicKind(definition->intrinsicKind()))
+                                if (definition != nullptr && isBitwiseIntrinsicKind(definition->intrinsicKind()))
                                 {
                                     return !expression->foldedValue().has_value();
                                 }
@@ -543,7 +543,7 @@ namespace Caracal
 
             [[nodiscard]] const FoldValue* tryGetFoldedOperand(const Expression* expression) const
             {
-                expression = StripGroupings(expression);
+                expression = stripGroupings(expression);
                 if (expression == nullptr)
                 {
                     return nullptr;

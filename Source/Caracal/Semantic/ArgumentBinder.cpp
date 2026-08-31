@@ -1,40 +1,52 @@
 #include <Caracal/Semantic/ArgumentBinder.h>
 
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
-#include <Caracal/Syntax/Expression.h>
-#include <Caracal/Syntax/FunctionCallExpression.h>
+#include <Caracal/Syntax/NodeLayout.h>
+#include <Caracal/Syntax/NodeSpans.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 
 namespace Caracal
 {
-    ArgumentBindingResult bindCallArguments(
+    ArgumentBinding bindCallArguments(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 callIndex,
+        std::span<const u32> argumentNodes,
         const std::vector<Parameter>& parameters,
         size_t parameterOffset,
         bool isVariadic,
-        const FunctionCallExpression& call,
         const std::string& functionName,
         DiagnosticsBag& diagnostics,
-        const TokenBuffer& tokens)
+        std::vector<u32>& orderedStack,
+        size_t orderedStart)
     {
-        ArgumentBindingResult binding;
+        ArgumentBinding binding;
+        const auto& buffer = unit.nodeBuffer;
 
         const auto totalParameters = parameters.size();
-        const auto fixedParameterCount = (isVariadic ? totalParameters - 1 : totalParameters) - parameterOffset;
-        const auto& callArguments = call.arguments();
+        auto boundParameters = totalParameters;
+        if (isVariadic)
+        {
+            boundParameters = totalParameters - 1;
+        }
+        const auto fixedParameterCount = boundParameters - parameterOffset;
 
-        binding.ordered.assign(fixedParameterCount, nullptr);
+        orderedStack.resize(orderedStart + fixedParameterCount, UnboundArgumentSlot);
+        const auto ordered = orderedStack.begin() + orderedStart;
 
         size_t positionalSlot = 0;
         auto tooManyPositional = false;
-        for (const auto& argument : callArguments)
+        for (const auto argumentNode : argumentNodes)
         {
-            const auto* value = argument.value().get();
-            if (argument.isNamed())
+            const auto argumentValue = NodeLayout::argumentValue(buffer, argumentNode);
+            if (NodeLayout::isNamedArgument(buffer, argumentNode))
             {
+                const auto nameTokenIndex = buffer.mainToken(argumentNode);
+                const auto argumentName = context.getLexeme(unit.fileId, nameTokenIndex);
                 size_t parameterIndex = fixedParameterCount;
                 for (size_t p = 0; p < fixedParameterCount; ++p)
                 {
-                    if (parameters[parameterOffset + p].name() == argument.name())
+                    if (parameters[parameterOffset + p].name() == argumentName)
                     {
                         parameterIndex = p;
                         break;
@@ -44,27 +56,27 @@ namespace Caracal
                 if (parameterIndex == fixedParameterCount)
                 {
                     binding.ok = false;
-                    diagnostics.addUnknownArgumentNameError(tokens.source(), tokens.getSourceLocation(argument.nameToken().value()), functionName, argument.name());
+                    diagnostics.addUnknownArgumentNameError(unit.source, context.sourceLocation(unit.fileId, nameTokenIndex), functionName, std::string(argumentName));
                     continue;
                 }
 
-                if (binding.ordered[parameterIndex] != nullptr)
+                if (ordered[parameterIndex] != UnboundArgumentSlot)
                 {
                     binding.ok = false;
-                    diagnostics.addDuplicateArgumentBindingError(tokens.source(), tokens.getSourceLocation(argument.nameToken().value()), functionName, argument.name());
+                    diagnostics.addDuplicateArgumentBindingError(unit.source, context.sourceLocation(unit.fileId, nameTokenIndex), functionName, std::string(argumentName));
                     continue;
                 }
 
-                binding.ordered[parameterIndex] = value;
+                ordered[parameterIndex] = argumentValue;
             }
             else if (positionalSlot < fixedParameterCount)
             {
-                binding.ordered[positionalSlot] = value;
+                ordered[positionalSlot] = argumentValue;
                 ++positionalSlot;
             }
             else if (isVariadic)
             {
-                binding.variadic.push_back(value);
+                binding.variadic.push_back(argumentValue);
             }
             else
             {
@@ -76,7 +88,7 @@ namespace Caracal
         // set default values or report missing arguments
         for (size_t i = 0; i < fixedParameterCount; ++i)
         {
-            if (binding.ordered[i] != nullptr)
+            if (ordered[i] != UnboundArgumentSlot)
             {
                 continue;
             }
@@ -84,13 +96,13 @@ namespace Caracal
             const auto& parameter = parameters[parameterOffset + i];
             if (parameter.hasDefault())
             {
-                binding.ordered[i] = parameter.defaultValue();
+                ordered[i] = DefaultBoundArgumentSlot;
                 continue;
             }
 
             if (binding.ok)
             {
-                diagnostics.addMissingRequiredArgumentError(tokens.source(), call.argumentsLocation(tokens), functionName, parameter.name());
+                diagnostics.addMissingRequiredArgumentError(unit.source, NodeSpans::callArgumentsLocation(buffer, context.tokenBuffer(unit.fileId), callIndex, argumentNodes), functionName, parameter.name());
             }
             binding.ok = false;
         }
@@ -99,11 +111,11 @@ namespace Caracal
         {
             binding.ok = false;
             diagnostics.addArgumentCountMismatchError(
-                tokens.source(),
-                call.argumentsLocation(tokens),
+                unit.source,
+                NodeSpans::callArgumentsLocation(buffer, context.tokenBuffer(unit.fileId), callIndex, argumentNodes),
                 functionName,
                 static_cast<i32>(fixedParameterCount),
-                static_cast<i32>(callArguments.size()),
+                static_cast<i32>(argumentNodes.size()),
                 isVariadic);
         }
 

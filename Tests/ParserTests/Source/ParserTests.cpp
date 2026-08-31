@@ -6,6 +6,7 @@
 #include <Caracal/Debug/ParseTreePrinter.h>
 #include <Caracal/Debug/ParseTreePrinterOld.h>
 #include <Caracal/Syntax/NodeBuffer.h>
+#include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Text/SourceEncoding.h>
 #include <Caracal/Text/File.h>
 #include <algorithm>
@@ -131,6 +132,13 @@ static void FileTestsFlat(
 
     CaraTest::isTrue(flatBuffer.nodeCount() >= 1);
 
+    std::string layoutFailure;
+    if (!Caracal::verifyNodeLayout(flatBuffer, layoutFailure))
+    {
+        std::cout << "      node layout violation in " << inputFilePath.string() << ": " << layoutFailure << std::endl;
+        CaraTest::fail();
+    }
+
     // the new printer must produce the same output as the old printer
     if (treeDiagnostics.diagnostics().empty())
     {
@@ -207,6 +215,9 @@ static void CapacityBoundHoldsOnDegenerateInputs()
         const auto tokens = Caracal::lex(source, diagnostics);
         const auto nodeBuffer = Caracal::parse(tokens, diagnostics);
         CaraTest::isTrue(nodeBuffer.nodeCount() <= nodeBuffer.capacity());
+
+        std::string layoutFailure;
+        CaraTest::isTrue(Caracal::verifyNodeLayout(nodeBuffer, layoutFailure));
     }
 }
 

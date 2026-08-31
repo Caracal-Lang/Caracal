@@ -1,6 +1,7 @@
-﻿#pragma once
+#pragma once
 
 #include <Caracal/Syntax/Statement.h>
+#include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Semantic/Type.h>
 #include <Caracal/Semantic/Parameter.h>
 #include <optional>
@@ -38,7 +39,7 @@ namespace Caracal
         ShiftRight,
     };
 
-    [[nodiscard]] CARACAL_API bool IsBitwiseIntrinsicKind(IntrinsicKind kind) noexcept;
+    [[nodiscard]] CARACAL_API bool isBitwiseIntrinsicKind(IntrinsicKind kind) noexcept;
 
     class FunctionDefinition
     {
@@ -48,11 +49,11 @@ namespace Caracal
             Type type,
             Type parentType,
             FunctionType functionType,
-            const std::string& name,
-            const std::string& fullName,
+            std::string name,
+            std::string fullName,
             bool isVariadic,
-            const std::vector<Parameter>& parameters = std::vector<Parameter>(),
-            const std::vector<Type>& returnTypes = std::vector<Type>());
+            std::vector<Parameter> parameters = std::vector<Parameter>(),
+            std::vector<Type> returnTypes = std::vector<Type>());
 
         [[nodiscard]] Type type() const noexcept { return m_type; }
         [[nodiscard]] Type parentType() const noexcept { return m_parentType; }
@@ -66,10 +67,12 @@ namespace Caracal
         [[nodiscard]] const std::vector<Parameter>& parameters() const noexcept { return m_parameters; }
         [[nodiscard]] const std::vector<Type>& returnTypes() const noexcept { return m_returnTypes; }
         [[nodiscard]] const Statement* statement() const noexcept { return m_statement; }
+        [[nodiscard]] NodeIndex definitionNode() const noexcept { return m_definitionNode; }
+        void setDefinitionNode(NodeIndex definitionNode) noexcept { m_definitionNode = definitionNode; }
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
 
-        void setParameters(const std::vector<Parameter>& parameters) noexcept;
-        void setReturnTypes(const std::vector<Type>& returnTypes) noexcept;
+        void setParameters(std::vector<Parameter> parameters) noexcept;
+        void setReturnTypes(std::vector<Type> returnTypes) noexcept;
         void setIsVariadic(bool isVariadic) noexcept;
         void setSymbolName(std::optional<std::string> symbolName) noexcept { m_symbolName = std::move(symbolName); }
 
@@ -85,5 +88,6 @@ namespace Caracal
         std::vector<Parameter> m_parameters;
         std::vector<Type> m_returnTypes;
         const Statement* m_statement;
+        NodeIndex m_definitionNode{};
     };
 }

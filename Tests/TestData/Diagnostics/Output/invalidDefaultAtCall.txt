@@ -1,0 +1,20 @@
+ Error T0051 Default parameter type mismatch
+    ,-[Diagnostics/Input/invalidDefaultAtCall.cara:1:37]
+  1 | def addWithDefault(x: i32, y: i32 = "no") i32 {
+    .                                     ----
+    .                                       `-- Default value of type 'string' does not match parameter type 'i32'.
+  2 |     return x %+ y;
+  3 | }
+  4 | 
+    `----
+  Fix: Change the default value to match the parameter type.
+ Error T0016 Argument type mismatch
+    ,-[Diagnostics/Input/invalidDefaultAtCall.cara:1:37]
+  1 | def addWithDefault(x: i32, y: i32 = "no") i32 {
+    .                                     ----
+    .                                       `-- Argument 2 of 'addWithDefault' expects 'i32', but got 'string'
+  2 |     return x %+ y;
+  3 | }
+  4 | 
+    `----
+  Fix: Change the mismatched argument to match the parameter type.

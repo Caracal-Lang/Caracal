@@ -1,0 +1,24 @@
+type Inner
+{
+    def combine(value: i32) i32
+    {
+        return value;
+    }
+}
+
+type Outer(seed: i32)
+{
+    inner := Inner.new()
+    seed := seed
+
+    def mix() i32
+    {
+        return .inner.combine(seed);
+    }
+}
+
+def main() i32
+{
+    outer := Outer.new(3);
+    return outer.mix();
+}

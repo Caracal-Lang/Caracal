@@ -134,15 +134,8 @@ namespace Caracal
 
     Type SemanticContext::tryGetFunctionTypeByName(std::string_view typeName) const noexcept
     {
-        for (const auto& functionDefinition : m_functionDefinitions)
-        {
-            // TODO add method definitions to a different list
-            if (functionDefinition.functionType() != FunctionType::FreeFunction)
-                continue;
-
-            if (functionDefinition.name() == typeName)
-                return functionDefinition.type();
-        }
+        if (const auto result = m_functionNameToType.find(typeName); result != m_functionNameToType.end())
+            return result->second;
 
         return Type::Undefined();
     }
@@ -224,7 +217,7 @@ namespace Caracal
 
     Type SemanticContext::tryGetTypeByName(std::string_view name) const noexcept
     {
-        if (const auto result = m_nameToTypes.find(std::string(name)); result != m_nameToTypes.end())
+        if (const auto result = m_nameToTypes.find(name); result != m_nameToTypes.end())
             return result->second;
 
         return Type::Undefined();
@@ -565,8 +558,8 @@ namespace Caracal
 
     FunctionDefinition& SemanticContext::createFunction(
         std::string_view name,
-        const std::vector<Parameter>& parameters,
-        const std::vector<Type>& returnTypes,
+        std::vector<Parameter> parameters,
+        std::vector<Type> returnTypes,
         const FunctionDefinitionStatement* functionStatement) noexcept
     {
         auto functionName = std::string(name);
@@ -574,8 +567,9 @@ namespace Caracal
         auto functionType = Type{ functionId, TypeKind::Function };
         auto isVariadic = !parameters.empty() && parameters.back().type() == Type::CVariadic();
         const Statement* statement = static_cast<const Statement*>(functionStatement);
-        m_functionDefinitions.emplace_back(statement, functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, parameters, returnTypes);
+        m_functionDefinitions.emplace_back(statement, functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(functionId, m_functionDefinitions.size() - 1);
+        m_functionNameToType.try_emplace(std::move(functionName), functionType);
 
         return m_functionDefinitions.back();
     }
@@ -584,8 +578,8 @@ namespace Caracal
         TypeDefinition& typeDefinition,
         MethodModifier modifier,
         const std::string& methodName,
-        const std::vector<Parameter>& parameters,
-        const std::vector<Type>& returnTypes,
+        std::vector<Parameter> parameters,
+        std::vector<Type> returnTypes,
         const MethodDefinitionStatement* methodStatement) noexcept
     {
         auto parentType = typeDefinition.type();
@@ -594,7 +588,7 @@ namespace Caracal
         auto methodType = Type{ methodId, TypeKind::Method };
         auto functionType = ToFunctionType(modifier);
         const Statement* statement = static_cast<const Statement*>(methodStatement);
-        m_functionDefinitions.emplace_back(statement, methodType, parentType, functionType, methodName, fullMethodName, false, parameters, returnTypes);
+        m_functionDefinitions.emplace_back(statement, methodType, parentType, functionType, methodName, std::move(fullMethodName), false, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(methodId, m_functionDefinitions.size() - 1);
         typeDefinition.addMethod(methodType, methodName);
 
@@ -603,14 +597,14 @@ namespace Caracal
 
     FunctionDefinition& SemanticContext::createConstructor(
         TypeDefinition& typeDefinition,
-        const std::vector<Parameter>& parameters) noexcept
+        std::vector<Parameter> parameters) noexcept
     {
         auto parentType = typeDefinition.type();
         auto constructorName = std::string("new");
         auto fullConstructorName = typeDefinition.name() + "." + constructorName;
         auto constructorId = m_nextId += VariantCount;
         auto methodType = Type{ constructorId, TypeKind::Constructor };
-        m_functionDefinitions.emplace_back(nullptr, methodType, parentType, FunctionType::SynthesizedConstructor, constructorName, fullConstructorName, false, parameters, std::vector<Type>{ Type::Void() });
+        m_functionDefinitions.emplace_back(nullptr, methodType, parentType, FunctionType::SynthesizedConstructor, constructorName, std::move(fullConstructorName), false, std::move(parameters), std::vector<Type>{ Type::Void() });
         m_functionDefinitionIndexById.try_emplace(constructorId, m_functionDefinitions.size() - 1);
         typeDefinition.addMethod(methodType, constructorName);
 
@@ -619,7 +613,7 @@ namespace Caracal
 
     const ConstantDefinition* SemanticContext::tryGetConstantDefinition(std::string_view name) const noexcept
     {
-        if (const auto result = m_constantDefinitionIndexByName.find(std::string(name)); result != m_constantDefinitionIndexByName.end())
+        if (const auto result = m_constantDefinitionIndexByName.find(name); result != m_constantDefinitionIndexByName.end())
             return &m_constantDefinitions.at(result->second);
 
         return nullptr;
@@ -631,6 +625,18 @@ namespace Caracal
     {
         auto constantName = std::string(name);
         m_constantDefinitions.emplace_back(constantName, expression);
+        m_constantDefinitionIndexByName.try_emplace(constantName, m_constantDefinitions.size() - 1);
+
+        return m_constantDefinitions.back();
+    }
+
+    ConstantDefinition& SemanticContext::createConstant(
+        std::string_view name,
+        Type type,
+        NodeIndex initializer) noexcept
+    {
+        auto constantName = std::string(name);
+        m_constantDefinitions.emplace_back(constantName, type, initializer);
         m_constantDefinitionIndexByName.try_emplace(constantName, m_constantDefinitions.size() - 1);
 
         return m_constantDefinitions.back();
@@ -669,5 +675,34 @@ namespace Caracal
         {
             m_nextId += VariantCount;
         }
+    }
+    
+    UnitSemantics& SemanticContext::createUnitSemantics(u16 fileId, u32 nodeCount) noexcept
+    {
+        auto& semantics = m_unitSemanticsByFileId[fileId];
+        semantics.nodeTypes.assign(nodeCount, Type::Undefined());
+        return semantics;
+    }
+
+    Type SemanticContext::typeOfNode(NodeIndex reference) const noexcept
+    {
+        const auto found = m_unitSemanticsByFileId.find(reference.fileId);
+        if (found == m_unitSemanticsByFileId.end() || reference.index >= found->second.nodeTypes.size())
+        {
+            return Type::Undefined();
+        }
+
+        return found->second.nodeTypes[reference.index];
+    }
+
+    void SemanticContext::setNodeType(NodeIndex reference, Type type) noexcept
+    {
+        const auto found = m_unitSemanticsByFileId.find(reference.fileId);
+        if (found == m_unitSemanticsByFileId.end() || reference.index >= found->second.nodeTypes.size())
+        {
+            return;
+        }
+
+        found->second.nodeTypes[reference.index] = type;
     }
 }

@@ -9,13 +9,16 @@
 #include <Caracal/Semantic/ConstantDefinition.h>
 #include <Caracal/Semantic/EnumDefinition.h>
 #include <Caracal/Semantic/TypeDefinition.h>
+#include <Caracal/Semantic/UnitSemantics.h>
 #include <Caracal/Semantic/FunctionDefinition.h>
 #include <Caracal/Syntax/EnumDefinitionStatement.h>
 #include <Caracal/Syntax/TypeDefinitionStatement.h>
 #include <Caracal/Syntax/FunctionDefinitionStatement.h>
 #include <Caracal/Syntax/MethodDefinitionStatement.h>
+#include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Syntax/ParseTree.h>
 #include <Caracal/Semantic/Parameter.h>
+#include <Caracal/Text/TransparentStringHash.h>
 #include <filesystem>
 #include <string>
 #include <string_view>
@@ -60,23 +63,27 @@ namespace Caracal
             const TypeDefinitionStatement* statement) noexcept;
         [[nodiscard]] FunctionDefinition& createFunction(
             std::string_view name,
-            const std::vector<Parameter>& parameters,
-            const std::vector<Type>& returnTypes,
+            std::vector<Parameter> parameters,
+            std::vector<Type> returnTypes,
             const FunctionDefinitionStatement* statement) noexcept;
         [[nodiscard]] FunctionDefinition& createMethod(
             TypeDefinition& typeDefinition,
             MethodModifier modifier,
             const std::string& methodName,
-            const std::vector<Parameter>& parameters,
-            const std::vector<Type>& returnTypes,
+            std::vector<Parameter> parameters,
+            std::vector<Type> returnTypes,
             const MethodDefinitionStatement* statement) noexcept;
         [[nodiscard]] FunctionDefinition& createConstructor(
             TypeDefinition& typeDefinition,
-            const std::vector<Parameter>& parameters) noexcept;
+            std::vector<Parameter> parameters) noexcept;
         [[nodiscard]] const ConstantDefinition* tryGetConstantDefinition(std::string_view name) const noexcept;
         [[nodiscard]] ConstantDefinition& createConstant(
             std::string_view name,
             Expression* expression) noexcept;
+        [[nodiscard]] ConstantDefinition& createConstant(
+            std::string_view name,
+            Type type,
+            NodeIndex initializer) noexcept;
         [[nodiscard]] ConstantDefinition& createInitConstant(
             std::string_view name,
             Type type) noexcept;
@@ -102,6 +109,9 @@ namespace Caracal
         [[nodiscard]] size_t preludeTypeDefinitionCount() const noexcept { return m_preludeTypeDefinitionCount; }
         void markExternRequired(Type functionType) noexcept;
         [[nodiscard]] Type tryGetExternFunctionByFullName(std::string_view fullName) const noexcept;
+        UnitSemantics& createUnitSemantics(u16 fileId, u32 nodeCount) noexcept;
+        [[nodiscard]] Type typeOfNode(NodeIndex reference) const noexcept;
+        void setNodeType(NodeIndex reference, Type type) noexcept;
 
     private:
         struct ArrayTypeInfo
@@ -123,13 +133,15 @@ namespace Caracal
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;
         std::unordered_map<i32, size_t> m_functionDefinitionIndexById;
-        std::unordered_map<std::string, size_t> m_constantDefinitionIndexByName;
+        std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_functionNameToType;
+        std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<>> m_constantDefinitionIndexByName;
         std::unordered_map<i32, std::string> m_typeNames;
-        std::unordered_map<std::string, Type> m_nameToTypes;
+        std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_nameToTypes;
         std::unordered_map<i32, ArrayTypeInfo> m_arrayTypeInfoById;
         std::vector<Type> m_arrayTypes;
         std::unordered_map<std::string, Type> m_arrayIntrinsicsByFullName;
         std::unordered_map<i32, BuiltinTypeDescription> m_builtinTypeDescriptionsById;
+        std::unordered_map<u16, UnitSemantics> m_unitSemanticsByFileId;
         WellKnownTypes m_wellKnownTypes;
         i32 m_nextId = 0;
     };

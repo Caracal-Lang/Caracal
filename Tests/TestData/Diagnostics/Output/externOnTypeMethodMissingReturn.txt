@@ -1,0 +1,22 @@
+ Error T0002 Unexpected annotation target
+    ,-[Diagnostics/Input/externOnTypeMethodMissingReturn.cara:1:1]
+  1 | #extern
+    . -------
+    .    `-- This annotation is not supported on this declaration.
+  2 | type Box {
+  3 |     def get() i32 {
+  4 |     }
+    `----
+  Fix: Remove the annotation or move it to a supported declaration kind.
+ Error T0060 Not all paths return a value
+    ,-[Diagnostics/Input/externOnTypeMethodMissingReturn.cara:3:9]
+  1 | #extern
+  2 | type Box {
+  3 |     def get() i32 {
+    .         ---
+    .          `-- 'get' does not return a value on all paths.
+  4 |     }
+  5 | }
+  6 | 
+    `----
+  Fix: Add a 'return' so every path returns a 'i32'.

@@ -1,0 +1,7 @@
+def addWithDefault(x: i32, y: i32 = "no") i32 {
+    return x %+ y;
+}
+
+def main() i32 {
+    return addWithDefault(1);
+}

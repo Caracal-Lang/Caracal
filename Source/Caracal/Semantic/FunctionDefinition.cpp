@@ -7,31 +7,31 @@ namespace Caracal
         Type type,
         Type parentType,
         FunctionType functionType,
-        const std::string& name,
-        const std::string& fullName,
+        std::string name,
+        std::string fullName,
         bool isVariadic,
-        const std::vector<Parameter>& parameters,
-        const std::vector<Type>& returnTypes)
+        std::vector<Parameter> parameters,
+        std::vector<Type> returnTypes)
         : m_type{ type }
         , m_parentType{ parentType }
         , m_functionType{ functionType }
-        , m_name{ name }
-        , m_fullName{ fullName }
+        , m_name{ std::move(name) }
+        , m_fullName{ std::move(fullName) }
         , m_isVariadic{ isVariadic }
-        , m_parameters{ parameters }
-        , m_returnTypes{ returnTypes }
+        , m_parameters{ std::move(parameters) }
+        , m_returnTypes{ std::move(returnTypes) }
         , m_statement{ statement }
     {
     }
 
-    void FunctionDefinition::setParameters(const std::vector<Parameter>& parameters) noexcept
+    void FunctionDefinition::setParameters(std::vector<Parameter> parameters) noexcept
     {
-        m_parameters = parameters;
+        m_parameters = std::move(parameters);
     }
 
-    void FunctionDefinition::setReturnTypes(const std::vector<Type>& returnTypes) noexcept
+    void FunctionDefinition::setReturnTypes(std::vector<Type> returnTypes) noexcept
     {
-        m_returnTypes = returnTypes;
+        m_returnTypes = std::move(returnTypes);
     }
     
     void FunctionDefinition::setIsVariadic(bool isVariadic) noexcept
@@ -39,7 +39,7 @@ namespace Caracal
         m_isVariadic = isVariadic;
     }
 
-    bool IsBitwiseIntrinsicKind(IntrinsicKind kind) noexcept
+    bool isBitwiseIntrinsicKind(IntrinsicKind kind) noexcept
     {
         return kind == IntrinsicKind::BitAnd
             || kind == IntrinsicKind::BitOr

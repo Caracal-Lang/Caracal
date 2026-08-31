@@ -2,7 +2,7 @@
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Optimization/ConstantFolder.h>
 #include <Caracal/Profiling.h>
-#include <Caracal/Semantic/TypeChecker.h>
+#include <Caracal/Semantic/TypeCheckerOld.h>
 #include <Caracal/Syntax/Parser.h>
 #include <Caracal/Syntax/ParserOld.h>
 #include <Caracal/Text/File.h>
@@ -142,7 +142,7 @@ namespace Caracal
     bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass) noexcept
     {
         CARACAL_ZONE_NAMED("typeCheck");
-        TypeChecker typeChecker{ compilationContext, isPreludePass, diagnostics };
+        TypeCheckerOld typeChecker{ compilationContext, isPreludePass, diagnostics };
         return typeChecker.typeCheck();
     }
 

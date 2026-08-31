@@ -8,19 +8,12 @@
 #include <Caracal/Syntax/ReturnTypesNode.h>
 #include <Caracal/Syntax/BlockNode.h>
 #include <Caracal/Syntax/AnnotationNode.h>
+#include <Caracal/Syntax/MethodModifier.h>
 
 #include <vector>
 
 namespace Caracal
 {
-    enum class MethodModifier
-    {
-        None,
-        Public,
-        Private,
-        Static
-    };
-
     enum class SpecialFunctionType
     {
         None,

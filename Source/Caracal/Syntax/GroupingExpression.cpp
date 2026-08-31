@@ -20,7 +20,7 @@ namespace Caracal
         return SourceLocation{ openLocation.startIndex, closeLocation.endIndex };
     }
 
-    const Expression* StripGroupings(const Expression* expression) noexcept
+    const Expression* stripGroupings(const Expression* expression) noexcept
     {
         while (expression != nullptr && expression->kind() == NodeKind::GroupingExpression)
         {

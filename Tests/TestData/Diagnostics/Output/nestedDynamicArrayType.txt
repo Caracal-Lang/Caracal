@@ -1,0 +1,11 @@
+ Error T0023 Explicit variable type mismatch
+    ,-[Diagnostics/Input/nestedDynamicArrayType.cara:2:28]
+  1 | def main() i32 {
+  2 |     grid : [[i32; 2]; _] = 0;
+    .                            -
+    .                            `-- Variable is declared as '[[i32; 2]; _]', but its initializer has type 'i32'
+  3 |     return 0;
+  4 | }
+  5 | 
+    `----
+  Fix: Initialize this variable with a value of type '[[i32; 2]; _]' or change its explicit type.

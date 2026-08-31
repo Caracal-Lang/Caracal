@@ -3,6 +3,7 @@
 #include <Caracal/API.h>
 #include <Caracal/Defines.h>
 #include <Caracal/Syntax/ArrayTypeKind.h>
+#include <Caracal/Syntax/MethodModifier.h>
 #include <Caracal/Syntax/NodeKind.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 
@@ -41,6 +42,10 @@ namespace Caracal
         [[nodiscard]] bool isDynamicArrayLiteral(const TokenBuffer& tokens, u32 index) const noexcept;
         [[nodiscard]] bool isConstantTypeField(const TokenBuffer& tokens, u32 index) const noexcept;
         [[nodiscard]] bool methodHasTypeName(const TokenBuffer& tokens, u32 index) const noexcept;
+        [[nodiscard]] u32 methodTypeNameToken(const TokenBuffer& tokens, u32 methodNameIndex) const noexcept;
+        [[nodiscard]] bool methodNameIsNew(const TokenBuffer& tokens, u32 methodNameIndex) const noexcept;
+        [[nodiscard]] MethodModifier methodModifier(const TokenBuffer& tokens, u32 methodNameIndex) const noexcept;
+        [[nodiscard]] bool isMemberAccessBinary(const TokenBuffer& tokens, u32 index) const noexcept;
         [[nodiscard]] bool annotationHasParentheses(const TokenBuffer& tokens, u32 index) const noexcept;
 
     private:

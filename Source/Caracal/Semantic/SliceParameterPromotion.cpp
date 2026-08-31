@@ -1,40 +1,44 @@
-#include "SliceParameterPromotion.h"
+#include <Caracal/Semantic/SliceParameterPromotion.h>
 
+#include <Caracal/CompilationContext.h>
 #include <Caracal/Constants.h>
-#include <Caracal/Syntax/ArrayLiteral.h>
-#include <Caracal/Syntax/AssignmentStatement.h>
-#include <Caracal/Syntax/BinaryExpression.h>
-#include <Caracal/Syntax/BlockNode.h>
-#include <Caracal/Syntax/ConstantDeclaration.h>
-#include <Caracal/Syntax/ExpressionStatement.h>
-#include <Caracal/Syntax/FunctionCallExpression.h>
-#include <Caracal/Syntax/GroupingExpression.h>
-#include <Caracal/Syntax/IfStatement.h>
-#include <Caracal/Syntax/MemberAccessExpression.h>
-#include <Caracal/Syntax/MethodDefinitionStatement.h>
-#include <Caracal/Syntax/NameExpression.h>
-#include <Caracal/Syntax/ReturnStatement.h>
-#include <Caracal/Syntax/UnaryExpression.h>
-#include <Caracal/Syntax/VariableDeclaration.h>
-#include <Caracal/Syntax/WhileStatement.h>
+#include <Caracal/Semantic/Parameter.h>
+#include <Caracal/Semantic/SemanticContext.h>
+#include <Caracal/Syntax/NodeIndex.h>
+#include <Caracal/Syntax/NodeLayout.h>
 
+#include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace Caracal
 {
-    struct SliceParameterUsage
+    struct SlicePromotionUsage
     {
         bool promotable = true;
         std::vector<std::pair<Type, size_t>> forwards;
     };
 
-    static u64 MakeSliceParameterKey(Type functionType, size_t parameterIndex)
+    struct SlicePromotionCandidate
+    {
+        Type functionType;
+        size_t parameterIndex;
+        bool promotable;
+        std::vector<std::pair<Type, size_t>> forwards;
+    };
+
+    [[nodiscard]] static u32 CallNameExpressionIndex(const NodeBuffer& buffer, u32 callIndex)
+    {
+        return NodeLayout::subtreeBegin(buffer, callIndex);
+    }
+
+    [[nodiscard]] static u64 MakeSliceParameterKey(Type functionType, size_t parameterIndex)
     {
         return (static_cast<u64>(static_cast<u32>(functionType.id())) << 32) | static_cast<u64>(parameterIndex);
     }
 
-    static size_t ImplicitThisOffset(const FunctionDefinition& functionDefinition)
+    [[nodiscard]] static size_t ImplicitThisOffset(const FunctionDefinition& functionDefinition)
     {
         const auto functionType = functionDefinition.functionType();
         if (functionType == FunctionType::SynthesizedConstructor
@@ -54,56 +58,75 @@ namespace Caracal
         return 0;
     }
 
-    struct PromotionCandidate
-    {
-        Type functionType;
-        size_t parameterIndex;
-        bool promotable;
-        std::vector<std::pair<Type, size_t>> forwards;
-    };
+    static void AnalyzeSliceParameterUsesInExpression(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 index,
+        const std::string& name,
+        const std::vector<Parameter>& enclosingParameters,
+        SemanticContext& module,
+        SlicePromotionUsage& usage);
 
-    static void AnalyzeSliceParameterUses(const Expression* expression, const std::string& name, const std::vector<Parameter>& enclosingParameters, SemanticContext& module, SliceParameterUsage& usage);
-
-    static void AnalyzeSliceParameterCallArguments(const FunctionCallExpression* call, Type calleeType, size_t parameterOffset, const std::string& name, const std::vector<Parameter>& enclosingParameters, SemanticContext& module, SliceParameterUsage& usage)
+    static void AnalyzeSliceParameterCallArguments(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 callIndex,
+        Type calleeType,
+        size_t parameterOffset,
+        const std::string& name,
+        const std::vector<Parameter>& enclosingParameters,
+        SemanticContext& module,
+        SlicePromotionUsage& usage)
     {
-        const auto& arguments = call->arguments();
+        const auto& buffer = unit.nodeBuffer;
+        auto children = std::vector<u32>{};
+        NodeLayout::collectChildren(buffer, callIndex, children);
+
+        // arguments start at 1
         size_t positionalIndex = 0;
-        for (size_t index = 0; index < arguments.size(); ++index)
+        for (size_t childIndex = 1; childIndex < children.size(); ++childIndex)
         {
-            const auto& argument = arguments[index];
-            const auto* argumentValue = StripGroupings(argument.value().get());
-            const auto isBareParameter = argumentValue != nullptr
-                && argumentValue->kind() == NodeKind::NameExpression
-                && static_cast<const NameExpression*>(argumentValue)->name() == name;
+            const auto argument = children[childIndex];
+            const auto isNamed = buffer.kind(argument) == NodeKind::NamedArgument;
+            auto value = argument;
+            if (isNamed)
+            {
+                value = NodeLayout::namedArgumentValue(argument);
+            }
+
+            const auto strippedValue = NodeLayout::stripGroupings(buffer, value);
+            const auto isBareParameter = 
+                (buffer.kind(strippedValue) == NodeKind::NameExpression
+                && context.getLexeme(unit.fileId, buffer.mainToken(strippedValue)) == name);
             if (!isBareParameter)
             {
-                AnalyzeSliceParameterUses(argument.value().get(), name, enclosingParameters, module, usage);
-                if (!argument.isNamed())
+                AnalyzeSliceParameterUsesInExpression(context, unit, value, name, enclosingParameters, module, usage);
+                if (!isNamed)
                 {
                     positionalIndex++;
                 }
                 continue;
             }
 
-            // a bare parameter argument forwards the qualifier question to the callee's parameter
             if (calleeType == Type::Undefined())
             {
                 usage.promotable = false;
-                if (!argument.isNamed())
+                if (!isNamed)
                 {
                     positionalIndex++;
                 }
                 continue;
             }
 
-            if (argument.isNamed())
+            if (isNamed)
             {
                 // named arguments resolve by parameter name
+                const auto argumentName = context.getLexeme(unit.fileId, buffer.mainToken(argument));
                 const auto& calleeParameters = module.getFunctionDefinition(calleeType).parameters();
                 auto resolved = false;
                 for (size_t j = 0; j < calleeParameters.size(); ++j)
                 {
-                    if (calleeParameters[j].name() == argument.name())
+                    if (calleeParameters[j].name() == argumentName)
                     {
                         usage.forwards.emplace_back(calleeType, j);
                         resolved = true;
@@ -123,14 +146,17 @@ namespace Caracal
         }
     }
 
-    static void AnalyzeSliceParameterUses(const Expression* expression, const std::string& name, const std::vector<Parameter>& enclosingParameters, SemanticContext& module, SliceParameterUsage& usage)
+    static void AnalyzeSliceParameterUsesInExpression(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 index,
+        const std::string& name,
+        const std::vector<Parameter>& enclosingParameters,
+        SemanticContext& module,
+        SlicePromotionUsage& usage)
     {
-        if (expression == nullptr)
-        {
-            return;
-        }
-
-        switch (expression->kind())
+        const auto& buffer = unit.nodeBuffer;
+        switch (buffer.kind(index))
         {
             case NodeKind::NumberLiteral:
             case NodeKind::StringLiteral:
@@ -141,8 +167,8 @@ namespace Caracal
             }
             case NodeKind::NameExpression:
             {
-                // a bare appearance outside of the allowed shapes blocks promotion
-                if (static_cast<const NameExpression*>(expression)->name() == name)
+                // dont promote to immutable, we dont check if we write through them
+                if (context.getLexeme(unit.fileId, buffer.mainToken(index)) == name)
                 {
                     usage.promotable = false;
                 }
@@ -150,57 +176,59 @@ namespace Caracal
             }
             case NodeKind::ArrayLiteral:
             {
-                for (const auto& element : static_cast<const ArrayLiteral*>(expression)->elements())
+                auto elements = std::vector<u32>{};
+                NodeLayout::collectChildren(buffer, index, elements);
+                for (const auto element : elements)
                 {
-                    AnalyzeSliceParameterUses(element.get(), name, enclosingParameters, module, usage);
+                    AnalyzeSliceParameterUsesInExpression(context, unit, element, name, enclosingParameters, module, usage);
                 }
                 return;
             }
             case NodeKind::GroupingExpression:
             {
-                AnalyzeSliceParameterUses(static_cast<const GroupingExpression*>(expression)->expression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::groupedExpression(index), name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::UnaryExpression:
             {
-                AnalyzeSliceParameterUses(static_cast<const UnaryExpression*>(expression)->expression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::unaryOperand(index), name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::MemberAccessExpression:
             {
-                AnalyzeSliceParameterUses(static_cast<const MemberAccessExpression*>(expression)->expression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::memberExpression(index), name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::FunctionCallExpression:
             {
-                const auto* call = static_cast<const FunctionCallExpression*>(expression);
-                AnalyzeSliceParameterCallArguments(call, module.tryGetFunctionTypeByName(call->nameExpression()->name()), 0, name, enclosingParameters, module, usage);
+                const auto calleeName = context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, index)));
+                AnalyzeSliceParameterCallArguments(context, unit, index, module.tryGetFunctionTypeByName(calleeName), 0, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::BinaryExpression:
             {
-                const auto* binaryExpression = static_cast<const BinaryExpression*>(expression);
-                if (binaryExpression->binaryOperator() == BinaryOperatorKind::MemberAccess)
+                const auto binaryLayout = NodeLayout::binary(buffer, index);
+                const auto& tokens = context.tokenBuffer(unit.fileId);
+                const auto operatorKind = tokens.getToken(static_cast<i32>(buffer.mainToken(index))).kind;
+                if (operatorKind == TokenKind::Dot)
                 {
-                    const auto* receiver = StripGroupings(binaryExpression->leftExpression().get());
-                    const auto receiverIsParameter = receiver != nullptr
-                        && receiver->kind() == NodeKind::NameExpression
-                        && static_cast<const NameExpression*>(receiver)->name() == name;
+                    const auto receiver = NodeLayout::stripGroupings(buffer, binaryLayout.left);
+                    const auto receiverIsParameter = (buffer.kind(receiver) == NodeKind::NameExpression
+                        && context.getLexeme(unit.fileId, buffer.mainToken(receiver)) == name);
                     if (receiverIsParameter)
                     {
-                        const auto* member = binaryExpression->rightExpression().get();
-                        if (member->kind() == NodeKind::NameExpression
-                            && static_cast<const NameExpression*>(member)->name() == ArrayLengthMemberName)
+                        const auto member = binaryLayout.right;
+                        if (buffer.kind(member) == NodeKind::NameExpression
+                            && context.getLexeme(unit.fileId, buffer.mainToken(member)) == ArrayLengthMemberName)
                         {
                             return;
                         }
 
-                        if (member->kind() == NodeKind::FunctionCallExpression)
+                        if (buffer.kind(member) == NodeKind::FunctionCallExpression)
                         {
-                            const auto* call = static_cast<const FunctionCallExpression*>(member);
-                            if (call->nameExpression()->name() == "at")
+                            if (context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, member))) == "at")
                             {
-                                AnalyzeSliceParameterCallArguments(call, Type::Undefined(), 0, name, enclosingParameters, module, usage);
+                                AnalyzeSliceParameterCallArguments(context, unit, member, Type::Undefined(), 0, name, enclosingParameters, module, usage);
                                 return;
                             }
                         }
@@ -209,16 +237,15 @@ namespace Caracal
                         return;
                     }
 
-                    AnalyzeSliceParameterUses(binaryExpression->leftExpression().get(), name, enclosingParameters, module, usage);
-                    if (binaryExpression->rightExpression()->kind() == NodeKind::FunctionCallExpression)
+                    AnalyzeSliceParameterUsesInExpression(context, unit, binaryLayout.left, name, enclosingParameters, module, usage);
+                    if (buffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression)
                     {
                         // method callees resolve for type-name receivers (static calls) and enclosing parameters
-                        const auto* methodCall = static_cast<const FunctionCallExpression*>(binaryExpression->rightExpression().get());
                         auto calleeType = Type::Undefined();
                         size_t parameterOffset = 0;
-                        if (receiver != nullptr && receiver->kind() == NodeKind::NameExpression)
+                        if (buffer.kind(receiver) == NodeKind::NameExpression)
                         {
-                            const auto& receiverName = static_cast<const NameExpression*>(receiver)->name();
+                            const auto receiverName = context.getLexeme(unit.fileId, buffer.mainToken(receiver));
                             auto receiverType = module.tryGetTypeByName(receiverName);
                             if (receiverType == Type::Undefined())
                             {
@@ -234,7 +261,7 @@ namespace Caracal
 
                             if (receiverType != Type::Undefined() && receiverType.kind() == TypeKind::Type)
                             {
-                                const auto methodType = module.getTypeDefinition(receiverType).tryGetMethodTypeByName(methodCall->nameExpression()->name());
+                                const auto methodType = module.getTypeDefinition(receiverType).tryGetMethodTypeByName(context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, binaryLayout.right))));
                                 if (methodType != Type::Undefined())
                                 {
                                     calleeType = methodType;
@@ -242,17 +269,17 @@ namespace Caracal
                                 }
                             }
                         }
-                        AnalyzeSliceParameterCallArguments(methodCall, calleeType, parameterOffset, name, enclosingParameters, module, usage);
+                        AnalyzeSliceParameterCallArguments(context, unit, binaryLayout.right, calleeType, parameterOffset, name, enclosingParameters, module, usage);
                     }
                     else
                     {
-                        AnalyzeSliceParameterUses(binaryExpression->rightExpression().get(), name, enclosingParameters, module, usage);
+                        AnalyzeSliceParameterUsesInExpression(context, unit, binaryLayout.right, name, enclosingParameters, module, usage);
                     }
                     return;
                 }
 
-                AnalyzeSliceParameterUses(binaryExpression->leftExpression().get(), name, enclosingParameters, module, usage);
-                AnalyzeSliceParameterUses(binaryExpression->rightExpression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, binaryLayout.left, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, binaryLayout.right, name, enclosingParameters, module, usage);
                 return;
             }
             default:
@@ -263,73 +290,87 @@ namespace Caracal
         }
     }
 
-    static void AnalyzeSliceParameterUses(const Statement* statement, const std::string& name, const std::vector<Parameter>& enclosingParameters, SemanticContext& module, SliceParameterUsage& usage)
+    static void AnalyzeSliceParameterUsesInStatement(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 index,
+        const std::string& name,
+        const std::vector<Parameter>& enclosingParameters,
+        SemanticContext& module,
+        SlicePromotionUsage& usage)
     {
-        if (statement == nullptr)
-        {
-            return;
-        }
-
-        switch (statement->kind())
+        const auto& buffer = unit.nodeBuffer;
+        switch (buffer.kind(index))
         {
             case NodeKind::BlockNode:
             {
-                for (const auto& child : static_cast<const BlockNode*>(statement)->statements())
+                auto children = std::vector<u32>{};
+                NodeLayout::collectChildren(buffer, index, children);
+                for (const auto child : children)
                 {
-                    AnalyzeSliceParameterUses(child.get(), name, enclosingParameters, module, usage);
+                    AnalyzeSliceParameterUsesInStatement(context, unit, child, name, enclosingParameters, module, usage);
                 }
                 return;
             }
             case NodeKind::VariableDeclaration:
             {
-                AnalyzeSliceParameterUses(static_cast<const VariableDeclaration*>(statement)->rightExpression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::declaration(buffer, index).right, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::ConstantDeclaration:
             {
-                AnalyzeSliceParameterUses(static_cast<const ConstantDeclaration*>(statement)->rightExpression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::declaration(buffer, index).right, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::AssignmentStatement:
             {
-                const auto* assignment = static_cast<const AssignmentStatement*>(statement);
-                AnalyzeSliceParameterUses(assignment->leftExpression().get(), name, enclosingParameters, module, usage);
-                AnalyzeSliceParameterUses(assignment->rightExpression().get(), name, enclosingParameters, module, usage);
+                const auto assignmentLayout = NodeLayout::assignment(buffer, index);
+                AnalyzeSliceParameterUsesInExpression(context, unit, assignmentLayout.target, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, assignmentLayout.value, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::ExpressionStatement:
             {
-                AnalyzeSliceParameterUses(static_cast<const ExpressionStatement*>(statement)->expression().get(), name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInExpression(context, unit, NodeLayout::statementExpression(index), name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::IfStatement:
             {
-                const auto* ifStatement = static_cast<const IfStatement*>(statement);
-                AnalyzeSliceParameterUses(ifStatement->condition().get(), name, enclosingParameters, module, usage);
-                AnalyzeSliceParameterUses(ifStatement->trueStatement().get(), name, enclosingParameters, module, usage);
-                if (ifStatement->falseStatement().has_value())
+                const auto ifLayout = NodeLayout::ifStatement(buffer, index);
+                AnalyzeSliceParameterUsesInExpression(context, unit, ifLayout.condition, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInStatement(context, unit, ifLayout.trueStatement, name, enclosingParameters, module, usage);
+                if (ifLayout.hasFalse)
                 {
-                    AnalyzeSliceParameterUses(ifStatement->falseStatement().value().get(), name, enclosingParameters, module, usage);
+                    AnalyzeSliceParameterUsesInStatement(context, unit, ifLayout.falseStatement, name, enclosingParameters, module, usage);
                 }
+                return;
+            }
+            case NodeKind::TrailingIfStatement:
+            {
+                const auto trailingIfLayout = NodeLayout::trailingIf(buffer, index);
+                AnalyzeSliceParameterUsesInExpression(context, unit, trailingIfLayout.condition, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInStatement(context, unit, trailingIfLayout.statement, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::WhileStatement:
             {
-                const auto* whileStatement = static_cast<const WhileStatement*>(statement);
-                AnalyzeSliceParameterUses(whileStatement->condition().get(), name, enclosingParameters, module, usage);
-                AnalyzeSliceParameterUses(whileStatement->trueStatement().get(), name, enclosingParameters, module, usage);
+                const auto whileLayout = NodeLayout::whileStatement(buffer, index);
+                AnalyzeSliceParameterUsesInExpression(context, unit, whileLayout.condition, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterUsesInStatement(context, unit, whileLayout.body, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::ReturnStatement:
             {
-                const auto& expression = static_cast<const ReturnStatement*>(statement)->expression();
-                if (expression.has_value())
+                const auto value = NodeLayout::optionalChild(buffer, index);
+                if (value.hasChild)
                 {
-                    AnalyzeSliceParameterUses(expression.value().get(), name, enclosingParameters, module, usage);
+                    AnalyzeSliceParameterUsesInExpression(context, unit, value.child, name, enclosingParameters, module, usage);
                 }
                 return;
             }
+            case NodeKind::AnnotationNode:
             case NodeKind::BreakStatement:
+            case NodeKind::InitConstantDeclaration:
             case NodeKind::SkipStatement:
             {
                 return;
@@ -343,10 +384,12 @@ namespace Caracal
     }
 
     static void CollectSlicePromotionCandidates(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
         Type functionType,
-        const BlockNode* bodyNode,
+        u32 bodyIndex,
         SemanticContext& module,
-        std::vector<PromotionCandidate>& candidates,
+        std::vector<SlicePromotionCandidate>& candidates,
         std::unordered_map<u64, size_t>& candidateIndexByKey)
     {
         const auto& functionDefinition = module.getFunctionDefinition(functionType);
@@ -366,59 +409,71 @@ namespace Caracal
                 continue;
             }
 
-            auto usage = SliceParameterUsage{};
-            AnalyzeSliceParameterUses(static_cast<const Statement*>(bodyNode), parameters[i].name(), parameters, module, usage);
+            auto usage = SlicePromotionUsage{};
+            AnalyzeSliceParameterUsesInStatement(context, unit, bodyIndex, parameters[i].name(), parameters, module, usage);
             if (!usage.promotable)
             {
                 continue;
             }
 
             candidateIndexByKey.try_emplace(MakeSliceParameterKey(functionType, i), candidates.size());
-            candidates.push_back(PromotionCandidate{ functionType, i, true, std::move(usage.forwards) });
+            candidates.push_back(SlicePromotionCandidate{ functionType, i, true, std::move(usage.forwards) });
         }
     }
 
     void promoteReadOnlySliceParameters(
-        const std::vector<const FunctionDefinitionStatement*>& functionDeclarations,
-        const std::vector<const TypeDefinitionStatement*>& typeDeclarations,
-        SemanticContext& module)
+        const CompilationContext& context,
+        SemanticContext& module,
+        const std::vector<NodeIndex>& functionDeclarations,
+        const std::vector<NodeIndex>& typeDeclarations)
     {
-        auto candidates = std::vector<PromotionCandidate>{};
+        auto candidates = std::vector<SlicePromotionCandidate>{};
         auto candidateIndexByKey = std::unordered_map<u64, size_t>{};
-        for (const auto* functionDefinitionStatement : functionDeclarations)
+        auto annotations = std::vector<u32>{};
+        for (const auto functionDeclaration : functionDeclarations)
         {
-            auto* statement = const_cast<FunctionDefinitionStatement*>(functionDefinitionStatement);
-            if (statement->isExtern() || statement->type() == Type::Undefined())
+            const auto& unit = context.units()[functionDeclaration.fileId];
+
+            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, functionDeclaration.index, annotations);
+            const auto isExtern = NodeLayout::annotationsContain(unit.nodeBuffer, context.tokenBuffer(unit.fileId), annotations, ExternAnnotationName);
+            const auto functionType = module.typeOfNode(functionDeclaration);
+            if (isExtern || functionType == Type::Undefined())
             {
                 continue;
             }
 
-            CollectSlicePromotionCandidates(statement->type(), statement->bodyNode().get(), module, candidates, candidateIndexByKey);
+            const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, functionDeclaration.index);
+            CollectSlicePromotionCandidates(context, unit, functionType, functionLayout.body, module, candidates, candidateIndexByKey);
         }
 
-        for (const auto* typeDefinitionStatement : typeDeclarations)
+        for (const auto typeDeclaration : typeDeclarations)
         {
-            if (typeDefinitionStatement->isBuiltin())
+            const auto& unit = context.units()[typeDeclaration.fileId];
+            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, typeDeclaration.index, annotations);
+            if (NodeLayout::annotationsContain(unit.nodeBuffer, context.tokenBuffer(unit.fileId), annotations, BuiltinAnnotationName))
             {
                 continue;
             }
 
-            for (const auto& bodyStatement : typeDefinitionStatement->bodyNode()->statements())
+            const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, typeDeclaration.index);
+            auto bodyStatements = std::vector<u32>{};
+            NodeLayout::collectChildren(unit.nodeBuffer, typeLayout.body, bodyStatements);
+            for (const auto bodyStatement : bodyStatements)
             {
-                if (bodyStatement->kind() != NodeKind::MethodDefinitionStatement)
+                if (unit.nodeBuffer.kind(bodyStatement) != NodeKind::MethodDefinitionStatement)
                 {
                     continue;
                 }
 
-                const auto* methodStatement = static_cast<const MethodDefinitionStatement*>(bodyStatement.get());
-                if (methodStatement->specialFunctionType() == SpecialFunctionType::Constructor
-                    || methodStatement->methodNameNode()->methodName() == "new"
-                    || methodStatement->type() == Type::Undefined())
+                const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, bodyStatement);
+                const auto methodType = module.typeOfNode(NodeIndex{ unit.fileId, bodyStatement });
+                if (unit.nodeBuffer.methodNameIsNew(context.tokenBuffer(unit.fileId), methodLayout.methodName)
+                    || methodType == Type::Undefined())
                 {
                     continue;
                 }
 
-                CollectSlicePromotionCandidates(methodStatement->type(), methodStatement->bodyNode().get(), module, candidates, candidateIndexByKey);
+                CollectSlicePromotionCandidates(context, unit, methodType, methodLayout.body, module, candidates, candidateIndexByKey);
             }
         }
 
@@ -442,7 +497,6 @@ namespace Caracal
                     }
                     else
                     {
-                        // a callee parameter that is already immutable from the prelude is a safe target
                         const auto& calleeParameters = module.getFunctionDefinition(calleeType).parameters();
                         forwardIsPromotable = calleeIndex < calleeParameters.size()
                             && module.isImmutableSlice(calleeParameters[calleeIndex].type());
@@ -469,9 +523,11 @@ namespace Caracal
             auto parameters = functionDefinition.parameters();
             auto& parameter = parameters[candidate.parameterIndex];
             const auto elementType = module.getArrayElementType(parameter.type());
-            parameter = Parameter{ parameter.name(), module.getOrCreateArrayType(TypeKind::Slice, elementType, 0, true), parameter.defaultValue() };
-            functionDefinition.setParameters(parameters);
+
+            auto promoted = Parameter{ parameter.name(), module.getOrCreateArrayType(TypeKind::Slice, elementType, 0, true), parameter.defaultValue() };
+            promoted.setDefaultValueNode(parameter.defaultValueNode());
+            parameter = std::move(promoted);
+            functionDefinition.setParameters(std::move(parameters));
         }
     }
-
 }

@@ -8,11 +8,6 @@ namespace Caracal
     {
     }
 
-    //void Scope::addTypeBinding(std::string_view identifier, Type type)
-    //{
-    //    m_typeBindings.try_emplace(identifier, type);
-    //}
-
     bool Scope::hasVariableBinding(std::string_view identifier) const noexcept
     {
         if (m_variableBindings.find(identifier) != m_variableBindings.end())
@@ -27,19 +22,6 @@ namespace Caracal
     {
         m_variableBindings.try_emplace(identifier, VariableBinding{ type, source, location, kind, false, referencesConstant });
     }
-
-    //void Scope::addFunctionBinding(std::string_view identifier, Type type)
-    //{
-    //    m_functionBindings.try_emplace(identifier, type);
-    //}
-
-    //std::optional<Type> Scope::tryGetTypeBinding(std::string_view identifier) const noexcept
-    //{
-    //    if (auto search = m_typeBindings.find(identifier); search != m_typeBindings.end())
-    //        return std::make_optional<Type>(search->second);
-    //    else
-    //        return std::nullopt;
-    //}
 
     std::optional<Type> Scope::tryGetVariableBinding(std::string_view identifier) const noexcept
     {
@@ -105,14 +87,4 @@ namespace Caracal
 
         return false;
     }
-
-    //std::optional<Type> Scope::tryGetFunctionBinding(std::string_view identifier) const noexcept
-    //{
-    //    if (auto search = m_functionBindings.find(identifier); search != m_functionBindings.end())
-    //        return std::make_optional<Type>(search->second);
-    //    else if (m_parent != nullptr)
-    //        return m_parent->tryGetFunctionBinding(identifier);
-    //    else
-    //        return std::nullopt;
-    //}
 }

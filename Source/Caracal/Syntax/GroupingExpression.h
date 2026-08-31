@@ -27,5 +27,5 @@ namespace Caracal
         Token m_closeParenthesisToken;
     };
 
-    [[nodiscard]] CARACAL_API const Expression* StripGroupings(const Expression* expression) noexcept;
+    [[nodiscard]] CARACAL_API const Expression* stripGroupings(const Expression* expression) noexcept;
 }

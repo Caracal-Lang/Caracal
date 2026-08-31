@@ -1,30 +1,34 @@
 #pragma once
 
+#include <Caracal/CompilationContext.h>
+#include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/Semantic/Parameter.h>
 
+#include <span>
 #include <string>
 #include <vector>
 
 namespace Caracal
 {
-    class FunctionCallExpression;
-    class Expression;
-    class DiagnosticsBag;
-    class TokenBuffer;
+    inline constexpr u32 UnboundArgumentSlot = 0xFFFFFFFF;
+    inline constexpr u32 DefaultBoundArgumentSlot = 0xFFFFFFFE;
 
-    struct ArgumentBindingResult
+    struct ArgumentBinding
     {
-        std::vector<const Expression*> ordered; 
-        std::vector<const Expression*> variadic;
+        std::vector<u32> variadic;
         bool ok = true;
     };
 
-    ArgumentBindingResult bindCallArguments(
+    [[nodiscard]] ArgumentBinding bindCallArguments(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 callIndex,
+        std::span<const u32> argumentNodes,
         const std::vector<Parameter>& parameters,
         size_t parameterOffset,
         bool isVariadic,
-        const FunctionCallExpression& call,
         const std::string& functionName,
         DiagnosticsBag& diagnostics,
-        const TokenBuffer& tokens);
+        std::vector<u32>& orderedStack,
+        size_t orderedStart);
 }

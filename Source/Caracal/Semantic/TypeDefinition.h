@@ -3,9 +3,11 @@
 #include <Caracal/Optimization/OperatorFolding.h>
 #include <Caracal/Syntax/BinaryExpression.h>
 #include <Caracal/Syntax/TypeDefinitionStatement.h>
+#include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Syntax/UnaryExpression.h>
 #include <Caracal/Semantic/Type.h>
 #include <Caracal/Semantic/FieldDefinition.h>
+#include <Caracal/Text/TransparentStringHash.h>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -43,14 +45,17 @@ namespace Caracal
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(BinaryOperatorKind binaryOperator) const noexcept;
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(UnaryOperatorKind unaryOperator) const noexcept;
         [[nodiscard]] const TypeDefinitionStatement* statement() const noexcept { return m_statement; }
+        [[nodiscard]] NodeIndex definitionNode() const noexcept { return m_definitionNode; }
+        void setDefinitionNode(NodeIndex definitionNode) noexcept { m_definitionNode = definitionNode; }
         
     private:
         Type m_type;
         std::string m_name;
         std::vector<FieldDefinition> m_fields;
-        std::unordered_map<std::string, Type> m_methods;
+        std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_methods;
         std::unordered_map<BinaryOperatorKind, OperatorSignature> m_binaryOperators;
         std::unordered_map<UnaryOperatorKind, OperatorSignature> m_unaryOperators;
         const TypeDefinitionStatement* m_statement;
+        NodeIndex m_definitionNode{};
     };
 }

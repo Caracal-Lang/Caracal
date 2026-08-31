@@ -80,7 +80,7 @@ namespace Caracal
 {
     static bool IsConstructorCall(const Expression* expression) noexcept
     {
-        expression = StripGroupings(expression);
+        expression = stripGroupings(expression);
         if (expression == nullptr || expression->kind() != NodeKind::BinaryExpression)
             return false;
 
@@ -471,7 +471,7 @@ namespace Caracal
 
     bool IRLowerer::lowerGlobalReference(const ConstantDefinition& definition, Module& module) noexcept
     {
-        const auto* expression = StripGroupings(definition.expression());
+        const auto* expression = stripGroupings(definition.expression());
         if (expression == nullptr || expression->kind() != NodeKind::UnaryExpression)
             return false;
 
@@ -479,7 +479,7 @@ namespace Caracal
         if (unaryExpression->unaryOperator() != UnaryOperatorKind::ReferenceOf)
             return false;
 
-        const auto* operand = StripGroupings(unaryExpression->expression().get());
+        const auto* operand = stripGroupings(unaryExpression->expression().get());
         if (operand->kind() != NodeKind::NameExpression)
             return false;
 
@@ -681,7 +681,7 @@ namespace Caracal
             case NodeKind::UnaryExpression:
             {
                 const auto* unaryExpression = static_cast<const UnaryExpression*>(expression);
-                const auto* operand = StripGroupings(unaryExpression->expression().get());
+                const auto* operand = stripGroupings(unaryExpression->expression().get());
                 if (unaryExpression->unaryOperator() == UnaryOperatorKind::ReferenceOf
                     && operand != nullptr
                     && operand->kind() == NodeKind::NameExpression)
@@ -1286,7 +1286,7 @@ namespace Caracal
             return false;
 
         const auto* nameExpression = static_cast<const NameExpression*>(leftExpression);
-        const auto* referenceCandidate = StripGroupings(rightExpression);
+        const auto* referenceCandidate = stripGroupings(rightExpression);
         const auto isExplicitReferenceBinding =
             (referenceCandidate->kind() == NodeKind::UnaryExpression
             && static_cast<const UnaryExpression*>(referenceCandidate)->unaryOperator() == UnaryOperatorKind::ReferenceOf);
@@ -1346,7 +1346,7 @@ namespace Caracal
 
     bool IRLowerer::tryLowerConstructorCallIntoAddress(const Expression* expression, ValueRef destinationAddress) noexcept
     {
-        expression = StripGroupings(expression);
+        expression = stripGroupings(expression);
         if (expression == nullptr || expression->kind() != NodeKind::BinaryExpression)
             return false;
 
@@ -1423,7 +1423,7 @@ namespace Caracal
 
     bool IRLowerer::tryLowerStringLiteralIntoAddress(const Expression* expression, ValueRef destinationAddress) noexcept
     {
-        const auto* stripped = StripGroupings(expression);
+        const auto* stripped = stripGroupings(expression);
         if (stripped == nullptr || stripped->kind() != NodeKind::StringLiteral)
             return false;
 
@@ -1455,7 +1455,7 @@ namespace Caracal
 
     bool IRLowerer::tryLowerArrayLiteralIntoAddress(const Expression* expression, ValueRef destinationAddress, Type arrayType) noexcept
     {
-        const auto* stripped = StripGroupings(expression);
+        const auto* stripped = stripGroupings(expression);
         if (stripped == nullptr || stripped->kind() != NodeKind::ArrayLiteral)
             return false;
 
@@ -1604,7 +1604,7 @@ namespace Caracal
             return tryLowerConstructorCallIntoAddress(rightExpression, destinationAddress.value());
         }
 
-        const auto* strippedRight = StripGroupings(rightExpression);
+        const auto* strippedRight = stripGroupings(rightExpression);
         if (strippedRight != nullptr
             && strippedRight->kind() == NodeKind::StringLiteral
             && strippedRight->type() == m_semanticContext.wellKnown().string)
@@ -1646,7 +1646,7 @@ namespace Caracal
             && targetType.kind() == TypeKind::DynamicArray
             && !targetType.isReference()
             && sourceType.kind() == TypeKind::DynamicArray
-            && StripGroupings(expression)->kind() == NodeKind::NameExpression)
+            && stripGroupings(expression)->kind() == NodeKind::NameExpression)
         {
             auto sourceAddress = lowerAddressExpression(expression);
             if (!sourceAddress.has_value())
@@ -1895,7 +1895,7 @@ namespace Caracal
 
     [[nodiscard]] static const BinaryExpression* TryGetAtIntrinsicCall(const Expression* expression, SemanticContext& semanticContext) noexcept
     {
-        const auto* stripped = StripGroupings(expression);
+        const auto* stripped = stripGroupings(expression);
         if (stripped == nullptr || stripped->kind() != NodeKind::BinaryExpression)
             return nullptr;
 
@@ -2085,7 +2085,7 @@ namespace Caracal
 
     bool IRLowerer::referenceArgumentAliasesConstant(const Expression* argument) const noexcept
     {
-        const auto* stripped = StripGroupings(argument);
+        const auto* stripped = stripGroupings(argument);
         if (stripped->kind() == NodeKind::UnaryExpression)
         {
             const auto* unary = static_cast<const UnaryExpression*>(stripped);
@@ -2124,7 +2124,7 @@ namespace Caracal
                 if (unaryExpression->unaryOperator() != UnaryOperatorKind::ReferenceOf)
                     return std::nullopt;
 
-                return lowerAddressExpression(StripGroupings(unaryExpression->expression().get()));
+                return lowerAddressExpression(stripGroupings(unaryExpression->expression().get()));
             }
             case NodeKind::MemberAccessExpression:
             {
@@ -2259,14 +2259,14 @@ namespace Caracal
     std::optional<ConstantValue> IRLowerer::tryLowerEnumFieldValue(Type enumType, const std::string& fieldName) noexcept
     {
         auto& enumDefinition = m_semanticContext.getEnumDefinition(enumType);
-        if (!enumDefinition.hasField(fieldName))
+        const auto* enumField = enumDefinition.tryGetFieldByName(fieldName);
+        if (enumField == nullptr)
             return std::nullopt;
 
-        const auto& enumField = enumDefinition.getFieldByName(fieldName);
-        if (enumField.expression() != nullptr)
-            return tryLowerConstantExpression(enumField.expression());
+        if (enumField->expression() != nullptr)
+            return tryLowerConstantExpression(enumField->expression());
 
-        return CreateEnumConstantValue(enumDefinition.baseType(), enumField.value(), m_semanticContext);
+        return CreateEnumConstantValue(enumDefinition.baseType(), enumField->value(), m_semanticContext);
     }
 
     std::optional<ConstantValue> IRLowerer::tryLowerEnumMemberConstant(const BinaryExpression* expression) noexcept
@@ -2297,7 +2297,7 @@ namespace Caracal
 
     bool IRLowerer::lowerExpressionForEffect(const Expression* expression) noexcept
     {
-        expression = StripGroupings(expression);
+        expression = stripGroupings(expression);
         if (expression == nullptr)
             return false;
 

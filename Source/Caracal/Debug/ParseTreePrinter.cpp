@@ -1,6 +1,7 @@
 #include <Caracal/Debug/ParseTreePrinter.h>
 
 #include <Caracal/Syntax/ArrayTypeNameNode.h>
+#include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/BinaryExpression.h>
 #include <Caracal/Syntax/MethodDefinitionStatement.h>
 #include <Caracal/Syntax/UnaryExpression.h>
@@ -180,17 +181,18 @@ namespace Caracal
     class ParseTreePrinter
     {
     public:
-        ParseTreePrinter(const NodeBuffer& tree, const TokenBuffer& tokens, SemanticContext* module)
-            : m_tree{ tree }
+        ParseTreePrinter(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module, u16 fileId)
+            : m_buffer{ buffer }
             , m_tokens{ tokens }
             , m_module{ module }
+            , m_fileId{ fileId }
             , m_builder{ 4 }
         {
         }
 
         [[nodiscard]] std::string run()
         {
-            printStatementRange(0, m_tree.nodeCount());
+            printStatementRange(0, m_buffer.nodeCount());
             return m_builder.toString();
         }
 
@@ -200,9 +202,8 @@ namespace Caracal
             return m_tokens.getLexeme(m_tokens.getToken(static_cast<i32>(tokenIndex)));
         }
 
-        // collects the subtree roots inside [begin, end) back to front onto the
-        // scratch stack and returns the childrenStart, entries below stay stable while
-        // recursion pushes and pops above them
+        // pushes the subtree roots in [begin, end) back to front, returns childrenStart
+        // entries below stay stable while recursion pushes and pops above them
         [[nodiscard]] size_t collectChildren(u32 begin, u32 end)
         {
             const auto childrenStart = m_childrenStack.size();
@@ -211,7 +212,7 @@ namespace Caracal
             {
                 const auto root = index - 1;
                 m_childrenStack.push_back(root);
-                index -= m_tree.subtreeSize(root);
+                index -= m_buffer.subtreeSize(root);
             }
 
             return childrenStart;
@@ -219,7 +220,7 @@ namespace Caracal
 
         [[nodiscard]] size_t collectChildrenOf(u32 index)
         {
-            return collectChildren(index - m_tree.subtreeSize(index) + 1, index);
+            return collectChildren(index - m_buffer.subtreeSize(index) + 1, index);
         }
 
         // annotations are positional siblings before their statement
@@ -229,7 +230,7 @@ namespace Caracal
             for (auto position = m_childrenStack.size(); position > childrenStart; position--)
             {
                 const auto child = m_childrenStack[position - 1];
-                if (m_tree.kind(child) == NodeKind::AnnotationNode)
+                if (m_buffer.kind(child) == NodeKind::AnnotationNode)
                 {
                     m_pendingAnnotations.push_back(child);
                 }
@@ -259,9 +260,9 @@ namespace Caracal
 
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
+                .appendLine(lexeme(m_buffer.mainToken(index)));
 
-            if (m_tree.annotationHasParentheses(m_tokens, index))
+            if (m_buffer.annotationHasParentheses(m_tokens, index))
             {
                 const auto childrenStart = collectChildrenOf(index);
                 printArgumentList(childrenStart);
@@ -283,15 +284,15 @@ namespace Caracal
             for (auto position = m_childrenStack.size(); position > childrenStart; position--)
             {
                 const auto argument = m_childrenStack[position - 1];
-                if (m_tree.kind(argument) == NodeKind::NamedArgument)
+                if (m_buffer.kind(argument) == NodeKind::NamedArgument)
                 {
                     m_builder.appendIndentedLine("NamedArgument: {");
                     m_builder.pushIndentation();
 
                     m_builder
                         .appendIndented("Name: ")
-                        .appendLine(lexeme(m_tree.mainToken(argument)));
-                    printNode(argument - 1);
+                        .appendLine(lexeme(m_buffer.mainToken(argument)));
+                    printNode(NodeLayout::namedArgumentValue(argument));
                     m_builder.popIndentation();
                     m_builder.appendIndentedLine("}");
                 }
@@ -307,25 +308,12 @@ namespace Caracal
 
         [[nodiscard]] Type typeOf(u32 index) const
         {
-            switch (m_tree.kind(index))
+            if (m_module == nullptr)
             {
-                case NodeKind::DiscardLiteral:
-                {
-                    return Type::Discard();
-                }
-                case NodeKind::GroupingExpression:
-                case NodeKind::UnaryExpression:
-                case NodeKind::MemberAccessExpression:
-                case NodeKind::ConstantDeclaration:
-                case NodeKind::VariableDeclaration:
-                {
-                    return typeOf(index - 1);
-                }
-                default:
-                {
-                    return Type::Undefined();
-                }
+                return Type::Undefined();
             }
+
+            return m_module->typeOfNode(NodeIndex{ m_fileId, index });
         }
 
         void printBracedNode(const char* label, u32 index)
@@ -341,33 +329,23 @@ namespace Caracal
 
         void appendArrayDisplayName(std::string& name, u32 index)
         {
-            if (m_tree.kind(index) != NodeKind::ArrayTypeNameNode)
+            if (m_buffer.kind(index) != NodeKind::ArrayTypeNameNode)
             {
-                name.append(lexeme(m_tree.mainToken(index)));
+                name.append(lexeme(m_buffer.mainToken(index)));
                 return;
             }
 
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto elementType = m_childrenStack[m_childrenStack.size() - 1];
-            u32 lengthLiteral = 0;
-            auto hasLength = false;
-            if (childCount == 2)
-            {
-                lengthLiteral = m_childrenStack[m_childrenStack.size() - 2];
-                hasLength = m_tree.kind(lengthLiteral) == NodeKind::NumberLiteral;
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto arrayTypeLayout = NodeLayout::arrayTypeName(m_buffer, index);
 
             name.push_back('[');
-            appendArrayDisplayName(name, elementType);
+            appendArrayDisplayName(name, arrayTypeLayout.elementType);
 
-            if (hasLength)
+            if (arrayTypeLayout.hasLength)
             {
                 name.append("; ");
-                name.append(lexeme(m_tree.mainToken(lengthLiteral)));
+                name.append(lexeme(m_buffer.mainToken(arrayTypeLayout.lengthLiteral)));
             }
-            else if (m_tree.arrayKind(m_tokens, index) == ArrayTypeKind::Dynamic)
+            else if (m_buffer.arrayKind(m_tokens, index) == ArrayTypeKind::Dynamic)
             {
                 name.append("; _");
             }
@@ -377,7 +355,7 @@ namespace Caracal
 
         void printTypeName(u32 index)
         {
-            if (m_tree.kind(index) == NodeKind::ArrayTypeNameNode)
+            if (m_buffer.kind(index) == NodeKind::ArrayTypeNameNode)
             {
                 printArrayTypeName(index);
                 return;
@@ -388,11 +366,11 @@ namespace Caracal
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
             m_builder
                 .appendIndented("Lexeme: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
-            if (m_tree.isReference(m_tokens, index))
+                .appendLine(lexeme(m_buffer.mainToken(index)));
+            if (m_buffer.isReference(m_tokens, index))
             {
                 m_builder.appendIndentedLine("Ref: true");
             }
@@ -402,36 +380,26 @@ namespace Caracal
 
         void printArrayTypeName(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto elementType = m_childrenStack[m_childrenStack.size() - 1];
-            u32 lengthLiteral = 0;
-            auto hasLength = false;
-            if (childCount == 2)
-            {
-                lengthLiteral = m_childrenStack[m_childrenStack.size() - 2];
-                hasLength = true;
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto arrayTypeLayout = NodeLayout::arrayTypeName(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::ArrayTypeNameNode))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
 
             std::string displayName;
             appendArrayDisplayName(displayName, index);
             m_builder
                 .appendIndented("Lexeme: ")
                 .appendLine(displayName);
-            if (m_tree.isReference(m_tokens, index))
+            if (m_buffer.isReference(m_tokens, index))
             {
                 m_builder.appendIndentedLine("Ref: true");
             }
 
-            const auto arrayKind = m_tree.arrayKind(m_tokens, index);
+            const auto arrayKind = m_buffer.arrayKind(m_tokens, index);
             if (arrayKind == ArrayTypeKind::Fixed)
             {
                 m_builder.appendIndentedLine("Kind: Fixed");
@@ -447,15 +415,15 @@ namespace Caracal
 
             m_builder.appendIndentedLine("DataType: {");
             m_builder.pushIndentation();
-            printTypeName(elementType);
+            printTypeName(arrayTypeLayout.elementType);
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
 
-            if (hasLength)
+            if (arrayTypeLayout.hasLength)
             {
                 m_builder.appendIndentedLine("Length: {");
                 m_builder.pushIndentation();
-                printNode(lengthLiteral);
+                printNode(arrayTypeLayout.lengthLiteral);
                 m_builder.popIndentation();
                 m_builder.appendIndentedLine("}");
             }
@@ -466,25 +434,14 @@ namespace Caracal
 
         void printParameter(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto typeName = m_childrenStack[m_childrenStack.size() - 1];
-            u32 defaultValue = 0;
-            auto hasDefault = false;
-            if (childCount == 2)
-            {
-                defaultValue = m_childrenStack[m_childrenStack.size() - 2];
-                hasDefault = true;
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto parameterLayout = NodeLayout::parameter(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::ParameterNode))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            if (m_tree.mainToken(index) == m_tree.mainToken(typeName)
-                && m_tree.kind(typeName) == NodeKind::TypeNameNode)
+            if (NodeLayout::isVariadicParameter(m_buffer, index))
             {
                 m_builder
                     .appendIndented("Name: ")
@@ -494,14 +451,14 @@ namespace Caracal
             {
                 m_builder
                     .appendIndented("Name: ")
-                    .appendLine(lexeme(m_tree.mainToken(index)));
+                    .appendLine(lexeme(m_buffer.mainToken(index)));
             }
-            printTypeName(typeName);
-            if (hasDefault)
+            printTypeName(parameterLayout.typeName);
+            if (parameterLayout.hasDefaultValue)
             {
                 m_builder.appendIndentedLine("DefaultValue: {");
                 m_builder.pushIndentation();
-                printNode(defaultValue);
+                printNode(parameterLayout.defaultValue);
                 m_builder.popIndentation();
                 m_builder.appendIndentedLine("}");
             }
@@ -552,14 +509,14 @@ namespace Caracal
 
         void printBlock(u32 index)
         {
-            const auto begin = index - m_tree.subtreeSize(index) + 1;
+            const auto begin = index - m_buffer.subtreeSize(index) + 1;
 
             // the block subtree doesnt include annotations
             const auto childrenStart = collectChildren(begin, index);
             u32 statementCount = 0;
             for (auto position = m_childrenStack.size(); position > childrenStart; position--)
             {
-                if (m_tree.kind(m_childrenStack[position - 1]) != NodeKind::AnnotationNode)
+                if (m_buffer.kind(m_childrenStack[position - 1]) != NodeKind::AnnotationNode)
                 {
                     statementCount++;
                 }
@@ -587,14 +544,13 @@ namespace Caracal
             m_builder.pushIndentation();
 
             m_builder.appendIndented("MethodName: ");
-            const auto mainToken = m_tree.mainToken(index);
-            if (m_tree.methodHasTypeName(m_tokens, index))
+            if (m_buffer.methodHasTypeName(m_tokens, index))
             {
                 m_builder
-                    .append(lexeme(mainToken - 2))
+                    .append(lexeme(m_buffer.methodTypeNameToken(m_tokens, index)))
                     .append(".");
             }
-            m_builder.appendLine(lexeme(mainToken));
+            m_builder.appendLine(lexeme(m_buffer.mainToken(index)));
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -603,16 +559,7 @@ namespace Caracal
         void printConstantDeclaration(u32 index)
         {
             m_pendingAnnotations.clear();
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto right = m_childrenStack[childrenStart];
-            u32 middle = 0;
-            if (childCount == 3)
-            {
-                middle = m_childrenStack[m_childrenStack.size() - 2];
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto declarationLayout = NodeLayout::declaration(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::ConstantDeclaration))
@@ -620,16 +567,16 @@ namespace Caracal
             m_builder.pushIndentation();
 
             WriteIndentedTypeName(m_builder, m_module, typeOf(index));
-            printBracedNode("Left", left);
-            if (childCount == 3)
+            printBracedNode("Left", declarationLayout.left);
+            if (declarationLayout.hasExplicitType)
             {
                 m_builder.appendIndentedLine("ExplicitType: {");
                 m_builder.pushIndentation();
-                printTypeName(middle);
+                printTypeName(declarationLayout.explicitType);
                 m_builder.popIndentation();
                 m_builder.appendIndentedLine("}");
             }
-            printBracedNode("Right", right);
+            printBracedNode("Right", declarationLayout.right);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -638,20 +585,17 @@ namespace Caracal
         void printInitConstantDeclaration(u32 index)
         {
             m_pendingAnnotations.clear();
-            const auto childrenStart = collectChildrenOf(index);
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto initType = m_childrenStack[childrenStart];
-            m_childrenStack.resize(childrenStart);
+            const auto initLayout = NodeLayout::initConstant(m_buffer, index);
 
             // TODO rename once the older printer is gone
             m_builder.appendIndentedLine("ConstantDeclaration: {");
             m_builder.pushIndentation();
 
             WriteIndentedTypeName(m_builder, m_module, typeOf(index));
-            printBracedNode("Left", left);
+            printBracedNode("Left", initLayout.left);
             m_builder.appendIndentedLine("InitType: {");
             m_builder.pushIndentation();
-            printTypeName(initType);
+            printTypeName(initLayout.initType);
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
 
@@ -662,16 +606,7 @@ namespace Caracal
         void printVariableDeclaration(u32 index)
         {
             m_pendingAnnotations.clear();
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto right = m_childrenStack[childrenStart];
-            u32 middle = 0;
-            if (childCount == 3)
-            {
-                middle = m_childrenStack[m_childrenStack.size() - 2];
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto declarationLayout = NodeLayout::declaration(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::VariableDeclaration))
@@ -679,16 +614,16 @@ namespace Caracal
             m_builder.pushIndentation();
 
             WriteIndentedTypeName(m_builder, m_module, typeOf(index));
-            printBracedNode("Left", left);
-            if (childCount == 3)
+            printBracedNode("Left", declarationLayout.left);
+            if (declarationLayout.hasExplicitType)
             {
                 m_builder.appendIndentedLine("ExplicitType: {");
                 m_builder.pushIndentation();
-                printTypeName(middle);
+                printTypeName(declarationLayout.explicitType);
                 m_builder.popIndentation();
                 m_builder.appendIndentedLine("}");
             }
-            printBracedNode("Right", right);
+            printBracedNode("Right", declarationLayout.right);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -696,16 +631,7 @@ namespace Caracal
 
         void printTypeFieldDeclaration(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto right = m_childrenStack[childrenStart];
-            u32 middle = 0;
-            if (childCount == 3)
-            {
-                middle = m_childrenStack[m_childrenStack.size() - 2];
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto declarationLayout = NodeLayout::declaration(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::TypeFieldDeclaration))
@@ -714,17 +640,17 @@ namespace Caracal
 
             m_builder
                 .appendIndented("IsConstant: ")
-                .appendLine(m_tree.isConstantTypeField(m_tokens, index) ? "true" : "false");
-            printBracedNode("Left", left);
-            if (childCount == 3)
+                .appendLine(m_buffer.isConstantTypeField(m_tokens, index) ? "true" : "false");
+            printBracedNode("Left", declarationLayout.left);
+            if (declarationLayout.hasExplicitType)
             {
                 m_builder.appendIndentedLine("ExplicitType: {");
                 m_builder.pushIndentation();
-                printTypeName(middle);
+                printTypeName(declarationLayout.explicitType);
                 m_builder.popIndentation();
                 m_builder.appendIndentedLine("}");
             }
-            printBracedNode("Right", right);
+            printBracedNode("Right", declarationLayout.right);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -736,49 +662,42 @@ namespace Caracal
                 .appendIndented(stringify(NodeKind::ExpressionStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            printNode(index - 1);
+            printNode(NodeLayout::statementExpression(index));
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
 
         void printAssignmentStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto right = m_childrenStack[childrenStart];
-            m_childrenStack.resize(childrenStart);
+            const auto assignmentLayout = NodeLayout::assignment(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::AssignmentStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            printBracedNode("Left", left);
-            printBracedNode("Right", right);
+            printBracedNode("Left", assignmentLayout.target);
+            printBracedNode("Right", assignmentLayout.value);
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
 
         void printFunctionDefinitionStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto parameters = m_childrenStack[m_childrenStack.size() - 1];
-            const auto returnTypes = m_childrenStack[m_childrenStack.size() - 2];
-            const auto body = m_childrenStack[m_childrenStack.size() - 3];
-            m_childrenStack.resize(childrenStart);
+            const auto functionLayout = NodeLayout::functionDefinition(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::FunctionDefinitionStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
+                .appendLine(lexeme(m_buffer.mainToken(index)));
             printPendingAnnotations();
-            printParameters(parameters);
-            printReturnTypes(returnTypes);
-            printBlock(body);
+            printParameters(functionLayout.parameters);
+            printReturnTypes(functionLayout.returnTypes);
+            printBlock(functionLayout.body);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -788,28 +707,41 @@ namespace Caracal
         {
             const auto childrenStart = collectChildrenOf(index);
             const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto first = m_childrenStack[m_childrenStack.size() - 1];
-            const auto hasBaseType = m_tree.kind(first) == NodeKind::TypeNameNode;
+            auto hasBaseType = false;
+            auto baseTypeNode = 0u;
+            if (childCount > 0)
+            {
+                baseTypeNode = m_childrenStack[m_childrenStack.size() - 1];
+                hasBaseType = m_buffer.kind(baseTypeNode) == NodeKind::TypeNameNode;
+            }
             u32 fieldCount = static_cast<u32>(childCount);
             if (hasBaseType)
             {
                 fieldCount--;
             }
 
+            const auto enumType = typeOf(index);
+
             m_builder
                 .appendIndented(stringify(NodeKind::EnumDefinitionStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, enumType);
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
+                .appendLine(lexeme(m_buffer.mainToken(index)));
             printPendingAnnotations();
 
             if (hasBaseType)
             {
-                printTypeName(first);
+                printTypeName(baseTypeNode);
+            }
+
+            const EnumDefinition* enumDefinition = nullptr;
+            if (enumType.kind() == TypeKind::Enum)
+            {
+                enumDefinition = &m_module->getEnumDefinition(enumType);
             }
 
             m_builder
@@ -822,9 +754,33 @@ namespace Caracal
             {
                 endPosition--;
             }
+
+            size_t nextField = 0;
             for (auto position = endPosition; position > childrenStart; position--)
             {
-                printNode(m_childrenStack[position - 1]);
+                const auto fieldNode = m_childrenStack[position - 1];
+                const EnumField* field = nullptr;
+                if (enumDefinition != nullptr)
+                {
+                    const auto& fields = enumDefinition->fields();
+                    const auto fieldName = lexeme(m_buffer.mainToken(fieldNode));
+                    auto isDuplicate = false;
+                    for (size_t consumed = 0; consumed < nextField; consumed++)
+                    {
+                        if (fields[consumed].name() == fieldName)
+                        {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    if (!isDuplicate && nextField < fields.size() && fields[nextField].name() == fieldName)
+                    {
+                        field = &fields[nextField];
+                        nextField++;
+                    }
+                }
+                printEnumFieldDeclaration(fieldNode, field);
             }
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -834,7 +790,7 @@ namespace Caracal
             m_builder.appendIndentedLine("}");
         }
 
-        void printEnumFieldDeclaration(u32 index)
+        void printEnumFieldDeclaration(u32 index, const EnumField* field)
         {
             m_builder
                 .appendIndented(stringify(NodeKind::EnumFieldDeclaration))
@@ -842,10 +798,18 @@ namespace Caracal
             m_builder.pushIndentation();
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
-            if (m_tree.subtreeSize(index) > 1)
+                .appendLine(lexeme(m_buffer.mainToken(index)));
+            const auto value = NodeLayout::optionalChild(m_buffer, index);
+            if (value.hasChild)
             {
-                printNode(index - 1);
+                printNode(value.child);
+            }
+
+            if (field != nullptr && field->hasConstantValue())
+            {
+                m_builder
+                    .appendIndented("Value: ")
+                    .appendLine(std::to_string(field->value()));
             }
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -853,33 +817,23 @@ namespace Caracal
 
         void printTypeDefinitionStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto body = m_childrenStack[childrenStart];
-            u32 constructorParameters = 0;
-            auto hasConstructorParameters = false;
-            if (childCount == 2)
-            {
-                constructorParameters = m_childrenStack[m_childrenStack.size() - 1];
-                hasConstructorParameters = true;
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto typeLayout = NodeLayout::typeDefinition(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::TypeDefinitionStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
+                .appendLine(lexeme(m_buffer.mainToken(index)));
             printPendingAnnotations();
-            if (hasConstructorParameters)
+            if (typeLayout.hasConstructorParameters)
             {
-                printParameters(constructorParameters);
+                printParameters(typeLayout.constructorParameters);
             }
-            printBlock(body);
+            printBlock(typeLayout.body);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -887,23 +841,18 @@ namespace Caracal
 
         void printMethodDefinitionStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto methodName = m_childrenStack[m_childrenStack.size() - 1];
-            const auto parameters = m_childrenStack[m_childrenStack.size() - 2];
-            const auto returnTypes = m_childrenStack[m_childrenStack.size() - 3];
-            const auto body = m_childrenStack[m_childrenStack.size() - 4];
-            m_childrenStack.resize(childrenStart);
+            const auto methodLayout = NodeLayout::methodDefinition(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::MethodDefinitionStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
 
-            const auto methodNameToken = m_tree.mainToken(methodName);
+            const auto methodNameToken = m_buffer.mainToken(methodLayout.methodName);
             const auto methodNameKind = m_tokens.getToken(static_cast<i32>(methodNameToken)).kind;
-            const auto hasTypeName = m_tree.methodHasTypeName(m_tokens, methodName);
+            const auto hasTypeName = m_buffer.methodHasTypeName(m_tokens, methodLayout.methodName);
             if (!hasTypeName && methodNameKind == TokenKind::NewKeyword)
             {
                 m_builder
@@ -922,12 +871,12 @@ namespace Caracal
             m_builder
                 .appendIndented("Modifier: ")
                 .appendLine(stringify(modifier));
-            printMethodName(methodName);
+            printMethodName(methodLayout.methodName);
 
             printPendingAnnotations();
-            printParameters(parameters);
-            printReturnTypes(returnTypes);
-            printBlock(body);
+            printParameters(methodLayout.parameters);
+            printReturnTypes(methodLayout.returnTypes);
+            printBlock(methodLayout.body);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -935,29 +884,18 @@ namespace Caracal
 
         void printIfStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto childCount = m_childrenStack.size() - childrenStart;
-            const auto condition = m_childrenStack[m_childrenStack.size() - 1];
-            const auto trueStatement = m_childrenStack[m_childrenStack.size() - 2];
-            u32 falseStatement = 0;
-            auto hasFalse = false;
-            if (childCount == 3)
-            {
-                falseStatement = m_childrenStack[childrenStart];
-                hasFalse = true;
-            }
-            m_childrenStack.resize(childrenStart);
+            const auto ifLayout = NodeLayout::ifStatement(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::IfStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            printBracedNode("Condition", condition);
-            printBracedNode("True", trueStatement);
-            if (hasFalse)
+            printBracedNode("Condition", ifLayout.condition);
+            printBracedNode("True", ifLayout.trueStatement);
+            if (ifLayout.hasFalse)
             {
-                printBracedNode("False", falseStatement);
+                printBracedNode("False", ifLayout.falseStatement);
             }
 
             m_builder.popIndentation();
@@ -966,17 +904,14 @@ namespace Caracal
 
         void printTrailingIfStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto trueStatement = m_childrenStack[m_childrenStack.size() - 1];
-            const auto condition = m_childrenStack[childrenStart];
-            m_childrenStack.resize(childrenStart);
+            const auto trailingIfLayout = NodeLayout::trailingIf(m_buffer, index);
 
             // TODO rename once the old parser is gone
             m_builder.appendIndentedLine("IfStatement: {");
             m_builder.pushIndentation();
 
-            printBracedNode("Condition", condition);
-            printBracedNode("True", trueStatement);
+            printBracedNode("Condition", trailingIfLayout.condition);
+            printBracedNode("True", trailingIfLayout.statement);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -984,17 +919,14 @@ namespace Caracal
 
         void printWhileStatement(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto condition = m_childrenStack[m_childrenStack.size() - 1];
-            const auto trueStatement = m_childrenStack[childrenStart];
-            m_childrenStack.resize(childrenStart);
+            const auto whileLayout = NodeLayout::whileStatement(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::WhileStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            printBracedNode("Condition", condition);
-            printBracedNode("True", trueStatement);
+            printBracedNode("Condition", whileLayout.condition);
+            printBracedNode("True", whileLayout.body);
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
@@ -1005,10 +937,11 @@ namespace Caracal
                 .appendIndented(stringify(NodeKind::ReturnStatement))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
-            if (m_tree.subtreeSize(index) > 1)
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
+            const auto value = NodeLayout::optionalChild(m_buffer, index);
+            if (value.hasChild)
             {
-                printNode(index - 1);
+                printNode(value.child);
             }
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -1021,7 +954,7 @@ namespace Caracal
                 .appendLine(": {");
             m_builder.pushIndentation();
             WriteIndentedTypeName(m_builder, m_module, typeOf(index));
-            printNode(index - 1);
+            printNode(NodeLayout::groupedExpression(index));
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
@@ -1034,13 +967,13 @@ namespace Caracal
             m_builder.pushIndentation();
 
             WriteIndentedTypeName(m_builder, m_module, typeOf(index));
-            const auto operatorKind = ConvertToUnaryOperator(m_tokens.getToken(static_cast<i32>(m_tree.mainToken(index))).kind);
+            const auto operatorKind = ConvertToUnaryOperator(m_tokens.getToken(static_cast<i32>(m_buffer.mainToken(index))).kind);
             m_builder
                 .appendIndented("Operation: ")
                 .appendLine(stringify(operatorKind));
             m_builder.appendIndentedLine("Expression: {");
             m_builder.pushIndentation();
-            printNode(index - 1);
+            printNode(NodeLayout::unaryOperand(index));
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
 
@@ -1050,23 +983,27 @@ namespace Caracal
 
         void printBinaryExpression(u32 index)
         {
-            const auto childrenStart = collectChildrenOf(index);
-            const auto left = m_childrenStack[m_childrenStack.size() - 1];
-            const auto right = m_childrenStack[childrenStart];
-            m_childrenStack.resize(childrenStart);
+            const auto binaryLayout = NodeLayout::binary(m_buffer, index);
 
             m_builder
                 .appendIndented(stringify(NodeKind::BinaryExpression))
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
-            printBracedNode("Left", left);
-            const auto operatorKind = ConvertToBinaryOperator(m_tokens.getToken(static_cast<i32>(m_tree.mainToken(index))).kind);
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
+            printBracedNode("Left", binaryLayout.left);
+            auto operatorKind = ConvertToBinaryOperator(m_tokens.getToken(static_cast<i32>(m_buffer.mainToken(index))).kind);
+            
+            if (operatorKind == BinaryOperatorKind::MemberAccess
+                && m_buffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression
+                && typeOf(NodeLayout::subtreeBegin(m_buffer, binaryLayout.right)).kind() == TypeKind::Constructor)
+            {
+                operatorKind = BinaryOperatorKind::ConstructorCall;
+            }
             m_builder
                 .appendIndented("Operation: ")
                 .appendLine(stringify(operatorKind));
-            printBracedNode("Right", right);
+            printBracedNode("Right", binaryLayout.right);
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
@@ -1078,10 +1015,10 @@ namespace Caracal
                 .appendIndented(stringify(NodeKind::NameExpression))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
             m_builder
                 .appendIndented("Name: ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
+                .appendLine(lexeme(m_buffer.mainToken(index)));
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
@@ -1096,8 +1033,8 @@ namespace Caracal
                 .appendLine(": {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined(), "Function type: ");
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
+            WriteIndentedTypeName(m_builder, m_module, typeOf(nameExpression), "Function type: ");
             printNode(nameExpression);
 
             // remove the name expression from the stack
@@ -1115,7 +1052,7 @@ namespace Caracal
                 .appendIndented(stringify(NodeKind::MemberAccessExpression))
                 .appendLine(": {");
             m_builder.pushIndentation();
-            printNode(index - 1);
+            printNode(NodeLayout::memberExpression(index));
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
         }
@@ -1125,10 +1062,11 @@ namespace Caracal
             m_builder
                 .appendIndented(stringify(NodeKind::NumberLiteral))
                 .append(": ")
-                .appendLine(lexeme(m_tree.mainToken(index)));
-            if (m_tree.subtreeSize(index) > 1)
+                .appendLine(lexeme(m_buffer.mainToken(index)));
+            const auto suffix = NodeLayout::optionalChild(m_buffer, index);
+            if (suffix.hasChild)
             {
-                printTypeName(index - 1);
+                printTypeName(suffix.child);
             }
         }
 
@@ -1144,8 +1082,8 @@ namespace Caracal
                 .appendLine("): {");
             m_builder.pushIndentation();
 
-            WriteIndentedTypeName(m_builder, m_module, Type::Undefined());
-            if (m_tree.isDynamicArrayLiteral(m_tokens, index))
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
+            if (m_buffer.isDynamicArrayLiteral(m_tokens, index))
             {
                 m_builder.appendIndentedLine("Dynamic: true");
             }
@@ -1161,7 +1099,7 @@ namespace Caracal
 
         void printNode(u32 index)
         {
-            const auto kind = m_tree.kind(index);
+            const auto kind = m_buffer.kind(index);
             switch (kind)
             {
                 case NodeKind::ConstantDeclaration:
@@ -1206,7 +1144,7 @@ namespace Caracal
                 }
                 case NodeKind::EnumFieldDeclaration:
                 {
-                    printEnumFieldDeclaration(index);
+                    printEnumFieldDeclaration(index, nullptr);
                     break;
                 }
                 case NodeKind::TypeDefinitionStatement:
@@ -1286,7 +1224,7 @@ namespace Caracal
                     m_builder
                         .appendIndented(stringify(kind))
                         .append(": ")
-                        .appendLine(lexeme(m_tree.mainToken(index)));
+                        .appendLine(lexeme(m_buffer.mainToken(index)));
                     break;
                 }
                 case NodeKind::NumberLiteral:
@@ -1318,17 +1256,18 @@ namespace Caracal
             }
         }
 
-        const NodeBuffer& m_tree;
+        const NodeBuffer& m_buffer;
         const TokenBuffer& m_tokens;
         SemanticContext* m_module;
+        u16 m_fileId;
         StringBuilder m_builder;
         std::vector<u32> m_childrenStack;
         std::vector<u32> m_pendingAnnotations;
     };
 
-    std::string prettyPrint(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module)
+    std::string prettyPrint(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module, u16 fileId)
     {
-        ParseTreePrinter printer{ buffer, tokens, module };
+        ParseTreePrinter printer{ buffer, tokens, module, fileId };
         return printer.run();
     }
 }

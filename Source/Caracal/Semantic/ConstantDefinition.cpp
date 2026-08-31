@@ -21,6 +21,17 @@ namespace Caracal
     {
     }
 
+    ConstantDefinition::ConstantDefinition(
+        std::string_view name,
+        Type type,
+        NodeIndex initializer) noexcept
+        : m_name{ name }
+        , m_expression{ nullptr }
+        , m_type{ type }
+        , m_initializerNode{ initializer }
+    {
+    }
+
     Type ConstantDefinition::type() const noexcept
     {
         return m_type;

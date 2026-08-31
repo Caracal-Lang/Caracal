@@ -98,9 +98,18 @@ namespace Caracal
         return m_parseTrees;
     }
 
+    const NodeBuffer& CompilationContext::nodeBuffer(u16 fileId) const noexcept
+    {
+        return m_units[fileId].nodeBuffer;
+    }
     const TokenBuffer& CompilationContext::tokenBuffer(const Token& token) const noexcept
     {
         return m_units[token.fileId].parseTree->tokens();
+    }
+
+    const TokenBuffer& CompilationContext::tokenBuffer(u16 fileId) const noexcept
+    {
+        return m_units[fileId].parseTree->tokens();
     }
 
     std::string_view CompilationContext::getLexeme(const Token& token) const noexcept
@@ -108,9 +117,21 @@ namespace Caracal
         return tokenBuffer(token).getLexeme(token);
     }
 
+    std::string_view CompilationContext::getLexeme(u16 fileId, u32 tokenIndex) const noexcept
+    {
+        const auto& tokens = tokenBuffer(fileId);
+        return tokens.getLexeme(tokens.getToken(static_cast<i32>(tokenIndex)));
+    }
+
     const SourceLocation& CompilationContext::sourceLocation(const Token& token) const noexcept
     {
         return tokenBuffer(token).getSourceLocation(token);
+    }
+
+    const SourceLocation& CompilationContext::sourceLocation(u16 fileId, u32 tokenIndex) const noexcept
+    {
+        const auto& tokens = tokenBuffer(fileId);
+        return tokens.getSourceLocation(tokens.getToken(static_cast<i32>(tokenIndex)));
     }
 
     const SourceTextSharedPtr& CompilationContext::source(const Token& token) const noexcept

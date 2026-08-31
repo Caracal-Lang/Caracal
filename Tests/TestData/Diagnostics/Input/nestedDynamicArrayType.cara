@@ -1,0 +1,4 @@
+def main() i32 {
+    grid : [[i32; 2]; _] = 0;
+    return 0;
+}

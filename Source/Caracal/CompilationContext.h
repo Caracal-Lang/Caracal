@@ -65,8 +65,12 @@ namespace Caracal
         [[nodiscard]] const std::vector<ParseTreeUPtr>& parseTreesFor(bool isPreludePass) const noexcept;
 
         [[nodiscard]] const TokenBuffer& tokenBuffer(const Token& token) const noexcept;
+        [[nodiscard]] const TokenBuffer& tokenBuffer(u16 fileId) const noexcept;
+        [[nodiscard]] const NodeBuffer& nodeBuffer(u16 fileId) const noexcept;
         [[nodiscard]] std::string_view getLexeme(const Token& token) const noexcept;
+        [[nodiscard]] std::string_view getLexeme(u16 fileId, u32 tokenIndex) const noexcept;
         [[nodiscard]] const SourceLocation& sourceLocation(const Token& token) const noexcept;
+        [[nodiscard]] const SourceLocation& sourceLocation(u16 fileId, u32 tokenIndex) const noexcept;
         [[nodiscard]] const SourceTextSharedPtr& source(const Token& token) const noexcept;
 
     private:

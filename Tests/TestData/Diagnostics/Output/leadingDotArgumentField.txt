@@ -1,0 +1,26 @@
+ Error T0096 Field access is missing the leading dot
+     ,-[Diagnostics/Input/leadingDotArgumentField.cara:16:31]
+  13 | 
+  14 |     def mix() i32
+  15 |     {
+  16 |         return .inner.combine(seed);
+     .                               ----
+     .                                 `-- 'seed' is a field, not a local variable
+  17 |     }
+  18 | }
+  19 | 
+     `----
+  Fix: Write '.seed' to access the field.
+ Error T0016 Argument type mismatch
+     ,-[Diagnostics/Input/leadingDotArgumentField.cara:16:31]
+  13 | 
+  14 |     def mix() i32
+  15 |     {
+  16 |         return .inner.combine(seed);
+     .                               ----
+     .                                 `-- Argument 1 of 'combine' expects 'i32', but got 'undefined'
+  17 |     }
+  18 | }
+  19 | 
+     `----
+  Fix: Change the mismatched argument to match the parameter type.

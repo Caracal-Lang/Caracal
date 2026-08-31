@@ -291,22 +291,22 @@ namespace Caracal
         }
     }
 
-    FoldResult FoldAddition(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldAddition(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldArithmetic(ArithmeticOperation::Addition, lhs, rhs);
     }
 
-    FoldResult FoldSubtraction(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldSubtraction(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldArithmetic(ArithmeticOperation::Subtraction, lhs, rhs);
     }
 
-    FoldResult FoldMultiplication(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldMultiplication(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldArithmetic(ArithmeticOperation::Multiplication, lhs, rhs);
     }
 
-    FoldResult FoldDivision(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldDivision(const FoldValue& lhs, const FoldValue& rhs)
     {
         return std::visit(
             [](const auto& left, const auto& right) -> FoldResult
@@ -355,47 +355,47 @@ namespace Caracal
             rhs);
     }
 
-    FoldResult FoldEqual(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldEqual(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::Equal, lhs, rhs);
     }
 
-    FoldResult FoldNotEqual(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldNotEqual(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::NotEqual, lhs, rhs);
     }
 
-    FoldResult FoldLessThan(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldLessThan(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::LessThan, lhs, rhs);
     }
 
-    FoldResult FoldLessOrEqual(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldLessOrEqual(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::LessOrEqual, lhs, rhs);
     }
 
-    FoldResult FoldGreaterThan(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldGreaterThan(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::GreaterThan, lhs, rhs);
     }
 
-    FoldResult FoldGreaterOrEqual(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldGreaterOrEqual(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldComparison(ComparisonOperation::GreaterOrEqual, lhs, rhs);
     }
 
-    FoldResult FoldLogicalAnd(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldLogicalAnd(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldLogical(true, lhs, rhs);
     }
 
-    FoldResult FoldLogicalOr(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldLogicalOr(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldLogical(false, lhs, rhs);
     }
 
-    FoldResult FoldValueNegation(const FoldValue& value)
+    FoldResult foldValueNegation(const FoldValue& value)
     {
         return std::visit(
             [](const auto& payload) -> FoldResult
@@ -428,7 +428,7 @@ namespace Caracal
             value);
     }
 
-    FoldResult FoldLogicalNegation(const FoldValue& value)
+    FoldResult foldLogicalNegation(const FoldValue& value)
     {
         return std::visit(
             [](const auto& payload) -> FoldResult
@@ -473,22 +473,22 @@ namespace Caracal
             rhs);
     }
 
-    FoldResult FoldBitAnd(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldBitAnd(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldBitwiseBinary(lhs, rhs, [](auto left, auto right) { return left & right; });
     }
 
-    FoldResult FoldBitOr(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldBitOr(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldBitwiseBinary(lhs, rhs, [](auto left, auto right) { return left | right; });
     }
 
-    FoldResult FoldBitXor(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldBitXor(const FoldValue& lhs, const FoldValue& rhs)
     {
         return FoldBitwiseBinary(lhs, rhs, [](auto left, auto right) { return left ^ right; });
     }
 
-    FoldResult FoldBitNot(const FoldValue& value)
+    FoldResult foldBitNot(const FoldValue& value)
     {
         return std::visit(
             [](const auto& payload) -> FoldResult
@@ -535,7 +535,7 @@ namespace Caracal
             amount);
     }
 
-    FoldResult FoldShiftLeft(const FoldValue& value, const FoldValue& amount)
+    FoldResult foldShiftLeft(const FoldValue& value, const FoldValue& amount)
     {
         // shifting in unsigned space matches the runtime wraparound for signed values
         return FoldShift(value, amount, [](auto left, i32 maskedAmount) 
@@ -545,7 +545,7 @@ namespace Caracal
             });
     }
 
-    FoldResult FoldShiftRight(const FoldValue& value, const FoldValue& amount)
+    FoldResult foldShiftRight(const FoldValue& value, const FoldValue& amount)
     {
         // signed values shift arithmetic and unsigned values shift logical, matching the emitted instructions
         return FoldShift(value, amount, [](auto left, i32 maskedAmount) 

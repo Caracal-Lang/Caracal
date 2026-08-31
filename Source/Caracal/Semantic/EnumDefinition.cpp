@@ -13,17 +13,20 @@ namespace Caracal
     {
     }
     
-    const EnumField& EnumDefinition::getFieldByName(std::string_view fieldName) const noexcept
+    const EnumField* EnumDefinition::tryGetFieldByName(std::string_view fieldName) const noexcept
     {
-        const auto index = m_fieldIndices.at(std::string(fieldName));
-        return m_fields.at(index);
+        const auto found = m_fieldIndices.find(fieldName);
+        if (found == m_fieldIndices.end())
+        {
+            return nullptr;
+        }
+
+        return &m_fields[found->second];
     }
 
     bool EnumDefinition::hasField(std::string_view fieldName) const noexcept
     {
-        if (m_fieldIndices.contains(std::string(fieldName)))
-            return true;
-        return false;
+        return m_fieldIndices.contains(fieldName);
     }
 
     void EnumDefinition::addField(std::string_view name, Expression* expression, SourceLocation location) noexcept

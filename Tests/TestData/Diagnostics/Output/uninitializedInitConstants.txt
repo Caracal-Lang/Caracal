@@ -1,0 +1,21 @@
+ Error T0055 Uninitialized init constant
+    ,-[Diagnostics/Input/uninitializedInitConstants.cara:1:1]
+  1 | first :: init i32;
+    . -----
+    .   `-- 'first' is an 'init' constant but is never initialized.
+  2 | second :: init i32;
+  3 | 
+  4 | def main() i32
+    `----
+  Fix: Assign 'first' once inside 'main'.
+ Error T0055 Uninitialized init constant
+    ,-[Diagnostics/Input/uninitializedInitConstants.cara:2:1]
+  1 | first :: init i32;
+  2 | second :: init i32;
+    . ------
+    .    `-- 'second' is an 'init' constant but is never initialized.
+  3 | 
+  4 | def main() i32
+  5 | {
+    `----
+  Fix: Assign 'second' once inside 'main'.
