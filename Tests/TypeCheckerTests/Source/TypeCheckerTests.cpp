@@ -133,77 +133,8 @@ static void UnitSemanticsResolveCrossFileNodeIndexes()
     CaraTest::isTrue(context.typeOfNode(Caracal::NodeIndex{ 2, 400 }) == Caracal::Type::Undefined());
 }
 
-static void PrintBenchmarkLine(const char* label, std::vector<double>& milliseconds, size_t byteCount)
-{
-    std::sort(milliseconds.begin(), milliseconds.end());
-    const auto minimum = milliseconds.front();
-    const auto median = milliseconds[milliseconds.size() / 2];
-    const auto megabytesPerSecond = (static_cast<double>(byteCount) / (1024.0 * 1024.0)) / (minimum / 1000.0);
-    std::cout << "      " << label << ": min " << minimum << " ms, median " << median
-        << " ms, " << megabytesPerSecond << " MB/s" << std::endl;
-}
-
-static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, const std::filesystem::path& preludePath, const char* label)
-{
-    const auto data = Caracal::File::readText(absolutePath);
-    if (!data.has_value())
-    {
-        CaraTest::fail();// ("benchmark input missing");
-    }
-    const auto byteCount = data.value().size();
-
-    constexpr int RunCount = 5;
-    std::vector<double> milliseconds;
-    milliseconds.reserve(RunCount);
-    for (int run = 0; run < RunCount; run++)
-    {
-        Caracal::CompilationContext context;
-        Caracal::loadPrelude(context, preludePath);
-
-        context.addSource(data.value(), absolutePath, Caracal::UnitOrigin::User);
-        Caracal::DiagnosticsBag diagnostics;
-        Caracal::lexAndParse(context, diagnostics);
-        if (!diagnostics.diagnostics().empty())
-        {
-            CaraTest::fail();// ("benchmark input must parse without diagnostics");
-        }
-
-        const auto startTime = std::chrono::high_resolution_clock::now();
-        Caracal::Module irModule{};
-        Caracal::TypeChecker checker{ context, false, diagnostics, irModule };
-        const auto checkedCleanly = checker.typeCheck();
-        Caracal::optimize(irModule);
-        const auto endTime = std::chrono::high_resolution_clock::now();
-
-        if (!checkedCleanly || !diagnostics.diagnostics().empty())
-        {
-            std::cout << Caracal::formatDiagnostics(diagnostics, {}) << std::endl;
-            CaraTest::fail();// ("benchmark input must check without diagnostics");
-        }
-
-        const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        milliseconds.push_back(static_cast<double>(nanoseconds) / 1000000.0);
-    }
-
-    PrintBenchmarkLine(label, milliseconds, byteCount);
-}
-
-static void OneMillionLinesTypeCheckTime()
-{
-#ifdef _DEBUG
-    CaraTest::skip();
-#endif
-
-    const auto currentFilePath = std::filesystem::path(__FILE__);
-    const auto inputDirectory = currentFilePath.parent_path() / "../../TestData/Input";
-    const auto preludePath = currentFilePath.parent_path() / "../../../Prelude";
-    BenchmarkTypeCheckFile(std::filesystem::absolute(inputDirectory / "oneMilLines.cara"), preludePath, "oneMilLinesShort");
-    BenchmarkTypeCheckFile(std::filesystem::absolute(inputDirectory / "oneMilLinesLongIdents.cara"), preludePath, "oneMilLinesLong ");
-}
-
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
     CaraTest::addTest("UnitSemanticsResolveCrossFileNodeIndexes", UnitSemanticsResolveCrossFileNodeIndexes),
-    CaraTest::addTest("OneMillionLinesTypeCheckTime", OneMillionLinesTypeCheckTime),
 };

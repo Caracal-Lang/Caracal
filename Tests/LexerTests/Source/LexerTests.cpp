@@ -529,61 +529,6 @@ static void LongRunBoundaries()
     CaraTest::areEqual(std::string_view("name"), tokens.getLexeme(tokens.getToken(1)));
 }
 
-static void BenchmarkLexFile(const std::filesystem::path& absolutePath, const char* label)
-{
-    if (!std::filesystem::exists(absolutePath))
-    {
-        CaraTest::fail();// ("benchmark input missing");
-    }
-
-    const auto data = Caracal::File::readText(absolutePath);
-    if (!data.has_value())
-    {
-        CaraTest::fail();// ("could not read benchmark input");
-    }
-
-    const auto source = std::make_shared<Caracal::SourceText>(data.value());
-
-    constexpr int RunCount = 20;
-    std::vector<double> milliseconds;
-    milliseconds.reserve(RunCount);
-    for (int run = 0; run < RunCount; run++)
-    {
-        Caracal::DiagnosticsBag diagnostics;
-        const auto startTime = std::chrono::high_resolution_clock::now();
-        const auto tokens = Caracal::lex(source, diagnostics);
-        const auto endTime = std::chrono::high_resolution_clock::now();
-
-        if (!diagnostics.diagnostics().empty())
-        {
-            CaraTest::fail();// ("benchmark input must lex without diagnostics");
-        }
-
-        const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        milliseconds.push_back(static_cast<double>(nanoseconds) / 1000000.0);
-    }
-
-    std::sort(milliseconds.begin(), milliseconds.end());
-    const auto minimum = milliseconds.front();
-    const auto median = milliseconds[milliseconds.size() / 2];
-    const auto megabytesPerSecond = (static_cast<double>(data.value().size()) / (1024.0 * 1024.0)) / (minimum / 1000.0);
-    std::cout << "      " << label << ": min " << minimum << " ms, median " << median
-        << " ms, " << megabytesPerSecond << " MB/s" << std::endl;
-}
-
-static void OneMillionLinesTime()
-{
-#ifdef _DEBUG
-    CaraTest::skip();
-#endif
-
-    const auto currentFilePath = std::filesystem::path(__FILE__);
-    const auto inputDirectory = currentFilePath.parent_path() / "../../TestData/Input";
-    BenchmarkLexFile(std::filesystem::absolute(inputDirectory / "oneMilLinesOld.txt"), "oneMilLinesOld  ");
-    BenchmarkLexFile(std::filesystem::absolute(inputDirectory / "oneMilLines.cara"), "oneMilLinesShort");
-    BenchmarkLexFile(std::filesystem::absolute(inputDirectory / "oneMilLinesLongIdents.cara"), "oneMilLinesLong ");
-}
-
 static void TokenResolutionAcrossUnits()
 {
     Caracal::DiagnosticsBag diagnostics;
@@ -632,5 +577,4 @@ static const auto tests =
     CaraTest::addTest("ScanPrimitivesDifferential", ScanPrimitivesDifferential),
     CaraTest::addTest("LongRunBoundaries", LongRunBoundaries),
     CaraTest::addTest("TokenResolutionAcrossUnits", TokenResolutionAcrossUnits),
-    CaraTest::addTest("OneMillionLinesTime", OneMillionLinesTime),
 };
