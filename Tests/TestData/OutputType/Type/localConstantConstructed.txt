@@ -1,0 +1,178 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: true
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: px
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: true
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: py
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: y
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Point) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: sum
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: px
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: py
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        ConstantDeclaration: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: p
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Point
+                    Left: {
+                        NameExpression: {
+                            Type: Point
+                            Name: Point
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref Point, i32, i32) -> void
+                            NameExpression: {
+                                Type: (ref Point, i32, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(2): {
+                                NumberLiteral: 3
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Point
+                        Name: p
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref Point) -> i32
+                        NameExpression: {
+                            Type: (ref Point) -> i32
+                            Name: sum
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

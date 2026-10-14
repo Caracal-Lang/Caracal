@@ -1,0 +1,16 @@
+type Point(x: i32, y: i32)
+{
+    px : i32 : x
+    py : i32 : y
+
+    def sum() i32
+    {
+        return .px %+ .py;
+    }
+}
+
+def use() i32
+{
+    p :: Point.new(3, 4);
+    return p.sum();
+}

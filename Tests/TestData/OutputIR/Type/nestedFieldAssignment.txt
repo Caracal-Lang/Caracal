@@ -1,0 +1,52 @@
+type Inner
+    value: i32
+
+type Outer
+    inner: Inner
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define use() i32
+block entry(0):
+    %slot0 = allocate_local : Outer "o"
+    %slot1 = allocate_local : Inner "constructed"
+    %0 = address_of %slot0 : ref Outer
+    %1 = address_of %slot1 : ref Inner
+    %2 = const 1 : i32
+    call Inner.new(%1, %2)
+    %3 = load_value %1 : Inner
+    call Outer.new(%0, %3)
+    %4 = const 7 : i32
+    %5 = address_of_field %0.0 : ref Inner "inner"
+    %6 = address_of_field %5.0 : ref i32 "value"
+    store_value %4, %6 : i32
+    %7 = address_of_field %0.0 : ref Inner "inner"
+    %8 = address_of_field %7.0 : ref i32 "value"
+    %9 = load_value %8 : i32
+    return %9
+
+define Inner.new(%0: ref Inner ".this", %1: i32 "v") void
+block entry(0):
+    %0 = parameter 0 : ref Inner ".this"
+    %1 = parameter 1 : i32 "v"
+    %2 = address_of_field %0.0 : ref i32 "value"
+    store_value %1, %2 : i32
+    return
+
+define Outer.new(%0: ref Outer ".this", %1: Inner "i") void
+block entry(0):
+    %0 = parameter 0 : ref Outer ".this"
+    %1 = parameter 1 : Inner "i"
+    %slot0 = allocate_local : Inner "i"
+    %2 = address_of %slot0 : ref Inner
+    store_value %1, %2 : Inner
+    %3 = load_value %2 : Inner
+    %4 = address_of_field %0.0 : ref Inner "inner"
+    store_value %3, %4 : Inner
+    return

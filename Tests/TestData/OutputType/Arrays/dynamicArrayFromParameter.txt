@@ -1,0 +1,124 @@
+FunctionDefinitionStatement: {
+    Type: ([i32; _]) -> i32
+    Name: take
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: xs
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: ys
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: xs
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: ys
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: [i32; _]
+                    Lexeme: [i32; _]
+                    Kind: Dynamic
+                    DataType: {
+                        TypeNameNode: {
+                            Type: i32
+                            Lexeme: i32
+                        }
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 4
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: ([i32; _]) -> i32
+                NameExpression: {
+                    Type: ([i32; _]) -> i32
+                    Name: take
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: items
+                    }
+                }
+            }
+        }
+    }
+}

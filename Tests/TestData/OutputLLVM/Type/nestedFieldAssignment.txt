@@ -1,0 +1,47 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+%Outer = type { %Inner }
+%Inner = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @use() {
+entry:
+  %o = alloca %Outer, align 8
+  %constructed = alloca %Inner, align 8
+  call void @Inner.new(ptr %constructed, i32 1)
+  %load = load %Inner, ptr %constructed, align 4
+  call void @Outer.new(ptr %o, %Inner %load)
+  %inner = getelementptr inbounds nuw %Outer, ptr %o, i32 0, i32 0
+  %value = getelementptr inbounds nuw %Inner, ptr %inner, i32 0, i32 0
+  store i32 7, ptr %value, align 4
+  %inner1 = getelementptr inbounds nuw %Outer, ptr %o, i32 0, i32 0
+  %value2 = getelementptr inbounds nuw %Inner, ptr %inner1, i32 0, i32 0
+  %load3 = load i32, ptr %value2, align 4
+  ret i32 %load3
+}
+
+define void @Inner.new(ptr nonnull %0, i32 %1) {
+entry:
+  %value = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %value, align 4
+  ret void
+}
+
+define void @Outer.new(ptr nonnull %0, %Inner %1) {
+entry:
+  %i = alloca %Inner, align 8
+  store %Inner %1, ptr %i, align 4
+  %load = load %Inner, ptr %i, align 4
+  %inner = getelementptr inbounds nuw %Outer, ptr %0, i32 0, i32 0
+  store %Inner %load, ptr %inner, align 4
+  ret void
+}

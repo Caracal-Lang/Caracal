@@ -2,10 +2,10 @@
 
 namespace Caracal
 {
-    Function::Function(FunctionId id, std::string name, const std::vector<IRParameter>& parameters, Type returnType)
+    Function::Function(FunctionId id, std::string name, std::vector<IRParameter> parameters, Type returnType)
         : m_id{ id }
         , m_name{ std::move(name) }
-        , m_parameters{ parameters }
+        , m_parameters{ std::move(parameters) }
         , m_returnType{ returnType }
     {
     }
@@ -36,7 +36,19 @@ namespace Caracal
     void Function::addBlock(BasicBlock block)
     {
         const auto blockId = block.id();
-        m_blockIndices.emplace(blockId, m_blocks.size());
+        m_blockIndices.insert_or_assign(blockId, m_blocks.size());
         m_blocks.push_back(std::make_unique<BasicBlock>(std::move(block)));
+    }
+
+    bool Function::popLastBlock(BlockId expectedId) noexcept
+    {
+        if (m_blocks.empty() || m_blocks.back()->id() != expectedId)
+        {
+            return false;
+        }
+
+        m_blockIndices.erase(expectedId);
+        m_blocks.pop_back();
+        return true;
     }
 }

@@ -33,18 +33,21 @@ static void FileTests(
     if (!Caracal::validateSourceEncoding(source, diagnostics))
         CaraTest::fail();
 
-    const auto tokens = Caracal::lex(source, diagnostics);
+    const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
+    Caracal::CompilationContext preludeContext;
+    Caracal::loadPrelude(preludeContext, preludePath);
+
+    // next free fileId after the prelude
+    const auto fileId = static_cast<u16>(preludeContext.units().size());
+    const auto tokens = Caracal::lex(source, diagnostics, fileId);
 
     const auto startTime = std::chrono::high_resolution_clock::now();
     const auto nodeBuffer = Caracal::parse(tokens, diagnostics);
     const auto endTime = std::chrono::high_resolution_clock::now();
 
     std::cout << "      parse(): " << CaraTest::stringify(endTime - startTime) << std::endl;
-    const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
-    Caracal::CompilationContext preludeContext;
-    Caracal::loadPrelude(preludeContext, preludePath);
 
-    const auto output = Caracal::prettyPrint(nodeBuffer, tokens, &preludeContext.semanticContext());
+    const auto output = Caracal::prettyPrint(nodeBuffer, tokens, &preludeContext.semanticContext(), fileId);
 
     CaraTest::isTrue(diagnostics.diagnostics().empty());
     const auto outputDirectory = std::filesystem::path(outputFilePath).parent_path();

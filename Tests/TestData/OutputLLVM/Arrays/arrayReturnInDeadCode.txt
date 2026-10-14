@@ -1,0 +1,38 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define [3 x i32] @pick(i1 %0) {
+entry:
+  %temp = alloca [3 x i32], align 4
+  %temp3 = alloca [3 x i32], align 4
+  br i1 %0, label %if.true, label %if.false
+
+if.true:                                          ; preds = %entry
+  %element = getelementptr [3 x i32], ptr %temp, i32 0, i32 0
+  store i32 1, ptr %element, align 4
+  %element1 = getelementptr [3 x i32], ptr %temp, i32 0, i32 1
+  store i32 2, ptr %element1, align 4
+  %element2 = getelementptr [3 x i32], ptr %temp, i32 0, i32 2
+  store i32 3, ptr %element2, align 4
+  %load = load [3 x i32], ptr %temp, align 4
+  ret [3 x i32] %load
+
+if.false:                                         ; preds = %entry
+  %element4 = getelementptr [3 x i32], ptr %temp3, i32 0, i32 0
+  store i32 4, ptr %element4, align 4
+  %element5 = getelementptr [3 x i32], ptr %temp3, i32 0, i32 1
+  store i32 5, ptr %element5, align 4
+  %element6 = getelementptr [3 x i32], ptr %temp3, i32 0, i32 2
+  store i32 6, ptr %element6, align 4
+  %load7 = load [3 x i32], ptr %temp3, align 4
+  ret [3 x i32] %load7
+}

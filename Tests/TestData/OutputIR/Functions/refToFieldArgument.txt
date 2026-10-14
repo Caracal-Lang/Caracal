@@ -1,0 +1,37 @@
+type Box
+    value: i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define store(%0: ref i32 "target") void
+block entry(0):
+    %0 = parameter 0 : ref i32 "target"
+    %1 = const 5 : i32
+    store_value %1, %0 : i32
+    return
+
+define use() i32
+block entry(0):
+    %slot0 = allocate_local : Box "b"
+    %0 = address_of %slot0 : ref Box
+    %1 = const 1 : i32
+    call Box.new(%0, %1)
+    %2 = address_of_field %0.0 : ref i32 "value"
+    call store(%2)
+    %3 = address_of_field %0.0 : ref i32 "value"
+    %4 = load_value %3 : i32
+    return %4
+
+define Box.new(%0: ref Box ".this", %1: i32 "v") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = parameter 1 : i32 "v"
+    %2 = address_of_field %0.0 : ref i32 "value"
+    store_value %1, %2 : i32
+    return

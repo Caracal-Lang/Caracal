@@ -30,7 +30,8 @@ namespace Caracal
     [[nodiscard]] CARACAL_API FoldResult foldAddition(const FoldValue& lhs, const FoldValue& rhs);
     [[nodiscard]] CARACAL_API FoldResult foldSubtraction(const FoldValue& lhs, const FoldValue& rhs);
     [[nodiscard]] CARACAL_API FoldResult foldMultiplication(const FoldValue& lhs, const FoldValue& rhs);
-    [[nodiscard]] CARACAL_API FoldResult foldDivision(const FoldValue& lhs, const FoldValue& rhs);
+    [[nodiscard]] CARACAL_API FoldResult foldFloatDivision(const FoldValue& lhs, const FoldValue& rhs);
+    [[nodiscard]] CARACAL_API FoldResult foldIntegerDivision(const FoldValue& lhs, const FoldValue& rhs);
     [[nodiscard]] CARACAL_API FoldResult foldEqual(const FoldValue& lhs, const FoldValue& rhs);
     [[nodiscard]] CARACAL_API FoldResult foldNotEqual(const FoldValue& lhs, const FoldValue& rhs);
     [[nodiscard]] CARACAL_API FoldResult foldLessThan(const FoldValue& lhs, const FoldValue& rhs);

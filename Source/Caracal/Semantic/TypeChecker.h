@@ -2,8 +2,11 @@
 
 #include <Caracal/API.h>
 #include <Caracal/CompilationContext.h>
+#include <Caracal/IR/IREmitter.h>
+#include <Caracal/Optimization/OperatorFolding.h>
 #include <Caracal/Defines.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
+#include <Caracal/IR/ValueRef.h>
 #include <Caracal/Semantic/BuiltinTypeDescription.h>
 #include <Caracal/Semantic/Parameter.h>
 #include <Caracal/Semantic/Scope.h>
@@ -16,6 +19,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Caracal
@@ -26,7 +30,8 @@ namespace Caracal
         TypeChecker(
             CompilationContext& compilationContext,
             bool isPreludePass,
-            DiagnosticsBag& diagnostics);
+            DiagnosticsBag& diagnostics,
+            Module& irModule);
 
         CARACAL_DELETE_COPY_DELETE_MOVE(TypeChecker)
 
@@ -37,6 +42,21 @@ namespace Caracal
         {
             std::optional<Type> contextualNumberType;
             bool negatedLiteral = false;
+            bool wantsAddress = false;
+            bool receiverPosition = false;
+        };
+
+        struct CheckedValue
+        {
+            Type type;
+            ValueRef value{};
+            std::optional<FoldValue> folded{};
+            bool signFolded = false;
+
+            CheckedValue(Type checkedType)
+                : type{ checkedType }
+            {
+            }
         };
 
         struct InitConstantRecord
@@ -54,12 +74,26 @@ namespace Caracal
             bool wasRead = false;
             bool referencesConstant = false;
             u32 scopeIndex = 0;
+            std::optional<FoldValue> folded{};
         };
 
         struct ScopeFrame
         {
             u32 boundNamesStart = 0;
             ScopeKind kind = ScopeKind::Invalid;
+        };
+        
+        struct CapturedArrayElement
+        {
+            u32 node;
+            ValueRef value;
+            std::optional<FoldValue> folded;
+        };
+
+        struct ConstructorDestination
+        {
+            ValueRef address;
+            bool loadResult = false;
         };
 
         void collectDeclarations();
@@ -68,12 +102,16 @@ namespace Caracal
         void collectEnumDeclaration(const CompilationUnit& unit, u32 index);
         void collectTypeDeclaration(const CompilationUnit& unit, u32 index);
         void collectBuiltinTypeDeclaration(const CompilationUnit& unit, u32 index);
+        void collectMethodDeclarations();
+        void collectMethodAnnotationsBefore(const CompilationUnit& unit, u32 methodIndex, const TypeDefinition& typeDefinition, std::vector<u32>& annotations) const;
+        [[nodiscard]] const std::vector<u32>& collectAddressTakenNameIds(const CompilationUnit& unit, u32 bodyIndex);
+        [[nodiscard]] std::vector<u32> collectRootStatements(const NodeBuffer& buffer) const;
+        [[nodiscard]] std::vector<Parameter> collectParameterNames(const CompilationUnit& unit, u32 parametersNode);
+
         [[nodiscard]] BuiltinTypeDescription extractPendingBuiltinTypeDescription(const CompilationUnit& unit) const;
         void reportDuplicateTypeDeclaration(const CompilationUnit& unit, u32 index, std::string_view name, Type existingType);
         void resolveWellKnownTypes();
         void checkUninitializedInitConstants();
-
-        void collectMethodDeclarations();
         void typeCheckFunctionSignatures();
         void typeCheckTypeSignatures();
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
@@ -120,18 +158,31 @@ namespace Caracal
         void typeCheckBlockNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] bool receiverChainIsConstant(const CompilationUnit& unit, u32 expressionIndex, std::string& rootName, bool& referencesConstant);
 
-        [[nodiscard]] Type typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context = {});
-        [[nodiscard]] Type typeCheckGroupingExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckUnaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckBinaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckNameExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckFunctionCallExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckMemberAccessExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type finishResolvedMethodCall(const CompilationUnit& unit, u32 index, u32 callIndex, u32 nameExpressionIndex, Type methodType, const ExpressionContext& context);
-        [[nodiscard]] bool typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
-        [[nodiscard]] Type typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context = {});
+        [[nodiscard]] CheckedValue typeCheckGroupingExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckUnaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckBinaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckNameExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckFunctionCallExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckMemberAccessExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue finishResolvedMethodCall(const CompilationUnit& unit, u32 index, u32 callIndex, u32 nameExpressionIndex, Type methodType, const ExpressionContext& context, std::optional<ValueRef> implicitArgument = std::nullopt);
+        [[nodiscard]] bool typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context, ValueRef& emittedCallValue, std::optional<FoldValue>& emittedCallFold, std::optional<ValueRef> implicitArgument = std::nullopt);
+
+        [[nodiscard]] Type tryResolveConstructedType(const CompilationUnit& unit, u32 strippedIndex);
+        [[nodiscard]] ValueRef memberReceiverAddress(const CompilationUnit& unit, u32 leftIndex);
+        [[nodiscard]] ValueRef addressOfExpression(const CompilationUnit& unit, u32 index);
+        [[nodiscard]] Type resolveAggregateInitializerType(const CompilationUnit& unit, Type declaredType, u32 strippedInitializer, Type constructedType, bool& initializerWantsAddress);
+        void emitLocalBinding(const CompilationUnit& unit, u32 nameId, std::string_view name, Type bindingType, Type rightType, u32 strippedRight, const CheckedValue& checkedRight, bool referencesConstant, ValueRef aggregateDestination, bool constructorFilled);
+        [[nodiscard]] bool memberLeftYieldsAddress(const CompilationUnit& unit, u32 leftIndex);
+        void recordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue);
+        [[nodiscard]] std::string escapedStringContent(const CompilationUnit& unit, u32 literalIndex);
+        void reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex);
+        void reportUnaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index);
+        void emitCapturedArrayLiteral(const CompilationUnit& unit, u32 literalIndex, ValueRef destination, Type arrayType);
+        [[nodiscard]] std::optional<ConstantValue> tryBuildAggregateConstant(const CompilationUnit& unit, u32 literalIndex);
+        [[nodiscard]] CheckedValue typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
+        [[nodiscard]] CheckedValue typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] Type coerceConditionType(Type conditionType, const CompilationUnit& unit, u32 conditionIndex);
         [[nodiscard]] bool isAssignableTo(Type sourceType, Type targetType) const noexcept;
         [[nodiscard]] std::optional<Type> contextualTypeForExpectedType(Type expectedType) const noexcept;
@@ -145,31 +196,27 @@ namespace Caracal
         void validateEnumAnnotation(const CompilationUnit& unit, u32 enumIndex, const std::vector<u32>& annotations, bool& isFlag, std::optional<i32>& stepValue);
         void validateTypeAnnotation(const CompilationUnit& unit, u32 typeIndex, const std::vector<u32>& annotations);
 
-        [[nodiscard]] std::vector<u32> collectRootStatements(const NodeBuffer& buffer) const;
-        [[nodiscard]] std::vector<Parameter> collectParameterNames(const CompilationUnit& unit, u32 parametersNode);
         [[nodiscard]] Token tokenAt(u16 fileId, u32 tokenIndex) const noexcept;
         [[nodiscard]] std::string_view nameOf(const CompilationUnit& unit, u32 index) const noexcept;
         [[nodiscard]] const SourceLocation& nameLocation(const CompilationUnit& unit, u32 index) const noexcept;
         [[nodiscard]] SourceLocation annotationLocation(const CompilationUnit& unit, u32 index) const noexcept;
-        void locateDefinitionName(
-            NodeIndex definitionNode,
-            const std::optional<Token>& statementNameToken,
-            SourceTextSharedPtr& source,
-            std::optional<SourceLocation>& location) const noexcept;
-        void collectMethodAnnotationsBefore(const CompilationUnit& unit, u32 methodIndex, const TypeDefinition& typeDefinition, std::vector<u32>& annotations) const;
+        void locateDefinitionName(NodeIndex definitionNode, const std::optional<Token>& statementNameToken, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
         [[nodiscard]] bool pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept;
 
-        Type noteType(const CompilationUnit& unit, u32 index, Type type) noexcept
+        Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept
         {
             m_module.setNodeType(NodeIndex{ unit.fileId, index }, type);
             return type;
         }
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
+        [[nodiscard]] ValueRef emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType);
+        [[nodiscard]] ValueRef dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType);
 
         CompilationContext& m_compilationContext;
         bool m_isPreludePass;
         SemanticContext& m_module;
+        IREmitter m_emitter;
         const TypeCheckerOptions& m_options;
         DiagnosticsBag& m_diagnostics;
 
@@ -185,6 +232,7 @@ namespace Caracal
         std::vector<u32> m_annotationScratch;
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
+        std::vector<u32> m_addressTakenScratch;
 
         Type m_defaultIntegerType = Type::Undefined();
         Type m_defaultFloatingType = Type::Undefined();
@@ -195,11 +243,15 @@ namespace Caracal
         std::string m_currentFunctionName;
 
         static constexpr u32 InvalidNameId = 0xFFFFFFFF;
+        u32 m_thisNameId = 0;
+        bool m_sawUnfoldedBitwiseCall = false;
 
         std::unordered_map<std::string_view, u32, TransparentStringHash, std::equal_to<>> m_nameIds;
         std::vector<std::string_view> m_nameLexemes;
         std::vector<std::vector<u32>> m_tokenNameIds;
         std::vector<std::vector<LexicalBinding>> m_bindingsByName;
+        std::vector<ConstructorDestination> m_constructorDestinations;
+        std::unordered_map<u64, std::vector<CapturedArrayElement>> m_arrayLiteralElements;
         std::vector<u32> m_boundNames;
         std::vector<ScopeFrame> m_scopeFrames;
         std::unordered_map<std::string, InitConstantRecord> m_initConstants;

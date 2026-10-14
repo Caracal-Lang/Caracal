@@ -58,6 +58,8 @@ namespace Caracal
         
     private:
         void collectDeclarations();
+        void locateDefinitionNode(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
+        void locateDefinitionNode(NodeIndex definitionNode, std::optional<SourceLocation>& location) const noexcept;
         void resolveWellKnownTypes();
         void collectMethodDeclarations();
         void typeCheckFunctionSignatures();

@@ -519,6 +519,7 @@ namespace Caracal
 
         [[nodiscard]] bool EliminateInFunction(Function& function)
         {
+            CARACAL_ZONE_DETAIL("dce.eliminatePass");
             std::unordered_set<TemporaryId> usedIds{};
             for (const auto& block : function.blocks())
             {
@@ -530,6 +531,7 @@ namespace Caracal
                 CollectTerminatorUses(block->terminator(), usedIds);
             }
 
+            CARACAL_ZONE_DETAIL("dce.sweep");
             auto removedAny = false;
             for (const auto& block : function.blocks())
             {
@@ -550,6 +552,7 @@ namespace Caracal
 
         void RenumberFunction(Function& function)
         {
+            CARACAL_ZONE_DETAIL("dce.renumber");
             ValueIdMap remap{};
             auto nextId = TemporaryId{ 0 };
             for (const auto& block : function.blocks())
@@ -593,6 +596,15 @@ namespace Caracal
 
             // elimination leaves gaps in the value ids, renumber them densely in definition order
             RenumberFunction(function);
+        }
+
+        if (auto* globalInit = module.tryGetGlobalInitMutable(); globalInit != nullptr)
+        {
+            while (EliminateInFunction(*globalInit))
+            {
+            }
+
+            RenumberFunction(*globalInit);
         }
     }
 }

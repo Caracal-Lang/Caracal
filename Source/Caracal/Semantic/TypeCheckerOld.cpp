@@ -183,6 +183,10 @@ namespace Caracal
                                     otherSource = m_compilationContext.source(otherStatement->nameToken());
                                     otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
                                 }
+                                else
+                                {
+                                    locateDefinitionNode(m_module.getEnumDefinition(existingType).definitionNode(), otherSource, otherLocation);
+                                }
                             }
                             else if (existingType.kind() == TypeKind::Type)
                             {
@@ -191,6 +195,10 @@ namespace Caracal
                                 {
                                     otherSource = m_compilationContext.source(otherStatement->nameToken());
                                     otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
+                                }
+                                else
+                                {
+                                    locateDefinitionNode(m_module.getTypeDefinition(existingType).definitionNode(), otherSource, otherLocation);
                                 }
                             }
 
@@ -242,6 +250,10 @@ namespace Caracal
                                 {
                                     otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
                                 }
+                                else
+                                {
+                                    locateDefinitionNode(existingDefinition.definitionNode(), otherLocation);
+                                }
 
                                 m_diagnostics.addDuplicateBuiltinTypeBindingError(
                                     parseTree->tokens().source(),
@@ -270,6 +282,10 @@ namespace Caracal
                                     otherSource = m_compilationContext.source(otherStatement->nameToken());
                                     otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
                                 }
+                                else
+                                {
+                                    locateDefinitionNode(m_module.getEnumDefinition(existingType).definitionNode(), otherSource, otherLocation);
+                                }
                             }
                             else if (existingType.kind() == TypeKind::Type)
                             {
@@ -278,6 +294,10 @@ namespace Caracal
                                 {
                                     otherSource = m_compilationContext.source(otherStatement->nameToken());
                                     otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
+                                }
+                                else
+                                {
+                                    locateDefinitionNode(m_module.getTypeDefinition(existingType).definitionNode(), otherSource, otherLocation);
                                 }
                             }
 
@@ -310,6 +330,10 @@ namespace Caracal
                             {
                                 otherSource = m_compilationContext.source(otherStatement->nameToken());
                                 otherLocation = m_compilationContext.sourceLocation(otherStatement->nameToken());
+                            }
+                            else
+                            {
+                                locateDefinitionNode(m_module.getFunctionDefinition(existingFunctionType).definitionNode(), otherSource, otherLocation);
                             }
 
                             m_diagnostics.addDuplicateFunctionDeclarationError(
@@ -411,6 +435,10 @@ namespace Caracal
                     if (otherStatement != nullptr)
                     {
                         otherLocation = tokens.getSourceLocation(otherStatement->methodNameNode()->methodNameToken());
+                    }
+                    else
+                    {
+                        locateDefinitionNode(m_module.getFunctionDefinition(methodType).definitionNode(), otherLocation);
                     }
 
                     m_diagnostics.addDuplicateMethodDeclarationError(
@@ -3456,5 +3484,24 @@ namespace Caracal
     Scope* TypeCheckerOld::currentScope() const noexcept
     {
         return m_scopes.back().get();
+    }
+
+    void TypeCheckerOld::locateDefinitionNode(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept
+    {
+        if (definitionNode.index == InvalidNodeIndex)
+        {
+            return;
+        }
+
+        const auto& buffer = m_compilationContext.nodeBuffer(definitionNode.fileId);
+        const auto token = m_compilationContext.tokenBuffer(definitionNode.fileId).getToken(static_cast<i32>(buffer.mainToken(definitionNode.index)));
+        source = m_compilationContext.source(token);
+        location = m_compilationContext.sourceLocation(token);
+    }
+
+    void TypeCheckerOld::locateDefinitionNode(NodeIndex definitionNode, std::optional<SourceLocation>& location) const noexcept
+    {
+        auto source = SourceTextSharedPtr{};
+        locateDefinitionNode(definitionNode, source, location);
     }
 }

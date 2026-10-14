@@ -1,0 +1,46 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define pick(%0: bool "c") [i32; 3]
+block entry(0):
+    %0 = parameter 0 : bool "c"
+    branch if %0, if.true(1), if.false(2)
+block if.true(1):
+    %slot0 = allocate_local : [i32; 3] "temp"
+    %1 = address_of %slot0 : ref [i32; 3]
+    %2 = const 0 : i32
+    %3 = element_address %1[%2] : i32
+    %4 = const 1 : i32
+    store_value %4, %3 : i32
+    %5 = const 1 : i32
+    %6 = element_address %1[%5] : i32
+    %7 = const 2 : i32
+    store_value %7, %6 : i32
+    %8 = const 2 : i32
+    %9 = element_address %1[%8] : i32
+    %10 = const 3 : i32
+    store_value %10, %9 : i32
+    %11 = load_value %1 : [i32; 3]
+    return %11
+block if.false(2):
+    %slot1 = allocate_local : [i32; 3] "temp"
+    %12 = address_of %slot1 : ref [i32; 3]
+    %13 = const 0 : i32
+    %14 = element_address %12[%13] : i32
+    %15 = const 4 : i32
+    store_value %15, %14 : i32
+    %16 = const 1 : i32
+    %17 = element_address %12[%16] : i32
+    %18 = const 5 : i32
+    store_value %18, %17 : i32
+    %19 = const 2 : i32
+    %20 = element_address %12[%19] : i32
+    %21 = const 6 : i32
+    store_value %21, %20 : i32
+    %22 = load_value %12 : [i32; 3]
+    return %22

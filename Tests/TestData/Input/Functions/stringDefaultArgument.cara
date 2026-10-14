@@ -1,0 +1,21 @@
+type Tagged(label: string = "anon")
+{
+    _label : string : label
+
+    def labelLength() i32
+    {
+        return ._label.length();
+    }
+}
+
+def describe(prefix: string = "tag") string
+{
+    return prefix;
+}
+
+def use() i32
+{
+    t := Tagged.new();
+    d := describe();
+    return t.labelLength() %+ d.length();
+}

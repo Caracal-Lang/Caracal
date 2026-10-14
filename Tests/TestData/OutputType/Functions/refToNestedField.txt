@@ -1,0 +1,217 @@
+TypeDefinitionStatement: {
+    Type: Inner
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: v
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: v
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Outer
+    Name: Outer
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: i
+            TypeNameNode: {
+                Type: Inner
+                Lexeme: Inner
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Inner
+                    Name: i
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Outer
+            Left: {
+                NameExpression: {
+                    Type: Outer
+                    Name: o
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Outer
+                    Left: {
+                        NameExpression: {
+                            Type: Outer
+                            Name: Outer
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Outer
+                            Function type: (ref Outer, Inner) -> void
+                            NameExpression: {
+                                Type: (ref Outer, Inner) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: Inner
+                                    Left: {
+                                        NameExpression: {
+                                            Type: Inner
+                                            Name: Inner
+                                        }
+                                    }
+                                    Operation: ConstructorCall
+                                    Right: {
+                                        FunctionCallExpression: {
+                                            Type: Inner
+                                            Function type: (ref Inner, i32) -> void
+                                            NameExpression: {
+                                                Type: (ref Inner, i32) -> void
+                                                Name: new
+                                            }
+                                            ArgumentsNode(1): {
+                                                NumberLiteral: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: ref i32
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: r
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: ref i32
+                    Operation: ReferenceOf
+                    Expression: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                BinaryExpression: {
+                                    Type: Inner
+                                    Left: {
+                                        NameExpression: {
+                                            Type: Outer
+                                            Name: o
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: Inner
+                                            Name: inner
+                                        }
+                                    }
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: value
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: r
+                }
+            }
+            Right: {
+                NumberLiteral: 7
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Outer
+                                Name: o
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

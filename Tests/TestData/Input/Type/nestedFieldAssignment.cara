@@ -1,0 +1,16 @@
+type Inner(v: i32)
+{
+    value := v
+}
+
+type Outer(i: Inner)
+{
+    inner := i
+}
+
+def use() i32
+{
+    o := Outer.new(Inner.new(1));
+    o.inner.value = 7;
+    return o.inner.value;
+}

@@ -1,0 +1,15 @@
+Debug :: true;
+
+def compute() bool
+{
+    return false;
+}
+
+def main() i32
+{
+    if Debug and compute()
+    {
+        return 1;
+    }
+    return 2;
+}

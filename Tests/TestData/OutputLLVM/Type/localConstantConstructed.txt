@@ -1,0 +1,40 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32, i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @use() {
+entry:
+  %p = alloca %Point, align 8
+  call void @Point.new(ptr %p, i32 3, i32 4)
+  %call = call i32 @Point.sum(ptr %p)
+  ret i32 %call
+}
+
+define i32 @Point.sum(ptr nonnull %0) {
+entry:
+  %px = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  %load = load i32, ptr %px, align 4
+  %py = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 1
+  %load1 = load i32, ptr %py, align 4
+  %add = add i32 %load, %load1
+  ret i32 %add
+}
+
+define void @Point.new(ptr nonnull %0, i32 %1, i32 %2) {
+entry:
+  %px = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %px, align 4
+  %py = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 1
+  store i32 %2, ptr %py, align 4
+  ret void
+}

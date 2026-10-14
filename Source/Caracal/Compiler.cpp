@@ -90,7 +90,21 @@ namespace Caracal
         return preludeDirectory;
     }
 
-    static bool PopulateModule(SemanticContext& semanticContext, llvm::Module& llvmModule)
+    static bool GenerateModule(Module& irModule, llvm::Module& llvmModule)
+    {
+        LLVMCodeGenerator codeGenerator{ irModule, llvmModule };
+        if (!codeGenerator.generate())
+            return false;
+
+        // catch malformed IR before it is emitted, verifyModule returns true when broken
+        CARACAL_ZONE_NAMED("verify");
+        if (llvm::verifyModule(llvmModule, &llvm::errs()))
+            return false;
+
+        return true;
+    }
+
+    static bool PopulateModuleOld(SemanticContext& semanticContext, llvm::Module& llvmModule)
     {
         Module irModule{};
         IRLowerer lowerer{ semanticContext };
@@ -155,17 +169,19 @@ namespace Caracal
 
         Caracal::loadPrelude(compilationContext, preludeSources);
 
-        auto wasSuccessful = typeCheck(compilationContext, diagnostics);
-        if (wasSuccessful)
-        {
-            wasSuccessful = optimize(compilationContext, diagnostics);
-        }
-
+        Module irModule{};
+        auto wasSuccessful = typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful)
         {
+            if (diagnostics.diagnostics().empty())
+            {
+                std::cout << "internal error: this program type checks but the compiler could not lower it\n";
+            }
             Caracal::writeDiagnostics(std::cout, diagnostics, diagnosticOptions);
             return 1;
         }
+
+        optimize(irModule);
 
         if (!diagnostics.diagnostics().empty())
         {
@@ -197,7 +213,7 @@ namespace Caracal
         llvmModule->setDataLayout(targetMachine->createDataLayout());
         llvmModule->setTargetTriple(triple);
 
-        wasSuccessful = PopulateModule(compilationContext.semanticContext(), *llvmModule);
+        wasSuccessful = GenerateModule(irModule, *llvmModule);
         if (!wasSuccessful)
         {
             std::cout << "Module not generated!";
@@ -289,7 +305,7 @@ namespace Caracal
         auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
         llvmModule->setTargetTriple(llvm::Triple(targetTriple));
 
-        if (!PopulateModule(semanticContext, *llvmModule))
+        if (!PopulateModuleOld(semanticContext, *llvmModule))
             return std::make_pair(false, std::string{});
 
         // catch malformed IR before it is snapshotted, verifyModule returns true when broken

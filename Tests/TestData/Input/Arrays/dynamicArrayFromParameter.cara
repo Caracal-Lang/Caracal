@@ -1,0 +1,11 @@
+def take(xs: [i32; _]) i32
+{
+    ys := xs;
+    return ys.length;
+}
+
+def use() i32
+{
+    items : [i32; _] = [4, 5, 6, ...];
+    return take(items);
+}

@@ -1,0 +1,16 @@
+type Box(v: i32)
+{
+    value := v
+}
+
+def store(target: ref i32)
+{
+    target = 5;
+}
+
+def use() i32
+{
+    b := Box.new(1);
+    store(ref b.value);
+    return b.value;
+}

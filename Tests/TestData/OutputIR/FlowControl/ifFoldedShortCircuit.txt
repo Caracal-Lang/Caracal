@@ -1,0 +1,32 @@
+global Debug : bool = true
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define compute() bool
+block entry(0):
+    %0 = const false : bool
+    return %0
+
+define main() i32
+block entry(0):
+    %0 = address_of_global @Debug : ref bool
+    %1 = load_value %0 : bool
+    branch if %1, and.rhs(1), and.merge(2)
+block and.rhs(1):
+    %2 = call compute() : bool
+    jump and.merge(2)
+block and.merge(2):
+    %3 = phi [entry(0): %1], [and.rhs(1): %2] : bool
+    branch if %3, if.true(3), if.continuation(4)
+block if.true(3):
+    %4 = const 1 : i32
+    return %4
+block if.continuation(4):
+    %5 = const 2 : i32
+    return %5

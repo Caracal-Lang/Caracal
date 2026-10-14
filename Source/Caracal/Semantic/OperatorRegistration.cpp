@@ -28,7 +28,7 @@ namespace Caracal
             { BuiltinAddMethodName, false, BinaryOperatorKind::AdditionWrapping, UnaryOperatorKind::Invalid, &foldAddition, nullptr },
             { BuiltinSubtractMethodName, false, BinaryOperatorKind::SubtractionWrapping, UnaryOperatorKind::Invalid, &foldSubtraction, nullptr },
             { BuiltinMultiplyMethodName, false, BinaryOperatorKind::MultiplicationWrapping, UnaryOperatorKind::Invalid, &foldMultiplication, nullptr },
-            { BuiltinDivideMethodName, false, BinaryOperatorKind::Division, UnaryOperatorKind::Invalid, &foldDivision, nullptr },
+            { BuiltinDivideMethodName, false, BinaryOperatorKind::Division, UnaryOperatorKind::Invalid, &foldFloatDivision, nullptr },
             { BuiltinEqualsMethodName, false, BinaryOperatorKind::Equal, UnaryOperatorKind::Invalid, &foldEqual, nullptr },
             { BuiltinNotEqualsMethodName, false, BinaryOperatorKind::NotEqual, UnaryOperatorKind::Invalid, &foldNotEqual, nullptr },
             { BuiltinLessThanMethodName, false, BinaryOperatorKind::LessThan, UnaryOperatorKind::Invalid, &foldLessThan, nullptr },
@@ -287,9 +287,20 @@ namespace Caracal
         }
         else
         {
+            auto binaryFold = operatorDefinition->binaryFold;
+            if (operatorDefinition->binaryOperator == BinaryOperatorKind::Division)
+            {
+                // the default operator definition table expects float result, we need to replace it if the prelude differs
+                const auto* resultDescription = module.tryGetBuiltinTypeDescription(returnTypes.front());
+                if (resultDescription != nullptr && resultDescription->kind == BuiltinTypeKind::Int)
+                {
+                    binaryFold = &foldIntegerDivision;
+                }
+            }
+
             typeDefinition.addOperatorSignature(
                 operatorDefinition->binaryOperator,
-                OperatorSignature{ parameters[0].type(), parameters[1].type(), returnTypes.front(), operatorDefinition->binaryFold, nullptr });
+                OperatorSignature{ parameters[0].type(), parameters[1].type(), returnTypes.front(), binaryFold, nullptr });
         }
     }
 

@@ -1,0 +1,196 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: v
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: v
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Outer
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: i
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: Inner
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: inner
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: i
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: o
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Outer
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: Inner
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        FunctionCallExpression: {
+                                            Type: undefined
+                                            Function type: undefined
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: new
+                                            }
+                                            ArgumentsNode(1): {
+                                                NumberLiteral: 1
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: o
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: inner
+                                }
+                            }
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: value
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 7
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: o
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,9 @@
 #include <Caracal/Compilation.h>
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Optimization/ConstantFolder.h>
+#include <Caracal/Optimization/DeadCodeElimination.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Semantic/TypeChecker.h>
 #include <Caracal/Semantic/TypeCheckerOld.h>
 #include <Caracal/Syntax/Parser.h>
 #include <Caracal/Syntax/ParserOld.h>
@@ -87,12 +89,15 @@ namespace Caracal
             LexAndParseUnit(compilationContext, units[index], preludeDiagnostics);
         }
 
-        if (!preludeDiagnostics.hasErrors())
+        if (!preludeDiagnostics.hasErrors() && units.size() > firstPreludeUnit)
         {
+            Module preludeModule{};
             constexpr bool isPreludePass = true;
-            if (typeCheck(compilationContext, preludeDiagnostics, isPreludePass))
+            TypeChecker preludeChecker{ compilationContext, isPreludePass, preludeDiagnostics, preludeModule };
+            if (!preludeChecker.typeCheck() && preludeDiagnostics.diagnostics().empty())
             {
-                static_cast<void>(optimize(compilationContext, preludeDiagnostics, isPreludePass));
+                std::cerr << "error: the prelude type checks but the compiler could not lower it\n";
+                std::abort();
             }
         }
 
@@ -110,13 +115,6 @@ namespace Caracal
     void loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory)
     {
         loadPrelude(compilationContext, collectPreludeSources(preludeDirectory));
-    }
-
-    ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
-    {
-        CARACAL_ZONE_NAMED("parseOld");
-        ParserOld parser{ tokens, diagnostics };
-        return parser.parse();
     }
 
     NodeBuffer parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
@@ -139,16 +137,36 @@ namespace Caracal
         }
     }
 
-    bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass) noexcept
+    bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, Module& irModule) noexcept
     {
         CARACAL_ZONE_NAMED("typeCheck");
+        TypeChecker typeChecker{ compilationContext, false, diagnostics, irModule };
+        return typeChecker.typeCheck();
+    }
+
+    void optimize(Module& irModule)
+    {
+        CARACAL_ZONE_NAMED("optimize");
+        eliminateDeadCode(irModule);
+    }
+
+    ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
+    {
+        CARACAL_ZONE_NAMED("parseOld");
+        ParserOld parser{ tokens, diagnostics };
+        return parser.parse();
+    }
+
+    bool typeCheckOld(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass) noexcept
+    {
+        CARACAL_ZONE_NAMED("typeCheckOld");
         TypeCheckerOld typeChecker{ compilationContext, isPreludePass, diagnostics };
         return typeChecker.typeCheck();
     }
 
-    bool optimize(const CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass)
+    bool optimizeOld(const CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass)
     {
-        CARACAL_ZONE_NAMED("optimize");
+        CARACAL_ZONE_NAMED("optimizeOld");
         return foldConstants(compilationContext, diagnostics, isPreludePass);
     }
 }

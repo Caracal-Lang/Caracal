@@ -34,6 +34,7 @@ namespace Caracal
         [[nodiscard]] const std::vector<GlobalReferenceDeclaration>& globalReferences() const noexcept { return m_globalReferences; }
         [[nodiscard]] const std::vector<ConstructedGlobalDeclaration>& constructedGlobals() const noexcept { return m_constructedGlobals; }
         [[nodiscard]] const Function* tryGetGlobalInit() const noexcept;
+        [[nodiscard]] Function* tryGetGlobalInitMutable() noexcept;
         [[nodiscard]] const std::vector<TypeDeclaration>& types() const noexcept { return m_types; }
         [[nodiscard]] const EnumDeclaration* tryGetEnum(Type type) const noexcept;
         [[nodiscard]] const ExternFunction* tryGetExternFunction(FunctionId id) const noexcept;
@@ -44,6 +45,7 @@ namespace Caracal
         void addEnum(EnumDeclaration enumDeclaration);
         void addExternFunction(ExternFunction function);
         Function* addFunction(Function function);
+        void reserveFunctions(size_t count);
         void addGlobalConstant(GlobalConstantDeclaration globalDeclaration);
         void addGlobalReference(GlobalReferenceDeclaration globalDeclaration);
         void addConstructedGlobal(ConstructedGlobalDeclaration globalDeclaration);

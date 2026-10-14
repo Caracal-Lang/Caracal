@@ -16,7 +16,7 @@ namespace Caracal
     {
     public:
         Function() = default;
-        Function(FunctionId id, std::string name, const std::vector<IRParameter>& parameters, Type returnType);
+        Function(FunctionId id, std::string name, std::vector<IRParameter> parameters, Type returnType);
         CARACAL_DELETE_COPY_DEFAULT_MOVE(Function)
 
         [[nodiscard]] FunctionId id() const noexcept { return m_id; }
@@ -34,6 +34,7 @@ namespace Caracal
         void addParameter(IRParameter parameter);
         void addBlock(BasicBlock block);
         void setSymbolName(std::optional<std::string> symbolName) noexcept { m_symbolName = std::move(symbolName); }
+        [[nodiscard]] bool popLastBlock(BlockId expectedId) noexcept;
 
     private:
         FunctionId m_id{ -1 };

@@ -1,0 +1,178 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Point
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: true
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: px
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: true
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: py
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: y
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: sum
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: undefined
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: px
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: py
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        ConstantDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: p
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Point
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(2): {
+                                NumberLiteral: 3
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: p
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: sum
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

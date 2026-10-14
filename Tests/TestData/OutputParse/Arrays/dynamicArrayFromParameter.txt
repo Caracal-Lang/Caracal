@@ -1,0 +1,124 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: take
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: xs
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: ys
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: xs
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: ys
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: items
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: undefined
+                    Lexeme: [i32; _]
+                    Kind: Dynamic
+                    DataType: {
+                        TypeNameNode: {
+                            Type: undefined
+                            Lexeme: i32
+                        }
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: undefined
+                    Dynamic: true
+                    NumberLiteral: 4
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: take
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: items
+                    }
+                }
+            }
+        }
+    }
+}

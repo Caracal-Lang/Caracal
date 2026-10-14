@@ -1,0 +1,82 @@
+ConstantDeclaration: {
+    Type: bool
+    Left: {
+        NameExpression: {
+            Type: bool
+            Name: Debug
+        }
+    }
+    Right: {
+        BoolLiteral: true
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> bool
+    Name: compute
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: bool
+            Lexeme: bool
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: bool
+            BoolLiteral: false
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: bool
+                            Name: Debug
+                        }
+                    }
+                    Operation: LogicalAnd
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: bool
+                            Function type: () -> bool
+                            NameExpression: {
+                                Type: () -> bool
+                                Name: compute
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}

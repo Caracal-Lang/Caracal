@@ -9,6 +9,9 @@
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <Caracal/Text/File.h>
+#include <Caracal/Compiler.h>
+#include <Caracal/Debug/IRPrinter.h>
+#include <Caracal/Optimization/DeadCodeElimination.h>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -45,10 +48,10 @@ static void FileTestsOld(
     Caracal::loadPrelude(compilationContext, preludePath);
 
     auto startTime = std::chrono::high_resolution_clock::now();
-    auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics);
+    auto wasSuccessful = Caracal::typeCheckOld(compilationContext, diagnostics);
     if (wasSuccessful)
     {
-        wasSuccessful = Caracal::optimize(compilationContext, diagnostics);
+        wasSuccessful = Caracal::optimizeOld(compilationContext, diagnostics);
     }
     auto endTime = std::chrono::high_resolution_clock::now();
 
@@ -159,14 +162,15 @@ static void FileTestsNewChecker(
     oldContext.addSource(std::string(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
     Caracal::lexAndParse(oldContext, oldDiagnostics);
     Caracal::loadPrelude(oldContext, preludePath);
-    static_cast<void>(Caracal::typeCheck(oldContext, oldDiagnostics));
+    static_cast<void>(Caracal::typeCheckOld(oldContext, oldDiagnostics));
 
     Caracal::DiagnosticsBag newDiagnostics;
     Caracal::CompilationContext newContext;
     newContext.addSource(std::string(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
     Caracal::lexAndParse(newContext, newDiagnostics);
     Caracal::loadPrelude(newContext, preludePath);
-    Caracal::TypeChecker newChecker{ newContext, false, newDiagnostics };
+    Caracal::Module newModule{};
+    Caracal::TypeChecker newChecker{ newContext, false, newDiagnostics, newModule };
     static_cast<void>(newChecker.typeCheck());
 
     const auto oldText = Caracal::formatDiagnostics(oldDiagnostics, {});
@@ -214,6 +218,55 @@ static void FileTestsNewChecker(
                 break;
             }
         }
+        CaraTest::fail();
+    }
+}
+
+static void FileTestsFusedIR(
+    const std::string& /*fileName*/,
+    const std::filesystem::path& inputFilePath,
+    const std::filesystem::path& /*outputFilePath*/)
+{
+    const auto input = Caracal::File::readText(inputFilePath);
+    if (!input.has_value())
+    {
+        CaraTest::fail();
+    }
+    const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
+
+    Caracal::DiagnosticsBag oldDiagnostics;
+    Caracal::CompilationContext oldContext;
+    oldContext.addSource(std::string(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
+    Caracal::lexAndParse(oldContext, oldDiagnostics);
+    Caracal::loadPrelude(oldContext, preludePath);
+    if (!Caracal::typeCheckOld(oldContext, oldDiagnostics) || !Caracal::optimizeOld(oldContext, oldDiagnostics))
+    {
+        CaraTest::fail();
+    }
+    const auto [oldGenerated, oldIR] = Caracal::generateIRText(oldContext.semanticContext());
+    CaraTest::isTrue(oldGenerated);
+
+    Caracal::DiagnosticsBag newDiagnostics;
+    Caracal::CompilationContext newContext;
+    newContext.addSource(std::string(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
+    Caracal::lexAndParse(newContext, newDiagnostics);
+    Caracal::loadPrelude(newContext, preludePath);
+    Caracal::Module module{};
+    Caracal::TypeChecker newChecker{ newContext, false, newDiagnostics, module };
+    if (!newChecker.typeCheck())
+    {
+        CaraTest::fail();
+    }
+
+    Caracal::optimize(module);
+    Caracal::IRPrinter fusedPrinter{ module };
+    const auto fusedIR = fusedPrinter.prettyPrint();
+
+    if (oldIR != fusedIR)
+    {
+        std::cout << "      fused ir mismatch in " << inputFilePath.string() << std::endl;
+        std::cout << "      old pipeline:" << std::endl << oldIR << std::endl;
+        std::cout << "      fused:" << std::endl << fusedIR << std::endl;
         CaraTest::fail();
     }
 }
@@ -279,12 +332,14 @@ static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, co
         auto checkedCleanly = false;
         if (useNewChecker)
         {
-            Caracal::TypeChecker checker{ context, false, diagnostics };
+            Caracal::Module irModule{};
+            Caracal::TypeChecker checker{ context, false, diagnostics, irModule };
             checkedCleanly = checker.typeCheck();
+            Caracal::optimize(irModule);
         }
         else
         {
-            checkedCleanly = Caracal::typeCheck(context, diagnostics);
+            checkedCleanly = Caracal::typeCheckOld(context, diagnostics);
         }
         const auto endTime = std::chrono::high_resolution_clock::now();
 
@@ -333,6 +388,7 @@ static auto tests =
     CaraTest::addTest("UnitSemanticsResolveCrossFileNodeIndexes", UnitSemanticsResolveCrossFileNodeIndexes),
     CaraTest::addTest("FileTestsNewChecker", FileTestsNewChecker, FileTests_Data),
     CaraTest::addTest("FileTestsNewCheckerBuiltin", FileTestsNewChecker, BuiltinParityTests_Data),
+    CaraTest::addTest("FileTestsFusedIR", FileTestsFusedIR, FileTests_Data),
     CaraTest::addTest("OneMillionLinesTypeCheckTimeOld", OneMillionLinesTypeCheckTimeOld),
     CaraTest::addTest("OneMillionLinesTypeCheckTime", OneMillionLinesTypeCheckTime),
 };

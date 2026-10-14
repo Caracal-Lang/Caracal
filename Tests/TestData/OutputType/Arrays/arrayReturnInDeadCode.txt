@@ -1,0 +1,74 @@
+FunctionDefinitionStatement: {
+    Type: (bool) -> [i32; 3]
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: c
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        ArrayTypeNameNode: {
+            Type: [i32; 3]
+            Lexeme: [i32; 3]
+            Kind: Fixed
+            DataType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            Length: {
+                NumberLiteral: 3
+            }
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: c
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: [i32; 3]
+                        ArrayLiteral(3): {
+                            Type: [i32; 3]
+                            NumberLiteral: 1
+                            NumberLiteral: 2
+                            NumberLiteral: 3
+                        }
+                    }
+                }
+            }
+            False: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: [i32; 3]
+                        ArrayLiteral(3): {
+                            Type: [i32; 3]
+                            NumberLiteral: 4
+                            NumberLiteral: 5
+                            NumberLiteral: 6
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: [i32; 3]
+            ArrayLiteral(3): {
+                Type: [i32; 3]
+                NumberLiteral: 7
+                NumberLiteral: 8
+                NumberLiteral: 9
+            }
+        }
+    }
+}

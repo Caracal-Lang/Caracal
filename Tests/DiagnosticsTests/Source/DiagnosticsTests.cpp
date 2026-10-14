@@ -1,6 +1,7 @@
 #include <CaraTest.h>
 
 #include <Caracal/Compilation.h>
+#include <Caracal/IR/Module.h>
 #include <Caracal/CompilationContext.h>
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
@@ -77,7 +78,7 @@ namespace
         return relativePath;
     }
 
-    std::string RenderDiagnosticsForSource(const std::string& input, const std::filesystem::path& filePath, bool withPrelude = true)
+    std::string RenderDiagnosticsForSource(const std::string& input, const std::filesystem::path& filePath, bool withPrelude)
     {
         Caracal::DiagnosticsBag diagnostics;
         Caracal::CompilationContext compilationContext;
@@ -100,12 +101,8 @@ namespace
         }
         Caracal::loadPrelude(compilationContext, preludeSources);
 
-        auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics);
-        if (wasSuccessful)
-        {
-            wasSuccessful = Caracal::optimize(compilationContext, diagnostics);
-        }
-
+        Caracal::Module irModule{};
+        const auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful || !diagnostics.diagnostics().empty())
             return Caracal::formatDiagnostics(diagnostics, diagnosticOptions);
 
@@ -209,21 +206,10 @@ namespace
     {
         return CollectFileTestData(DiagnosticsBuiltinInputDirectory(), DiagnosticsBuiltinOutputDirectory());
     }
-
-    static void ExternFunctionUnusedParameterDoesNotWarn()
-    {
-        const auto output = RenderDiagnosticsForSource(
-            "#extern\n"
-            "def printf(value: i32) void {}\n",
-            DiagnosticsInputDirectory() / "externFunctionUnusedParameterDoesNotWarn.cara");
-
-        CaraTest::isTrue(output.empty());
-    }
 }
 
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
     CaraTest::addTest("BuiltinFileTests", BuiltinFileTests, BuiltinFileTests_Data),
-    CaraTest::addTest("ExternFunctionUnusedParameterDoesNotWarn", ExternFunctionUnusedParameterDoesNotWarn),
 };

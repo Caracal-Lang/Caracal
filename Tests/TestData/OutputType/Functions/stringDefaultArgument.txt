@@ -1,0 +1,237 @@
+TypeDefinitionStatement: {
+    Type: Tagged
+    Name: Tagged
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: label
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                StringLiteral: "anon"
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: true
+            Left: {
+                NameExpression: {
+                    Type: string
+                    Name: _label
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: string
+                    Lexeme: string
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: string
+                    Name: label
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Tagged) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: labelLength
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: string
+                                    Name: _label
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref string) -> i32
+                                NameExpression: {
+                                    Type: (ref string) -> i32
+                                    Name: length
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (string) -> string
+    Name: describe
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: prefix
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                StringLiteral: "tag"
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: string
+            Lexeme: string
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: string
+            NameExpression: {
+                Type: string
+                Name: prefix
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Tagged
+            Left: {
+                NameExpression: {
+                    Type: Tagged
+                    Name: t
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Tagged
+                    Left: {
+                        NameExpression: {
+                            Type: Tagged
+                            Name: Tagged
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Tagged
+                            Function type: (ref Tagged, string) -> void
+                            NameExpression: {
+                                Type: (ref Tagged, string) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: string
+            Left: {
+                NameExpression: {
+                    Type: string
+                    Name: d
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (string) -> string
+                    NameExpression: {
+                        Type: (string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: Tagged
+                                Name: t
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref Tagged) -> i32
+                                NameExpression: {
+                                    Type: (ref Tagged) -> i32
+                                    Name: labelLength
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: string
+                                Name: d
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref string) -> i32
+                                NameExpression: {
+                                    Type: (ref string) -> i32
+                                    Name: length
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

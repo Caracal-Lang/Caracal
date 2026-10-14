@@ -1,0 +1,84 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+%Tagged = type { %string }
+
+@0 = private unnamed_addr constant [5 x i8] c"anon\00", align 1
+@1 = private unnamed_addr constant [4 x i8] c"tag\00", align 1
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define %string @describe(%string %0) {
+entry:
+  %prefix = alloca %string, align 8
+  store %string %0, ptr %prefix, align 8
+  %load = load %string, ptr %prefix, align 8
+  ret %string %load
+}
+
+define i32 @use() {
+entry:
+  %t = alloca %Tagged, align 8
+  %temp = alloca %string, align 8
+  %d = alloca %string, align 8
+  %temp1 = alloca %string, align 8
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
+  store ptr @0, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  store i32 4, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
+  store i32 4, ptr %capacity, align 4
+  %load = load %string, ptr %temp, align 8
+  call void @Tagged.new(ptr %t, %string %load)
+  %_bytes2 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
+  %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 0
+  store ptr @1, ptr %data3, align 8
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 1
+  store i32 3, ptr %length4, align 4
+  %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 2
+  store i32 3, ptr %capacity5, align 4
+  %load6 = load %string, ptr %temp1, align 8
+  %call = call %string @describe(%string %load6)
+  store %string %call, ptr %d, align 8
+  %call7 = call i32 @Tagged.labelLength(ptr %t)
+  %call8 = call i32 @string.length(ptr %d)
+  %add = add i32 %call7, %call8
+  ret i32 %add
+}
+
+define i32 @Tagged.labelLength(ptr nonnull %0) {
+entry:
+  %_label = getelementptr inbounds nuw %Tagged, ptr %0, i32 0, i32 0
+  %call = call i32 @string.length(ptr %_label)
+  ret i32 %call
+}
+
+define void @Tagged.new(ptr nonnull %0, %string %1) {
+entry:
+  %label = alloca %string, align 8
+  store %string %1, ptr %label, align 8
+  %load = load %string, ptr %label, align 8
+  %_label = getelementptr inbounds nuw %Tagged, ptr %0, i32 0, i32 0
+  store %string %load, ptr %_label, align 8
+  ret void
+}
+
+define i32 @string.length(ptr nonnull %0) {
+entry:
+  %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+; uselistorder directives
+uselistorder ptr @string.length, { 1, 0 }

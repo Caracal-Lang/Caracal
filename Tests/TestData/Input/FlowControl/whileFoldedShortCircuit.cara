@@ -1,0 +1,17 @@
+Debug :: true;
+
+def compute() bool
+{
+    return false;
+}
+
+def main() i32
+{
+    count := 0;
+    while Debug and compute()
+    {
+        count = count %+ 1;
+        break;
+    }
+    return count;
+}

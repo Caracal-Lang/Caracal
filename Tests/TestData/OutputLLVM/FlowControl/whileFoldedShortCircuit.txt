@@ -1,0 +1,44 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+@Debug = constant i1 true
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i1 @compute() {
+entry:
+  ret i1 false
+}
+
+define i32 @main() {
+entry:
+  br label %while.condition
+
+while.condition:                                  ; preds = %entry
+  %phi = phi i32 [ 0, %entry ]
+  %load = load i1, ptr @Debug, align 1
+  br i1 %load, label %and.rhs, label %and.merge
+
+and.rhs:                                          ; preds = %while.condition
+  %call = call i1 @compute()
+  br label %and.merge
+
+and.merge:                                        ; preds = %and.rhs, %while.condition
+  %phi1 = phi i1 [ %load, %while.condition ], [ %call, %and.rhs ]
+  br i1 %phi1, label %while.body, label %while.continuation
+
+while.body:                                       ; preds = %and.merge
+  %add = add i32 %phi, 1
+  br label %while.continuation
+
+while.continuation:                               ; preds = %while.body, %and.merge
+  %phi2 = phi i32 [ %phi, %and.merge ], [ %add, %while.body ]
+  ret i32 %phi2
+}

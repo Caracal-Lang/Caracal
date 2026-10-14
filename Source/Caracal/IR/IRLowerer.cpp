@@ -329,8 +329,7 @@ namespace Caracal
         // finally lower previously marked functions
         for (size_t queueIndex = 0; queueIndex < m_requiredPreludeFunctions.size(); ++queueIndex)
         {
-            const auto& definition = m_semanticContext.getFunctionDefinition(m_requiredPreludeFunctions[queueIndex]);
-            if (!lowerFunctionDefinitionByKind(definition, module))
+            if (!addPreludeFunctionFromPool(m_requiredPreludeFunctions[queueIndex], module))
                 return false;
         }
 
@@ -792,6 +791,22 @@ namespace Caracal
 
         m_externFunctionIdCache.try_emplace(fullName, methodType.id());
         return methodType.id();
+    }
+
+    bool IRLowerer::addPreludeFunctionFromPool(Type functionType, Module& module) noexcept
+    {
+        auto taken = m_semanticContext.preludeFunctionPool().take(functionType.id());
+        if (!taken.has_value())
+        {
+            return false;
+        }
+
+        for (const auto callee : taken->calledPreludeFunctions)
+        {
+            markPreludeFunction(callee);
+        }
+        module.addFunction(std::move(taken->body));
+        return true;
     }
 
     void IRLowerer::markPreludeFunction(Type functionType) noexcept

@@ -306,7 +306,7 @@ namespace Caracal
         return FoldArithmetic(ArithmeticOperation::Multiplication, lhs, rhs);
     }
 
-    FoldResult foldDivision(const FoldValue& lhs, const FoldValue& rhs)
+    FoldResult foldFloatDivision(const FoldValue& lhs, const FoldValue& rhs)
     {
         return std::visit(
             [](const auto& left, const auto& right) -> FoldResult
@@ -349,6 +349,42 @@ namespace Caracal
                 else
                 {
                     return FoldResult{ FoldResultKind::NotFoldable, FoldValue{} };
+                }
+            },
+            lhs,
+            rhs);
+    }
+
+    FoldResult foldIntegerDivision(const FoldValue& lhs, const FoldValue& rhs)
+    {
+        return std::visit(
+            [](const auto& left, const auto& right) -> FoldResult
+            {
+                using Left = std::decay_t<decltype(left)>;
+                using Right = std::decay_t<decltype(right)>;
+
+                if constexpr (!std::is_same_v<Left, Right> || !std::is_integral_v<Left> || std::is_same_v<Left, bool>)
+                {
+                    return FoldResult{ FoldResultKind::NotFoldable, FoldValue{} };
+                }
+                else
+                {
+                    if (right == 0)
+                    {
+                        return FoldResult{ FoldResultKind::DivideByZero, FoldValue{} };
+                    }
+
+                    // the smallest signed value divided by -1 does not fit the type
+                    if constexpr (std::is_signed_v<Left>)
+                    {
+                        if (left == std::numeric_limits<Left>::min() && right == Left{ -1 })
+                        {
+                            return FoldResult{ FoldResultKind::Overflow, FoldValue{} };
+                        }
+                    }
+
+                    // truncates toward zero like C
+                    return FoldResult{ FoldResultKind::Value, FoldValue{ static_cast<Left>(left / right) } };
                 }
             },
             lhs,

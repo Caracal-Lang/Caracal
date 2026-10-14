@@ -1,0 +1,160 @@
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: v
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: v
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> void
+    Name: store
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: target
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: target
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: use
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: b
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box, i32) -> void
+                            NameExpression: {
+                                Type: (ref Box, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            FunctionCallExpression: {
+                Type: void
+                Function type: (ref i32) -> void
+                NameExpression: {
+                    Type: (ref i32) -> void
+                    Name: store
+                }
+                ArgumentsNode(1): {
+                    UnaryExpression: {
+                        Type: ref i32
+                        Operation: ReferenceOf
+                        Expression: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: Box
+                                        Name: b
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Box
+                        Name: b
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

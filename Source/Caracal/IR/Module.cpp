@@ -79,6 +79,12 @@ namespace Caracal
         return &m_functions.back();
     }
 
+    void Module::reserveFunctions(size_t count)
+    {
+        m_functions.reserve(count);
+        m_functionIndices.reserve(count);
+    }
+
     void Module::addGlobalConstant(GlobalConstantDeclaration globalDeclaration)
     {
         m_globalConstants.push_back(std::move(globalDeclaration));
@@ -96,7 +102,22 @@ namespace Caracal
 
     const Function* Module::tryGetGlobalInit() const noexcept
     {
-        return m_globalInit.has_value() ? &m_globalInit.value() : nullptr;
+        if (!m_globalInit.has_value())
+        {
+            return nullptr;
+        }
+
+        return &m_globalInit.value();
+    }
+
+    Function* Module::tryGetGlobalInitMutable() noexcept
+    {
+        if (!m_globalInit.has_value())
+        {
+            return nullptr;
+        }
+
+        return &m_globalInit.value();
     }
 
     void Module::setGlobalInit(Function function)

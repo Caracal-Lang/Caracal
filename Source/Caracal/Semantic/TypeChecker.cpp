@@ -1,4 +1,5 @@
 ﻿#include <Caracal/Semantic/TypeChecker.h>
+#include <Caracal/Profiling.h>
 
 #include <Caracal/Constants.h>
 #include <Caracal/Diagnostics/DiagnosticFormatting.h>
@@ -10,6 +11,7 @@
 #include <Caracal/Syntax/BinaryExpression.h>
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/NodeSpans.h>
+#include <Caracal/Syntax/StringEscapes.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 #include <Caracal/Syntax/UnaryExpression.h>
 
@@ -30,6 +32,16 @@ namespace Caracal
     static bool ShouldIgnoreUnusedVariableWarning(std::string_view name)
     {
         return name == "_" || name == ImplicitThisName;
+    }
+
+    [[nodiscard]] static u64 ArrayLiteralKey(u16 fileId, u32 literalIndex) noexcept
+    {
+        return (static_cast<u64>(fileId) << 32) | literalIndex;
+    }
+
+    [[nodiscard]] static FoldValue MakeFoldValue(const NumberLiteral::ParsedValue& parsedValue) noexcept
+    {
+        return std::visit([](const auto value) { return FoldValue{ value }; }, parsedValue);
     }
 
     [[nodiscard]] static SourceLocation TypeNameSpan(const CompilationContext& context, const CompilationUnit& unit, u32 index)
@@ -474,10 +486,12 @@ namespace Caracal
     TypeChecker::TypeChecker(
         CompilationContext& compilationContext,
         bool isPreludePass,
-        DiagnosticsBag& diagnostics)
+        DiagnosticsBag& diagnostics,
+        Module& irModule)
         : m_compilationContext{ compilationContext }
         , m_isPreludePass{ isPreludePass }
         , m_module{ compilationContext.semanticContext() }
+        , m_emitter{ compilationContext.semanticContext(), irModule }
         , m_options{ compilationContext.options() }
         , m_diagnostics{ diagnostics }
     {
@@ -491,10 +505,14 @@ namespace Caracal
         }
 
         m_scopeFrames.push_back(ScopeFrame{ 0, ScopeKind::Global });
+        m_emitter.setNameLexemes(m_nameLexemes);
+        m_thisNameId = internName(ImplicitThisName);
+        m_emitter.setPreludeMode(isPreludePass);
     }
 
     bool TypeChecker::typeCheck()
     {
+        CARACAL_ZONE_NAMED("check.typeCheck");
         if (m_diagnostics.hasErrors())
         {
             return false;
@@ -520,11 +538,22 @@ namespace Caracal
 
         checkUninitializedInitConstants();
 
+        if (!m_isPreludePass)
+        {
+            m_emitter.finishModule();
+        }
+
+        if (m_emitter.emissionFailed() && !m_diagnostics.hasErrors())
+        {
+            return false;
+        }
+
         return !m_diagnostics.hasErrors();
     }
 
     void TypeChecker::collectDeclarations()
     {
+        CARACAL_ZONE_NAMED("check.collectDeclarations");
         for (auto* unit : m_units)
         {
             collectUnitDeclarations(*unit);
@@ -678,63 +707,6 @@ namespace Caracal
         m_enumDeclarations.push_back(NodeIndex{ unit.fileId, index });
     }
 
-    BuiltinTypeDescription TypeChecker::extractPendingBuiltinTypeDescription(const CompilationUnit& unit) const
-    {
-        BuiltinTypeDescription description{};
-        const auto& buffer = unit.nodeBuffer;
-        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
-        std::vector<u32> arguments;
-        for (const auto annotationIndex : m_pendingAnnotations)
-        {
-            if (nameOf(unit, annotationIndex) != BuiltinAnnotationName)
-            {
-                continue;
-            }
-
-            NodeLayout::collectChildren(buffer, annotationIndex, arguments);
-            for (const auto argumentIndex : arguments)
-            {
-                if (buffer.kind(argumentIndex) != NodeKind::NamedArgument)
-                {
-                    continue;
-                }
-
-                const auto argumentName = nameOf(unit, argumentIndex);
-                const auto valueIndex = NodeLayout::namedArgumentValue(argumentIndex);
-                if (argumentName == KindAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::NameExpression)
-                {
-                    const auto kindName = nameOf(unit, valueIndex);
-                    if (kindName == BuiltinKindFloatName)
-                    {
-                        description.kind = BuiltinTypeKind::Float;
-                    }
-                    else if (kindName == BuiltinKindBoolName)
-                    {
-                        description.kind = BuiltinTypeKind::Bool;
-                    }
-                    else if (kindName == BuiltinKindPointerName)
-                    {
-                        description.kind = BuiltinTypeKind::Pointer;
-                    }
-                }
-                else if (argumentName == BitsAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::NumberLiteral)
-                {
-                    const auto parsed = tryParseI32Literal(nameOf(unit, valueIndex));
-                    if (parsed.has_value())
-                    {
-                        description.bits = parsed.value();
-                    }
-                }
-                else if (argumentName == SignedAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::BoolLiteral)
-                {
-                    description.isSigned = tokens.getToken(static_cast<i32>(buffer.mainToken(valueIndex))).kind == TokenKind::TrueKeyword;
-                }
-            }
-        }
-
-        return description;
-    }
-
     void TypeChecker::collectBuiltinTypeDeclaration(const CompilationUnit& unit, u32 index)
     {
         const auto typeName = nameOf(unit, index);
@@ -810,12 +782,30 @@ namespace Caracal
         m_typeDeclarations.push_back(NodeIndex{ unit.fileId, index });
     }
 
-    void TypeChecker::resolveWellKnownTypes()
+    const std::vector<u32>& TypeChecker::collectAddressTakenNameIds(const CompilationUnit& unit, u32 bodyIndex)
     {
-        m_module.refreshWellKnownTypes();
-        m_defaultIntegerType = m_module.tryGetTypeByName(m_options.defaultIntegerType);
-        m_defaultFloatingType = m_module.tryGetTypeByName(m_options.defaultFloatingType);
-        m_defaultEnumBaseType = m_module.tryGetTypeByName(m_options.defaultEnumBaseType);
+        CARACAL_ZONE_NAMED("check.addressTakenScan");
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        auto& nameIds = m_addressTakenScratch;
+        nameIds.clear();
+        for (auto i = NodeLayout::subtreeBegin(unit.nodeBuffer, bodyIndex); i <= bodyIndex; ++i)
+        {
+            if (unit.nodeBuffer.kind(i) != NodeKind::UnaryExpression
+                || TokenKindAt(tokens, unit.nodeBuffer.mainToken(i)) != TokenKind::RefKeyword)
+            {
+                continue;
+            }
+
+            const auto operand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(i));
+            if (unit.nodeBuffer.kind(operand) == NodeKind::NameExpression)
+            {
+                nameIds.push_back(nameIdOf(unit, operand));
+            }
+        }
+
+        std::sort(nameIds.begin(), nameIds.end());
+        nameIds.erase(std::unique(nameIds.begin(), nameIds.end()), nameIds.end());
+        return nameIds;
     }
 
     std::vector<u32> TypeChecker::collectRootStatements(const NodeBuffer& buffer) const
@@ -850,105 +840,6 @@ namespace Caracal
         }
 
         return parameters;
-    }
-
-    Token TypeChecker::tokenAt(u16 fileId, u32 tokenIndex) const noexcept
-    {
-        return Token{ .kind = TokenKind::Identifier, .fileId = fileId, .index = static_cast<i32>(tokenIndex) };
-    }
-
-    std::string_view TypeChecker::nameOf(const CompilationUnit& unit, u32 index) const noexcept
-    {
-        return m_compilationContext.getLexeme(unit.fileId, unit.nodeBuffer.mainToken(index));
-    }
-
-    const SourceLocation& TypeChecker::nameLocation(const CompilationUnit& unit, u32 index) const noexcept
-    {
-        return m_compilationContext.sourceLocation(unit.fileId, unit.nodeBuffer.mainToken(index));
-    }
-
-    SourceLocation TypeChecker::annotationLocation(const CompilationUnit& unit, u32 index) const noexcept
-    {
-        const auto nameToken = unit.nodeBuffer.mainToken(index);
-        const auto& hashLocation = m_compilationContext.sourceLocation(unit.fileId, nameToken - 1);
-        const auto& nameLocation = m_compilationContext.sourceLocation(unit.fileId, nameToken);
-        return SourceLocation{ hashLocation.startIndex, nameLocation.endIndex };
-    }
-
-    void TypeChecker::locateDefinitionName(
-        NodeIndex definitionNode,
-        const std::optional<Token>& statementNameToken,
-        SourceTextSharedPtr& source,
-        std::optional<SourceLocation>& location) const noexcept
-    {
-        if (definitionNode.index != InvalidNodeIndex)
-        {
-            const auto& buffer = m_compilationContext.nodeBuffer(definitionNode.fileId);
-            const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
-            source = m_compilationContext.source(nameToken);
-            location = m_compilationContext.sourceLocation(nameToken);
-            return;
-        }
-
-        if (statementNameToken.has_value())
-        {
-            source = m_compilationContext.source(statementNameToken.value());
-            location = m_compilationContext.sourceLocation(statementNameToken.value());
-        }
-    }
-
-    void TypeChecker::collectMethodAnnotationsBefore(const CompilationUnit& unit, u32 methodIndex, const TypeDefinition& typeDefinition, std::vector<u32>& annotations) const
-    {
-        NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, methodIndex, annotations);
-        if (typeDefinition.definitionNode().index == InvalidNodeIndex)
-        {
-            return;
-        }
-
-        const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, typeDefinition.definitionNode().index);
-        const auto bodyBegin = NodeLayout::subtreeBegin(unit.nodeBuffer, typeLayout.body);
-        std::erase_if(annotations, [bodyBegin](u32 annotation) { return annotation < bodyBegin; });
-    }
-
-    CompilationUnit& TypeChecker::unitFor(NodeIndex index) const noexcept
-    {
-        return m_compilationContext.units()[index.fileId];
-    }
-
-    void TypeChecker::checkUninitializedInitConstants()
-    {
-        std::vector<std::pair<std::string_view, const InitConstantRecord*>> uninitialized;
-        for (const auto& [name, declaration] : m_initConstants)
-        {
-            if (m_initConstantAssignments.contains(name))
-                continue;
-
-            uninitialized.emplace_back(name, &declaration);
-        }
-
-        // sort by source position so the errors emit in declaration order
-        std::sort(uninitialized.begin(), uninitialized.end(), [](const auto& left, const auto& right)
-        {
-            return left.second->location.startIndex < right.second->location.startIndex;
-        });
-
-        for (const auto& [name, declaration] : uninitialized)
-        {
-            m_diagnostics.addUninitializedInitConstantError(declaration->source, declaration->location, std::string(name));
-        }
-    }
-
-    bool TypeChecker::pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept
-    {
-        for (const auto annotation : m_pendingAnnotations)
-        {
-            if (nameOf(unit, annotation) == name)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     void TypeChecker::collectMethodDeclarations()
@@ -1051,8 +942,211 @@ namespace Caracal
         }
     }
 
+    void TypeChecker::collectMethodAnnotationsBefore(const CompilationUnit& unit, u32 methodIndex, const TypeDefinition& typeDefinition, std::vector<u32>& annotations) const
+    {
+        NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, methodIndex, annotations);
+        if (typeDefinition.definitionNode().index == InvalidNodeIndex)
+        {
+            return;
+        }
+
+        const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, typeDefinition.definitionNode().index);
+        const auto bodyBegin = NodeLayout::subtreeBegin(unit.nodeBuffer, typeLayout.body);
+        std::erase_if(annotations, [bodyBegin](u32 annotation) { return annotation < bodyBegin; });
+    }
+
+    BuiltinTypeDescription TypeChecker::extractPendingBuiltinTypeDescription(const CompilationUnit& unit) const
+    {
+        BuiltinTypeDescription description{};
+        const auto& buffer = unit.nodeBuffer;
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        std::vector<u32> arguments;
+        for (const auto annotationIndex : m_pendingAnnotations)
+        {
+            if (nameOf(unit, annotationIndex) != BuiltinAnnotationName)
+            {
+                continue;
+            }
+
+            NodeLayout::collectChildren(buffer, annotationIndex, arguments);
+            for (const auto argumentIndex : arguments)
+            {
+                if (buffer.kind(argumentIndex) != NodeKind::NamedArgument)
+                {
+                    continue;
+                }
+
+                const auto argumentName = nameOf(unit, argumentIndex);
+                const auto valueIndex = NodeLayout::namedArgumentValue(argumentIndex);
+                if (argumentName == KindAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::NameExpression)
+                {
+                    const auto kindName = nameOf(unit, valueIndex);
+                    if (kindName == BuiltinKindFloatName)
+                    {
+                        description.kind = BuiltinTypeKind::Float;
+                    }
+                    else if (kindName == BuiltinKindBoolName)
+                    {
+                        description.kind = BuiltinTypeKind::Bool;
+                    }
+                    else if (kindName == BuiltinKindPointerName)
+                    {
+                        description.kind = BuiltinTypeKind::Pointer;
+                    }
+                }
+                else if (argumentName == BitsAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::NumberLiteral)
+                {
+                    const auto parsed = tryParseI32Literal(nameOf(unit, valueIndex));
+                    if (parsed.has_value())
+                    {
+                        description.bits = parsed.value();
+                    }
+                }
+                else if (argumentName == SignedAnnotationArgumentName && buffer.kind(valueIndex) == NodeKind::BoolLiteral)
+                {
+                    description.isSigned = tokens.getToken(static_cast<i32>(buffer.mainToken(valueIndex))).kind == TokenKind::TrueKeyword;
+                }
+            }
+        }
+
+        return description;
+    }
+
+    void TypeChecker::resolveWellKnownTypes()
+    {
+        m_module.refreshWellKnownTypes();
+        m_defaultIntegerType = m_module.tryGetTypeByName(m_options.defaultIntegerType);
+        m_defaultFloatingType = m_module.tryGetTypeByName(m_options.defaultFloatingType);
+        m_defaultEnumBaseType = m_module.tryGetTypeByName(m_options.defaultEnumBaseType);
+    }
+
+    Token TypeChecker::tokenAt(u16 fileId, u32 tokenIndex) const noexcept
+    {
+        return Token{ .kind = TokenKind::Identifier, .fileId = fileId, .index = static_cast<i32>(tokenIndex) };
+    }
+
+    std::string_view TypeChecker::nameOf(const CompilationUnit& unit, u32 index) const noexcept
+    {
+        return m_compilationContext.getLexeme(unit.fileId, unit.nodeBuffer.mainToken(index));
+    }
+
+    const SourceLocation& TypeChecker::nameLocation(const CompilationUnit& unit, u32 index) const noexcept
+    {
+        return m_compilationContext.sourceLocation(unit.fileId, unit.nodeBuffer.mainToken(index));
+    }
+
+    SourceLocation TypeChecker::annotationLocation(const CompilationUnit& unit, u32 index) const noexcept
+    {
+        const auto nameToken = unit.nodeBuffer.mainToken(index);
+        const auto& hashLocation = m_compilationContext.sourceLocation(unit.fileId, nameToken - 1);
+        const auto& nameLocation = m_compilationContext.sourceLocation(unit.fileId, nameToken);
+        return SourceLocation{ hashLocation.startIndex, nameLocation.endIndex };
+    }
+
+    void TypeChecker::locateDefinitionName(
+        NodeIndex definitionNode,
+        const std::optional<Token>& statementNameToken,
+        SourceTextSharedPtr& source,
+        std::optional<SourceLocation>& location) const noexcept
+    {
+        if (definitionNode.index != InvalidNodeIndex)
+        {
+            const auto& buffer = m_compilationContext.nodeBuffer(definitionNode.fileId);
+            const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
+            source = m_compilationContext.source(nameToken);
+            location = m_compilationContext.sourceLocation(nameToken);
+            return;
+        }
+
+        if (statementNameToken.has_value())
+        {
+            source = m_compilationContext.source(statementNameToken.value());
+            location = m_compilationContext.sourceLocation(statementNameToken.value());
+        }
+    }
+
+    CompilationUnit& TypeChecker::unitFor(NodeIndex index) const noexcept
+    {
+        return m_compilationContext.units()[index.fileId];
+    }
+
+    ValueRef TypeChecker::dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType)
+    {
+        const auto nameId = nameIdOf(unit, nameNode);
+        const auto address = m_emitter.addressOfLocal(nameId);
+        if (address.id() >= 0)
+        {
+            return address;
+        }
+
+        const auto value = m_emitter.peekLocal(nameId);
+        if (value.id() >= 0)
+        {
+            return m_emitter.spillToTempSlot(value, arrayType);
+        }
+
+        return m_emitter.emitGlobalAddress(std::string(nameOf(unit, nameNode)));
+    }
+
+    ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
+    {
+        const auto defaultType = m_module.typeOfNode(defaultNode);
+        if (defaultType == Type::Undefined())
+        {
+            return ValueRef{};
+        }
+
+        auto& defaultUnit = unitFor(defaultNode);
+        auto context = ExpressionContext{};
+        context.contextualNumberType = contextualTypeForExpectedType(parameterType);
+        const auto checkedDefault = typeCheckExpression(defaultUnit, defaultNode.index, context);
+        if (checkedDefault.value.id() < 0)
+        {
+            return ValueRef{};
+        }
+
+        return m_emitter.emitWidened(checkedDefault.value, checkedDefault.type.toValue(), parameterType.toValue());
+    }
+
+    void TypeChecker::checkUninitializedInitConstants()
+    {
+        std::vector<std::pair<std::string_view, const InitConstantRecord*>> uninitialized;
+        for (const auto& [name, declaration] : m_initConstants)
+        {
+            if (m_initConstantAssignments.contains(name))
+                continue;
+
+            uninitialized.emplace_back(name, &declaration);
+        }
+
+        // sort by source position so the errors emit in declaration order
+        std::sort(uninitialized.begin(), uninitialized.end(), [](const auto& left, const auto& right)
+        {
+            return left.second->location.startIndex < right.second->location.startIndex;
+        });
+
+        for (const auto& [name, declaration] : uninitialized)
+        {
+            m_diagnostics.addUninitializedInitConstantError(declaration->source, declaration->location, std::string(name));
+        }
+    }
+
+    bool TypeChecker::pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept
+    {
+        for (const auto annotation : m_pendingAnnotations)
+        {
+            if (nameOf(unit, annotation) == name)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void TypeChecker::typeCheckFunctionSignatures()
     {
+        CARACAL_ZONE_NAMED("check.functionSignatures");
         for (const auto functionDeclaration : m_functionDeclarations)
         {
             const auto& unit = unitFor(functionDeclaration);
@@ -1062,6 +1156,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckTypeSignatures()
     {
+        CARACAL_ZONE_NAMED("check.typeSignatures");
         for (const auto typeDeclaration : m_typeDeclarations)
         {
             const auto& unit = unitFor(typeDeclaration);
@@ -1206,6 +1301,10 @@ namespace Caracal
         {
             m_module.markExternRequired(methodType);
         }
+        if (isExtern && !m_isPreludePass)
+        {
+            m_emitter.recordExternDefinition(methodType);
+        }
         if (isExtern && !symbolName.has_value())
         {
             // methods need to specify the extern symbol name
@@ -1321,7 +1420,7 @@ namespace Caracal
                 type = type.toReference();
             }
             // TODO nullable handling
-            return noteType(unit, index, type);
+            return recordType(unit, index, type);
         }
         else
         {
@@ -1385,7 +1484,7 @@ namespace Caracal
             arrayType = arrayType.toReference();
         }
 
-        return noteType(unit, index, arrayType);
+        return recordType(unit, index, arrayType);
     }
 
     std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index)
@@ -1396,7 +1495,8 @@ namespace Caracal
         auto parameterNodes = std::vector<u32>{};
         NodeLayout::collectChildren(unit.nodeBuffer, index, parameterNodes);
 
-        // first loop doesnt put the parameter names into the scope, so that default values cannot reference other parameters
+        // parameter names stay out of scope in this loop
+        // default values cannot reference other parameters
         for (const auto parameterIndex : parameterNodes)
         {
             const auto parameterLayout = NodeLayout::parameter(unit.nodeBuffer, parameterIndex);
@@ -1427,7 +1527,12 @@ namespace Caracal
             {
                 auto defaultContext = ExpressionContext{};
                 defaultContext.contextualNumberType = parameterType;
-                const auto defaultType = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
+                const auto checkedDefault = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
+                const auto defaultType = checkedDefault.type;
+                if (checkedDefault.folded.has_value())
+                {
+                    m_emitter.recordDefaultArgumentFold(unit.fileId, parameterLayout.defaultValue, checkedDefault.folded.value());
+                }
                 if (defaultType != Type::Undefined() && !isAssignableTo(defaultType, parameterType))
                 {
                     const auto location = ExpressionSourceLocation(m_compilationContext, unit, parameterLayout.defaultValue);
@@ -1498,7 +1603,7 @@ namespace Caracal
         for (const auto returnTypeNode : returnTypeNodes)
         {
             auto returnType = typeCheckTypeNameNode(unit, returnTypeNode);
-            // ownership rule: returning references or slices is not allowed because they could outlive the values
+            // ownership rule: returning references or slices is not allowed
             if (returnType.isReference() || returnType.kind() == TypeKind::Slice)
             {
                 m_diagnostics.addReferenceOrSliceReturnError(
@@ -1512,7 +1617,7 @@ namespace Caracal
 
     i32 TypeChecker::convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex)
     {
-        const auto literalType = typeCheckNumberLiteral(unit, numberLiteralIndex, ExpressionContext{});
+        const auto literalType = typeCheckNumberLiteral(unit, numberLiteralIndex, ExpressionContext{}).type;
         if (literalType == Type::Undefined() || literalType != m_module.wellKnown().i32)
         {
             return 0;
@@ -1565,6 +1670,278 @@ namespace Caracal
     u32 TypeChecker::nameIdOf(const CompilationUnit& unit, u32 index) const noexcept
     {
         return m_tokenNameIds[unit.fileId][unit.nodeBuffer.mainToken(index)];
+    }
+
+    Type TypeChecker::tryResolveConstructedType(const CompilationUnit& unit, u32 strippedIndex)
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        if (unit.nodeBuffer.kind(strippedIndex) != NodeKind::BinaryExpression
+            || !unit.nodeBuffer.isMemberAccessBinary(tokens, strippedIndex))
+        {
+            return Type::Undefined();
+        }
+
+        const auto binaryLayout = NodeLayout::binary(unit.nodeBuffer, strippedIndex);
+        if (unit.nodeBuffer.kind(binaryLayout.right) != NodeKind::FunctionCallExpression)
+        {
+            return Type::Undefined();
+        }
+
+        const auto left = NodeLayout::stripGroupings(unit.nodeBuffer, binaryLayout.left);
+        if (unit.nodeBuffer.kind(left) != NodeKind::NameExpression
+            || nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right)) != "new")
+        {
+            return Type::Undefined();
+        }
+
+        const auto type = m_module.tryGetTypeByName(nameOf(unit, left));
+        if (type.kind() != TypeKind::Type)
+        {
+            return Type::Undefined();
+        }
+
+        return type;
+    }
+
+    ValueRef TypeChecker::memberReceiverAddress(const CompilationUnit& unit, u32 leftIndex)
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, leftIndex);
+        if (unit.nodeBuffer.kind(stripped) != NodeKind::NameExpression)
+        {
+            return ValueRef{};
+        }
+
+        const auto nameId = nameIdOf(unit, stripped);
+        if (tryGetBinding(nameId) == nullptr)
+        {
+            return ValueRef{};
+        }
+
+        return m_emitter.localOrGlobalAddress(nameId, nameOf(unit, stripped));
+    }
+
+    std::string TypeChecker::escapedStringContent(const CompilationUnit& unit, u32 literalIndex)
+    {
+        const auto lexeme = nameOf(unit, literalIndex);
+        if (lexeme.size() < 2)
+        {
+            return std::string{};
+        }
+
+        return replaceEscapeSequences(lexeme.substr(1, lexeme.size() - 2));
+    }
+
+    bool TypeChecker::memberLeftYieldsAddress(const CompilationUnit& unit, u32 leftIndex)
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, leftIndex);
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::MemberAccessExpression)
+        {
+            return unit.nodeBuffer.kind(NodeLayout::memberExpression(stripped)) == NodeKind::NameExpression;
+        }
+
+        if (unit.nodeBuffer.kind(stripped) != NodeKind::BinaryExpression
+            || !unit.nodeBuffer.isMemberAccessBinary(tokens, stripped))
+        {
+            return false;
+        }
+
+        const auto strippedLayout = NodeLayout::binary(unit.nodeBuffer, stripped);
+        if (unit.nodeBuffer.kind(strippedLayout.right) == NodeKind::FunctionCallExpression)
+        {
+            const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedLayout.right) });
+            const auto* definition = m_module.tryGetFunctionDefinition(methodType);
+            return definition != nullptr && definition->intrinsicKind() == IntrinsicKind::ArrayAt;
+        }
+
+        if (unit.nodeBuffer.kind(strippedLayout.right) == NodeKind::NameExpression)
+        {
+            return m_module.typeOfNode(NodeIndex{ unit.fileId, strippedLayout.left }).toValue().kind() == TypeKind::Type;
+        }
+
+        return false;
+    }
+
+    void TypeChecker::reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex)
+    {
+        const auto* description = m_module.tryGetBuiltinTypeDescription(operandType);
+        if (description == nullptr || description->kind != BuiltinTypeKind::Int)
+        {
+            return;
+        }
+
+        if (kind == FoldResultKind::DivideByZero)
+        {
+            m_diagnostics.addDivisionByZeroError(
+                unit.source,
+                ExpressionSourceLocation(m_compilationContext, unit, rightIndex));
+        }
+        else if (kind == FoldResultKind::Overflow)
+        {
+            m_diagnostics.addConstantOverflowError(
+                unit.source,
+                ExpressionSourceLocation(m_compilationContext, unit, index),
+                formatTypeName(m_module, operandType));
+        }
+    }
+
+    void TypeChecker::reportUnaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index)
+    {
+        const auto* description = m_module.tryGetBuiltinTypeDescription(operandType);
+        if (kind != FoldResultKind::Overflow || description == nullptr || description->kind != BuiltinTypeKind::Int)
+        {
+            return;
+        }
+
+        m_diagnostics.addConstantOverflowError(
+            unit.source,
+            ExpressionSourceLocation(m_compilationContext, unit, index),
+            formatTypeName(m_module, operandType));
+    }
+
+    ValueRef TypeChecker::addressOfExpression(const CompilationUnit& unit, u32 index)
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
+        switch (unit.nodeBuffer.kind(stripped))
+        {
+            case NodeKind::NameExpression:
+            {
+                const auto nameId = nameIdOf(unit, stripped);
+                if (tryGetBinding(nameId) == nullptr)
+                {
+                    return ValueRef{};
+                }
+
+                return m_emitter.localOrGlobalAddress(nameId, nameOf(unit, stripped));
+            }
+            case NodeKind::MemberAccessExpression:
+            {
+                const auto inner = NodeLayout::memberExpression(stripped);
+                if (m_currentType == Type::Undefined() || unit.nodeBuffer.kind(inner) != NodeKind::NameExpression)
+                {
+                    return ValueRef{};
+                }
+
+                const auto& fieldDefinition = m_module.getTypeDefinition(m_currentType).tryGetFieldByName(nameOf(unit, inner));
+                if (fieldDefinition.type() == Type::Undefined())
+                {
+                    return ValueRef{};
+                }
+
+                const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
+                return m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+            }
+            case NodeKind::BinaryExpression:
+            {
+                if (!unit.nodeBuffer.isMemberAccessBinary(tokens, stripped))
+                {
+                    return ValueRef{};
+                }
+
+                const auto memberLayout = NodeLayout::binary(unit.nodeBuffer, stripped);
+                const auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
+                if (receiverType.kind() != TypeKind::Type || unit.nodeBuffer.kind(memberLayout.right) != NodeKind::NameExpression)
+                {
+                    return ValueRef{};
+                }
+
+                const auto& fieldDefinition = m_module.getTypeDefinition(receiverType).tryGetFieldByName(nameOf(unit, memberLayout.right));
+                if (fieldDefinition.type() == Type::Undefined())
+                {
+                    return ValueRef{};
+                }
+
+                // the receiver is itself addressable, chains recurse
+                const auto receiverAddress = addressOfExpression(unit, memberLayout.left);
+                if (receiverAddress.id() < 0)
+                {
+                    return ValueRef{};
+                }
+
+                return m_emitter.emitFieldAddress(receiverAddress, receiverType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+            }
+            default:
+            {
+                return ValueRef{};
+            }
+        }
+    }
+
+    void TypeChecker::emitCapturedArrayLiteral(const CompilationUnit& unit, u32 literalIndex, ValueRef destination, Type arrayType)
+    {
+        const auto captured = m_arrayLiteralElements.find(ArrayLiteralKey(unit.fileId, literalIndex));
+        if (captured == m_arrayLiteralElements.end() || destination.id() < 0)
+        {
+            return;
+        }
+
+        const auto elementType = m_module.getArrayElementType(arrayType);
+        auto elementBase = destination;
+        if (arrayType.kind() == TypeKind::DynamicArray)
+        {
+            // dynamic literals fill the calloc'd buffer behind the descriptor
+            elementBase = m_emitter.emitDynamicArrayStorage(destination, arrayType, static_cast<i32>(captured->second.size()));
+            if (elementBase.id() < 0)
+            {
+                return;
+            }
+        }
+        for (size_t i = 0; i < captured->second.size(); ++i)
+        {
+            const auto element = captured->second[i];
+            const auto indexValue = m_emitter.emitConstant(ConstantValue::FromI32(static_cast<i32>(i)), m_module.wellKnown().i32);
+            const auto elementAddress = m_emitter.emitElementAddress(elementBase, arrayType, indexValue, elementType);
+
+            const auto strippedElement = NodeLayout::stripGroupings(unit.nodeBuffer, element.node);
+            if (unit.nodeBuffer.kind(strippedElement) == NodeKind::ArrayLiteral)
+            {
+                // nested literals fill their element storage directly
+                emitCapturedArrayLiteral(unit, strippedElement, elementAddress, elementType);
+                continue;
+            }
+
+            auto elementValue = element.value;
+            if (element.folded.has_value())
+            {
+                elementValue = m_emitter.emitConstant(IREmitter::constantFromFold(element.folded.value()), elementType.toValue());
+            }
+            m_emitter.emitStoreValue(elementValue, elementAddress, elementType);
+        }
+    }
+
+    std::optional<ConstantValue> TypeChecker::tryBuildAggregateConstant(const CompilationUnit& unit, u32 literalIndex)
+    {
+        const auto captured = m_arrayLiteralElements.find(ArrayLiteralKey(unit.fileId, literalIndex));
+        if (captured == m_arrayLiteralElements.end())
+        {
+            return std::nullopt;
+        }
+
+        ConstantValue::AggregateData elements{};
+        elements.reserve(captured->second.size());
+        for (const auto& element : captured->second)
+        {
+            const auto strippedElement = NodeLayout::stripGroupings(unit.nodeBuffer, element.node);
+            if (unit.nodeBuffer.kind(strippedElement) == NodeKind::ArrayLiteral)
+            {
+                const auto nested = tryBuildAggregateConstant(unit, strippedElement);
+                if (!nested.has_value())
+                {
+                    return std::nullopt;
+                }
+                elements.push_back(nested.value());
+                continue;
+            }
+
+            if (!element.folded.has_value())
+            {
+                return std::nullopt;
+            }
+            elements.push_back(IREmitter::constantFromFold(element.folded.value()));
+        }
+
+        return ConstantValue::FromAggregate(std::move(elements));
     }
 
     void TypeChecker::addVariableBinding(u32 nameId, Type type, std::optional<SourceLocation> location, const SourceTextSharedPtr& source, VariableBindingKind kind, bool referencesConstant)
@@ -1678,6 +2055,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckGlobalConstants()
     {
+        CARACAL_ZONE_NAMED("check.globalConstants");
         for (const auto declaration : m_globalConstantDeclarations)
         {
             const auto& unit = unitFor(declaration);
@@ -1694,6 +2072,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckFunctionDefinitions()
     {
+        CARACAL_ZONE_NAMED("check.functionDefinitions");
         for (const auto declaration : m_functionDeclarations)
         {
             const auto& unit = unitFor(declaration);
@@ -1703,6 +2082,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckEnumDefinitions()
     {
+        CARACAL_ZONE_NAMED("check.enumDefinitions");
         for (const auto declaration : m_enumDeclarations)
         {
             const auto& unit = unitFor(declaration);
@@ -1712,6 +2092,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckTypeFieldDefinitions()
     {
+        CARACAL_ZONE_NAMED("check.typeFieldDefinitions");
         for (const auto declaration : m_typeDeclarations)
         {
             const auto& unit = unitFor(declaration);
@@ -1760,12 +2141,26 @@ namespace Caracal
             pushScope(ScopeKind::Type);
 
             const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, index);
+            auto& typeDefinition = m_module.getTypeDefinition(typeType);
+            const auto constructorType = typeDefinition.tryGetMethodTypeByName("new");
+            const auto emitConstructor = constructorType != Type::Undefined();
             if (typeLayout.hasConstructorParameters)
             {
                 static_cast<void>(typeCheckParametersNode(unit, typeLayout.constructorParameters));
             }
 
-            auto& typeDefinition = m_module.getTypeDefinition(typeType);
+            if (emitConstructor)
+            {
+                auto& constructorDefinition = m_module.getFunctionDefinition(constructorType);
+                m_emitter.setAddressTakenLocals({});
+                m_emitter.beginFunction(constructorDefinition);
+                const auto& constructorParameters = constructorDefinition.parameters();
+                for (size_t i = 0; i < constructorParameters.size(); ++i)
+                {
+                    m_emitter.emitParameter(internName(constructorParameters[i].name()), static_cast<i32>(i), constructorParameters[i]);
+                }
+            }
+
             auto fieldIndex = 0;
             std::vector<u32> bodyStatements;
             NodeLayout::collectChildren(unit.nodeBuffer, typeLayout.body, bodyStatements);
@@ -1780,12 +2175,18 @@ namespace Caracal
                 ++fieldIndex;
             }
 
+            if (emitConstructor)
+            {
+                m_emitter.endFunction();
+            }
+
             popScope(true);
         }
     }
 
     void TypeChecker::typeCheckTypeMethodDefinitions()
     {
+        CARACAL_ZONE_NAMED("check.typeMethodDefinitions");
         for (const auto declaration : m_typeDeclarations)
         {
             const auto& unit = unitFor(declaration);
@@ -1946,6 +2347,16 @@ namespace Caracal
                 typeCheckBlockNode(unit, index);
                 break;
             }
+            case NodeKind::BreakStatement:
+            {
+                m_emitter.emitBreak();
+                break;
+            }
+            case NodeKind::SkipStatement:
+            {
+                m_emitter.emitSkip();
+                break;
+            }
             default:
             {
                 break;
@@ -1953,8 +2364,246 @@ namespace Caracal
         }
     }
 
+    void TypeChecker::emitLocalBinding(
+        const CompilationUnit& unit, 
+        u32 nameId,
+        std::string_view name,
+        Type bindingType,
+        Type rightType,
+        u32 strippedRight,
+        const CheckedValue& checkedRight,
+        bool referencesConstant,
+        ValueRef aggregateDestination,
+        bool constructorFilled)
+    {
+        CARACAL_ZONE_DETAIL("decl.emitBinding");
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const auto strippedRightKind = unit.nodeBuffer.kind(strippedRight);
+
+        if (aggregateDestination.id() >= 0)
+        {
+            // a constructor call already filled the slot through its receiver
+            if (constructorFilled)
+            {
+                return;
+            }
+
+            if (strippedRightKind == NodeKind::ArrayLiteral
+                && (bindingType.kind() == TypeKind::FixedArray 
+                || bindingType.kind() == TypeKind::DynamicArray))
+            {
+                emitCapturedArrayLiteral(unit, strippedRight, aggregateDestination, bindingType);
+            }
+            else if (strippedRightKind == NodeKind::StringLiteral && bindingType == m_module.wellKnown().string)
+            {
+                m_emitter.emitStringLiteralIntoAddress(aggregateDestination, escapedStringContent(unit, strippedRight));
+            }
+            else if (bindingType.kind() == TypeKind::DynamicArray && strippedRightKind == NodeKind::NameExpression)
+            {
+                // owning dynamic arrays deep copy on binding
+                const auto sourceAddress = dynamicArraySourceAddress(unit, strippedRight, bindingType.toValue());
+                const auto copied = m_emitter.emitArrayCopy(sourceAddress, bindingType.toValue());
+                m_emitter.emitStoreValue(copied, aggregateDestination, bindingType.toValue());
+            }
+            else
+            {
+                m_emitter.emitStoreValue(checkedRight.value, aggregateDestination, bindingType.toValue());
+            }
+            return;
+        }
+
+        if ((bindingType.kind() == TypeKind::FixedArray || bindingType.kind() == TypeKind::DynamicArray)
+            && strippedRightKind == NodeKind::ArrayLiteral)
+        {
+            // array literals with an inferred type allocate their slot here and fill it with the checked elements
+            const auto destination = m_emitter.allocateAggregateSlot(nameId, name, bindingType);
+            emitCapturedArrayLiteral(unit, strippedRight, destination, bindingType);
+            return;
+        }
+
+        if (bindingType.isReference())
+        {
+            const auto isExplicitRefBinding = 
+                strippedRightKind == NodeKind::UnaryExpression
+                && TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedRight)) == TokenKind::RefKeyword;
+            if (isExplicitRefBinding)
+            {
+                // an explicit ref binds to the address of its referent, field chains included
+                // a referent without an address cannot be emitted
+                const auto refOperand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedRight));
+                const auto referentAddress = addressOfExpression(unit, refOperand);
+                if (referentAddress.id() < 0)
+                {
+                    m_emitter.recordEmissionFailure();
+                    return;
+                }
+
+                m_emitter.emitRefLocalDeclaration(nameId, bindingType, referentAddress);
+            }
+            else
+            {
+                // a ref typed initializer without an explicit ref copies the value for now
+                m_emitter.emitLocalDeclaration(nameId, name, bindingType.toValue(), checkedRight.value);
+            }
+            return;
+        }
+
+        if (bindingType.kind() == TypeKind::FixedArray || bindingType.kind() == TypeKind::Type)
+        {
+            // aggregates without a preallocated slot allocate one here and store the value into it
+            const auto destination = m_emitter.allocateAggregateSlot(nameId, name, bindingType);
+            m_emitter.emitStoreValue(checkedRight.value, destination, bindingType.toValue());
+            return;
+        }
+
+        const auto initializerValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), bindingType.toValue());
+        m_emitter.emitLocalDeclaration(nameId, name, bindingType, initializerValue);
+    }
+
+    Type TypeChecker::resolveAggregateInitializerType(
+        const CompilationUnit& unit,
+        Type declaredType,
+        u32 strippedInitializer,
+        Type constructedType,
+        bool& initializerWantsAddress)
+    {
+        CARACAL_ZONE_NAMED("check.aggregateInitializerType");
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        auto aggregateType = constructedType;
+        if (aggregateType == Type::Undefined() && !declaredType.isReference()
+            && (declaredType.kind() == TypeKind::Type
+                || declaredType.kind() == TypeKind::FixedArray
+                || declaredType.kind() == TypeKind::DynamicArray))
+        {
+            aggregateType = declaredType;
+        }
+        if (aggregateType == Type::Undefined() && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::NameExpression
+            && !declaredType.isReference())
+        {
+            if (const auto* initializerBinding = tryGetBinding(nameIdOf(unit, strippedInitializer));
+                initializerBinding != nullptr
+                && !initializerBinding->type.isReference()
+                && (initializerBinding->type.kind() == TypeKind::Type
+                    || initializerBinding->type.kind() == TypeKind::FixedArray
+                    || initializerBinding->type.toValue().kind() == TypeKind::DynamicArray))
+            {
+                aggregateType = initializerBinding->type.toValue();
+            }
+        }
+        if (aggregateType == Type::Undefined() 
+            && !declaredType.isReference()
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::FunctionCallExpression)
+        {
+            // a call returning an aggregate stores into a preallocated slot
+            const auto calleeType = m_module.tryGetFunctionTypeByName(nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer)));
+            if (calleeType != Type::Undefined())
+            {
+                const auto& calleeReturns = m_module.getFunctionDefinition(calleeType).returnTypes();
+                if (calleeReturns.size() == 1 && !calleeReturns.front().isReference()
+                    && (calleeReturns.front().kind() == TypeKind::Type
+                        || calleeReturns.front().kind() == TypeKind::FixedArray
+                        || calleeReturns.front().kind() == TypeKind::DynamicArray))
+                {
+                    aggregateType = calleeReturns.front();
+                }
+            }
+        }
+        if (aggregateType == Type::Undefined()
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::StringLiteral
+            && m_module.wellKnown().string != Type::Undefined()
+            && (declaredType == Type::Undefined() || declaredType == m_module.wellKnown().string))
+        {
+            aggregateType = m_module.wellKnown().string;
+        }
+        if (aggregateType.kind() == TypeKind::DynamicArray
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::NameExpression)
+        {
+            // a dynamic array copied from a name is read through its address and deep copied
+            initializerWantsAddress = true;
+        }
+        if (aggregateType != Type::Undefined() && aggregateType == m_module.wellKnown().string
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::StringLiteral)
+        {
+            // the literal fills the declaration's slot directly
+            initializerWantsAddress = true;
+        }
+        if (aggregateType == Type::Undefined()
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::BinaryExpression
+            && unit.nodeBuffer.isMemberAccessBinary(tokens, strippedInitializer))
+        {
+            // a method call returning an aggregate preallocates like a
+            // free call, the receiver type resolves syntactically
+            const auto callLayout = NodeLayout::binary(unit.nodeBuffer, strippedInitializer);
+            if (unit.nodeBuffer.kind(callLayout.right) == NodeKind::FunctionCallExpression)
+            {
+                const auto receiverNode = NodeLayout::stripGroupings(unit.nodeBuffer, callLayout.left);
+                auto receiverType = Type::Undefined();
+                if (unit.nodeBuffer.kind(receiverNode) == NodeKind::NameExpression)
+                {
+                    if (const auto* receiverBinding = tryGetBinding(nameIdOf(unit, receiverNode)); receiverBinding != nullptr)
+                    {
+                        receiverType = receiverBinding->type.toValue();
+                    }
+                }
+                else if (unit.nodeBuffer.kind(receiverNode) == NodeKind::StringLiteral)
+                {
+                    receiverType = m_module.wellKnown().string;
+                }
+
+                if (receiverType.kind() == TypeKind::Type)
+                {
+                    const auto methodType = m_module.getTypeDefinition(receiverType).tryGetMethodTypeByName(
+                        nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right)));
+                    if (methodType != Type::Undefined())
+                    {
+                        const auto& methodReturns = m_module.getFunctionDefinition(methodType).returnTypes();
+                        if (methodReturns.size() == 1 && !methodReturns.front().isReference()
+                            && (methodReturns.front().kind() == TypeKind::Type
+                                || methodReturns.front().kind() == TypeKind::FixedArray
+                                || methodReturns.front().kind() == TypeKind::DynamicArray))
+                        {
+                            aggregateType = methodReturns.front();
+                        }
+                    }
+                }
+            }
+        }
+        if (aggregateType == Type::Undefined()
+            && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::BinaryExpression
+            && !unit.nodeBuffer.isMemberAccessBinary(tokens, strippedInitializer)
+            && ConvertToBinaryOperator(TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedInitializer))) == BinaryOperatorKind::AdditionWrapping
+            && m_module.wellKnown().string != Type::Undefined())
+        {
+            // only a concat chain is string typed, a comparison of strings is not
+            auto leftmostOperand = strippedInitializer;
+            while (unit.nodeBuffer.kind(leftmostOperand) == NodeKind::BinaryExpression)
+            {
+                leftmostOperand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::binary(unit.nodeBuffer, leftmostOperand).left);
+            }
+            auto leftmostOperandType = Type::Undefined();
+            if (unit.nodeBuffer.kind(leftmostOperand) == NodeKind::StringLiteral)
+            {
+                leftmostOperandType = m_module.wellKnown().string;
+            }
+            else if (unit.nodeBuffer.kind(leftmostOperand) == NodeKind::NameExpression)
+            {
+                if (const auto* leftmostBinding = tryGetBinding(nameIdOf(unit, leftmostOperand)); leftmostBinding != nullptr)
+                {
+                    leftmostOperandType = leftmostBinding->type.toValue();
+                }
+            }
+            if (leftmostOperandType == m_module.wellKnown().string)
+            {
+                aggregateType = leftmostOperandType;
+            }
+        }
+
+        return aggregateType;
+    }
+
     void TypeChecker::typeCheckConstantDeclaration(const CompilationUnit& unit, u32 index)
     {
+        CARACAL_ZONE_NAMED("check.constantDeclaration");
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto isGlobalConstant = currentScopeIsGlobal();
 
@@ -1977,15 +2626,87 @@ namespace Caracal
             declaredType = typeCheckTypeNameNode(unit, declarationLayout.explicitType);
         }
 
-        auto rightType = Type::Undefined();
+        auto constantAggregateDestination = ValueRef{};
+        auto pushedConstantConstruction = false;
+        auto constantInitializerWantsAddress = false;
+        if (!currentScopeIsGlobal() && unit.nodeBuffer.kind(declarationLayout.left) == NodeKind::NameExpression)
         {
-            auto context = ExpressionContext{};
-            // use the explicit type for the initializer
-            context.contextualNumberType = contextualTypeForExpectedType(declaredType);
-            rightType = typeCheckExpression(unit, declarationLayout.right, context);
+            const auto strippedInitializer = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+            const auto constructedType = tryResolveConstructedType(unit, strippedInitializer);
+            const auto aggregateType = resolveAggregateInitializerType(unit, declaredType, strippedInitializer, constructedType, constantInitializerWantsAddress);
+            if (aggregateType != Type::Undefined())
+            {
+                constantAggregateDestination = m_emitter.allocateAggregateSlot(
+                    nameIdOf(unit, declarationLayout.left),
+                    nameOf(unit, declarationLayout.left),
+                    aggregateType);
+                if (constructedType != Type::Undefined() && constantAggregateDestination.id() >= 0)
+                {
+                    m_constructorDestinations.push_back(ConstructorDestination{ constantAggregateDestination, false });
+                    pushedConstantConstruction = true;
+                }
+            }
         }
 
-        // the declared type wins for the binding, the initializer only has to be assignable to it
+        // a constructed global is built inside .global_init
+        // its slot address is pushed before the arguments are checked, like any constructor
+        // a discarded global with a runtime call is emitted into .global_init for its side effects
+        auto pushedGlobalConstruction = false;
+        auto resumedGlobalInit = false;
+        if (currentScopeIsGlobal() && !m_isPreludePass)
+        {
+            if (unit.nodeBuffer.kind(declarationLayout.left) == NodeKind::DiscardLiteral)
+            {
+                if (ContainsRuntimeCall(m_module, unit, tokens, declarationLayout.right))
+                {
+                    m_emitter.resumeGlobalInitEffects();
+                    resumedGlobalInit = true;
+                }
+            }
+            else if (unit.nodeBuffer.kind(declarationLayout.left) == NodeKind::NameExpression)
+            {
+                const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right));
+                if (constructedType != Type::Undefined())
+                {
+                    resumedGlobalInit = true;
+                    const auto destination = m_emitter.beginGlobalInitConstruction(nameOf(unit, declarationLayout.left), constructedType);
+                    if (destination.id() >= 0)
+                    {
+                        m_constructorDestinations.push_back(ConstructorDestination{ destination, false });
+                        pushedGlobalConstruction = true;
+                    }
+                }
+            }
+        }
+
+        m_sawUnfoldedBitwiseCall = false;
+        auto checkedRight = CheckedValue{ Type::Undefined() };
+        {
+            auto context = ExpressionContext{};
+            // number literals get their type from the declared type
+            context.contextualNumberType = contextualTypeForExpectedType(declaredType);
+            // a ref initializer binds to the address, not to the value
+            const auto addressRight = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+            context.wantsAddress = constantInitializerWantsAddress
+                || (unit.nodeBuffer.kind(addressRight) == NodeKind::UnaryExpression
+                    && TokenKindAt(tokens, unit.nodeBuffer.mainToken(addressRight)) == TokenKind::RefKeyword);
+            checkedRight = typeCheckExpression(unit, declarationLayout.right, context);
+        }
+        if (pushedConstantConstruction)
+        {
+            m_constructorDestinations.pop_back();
+        }
+        if (pushedGlobalConstruction)
+        {
+            m_constructorDestinations.pop_back();
+        }
+        if (resumedGlobalInit)
+        {
+            m_emitter.suspendGlobalInit();
+        }
+        const auto rightType = checkedRight.type;
+
+        // the binding takes the declared type if there is one
         auto bindingType = rightType;
         if (declaredType != Type::Undefined())
         {
@@ -1999,8 +2720,8 @@ namespace Caracal
             if (bindingType == Type::Void())
             {
                 m_diagnostics.addCallReturnsNoValueError(unit.source, nameLocation(unit, declarationLayout.left), std::string(name));
-                noteType(unit, declarationLayout.left, Type::Undefined());
-                noteType(unit, index, Type::Undefined());
+                recordType(unit, declarationLayout.left, Type::Undefined());
+                recordType(unit, index, Type::Undefined());
                 return;
             }
 
@@ -2014,14 +2735,83 @@ namespace Caracal
                     std::string(name));
             }
 
+            if (isGlobalConstant && m_sawUnfoldedBitwiseCall)
+            {
+                m_diagnostics.addGlobalConstantNotComputableError(
+                    unit.source,
+                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, declarationLayout.right),
+                    std::string(name));
+            }
+
             const auto nameId = nameIdOf(unit, declarationLayout.left);
             if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, bindingType, nameLocation(unit, declarationLayout.left), unit.source, VariableBindingKind::LocalConstant);
+                if (auto* newBinding = tryGetBindingMutable(nameId); newBinding != nullptr)
+                {
+                    newBinding->folded = checkedRight.folded;
+                }
 
                 if (isGlobalConstant)
                 {
                     static_cast<void>(m_module.createConstant(name, rightType, NodeIndex{ unit.fileId, declarationLayout.right }));
+                    if (!m_isPreludePass)
+                    {
+                        if (checkedRight.folded.has_value())
+                        {
+                            m_emitter.emitGlobalConstant(name, rightType, IREmitter::constantFromFold(checkedRight.folded.value()));
+                        }
+                        else
+                        {
+                            const auto strippedRight = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+                            const auto strippedKind = unit.nodeBuffer.kind(strippedRight);
+                            if (strippedKind == NodeKind::UnaryExpression
+                                && TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedRight)) == TokenKind::RefKeyword)
+                            {
+                                const auto refTarget = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedRight));
+                                if (unit.nodeBuffer.kind(refTarget) == NodeKind::NameExpression)
+                                {
+                                    m_emitter.emitGlobalReference(name, rightType, nameOf(unit, refTarget));
+                                }
+                            }
+                            else if (strippedKind == NodeKind::StringLiteral)
+                            {
+                                m_emitter.emitGlobalConstant(name, rightType, ConstantValue::FromString(escapedStringContent(unit, strippedRight)));
+                            }
+                            else if (strippedKind == NodeKind::ArrayLiteral)
+                            {
+                                // constant element arrays store an aggregate value
+                                if (const auto aggregate = tryBuildAggregateConstant(unit, strippedRight); aggregate.has_value())
+                                {
+                                    m_emitter.emitGlobalConstant(name, rightType, aggregate.value());
+                                }
+                            }
+                            else if (strippedKind == NodeKind::BinaryExpression
+                                && rightType.kind() == TypeKind::Enum
+                                && unit.nodeBuffer.isMemberAccessBinary(tokens, strippedRight))
+                            {
+                                // an enum member global stores the underlying literal
+                                const auto memberLayout = NodeLayout::binary(unit.nodeBuffer, strippedRight);
+                                if (unit.nodeBuffer.kind(memberLayout.right) == NodeKind::NameExpression)
+                                {
+                                    auto& initializerEnum = m_module.getEnumDefinition(rightType);
+                                    if (const auto* field = initializerEnum.tryGetFieldByName(nameOf(unit, memberLayout.right)); field != nullptr && field->hasConstantValue())
+                                    {
+                                        if (const auto constant = m_emitter.makeEnumConstantValue(initializerEnum.baseType(), field->value()); constant.has_value())
+                                        {
+                                            m_emitter.emitGlobalConstant(name, rightType, constant.value());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    emitLocalBinding(unit, nameId, name, bindingType, rightType,
+                        NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right),
+                        checkedRight, false, constantAggregateDestination, pushedConstantConstruction);
                 }
             }
             else
@@ -2033,7 +2823,7 @@ namespace Caracal
                     existing->source,
                     existing->location);
             }
-            noteType(unit, declarationLayout.left, bindingType);
+            recordType(unit, declarationLayout.left, bindingType);
         }
         else if (isGlobalConstant && leftKind == NodeKind::DiscardLiteral)
         {
@@ -2054,7 +2844,7 @@ namespace Caracal
             }
         }
 
-        noteType(unit, index, bindingType);
+        recordType(unit, index, bindingType);
     }
 
     void TypeChecker::typeCheckInitConstantDeclaration(const CompilationUnit& unit, u32 index)
@@ -2098,6 +2888,10 @@ namespace Caracal
                 {
                     static_cast<void>(m_module.createInitConstant(name, declaredType));
                     m_initConstants.insert_or_assign(std::string(name), InitConstantRecord{ nameLocation(unit, initLayout.left), unit.source });
+                    if (!m_isPreludePass)
+                    {
+                        m_emitter.emitConstructedGlobal(name, declaredType);
+                    }
                 }
             }
             else
@@ -2109,14 +2903,15 @@ namespace Caracal
                     existing->source,
                     existing->location);
             }
-            noteType(unit, initLayout.left, declaredType);
+            recordType(unit, initLayout.left, declaredType);
         }
 
-        noteType(unit, index, declaredType);
+        recordType(unit, index, declaredType);
     }
 
     void TypeChecker::typeCheckVariableDeclaration(const CompilationUnit& unit, u32 index)
     {
+        CARACAL_ZONE_NAMED("check.variableDeclaration");
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto declarationLayout = NodeLayout::declaration(unit.nodeBuffer, index);
 
@@ -2126,15 +2921,50 @@ namespace Caracal
             declaredType = typeCheckTypeNameNode(unit, declarationLayout.explicitType);
         }
 
-        auto rightType = Type::Undefined();
+        auto pushedConstructorDestination = false;
+        auto aggregateDestination = ValueRef{};
+        auto initializerWantsAddress = false;
+        if (unit.nodeBuffer.kind(declarationLayout.left) == NodeKind::NameExpression && !currentScopeIsGlobal())
         {
-            auto context = ExpressionContext{};
-            // use the explicit type for the initializer
-            context.contextualNumberType = contextualTypeForExpectedType(declaredType);
-            rightType = typeCheckExpression(unit, declarationLayout.right, context);
+            CARACAL_ZONE_DETAIL("decl.preallocateSlot");
+            const auto strippedInitializer = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+            const auto constructedType = tryResolveConstructedType(unit, strippedInitializer);
+            const auto aggregateType = resolveAggregateInitializerType(unit, declaredType, strippedInitializer, constructedType, initializerWantsAddress);
+
+            if (aggregateType != Type::Undefined())
+            {
+                aggregateDestination = m_emitter.allocateAggregateSlot(
+                    nameIdOf(unit, declarationLayout.left),
+                    nameOf(unit, declarationLayout.left),
+                    aggregateType);
+                if (constructedType != Type::Undefined() && aggregateDestination.id() >= 0)
+                {
+                    m_constructorDestinations.push_back(ConstructorDestination{ aggregateDestination, false });
+                    pushedConstructorDestination = true;
+                }
+            }
         }
 
-        // the declared type wins for the binding, the initializer only has to be assignable to it
+        auto checkedRight = CheckedValue{ Type::Undefined() };
+        {
+            CARACAL_ZONE_DETAIL("decl.initializer");
+            auto context = ExpressionContext{};
+            // number literals get their type from the declared type
+            context.contextualNumberType = contextualTypeForExpectedType(declaredType);
+            // a ref initializer binds to the address, not to the value
+            const auto addressRight = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+            context.wantsAddress = initializerWantsAddress
+                || (unit.nodeBuffer.kind(addressRight) == NodeKind::UnaryExpression
+                    && TokenKindAt(tokens, unit.nodeBuffer.mainToken(addressRight)) == TokenKind::RefKeyword);
+            checkedRight = typeCheckExpression(unit, declarationLayout.right, context);
+        }
+        if (pushedConstructorDestination)
+        {
+            m_constructorDestinations.pop_back();
+        }
+        const auto rightType = checkedRight.type;
+
+        // the binding takes the declared type if there is one
         auto bindingType = rightType;
         if (declaredType != Type::Undefined())
         {
@@ -2144,58 +2974,62 @@ namespace Caracal
         auto referencesConstant = false;
         const auto strippedRight = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
         const auto strippedRightKind = unit.nodeBuffer.kind(strippedRight);
-        if (strippedRightKind == NodeKind::UnaryExpression)
         {
-            // taking a ref of a constant is allowed, but assigning through it is not
-            const auto isReferenceOf = TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedRight)) == TokenKind::RefKeyword;
-            if (isReferenceOf && m_module.typeOfNode(NodeIndex{ unit.fileId, strippedRight }).isReference())
+            CARACAL_ZONE_DETAIL("decl.constness");
+            if (strippedRightKind == NodeKind::UnaryExpression)
             {
-                const auto operand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedRight));
-                if (unit.nodeBuffer.kind(operand) == NodeKind::NameExpression)
+                // taking a ref of a constant is allowed, but assigning through it is not
+                const auto isReferenceOf = TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedRight)) == TokenKind::RefKeyword;
+                if (isReferenceOf && m_module.typeOfNode(NodeIndex{ unit.fileId, strippedRight }).isReference())
                 {
-                    const auto* operandBinding = tryGetBinding(nameIdOf(unit, operand));
-                    referencesConstant = operandBinding != nullptr && operandBinding->kind == VariableBindingKind::LocalConstant;
-                }
-                else
-                {
-                    auto rootName = std::string{};
-                    auto rootReferencesConstant = false;
-                    referencesConstant = receiverChainIsConstant(unit, operand, rootName, rootReferencesConstant);
+                    const auto operand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedRight));
+                    if (unit.nodeBuffer.kind(operand) == NodeKind::NameExpression)
+                    {
+                        const auto* operandBinding = tryGetBinding(nameIdOf(unit, operand));
+                        referencesConstant = operandBinding != nullptr && operandBinding->kind == VariableBindingKind::LocalConstant;
+                    }
+                    else
+                    {
+                        auto rootName = std::string{};
+                        auto rootReferencesConstant = false;
+                        referencesConstant = receiverChainIsConstant(unit, operand, rootName, rootReferencesConstant);
+                    }
                 }
             }
-        }
-        else if (strippedRightKind == NodeKind::NameExpression)
-        {
-            const auto* rightBinding = tryGetBinding(nameIdOf(unit, strippedRight));
-            referencesConstant = rightBinding != nullptr && rightBinding->referencesConstant;
-        }
-        else if (strippedRightKind == NodeKind::BinaryExpression)
-        {
-            // a slice() view borrows its receiver, a view of a constant stays constant
-            const auto binaryLayout = NodeLayout::binary(unit.nodeBuffer, strippedRight);
-            if (unit.nodeBuffer.isMemberAccessBinary(tokens, strippedRight)
-                && unit.nodeBuffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression
-                && unit.nodeBuffer.kind(binaryLayout.left) == NodeKind::NameExpression)
+            else if (strippedRightKind == NodeKind::NameExpression)
             {
-                const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
-                if (methodType != Type::Undefined()
-                    && m_module.getFunctionDefinition(methodType).intrinsicKind() == IntrinsicKind::ArraySlice)
+                const auto* rightBinding = tryGetBinding(nameIdOf(unit, strippedRight));
+                referencesConstant = rightBinding != nullptr && rightBinding->referencesConstant;
+            }
+            else if (strippedRightKind == NodeKind::BinaryExpression)
+            {
+                // a slice() view borrows its receiver, a view of a constant stays constant
+                const auto binaryLayout = NodeLayout::binary(unit.nodeBuffer, strippedRight);
+                if (unit.nodeBuffer.isMemberAccessBinary(tokens, strippedRight)
+                    && unit.nodeBuffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression
+                    && unit.nodeBuffer.kind(binaryLayout.left) == NodeKind::NameExpression)
                 {
-                    const auto* receiverBinding = tryGetBinding(nameIdOf(unit, binaryLayout.left));
-                    referencesConstant = receiverBinding != nullptr
-                        && (receiverBinding->kind == VariableBindingKind::LocalConstant || receiverBinding->referencesConstant);
+                    const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
+                    if (methodType != Type::Undefined()
+                        && m_module.getFunctionDefinition(methodType).intrinsicKind() == IntrinsicKind::ArraySlice)
+                    {
+                        const auto* receiverBinding = tryGetBinding(nameIdOf(unit, binaryLayout.left));
+                        referencesConstant = receiverBinding != nullptr
+                            && (receiverBinding->kind == VariableBindingKind::LocalConstant || receiverBinding->referencesConstant);
+                    }
                 }
             }
         }
 
         if (unit.nodeBuffer.kind(declarationLayout.left) == NodeKind::NameExpression)
         {
+            CARACAL_ZONE_DETAIL("decl.bind");
             const auto name = nameOf(unit, declarationLayout.left);
             if (bindingType == Type::Void())
             {
                 m_diagnostics.addCallReturnsNoValueError(unit.source, nameLocation(unit, declarationLayout.left), std::string(name));
-                noteType(unit, declarationLayout.left, Type::Undefined());
-                noteType(unit, index, Type::Undefined());
+                recordType(unit, declarationLayout.left, Type::Undefined());
+                recordType(unit, index, Type::Undefined());
                 return;
             }
 
@@ -2203,6 +3037,7 @@ namespace Caracal
             if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, bindingType, nameLocation(unit, declarationLayout.left), unit.source, VariableBindingKind::LocalVariable, referencesConstant);
+                emitLocalBinding(unit, nameId, name, bindingType, rightType, strippedRight, checkedRight, referencesConstant, aggregateDestination, pushedConstructorDestination);
             }
             else
             {
@@ -2213,7 +3048,7 @@ namespace Caracal
                     existing->source,
                     existing->location);
             }
-            noteType(unit, declarationLayout.left, bindingType);
+            recordType(unit, declarationLayout.left, bindingType);
         }
 
         if (declaredType != Type::Undefined() && rightType != Type::Undefined() && !isAssignableTo(rightType, declaredType))
@@ -2229,13 +3064,13 @@ namespace Caracal
             }
         }
 
-        noteType(unit, index, bindingType);
+        recordType(unit, index, bindingType);
     }
 
     void TypeChecker::typeCheckExpressionStatement(const CompilationUnit& unit, u32 index)
     {
-        const auto expressionType = typeCheckExpression(unit, NodeLayout::statementExpression(index));
-        noteType(unit, index, expressionType);
+        const auto expressionType = typeCheckExpression(unit, NodeLayout::statementExpression(index)).type;
+        recordType(unit, index, expressionType);
     }
 
     bool TypeChecker::receiverChainIsConstant(const CompilationUnit& unit, u32 expressionIndex, std::string& rootName, bool& referencesConstant)
@@ -2304,7 +3139,9 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto assignmentLayout = NodeLayout::assignment(unit.nodeBuffer, index);
 
-        auto leftType = typeCheckExpression(unit, assignmentLayout.target);
+        auto targetContext = ExpressionContext{};
+        targetContext.wantsAddress = true;
+        auto leftType = typeCheckExpression(unit, assignmentLayout.target, targetContext).type;
         if (leftType.isReference())
         {
             leftType = leftType.toValue();
@@ -2397,13 +3234,44 @@ namespace Caracal
                 }
             }
         }
-        auto rightType = Type::Undefined();
+        // a dynamic array assigned from a name is deep copied through the name's address
+        // the right side is not loaded
+        const auto strippedAssignedValue = NodeLayout::stripGroupings(unit.nodeBuffer, assignmentLayout.value);
+        const auto dynamicAssignmentCopy = leftType.toValue().kind() == TypeKind::DynamicArray
+            && !leftType.isReference()
+            && unit.nodeBuffer.kind(strippedAssignedValue) == NodeKind::NameExpression
+            && !currentScopeIsGlobal();
+
+        // a constructor call on the right side writes straight into the target
+        // the target's address is taken before the arguments are checked
+        auto pushedAssignmentConstruction = false;
+        if (leftKind == NodeKind::NameExpression && !currentScopeIsGlobal())
+        {
+            const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(unit.nodeBuffer, assignmentLayout.value));
+            if (constructedType != Type::Undefined())
+            {
+                const auto destination = m_emitter.localOrGlobalAddress(nameIdOf(unit, assignmentLayout.target), nameOf(unit, assignmentLayout.target));
+                if (destination.id() >= 0)
+                {
+                    m_constructorDestinations.push_back(ConstructorDestination{ destination, false });
+                    pushedAssignmentConstruction = true;
+                }
+            }
+        }
+
+        auto checkedRight = CheckedValue{ Type::Undefined() };
         {
             auto context = ExpressionContext{};
             // use the assigned variable's type for the value
             context.contextualNumberType = contextualTypeForExpectedType(leftType);
-            rightType = typeCheckExpression(unit, assignmentLayout.value, context);
+            context.wantsAddress = dynamicAssignmentCopy;
+            checkedRight = typeCheckExpression(unit, assignmentLayout.value, context);
         }
+        if (pushedAssignmentConstruction)
+        {
+            m_constructorDestinations.pop_back();
+        }
+        auto rightType = checkedRight.type;
         if (rightType.isReference())
         {
             rightType = rightType.toValue();
@@ -2431,11 +3299,50 @@ namespace Caracal
                     formatTypeName(m_module, leftType),
                     formatTypeName(m_module, rightType));
             }
+            return;
+        }
+
+        // a constructor right side already stored through the target's address
+        if (!pushedAssignmentConstruction && leftKind == NodeKind::NameExpression)
+        {
+            auto assignedValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), leftType.toValue());
+            if (dynamicAssignmentCopy)
+            {
+                const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
+                assignedValue = m_emitter.emitArrayCopy(sourceAddress, leftType.toValue());
+            }
+            const auto* emitBinding = tryGetBinding(nameIdOf(unit, assignmentLayout.target));
+            if (emitBinding != nullptr && emitBinding->scopeIndex == 0 && !currentScopeIsGlobal())
+            {
+                m_emitter.emitGlobalAssignment(std::string(nameOf(unit, assignmentLayout.target)), assignedValue);
+            }
+            else
+            {
+                m_emitter.emitLocalAssignment(nameIdOf(unit, assignmentLayout.target), assignedValue);
+            }
+        }
+        else if (!pushedAssignmentConstruction
+            && (leftKind == NodeKind::MemberAccessExpression
+                || (leftKind == NodeKind::BinaryExpression && unit.nodeBuffer.isMemberAccessBinary(tokens, assignmentLayout.target))))
+        {
+            // a field assignment emits the value before the field's address
+            // nested fields like a.b.c resolve their address recursively
+            const auto assignedValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), leftType.toValue());
+            const auto targetAddress = addressOfExpression(unit, assignmentLayout.target);
+            if (targetAddress.id() < 0)
+            {
+                m_emitter.recordEmissionFailure();
+            }
+            else
+            {
+                m_emitter.emitStoreValue(assignedValue, targetAddress, leftType);
+            }
         }
     }
 
     void TypeChecker::typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index)
     {
+        CARACAL_ZONE_NAMED("check.functionBody");
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         pushScope(ScopeKind::Function);
@@ -2449,6 +3356,22 @@ namespace Caracal
         auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         const auto& parameters = functionDefinition.parameters();
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
+
+        // the extern annotation is read before the body is emitted
+        // annotation errors are reported after the body
+        NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, index, m_annotationScratch);
+        const auto isExternFunction = NodeLayout::annotationsContain(unit.nodeBuffer, tokens, m_annotationScratch, ExternAnnotationName);
+        const auto emitBody = !isExternFunction;
+        if (isExternFunction && !m_isPreludePass)
+        {
+            m_emitter.recordExternDefinition(functionDefinition.type());
+        }
+        if (emitBody)
+        {
+            m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, functionLayout.body));
+            m_emitter.beginFunction(functionDefinition);
+        }
+
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, m_childrenScratch);
         for (size_t i = 0; i < parameters.size(); ++i)
         {
@@ -2457,7 +3380,12 @@ namespace Caracal
             {
                 location = NodeSpans::parameterLocation(unit.nodeBuffer, tokens, m_childrenScratch[i]);
             }
-            addVariableBinding(internName(parameters[i].name()), parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
+            const auto nameId = internName(parameters[i].name());
+            addVariableBinding(nameId, parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
+            if (emitBody)
+            {
+                m_emitter.emitParameter(nameId, static_cast<i32>(i), parameters[i]);
+            }
         }
 
         const auto& returnTypes = functionDefinition.returnTypes();
@@ -2473,6 +3401,11 @@ namespace Caracal
         m_currentFunctionName = functionDefinition.fullName();
         typeCheckBlockNode(unit, functionLayout.body);
         m_currentFunctionName.clear();
+
+        if (emitBody)
+        {
+            m_emitter.endFunction();
+        }
 
         NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, index, m_annotationScratch);
         auto isExtern = false;
@@ -2586,12 +3519,13 @@ namespace Caracal
                     contextualType = m_module.wellKnown().cstring;
                 }
 
-                auto fieldValueType = Type::Undefined();
+                auto checkedFieldValue = CheckedValue{ Type::Undefined() };
                 {
                     auto context = ExpressionContext{};
                     context.contextualNumberType = contextualType;
-                    fieldValueType = typeCheckExpression(unit, expression, context);
+                    checkedFieldValue = typeCheckExpression(unit, expression, context);
                 }
+                const auto fieldValueType = checkedFieldValue.type;
                 if (baseType == Type::Undefined())
                 {
                     baseType = fieldValueType;
@@ -2620,11 +3554,13 @@ namespace Caracal
                     else
                     {
                         enumDefinition.addField(fieldName, nullptr, fieldLocation);
+                        recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
                     }
                 }
                 else
                 {
                     enumDefinition.addField(fieldName, nullptr, fieldLocation);
+                    recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
                 }
             }
             else
@@ -2637,6 +3573,23 @@ namespace Caracal
         if (enumDefinition.baseType() == Type::Undefined())
         {
             enumDefinition.setBaseType(defaultBaseType);
+        }
+    }
+
+    void TypeChecker::recordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue)
+    {
+        if (checkedFieldValue.folded.has_value())
+        {
+            m_emitter.recordEnumFieldConstant(enumType.id(), std::string(fieldName), IREmitter::constantFromFold(checkedFieldValue.folded.value()), checkedFieldValue.folded);
+            return;
+        }
+
+        // cstring valued fields store their literal bytes
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, expressionIndex);
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::StringLiteral
+            && checkedFieldValue.type == m_module.wellKnown().cstring)
+        {
+            m_emitter.recordEnumFieldConstant(enumType.id(), std::string(fieldName), ConstantValue::FromString(escapedStringContent(unit, stripped)), std::nullopt);
         }
     }
 
@@ -2663,13 +3616,14 @@ namespace Caracal
             fieldType = typeCheckTypeNameNode(unit, declarationLayout.explicitType);
         }
 
-        auto expressionType = Type::Undefined();
+        auto checkedFieldRight = CheckedValue{ Type::Undefined() };
         {
             auto context = ExpressionContext{};
             // use the explicit field type for the initializer
             context.contextualNumberType = contextualTypeForExpectedType(fieldType);
-            expressionType = typeCheckExpression(unit, declarationLayout.right, context);
+            checkedFieldRight = typeCheckExpression(unit, declarationLayout.right, context);
         }
+        const auto expressionType = checkedFieldRight.type;
 
         if (fieldType == Type::Undefined())
         {
@@ -2701,14 +3655,40 @@ namespace Caracal
                 nameLocation(unit, declarationLayout.left));
         }
 
-        noteType(unit, declarationLayout.left, fieldType);
-        noteType(unit, index, fieldType);
+        recordType(unit, declarationLayout.left, fieldType);
+        recordType(unit, index, fieldType);
 
         typeDefinition.addField(fieldType, std::string(fieldName), fieldIndex, nullptr, unit.nodeBuffer.isConstantTypeField(tokens, index));
+
+        const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
+        if (thisAddress.id() >= 0)
+        {
+            auto fieldValue = m_emitter.emitWidened(checkedFieldRight.value, expressionType.toValue(), fieldType.toValue());
+            const auto strippedField = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+            if (unit.nodeBuffer.kind(strippedField) == NodeKind::ArrayLiteral
+                && (fieldType.kind() == TypeKind::FixedArray || fieldType.kind() == TypeKind::DynamicArray))
+            {
+                // a literal initializer materializes in a temp and loads back
+                const auto temp = m_emitter.allocateTempAggregateSlot("temp", fieldType);
+                emitCapturedArrayLiteral(unit, strippedField, temp, fieldType);
+                fieldValue = m_emitter.emitLoad(temp, fieldType);
+            }
+            else if (fieldType.kind() == TypeKind::DynamicArray && unit.nodeBuffer.kind(strippedField) == NodeKind::NameExpression)
+            {
+                // an owning array field deep copies its source
+                // string reserves the nul byte its c string view relies on
+                const auto sourceAddress = dynamicArraySourceAddress(unit, strippedField, fieldType);
+                const auto reserveNulByte = typeDefinition.type() == m_module.wellKnown().string;
+                fieldValue = m_emitter.emitArrayCopy(sourceAddress, fieldType, reserveNulByte);
+            }
+            const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
+            m_emitter.emitStoreValue(fieldValue, fieldAddress, fieldType);
+        }
     }
 
     void TypeChecker::typeCheckMethodDefinitionStatement(const CompilationUnit& unit, u32 index)
     {
+        CARACAL_ZONE_NAMED("check.methodBody");
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, index);
@@ -2730,6 +3710,25 @@ namespace Caracal
         }
 
         auto& methodDefinition = m_module.getFunctionDefinition(methodType);
+
+        collectMethodAnnotationsBefore(unit, index, m_module.getTypeDefinition(m_currentType), m_annotationScratch);
+        auto isExternMethod = false;
+        for (const auto annotation : m_annotationScratch)
+        {
+            if (nameOf(unit, annotation) == ExternAnnotationName)
+            {
+                isExternMethod = true;
+                break;
+            }
+        }
+
+        const auto emitBody = !isExternMethod;
+        if (emitBody)
+        {
+            m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, methodLayout.body));
+            m_emitter.beginFunction(methodDefinition);
+        }
+
         const auto& parameters = methodDefinition.parameters();
         NodeLayout::collectChildren(unit.nodeBuffer, methodLayout.parameters, m_childrenScratch);
         for (size_t i = 0; i < parameters.size(); ++i)
@@ -2739,7 +3738,12 @@ namespace Caracal
             {
                 location = NodeSpans::parameterLocation(unit.nodeBuffer, tokens, m_childrenScratch[i]);
             }
-            addVariableBinding(internName(parameters[i].name()), parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
+            const auto nameId = internName(parameters[i].name());
+            addVariableBinding(nameId, parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
+            if (emitBody)
+            {
+                m_emitter.emitParameter(nameId, static_cast<i32>(i), parameters[i]);
+            }
         }
 
         const auto& returnTypes = methodDefinition.returnTypes();
@@ -2755,18 +3759,12 @@ namespace Caracal
         m_currentFunctionName = methodDefinition.fullName();
         typeCheckBlockNode(unit, methodLayout.body);
         m_currentFunctionName.clear();
-
-        collectMethodAnnotationsBefore(unit, index, m_module.getTypeDefinition(m_currentType), m_annotationScratch);
-        auto isExtern = false;
-        for (const auto annotation : m_annotationScratch)
+        if (emitBody)
         {
-            if (nameOf(unit, annotation) == ExternAnnotationName)
-            {
-                isExtern = true;
-                break;
-            }
+            m_emitter.endFunction();
         }
 
+        const auto isExtern = isExternMethod;
         if (!isExtern
             && m_currentReturnType != Type::Void()
             && m_currentReturnType != Type::Undefined()
@@ -2788,8 +3786,8 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto ifLayout = NodeLayout::ifStatement(unit.nodeBuffer, index);
 
-        auto conditionType = typeCheckExpression(unit, ifLayout.condition);
-        conditionType = coerceConditionType(conditionType, unit, ifLayout.condition);
+        const auto checkedCondition = typeCheckExpression(unit, ifLayout.condition);
+        auto conditionType = coerceConditionType(checkedCondition.type, unit, ifLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {
             m_diagnostics.addNonBoolIfConditionError(
@@ -2798,12 +3796,15 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
+        auto ifFrame = m_emitter.beginIf(checkedCondition.value, ifLayout.hasFalse);
         typeCheckStatement(unit, ifLayout.trueStatement);
+        m_emitter.endIfThen(ifFrame);
 
         if (ifLayout.hasFalse)
         {
             typeCheckStatement(unit, ifLayout.falseStatement);
         }
+        m_emitter.endIf(ifFrame);
     }
 
     void TypeChecker::typeCheckTrailingIfStatement(const CompilationUnit& unit, u32 index)
@@ -2811,8 +3812,8 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto trailingIfLayout = NodeLayout::trailingIf(unit.nodeBuffer, index);
 
-        auto conditionType = typeCheckExpression(unit, trailingIfLayout.condition);
-        conditionType = coerceConditionType(conditionType, unit, trailingIfLayout.condition);
+        const auto checkedCondition = typeCheckExpression(unit, trailingIfLayout.condition);
+        auto conditionType = coerceConditionType(checkedCondition.type, unit, trailingIfLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {
             m_diagnostics.addNonBoolIfConditionError(
@@ -2821,7 +3822,10 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
+        auto ifFrame = m_emitter.beginIf(checkedCondition.value, false);
         typeCheckStatement(unit, trailingIfLayout.statement);
+        m_emitter.endIfThen(ifFrame);
+        m_emitter.endIf(ifFrame);
     }
 
     void TypeChecker::typeCheckWhileStatement(const CompilationUnit& unit, u32 index)
@@ -2829,8 +3833,9 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto whileLayout = NodeLayout::whileStatement(unit.nodeBuffer, index);
 
-        auto conditionType = typeCheckExpression(unit, whileLayout.condition);
-        conditionType = coerceConditionType(conditionType, unit, whileLayout.condition);
+        auto whileFrame = m_emitter.beginWhile();
+        const auto checkedCondition = typeCheckExpression(unit, whileLayout.condition);
+        auto conditionType = coerceConditionType(checkedCondition.type, unit, whileLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {
             m_diagnostics.addNonBoolWhileConditionError(
@@ -2839,7 +3844,9 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
+        m_emitter.beginWhileBody(whileFrame, checkedCondition.value);
         typeCheckStatement(unit, whileLayout.body);
+        m_emitter.endWhile(whileFrame);
     }
 
     void TypeChecker::typeCheckReturnStatement(const CompilationUnit& unit, u32 index)
@@ -2850,19 +3857,40 @@ namespace Caracal
         const auto value = NodeLayout::optionalChild(unit.nodeBuffer, index);
         if (value.hasChild)
         {
-            auto type = Type::Undefined();
+            // a constructor call builds the object in a temp slot and returns that
+            auto pushedTempDestination = false;
+            if (!currentScopeIsGlobal())
+            {
+                const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(unit.nodeBuffer, value.child));
+                if (constructedType != Type::Undefined())
+                {
+                    const auto destination = m_emitter.allocateTempAggregateSlot("constructed", constructedType);
+                    if (destination.id() >= 0)
+                    {
+                        m_constructorDestinations.push_back(ConstructorDestination{ destination, true });
+                        pushedTempDestination = true;
+                    }
+                }
+            }
+
+            auto checkedValue = CheckedValue{ Type::Undefined() };
             {
                 auto context = ExpressionContext{};
                 context.contextualNumberType = contextualTypeForExpectedType(declaredReturnType);
-                type = typeCheckExpression(unit, value.child, context);
+                checkedValue = typeCheckExpression(unit, value.child, context);
             }
+            if (pushedTempDestination)
+            {
+                m_constructorDestinations.pop_back();
+            }
+            auto type = checkedValue.type;
             if (type.isReference())
             {
                 // returning a ref is not allowed, so we need to coerce it to a value
                 type = type.toValue();
             }
 
-            noteType(unit, index, type);
+            recordType(unit, index, type);
             if (type == Type::Undefined())
             {
                 return;
@@ -2880,10 +3908,23 @@ namespace Caracal
                         formatTypeName(m_module, type));
                 }
             }
+
+            const auto strippedReturn = NodeLayout::stripGroupings(unit.nodeBuffer, value.child);
+            if (unit.nodeBuffer.kind(strippedReturn) == NodeKind::ArrayLiteral
+                && (type.kind() == TypeKind::FixedArray || type.kind() == TypeKind::DynamicArray))
+            {
+                // a literal materializes in a temp slot and returns that
+                const auto destination = m_emitter.allocateTempAggregateSlot("temp", type);
+                emitCapturedArrayLiteral(unit, strippedReturn, destination, type);
+                checkedValue.value = m_emitter.emitLoad(destination, type);
+            }
+
+            m_emitter.emitReturnValue(m_emitter.emitWidened(checkedValue.value, type.toValue(), declaredReturnType.toValue()));
         }
         else
         {
-            noteType(unit, index, Type::Void());
+            recordType(unit, index, Type::Void());
+            m_emitter.emitReturn();
 
             if (declaredReturnType != Type::Void())
             {
@@ -2937,7 +3978,7 @@ namespace Caracal
         m_childrenStack.resize(childrenStart);
     }
 
-    Type TypeChecker::typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
         switch (unit.nodeBuffer.kind(index))
         {
@@ -2956,11 +3997,32 @@ namespace Caracal
                     m_module.markPreludeTypeRequired(literalType);
                 }
 
-                return noteType(unit, index, literalType);
+                auto result = CheckedValue{ recordType(unit, index, literalType) };
+                if (literalType == m_module.wellKnown().cstring)
+                {
+                    result.value = m_emitter.emitConstant(ConstantValue::FromString(escapedStringContent(unit, index)), literalType);
+                }
+                else if (literalType == m_module.wellKnown().string
+                    && (!context.wantsAddress || context.receiverPosition))
+                {
+                    // a string literal used as a value is built in a temp slot and loaded back
+                    const auto temp = m_emitter.allocateTempAggregateSlot("temp", literalType);
+                    if (temp.id() >= 0)
+                    {
+                        m_emitter.emitStringLiteralIntoAddress(temp, escapedStringContent(unit, index));
+                        result.value = m_emitter.emitLoad(temp, literalType);
+                    }
+                }
+                return result;
             }
             case NodeKind::BoolLiteral:
             {
-                return noteType(unit, index, m_module.wellKnown().boolean);
+                auto result = CheckedValue{ recordType(unit, index, m_module.wellKnown().boolean) };
+                const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+                const auto isTrue = TokenKindAt(tokens, unit.nodeBuffer.mainToken(index)) == TokenKind::TrueKeyword;
+                result.folded = FoldValue{ isTrue };
+                result.value = m_emitter.emitConstant(ConstantValue::FromBool(isTrue), m_module.wellKnown().boolean);
+                return result;
             }
             case NodeKind::NumberLiteral:
             {
@@ -2996,7 +4058,7 @@ namespace Caracal
             }
             case NodeKind::DiscardLiteral:
             {
-                return noteType(unit, index, Type::Discard());
+                return recordType(unit, index, Type::Discard());
             }
             default:
             {
@@ -3006,14 +4068,16 @@ namespace Caracal
         return Type::Undefined();
     }
 
-    Type TypeChecker::typeCheckGroupingExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckGroupingExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
-        auto type = typeCheckExpression(unit, NodeLayout::groupedExpression(index), context);
-        return noteType(unit, index, type);
+        auto result = typeCheckExpression(unit, NodeLayout::groupedExpression(index), context);
+        result.type = recordType(unit, index, result.type);
+        return result;
     }
 
-    Type TypeChecker::typeCheckUnaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckUnaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.unary");
         const auto& buffer = unit.nodeBuffer;
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto unaryOperator = ConvertToUnaryOperator(tokens.getToken(static_cast<i32>(buffer.mainToken(index))).kind);
@@ -3021,11 +4085,11 @@ namespace Caracal
         {
             case UnaryOperatorKind::LogicalNegation:
             {
-                auto type = typeCheckExpression(unit, NodeLayout::unaryOperand(index), context);
-
+                const auto checkedOperand = typeCheckExpression(unit, NodeLayout::unaryOperand(index), context);
+                const auto type = checkedOperand.type;
                 const auto operandType = type.toValue();
-                if (operandType != Type::Undefined()
-                    && m_module.tryGetOperatorSignature(operandType, UnaryOperatorKind::LogicalNegation) == nullptr)
+                const auto* operatorSignature = m_module.tryGetOperatorSignature(operandType, UnaryOperatorKind::LogicalNegation);
+                if (operandType != Type::Undefined() && operatorSignature == nullptr)
                 {
                     m_diagnostics.addUnaryOperandTypeMismatchError(
                         unit.source,
@@ -3034,10 +4098,25 @@ namespace Caracal
                         formatTypeName(m_module, operandType),
                         "a 'bool' operand");
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
-                return noteType(unit, index, type);
+                auto result = CheckedValue{ recordType(unit, index, type) };
+                if (operatorSignature != nullptr && checkedOperand.folded.has_value() && operatorSignature->unaryFold != nullptr)
+                {
+                    const auto foldResult = operatorSignature->unaryFold(checkedOperand.folded.value());
+                    if (foldResult.kind == FoldResultKind::Value)
+                    {
+                        result.folded = foldResult.value;
+                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), type);
+                        return result;
+                    }
+
+                    reportUnaryFoldFailure(unit, foldResult.kind, operandType, index);
+                }
+
+                result.value = m_emitter.emitUnary(UnaryOperatorKind::LogicalNegation, checkedOperand.value, type);
+                return result;
             }
             case UnaryOperatorKind::ValueNegation:
             {
@@ -3045,10 +4124,11 @@ namespace Caracal
 
                 auto operandContext = context;
                 operandContext.negatedLiteral = buffer.kind(operand) == NodeKind::NumberLiteral;
-                const auto type = typeCheckExpression(unit, operand, operandContext);
+                const auto checkedOperand = typeCheckExpression(unit, operand, operandContext);
+                const auto type = checkedOperand.type;
                 const auto operandType = type.toValue();
-                if (operandType != Type::Undefined()
-                    && m_module.tryGetOperatorSignature(operandType, UnaryOperatorKind::ValueNegation) == nullptr)
+                const auto* operatorSignature = m_module.tryGetOperatorSignature(operandType, UnaryOperatorKind::ValueNegation);
+                if (operandType != Type::Undefined() && operatorSignature == nullptr)
                 {
                     m_diagnostics.addUnaryOperandTypeMismatchError(
                         unit.source,
@@ -3057,15 +4137,40 @@ namespace Caracal
                         formatTypeName(m_module, operandType),
                         "a numeric operand");
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
-                return noteType(unit, index, type);
+                auto result = CheckedValue{ recordType(unit, index, type) };
+                if (checkedOperand.signFolded)
+                {
+                    // the literal already parsed negative, nothing to negate
+                    result.folded = checkedOperand.folded;
+                    result.value = checkedOperand.value;
+                    return result;
+                }
+
+                if (operatorSignature != nullptr && checkedOperand.folded.has_value() && operatorSignature->unaryFold != nullptr)
+                {
+                    const auto foldResult = operatorSignature->unaryFold(checkedOperand.folded.value());
+                    if (foldResult.kind == FoldResultKind::Value)
+                    {
+                        result.folded = foldResult.value;
+                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), type);
+                        return result;
+                    }
+
+                    reportUnaryFoldFailure(unit, foldResult.kind, operandType, index);
+                }
+
+                result.value = m_emitter.emitUnary(UnaryOperatorKind::ValueNegation, checkedOperand.value, type);
+                return result;
             }
             case UnaryOperatorKind::ReferenceOf:
             {
                 const auto operand = NodeLayout::unaryOperand(index);
-                auto type = typeCheckExpression(unit, operand, context);
+                auto operandContext = context;
+                operandContext.wantsAddress = true;
+                auto type = typeCheckExpression(unit, operand, operandContext).type;
                 if (type.isReference())
                 {
                     m_diagnostics.addAlreadyReferenceError(
@@ -3107,7 +4212,18 @@ namespace Caracal
                 }
 
                 auto referenceType = type.toReference();
-                return noteType(unit, index, referenceType);
+                auto result = CheckedValue{ recordType(unit, index, referenceType) };
+                if (!context.wantsAddress && !operandIsMemberAccess)
+                {
+                    // a ref used as a value loads the value of its variable
+                    // where an address is wanted, the consumer takes it from the node itself
+                    result.value = m_emitter.emitRefValue(nameIdOf(unit, strippedOperand), type);
+                    if (result.value.id() < 0)
+                    {
+                        result.value = m_emitter.readGlobal(std::string(nameOf(unit, strippedOperand)));
+                    }
+                }
+                return result;
             }
             default:
             {
@@ -3117,8 +4233,9 @@ namespace Caracal
         }
     }
 
-    Type TypeChecker::typeCheckBinaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckBinaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.binary");
         const auto& buffer = unit.nodeBuffer;
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto binaryOperator = ConvertToBinaryOperator(tokens.getToken(static_cast<i32>(buffer.mainToken(index))).kind);
@@ -3127,14 +4244,19 @@ namespace Caracal
         {
             case BinaryOperatorKind::MemberAccess:
             {
-                auto leftType = typeCheckExpression(unit, binaryLayout.left, context);
+                auto receiverContext = context;
+                receiverContext.wantsAddress = true;
+                receiverContext.receiverPosition = !context.wantsAddress || context.receiverPosition;
+                const auto checkedLeft = typeCheckExpression(unit, binaryLayout.left, receiverContext);
+                auto leftType = checkedLeft.type;
                 if (leftType.kind() == TypeKind::Enum)
                 {
                     auto& enumDefinition = m_module.getEnumDefinition(leftType);
                     if (buffer.kind(binaryLayout.right) == NodeKind::NameExpression)
                     {
                         const auto fieldName = nameOf(unit, binaryLayout.right);
-                        if (!enumDefinition.hasField(fieldName))
+                        const auto* field = enumDefinition.tryGetFieldByName(fieldName);
+                        if (field == nullptr)
                         {
                             m_diagnostics.addUnknownEnumFieldError(
                                 unit.source,
@@ -3144,9 +4266,21 @@ namespace Caracal
                             return Type::Undefined();
                         }
 
-                        noteType(unit, index, leftType);
-                        noteType(unit, binaryLayout.right, leftType);
-                        return leftType;
+                        recordType(unit, index, leftType);
+                        recordType(unit, binaryLayout.right, leftType);
+                        auto result = CheckedValue{ leftType };
+                        if (field->hasConstantValue())
+                        {
+                            if (const auto constant = m_emitter.makeEnumConstantValue(enumDefinition.baseType(), field->value()); constant.has_value())
+                            {
+                                result.value = m_emitter.emitEnumMemberConstant(leftType, enumDefinition.name(), std::string(fieldName), constant.value());
+                            }
+                        }
+                        else if (const auto* fieldConstant = m_emitter.tryGetEnumFieldConstant(leftType.id(), std::string(fieldName)); fieldConstant != nullptr)
+                        {
+                            result.value = m_emitter.emitEnumMemberConstant(leftType, enumDefinition.name(), std::string(fieldName), fieldConstant->constant);
+                        }
+                        return result;
                     }
 
                     m_diagnostics.addInvalidEnumMemberAccessError(
@@ -3192,7 +4326,29 @@ namespace Caracal
                                 return Type::Undefined();
                             }
 
-                            if (!typeCheckCallArguments(unit, binaryLayout.right, methodType, context))
+                            auto implicitReceiver = std::optional<ValueRef>{};
+                            if (methodDefinition.functionType() == FunctionType::PublicMethod
+                                || methodDefinition.functionType() == FunctionType::PrivateMethod
+                                || (methodDefinition.functionType() == FunctionType::Intrinsic
+                                    && !methodDefinition.parameters().empty()
+                                    && methodDefinition.parameters().front().name() == ImplicitThisName))
+                            {
+                                auto receiverAddress = memberReceiverAddress(unit, binaryLayout.left);
+                                if (receiverAddress.id() < 0 && memberLeftYieldsAddress(unit, binaryLayout.left))
+                                {
+                                    // the receiver was checked in address context, its value already is the address
+                                    receiverAddress = checkedLeft.value;
+                                }
+                                if (receiverAddress.id() < 0)
+                                {
+                                    receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                                }
+                                implicitReceiver = receiverAddress;
+                            }
+
+                            auto methodCallValue = ValueRef{};
+                            auto methodCallFold = std::optional<FoldValue>{};
+                            if (!typeCheckCallArguments(unit, binaryLayout.right, methodType, context, methodCallValue, methodCallFold, implicitReceiver))
                             {
                                 return Type::Undefined();
                             }
@@ -3212,16 +4368,21 @@ namespace Caracal
 
                             if (checkedMethodDefinition.functionType() == FunctionType::SynthesizedConstructor)
                             {
-                                noteType(unit, index, leftType);
-                                noteType(unit, binaryLayout.right, leftType);
-                                noteType(unit, nameExpressionIndex, methodType);
-                                return leftType;
+                                recordType(unit, index, leftType);
+                                recordType(unit, binaryLayout.right, leftType);
+                                recordType(unit, nameExpressionIndex, methodType);
+                                auto constructed = CheckedValue{ leftType };
+                                constructed.value = methodCallValue;
+                                return constructed;
                             }
 
-                            noteType(unit, index, returnType);
-                            noteType(unit, binaryLayout.right, returnType);
-                            noteType(unit, nameExpressionIndex, methodType);
-                            return returnType;
+                            recordType(unit, index, returnType);
+                            recordType(unit, binaryLayout.right, returnType);
+                            recordType(unit, nameExpressionIndex, methodType);
+                            auto result = CheckedValue{ returnType };
+                            result.value = methodCallValue;
+                            result.folded = methodCallFold;
+                            return result;
                         }
                         else
                         {
@@ -3259,9 +4420,36 @@ namespace Caracal
                         }
 
                         auto fieldType = fieldDefinition.type();
-                        noteType(unit, binaryLayout.right, fieldType);
-                        noteType(unit, index, fieldType);
-                        return fieldType;
+                        recordType(unit, binaryLayout.right, fieldType);
+                        recordType(unit, index, fieldType);
+                        auto result = CheckedValue{ fieldType };
+                        if (context.receiverPosition || !context.wantsAddress)
+                        {
+                            auto receiverAddress = memberReceiverAddress(unit, binaryLayout.left);
+                            if (receiverAddress.id() < 0 && memberLeftYieldsAddress(unit, binaryLayout.left))
+                            {
+                                receiverAddress = checkedLeft.value;
+                            }
+                            if (receiverAddress.id() < 0 && !context.wantsAddress)
+                            {
+                                // a temporary receiver spills so the field has an address
+                                receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                            }
+                            if (receiverAddress.id() >= 0)
+                            {
+                                const auto fieldAddress = m_emitter.emitFieldAddress(receiverAddress, leftType.toValue(), fieldDefinition.name(), fieldDefinition.index(), fieldType);
+                                if (context.receiverPosition)
+                                {
+                                    // a field used as a receiver returns its address, not its value
+                                    result.value = fieldAddress;
+                                }
+                                else
+                                {
+                                    result.value = m_emitter.emitLoad(fieldAddress, fieldType);
+                                }
+                            }
+                        }
+                        return result;
                     }
                 }
                 else if (leftType.kind() == TypeKind::FixedArray
@@ -3335,7 +4523,20 @@ namespace Caracal
                             }
                         }
 
-                        return finishResolvedMethodCall(unit, index, binaryLayout.right, nameExpressionIndex, methodType, context);
+                        auto arrayReceiver = memberReceiverAddress(unit, binaryLayout.left);
+                        if (arrayReceiver.id() < 0)
+                        {
+                            if (memberLeftYieldsAddress(unit, binaryLayout.left))
+                            {
+                                // the receiver was checked in address context, its value already is the address
+                                arrayReceiver = checkedLeft.value;
+                            }
+                            else
+                            {
+                                arrayReceiver = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                            }
+                        }
+                        return finishResolvedMethodCall(unit, index, binaryLayout.right, nameExpressionIndex, methodType, context, arrayReceiver);
                     }
                     else if (buffer.kind(binaryLayout.right) == NodeKind::NameExpression)
                     {
@@ -3343,9 +4544,35 @@ namespace Caracal
                         if (memberName == ArrayLengthMemberName)
                         {
                             const auto lengthType = m_module.wellKnown().i32;
-                            noteType(unit, binaryLayout.right, lengthType);
-                            noteType(unit, index, lengthType);
-                            return lengthType;
+                            recordType(unit, binaryLayout.right, lengthType);
+                            recordType(unit, index, lengthType);
+                            auto result = CheckedValue{ lengthType };
+                            if (receiverType.kind() == TypeKind::FixedArray && !context.wantsAddress)
+                            {
+                                // a fixed length is a compile time constant
+                                const auto length = m_module.getArrayLength(receiverType);
+                                result.folded = FoldValue{ length };
+                                result.value = m_emitter.emitConstant(ConstantValue::FromI32(length), lengthType);
+                            }
+                            else if (!context.wantsAddress)
+                            {
+                                // slice and dynamic lengths load from the descriptor
+                                auto receiverAddress = memberReceiverAddress(unit, binaryLayout.left);
+                                if (receiverAddress.id() < 0 && memberLeftYieldsAddress(unit, binaryLayout.left))
+                                {
+                                    receiverAddress = checkedLeft.value;
+                                }
+                                if (receiverAddress.id() < 0)
+                                {
+                                    receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, receiverType);
+                                }
+                                if (receiverAddress.id() >= 0)
+                                {
+                                    const auto lengthAddress = m_emitter.emitFieldAddress(receiverAddress, receiverType, ArrayLengthMemberName, 1, lengthType);
+                                    result.value = m_emitter.emitLoad(lengthAddress, lengthType);
+                                }
+                            }
+                            return result;
                         }
 
                         m_diagnostics.addUnknownFieldError(
@@ -3398,12 +4625,14 @@ namespace Caracal
             case BinaryOperatorKind::MultiplicationWrapping:
             case BinaryOperatorKind::Division:
             {
-                auto leftType = typeCheckExpression(unit, binaryLayout.left, context);
+                const auto checkedLeft = typeCheckExpression(unit, binaryLayout.left, context);
+                auto leftType = checkedLeft.type;
                 if (leftType.isReference())
                 {
                     leftType = leftType.toValue();
                 }
-                auto rightType = typeCheckExpression(unit, binaryLayout.right, context);
+                const auto checkedRight = typeCheckExpression(unit, binaryLayout.right, context);
+                auto rightType = checkedRight.type;
                 if (rightType.isReference())
                 {
                     rightType = rightType.toValue();
@@ -3423,7 +4652,7 @@ namespace Caracal
                             formatTypeName(m_module, rightType));
                     }
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
                 const auto* operatorSignature = m_module.tryGetOperatorSignature(leftType, binaryOperator);
@@ -3436,10 +4665,53 @@ namespace Caracal
                         formatTypeName(m_module, leftType),
                         "numeric operands");
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
-                return noteType(unit, index, operatorSignature->resultType);
+                auto result = CheckedValue{ recordType(unit, index, operatorSignature->resultType) };
+                if (checkedLeft.folded.has_value() && checkedRight.folded.has_value() && operatorSignature->binaryFold != nullptr)
+                {
+                    const auto foldResult = operatorSignature->binaryFold(checkedLeft.folded.value(), checkedRight.folded.value());
+                    if (foldResult.kind == FoldResultKind::Value)
+                    {
+                        result.folded = foldResult.value;
+                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), operatorSignature->resultType);
+                        return result;
+                    }
+
+                    reportBinaryFoldFailure(unit, foldResult.kind, leftType, index, binaryLayout.right);
+                }
+
+                if (operatorSignature->callee != Type::Undefined())
+                {
+                    // runtime operators call their backing function by value
+                    m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
+                    if (checkedLeft.value.id() >= 0 && checkedRight.value.id() >= 0)
+                    {
+                        result.value = m_emitter.emitCall(
+                            operatorSignature->callee.id(),
+                            std::vector<ValueRef>{ checkedLeft.value, checkedRight.value },
+                            operatorSignature->resultType);
+                    }
+                    return result;
+                }
+
+                auto leftValue = checkedLeft.value;
+                auto rightValue = checkedRight.value;
+                if (binaryOperator == BinaryOperatorKind::Division && leftValue.id() >= 0 && rightValue.id() >= 0)
+                {
+                    // convert the int operands to float for the float return type
+                    const auto* operandDescription = m_module.tryGetBuiltinTypeDescription(leftType);
+                    const auto* resultDescription = m_module.tryGetBuiltinTypeDescription(operatorSignature->resultType);
+                    if (operandDescription != nullptr && operandDescription->kind == BuiltinTypeKind::Int
+                        && resultDescription != nullptr && resultDescription->kind == BuiltinTypeKind::Float)
+                    {
+                        leftValue = m_emitter.emitIntToFloat(leftValue, leftType, operatorSignature->resultType);
+                        rightValue = m_emitter.emitIntToFloat(rightValue, rightType, operatorSignature->resultType);
+                    }
+                }
+                result.value = m_emitter.emitBinary(binaryOperator, leftValue, rightValue, operatorSignature->resultType, leftType);
+                return result;
             }
             case BinaryOperatorKind::Equal:
             case BinaryOperatorKind::NotEqual:
@@ -3450,12 +4722,24 @@ namespace Caracal
             case BinaryOperatorKind::LogicalAnd:
             case BinaryOperatorKind::LogicalOr:
             {
-                auto leftType = typeCheckExpression(unit, binaryLayout.left, context);
+                const auto checkedLeft = typeCheckExpression(unit, binaryLayout.left, context);
+                auto leftType = checkedLeft.type;
                 if (leftType.isReference())
                 {
                     leftType = leftType.toValue();
                 }
-                auto rightType = typeCheckExpression(unit, binaryLayout.right, context);
+
+                // and/or open the block for the right operand before it is checked
+                // whether the whole expression folds and needs no blocks is only known afterwards
+                auto shortCircuit = ShortCircuitFrame{};
+                const auto isShortCircuitOperator = binaryOperator == BinaryOperatorKind::LogicalAnd || binaryOperator == BinaryOperatorKind::LogicalOr;
+                if (isShortCircuitOperator && leftType == m_module.wellKnown().boolean)
+                {
+                    shortCircuit = m_emitter.beginShortCircuit(binaryOperator == BinaryOperatorKind::LogicalAnd, checkedLeft.value);
+                }
+
+                const auto checkedRight = typeCheckExpression(unit, binaryLayout.right, context);
+                auto rightType = checkedRight.type;
                 if (rightType.isReference())
                 {
                     rightType = rightType.toValue();
@@ -3473,7 +4757,7 @@ namespace Caracal
                             formatTypeName(m_module, rightType));
                     }
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
                 const auto operation = binaryOperator;
@@ -3504,11 +4788,52 @@ namespace Caracal
                         formatTypeName(m_module, leftType),
                         expectedOperands);
 
-                    return noteType(unit, index, Type::Undefined());
+                    return recordType(unit, index, Type::Undefined());
                 }
 
-                auto resultType = operatorSignature->resultType;
-                return noteType(unit, index, resultType);
+                auto result = CheckedValue{ recordType(unit, index, operatorSignature->resultType) };
+                if (checkedLeft.folded.has_value() && checkedRight.folded.has_value() && operatorSignature->binaryFold != nullptr)
+                {
+                    const auto foldResult = operatorSignature->binaryFold(checkedLeft.folded.value(), checkedRight.folded.value());
+                    if (foldResult.kind == FoldResultKind::Value)
+                    {
+                        m_emitter.discardShortCircuit(shortCircuit);
+                        result.folded = foldResult.value;
+                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), operatorSignature->resultType);
+                        return result;
+                    }
+
+                    reportBinaryFoldFailure(unit, foldResult.kind, lookupType, index, binaryLayout.right);
+                }
+
+                if (shortCircuit.active)
+                {
+                    result.value = m_emitter.endShortCircuit(shortCircuit, checkedRight.value);
+                    return result;
+                }
+
+                if (!isShortCircuitOperator && operatorSignature->callee != Type::Undefined())
+                {
+                    // runtime operators call their backing function by value
+                    m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
+                    if (checkedLeft.value.id() >= 0 && checkedRight.value.id() >= 0)
+                    {
+                        result.value = m_emitter.emitCall(
+                            operatorSignature->callee.id(),
+                            std::vector<ValueRef>{ checkedLeft.value, checkedRight.value },
+                            operatorSignature->resultType);
+                    }
+                }
+                else if (!isShortCircuitOperator && leftType == m_module.wellKnown().cstring
+                    && leftType != Type::Undefined())
+                {
+                    result.value = m_emitter.emitCStringEquality(operation, checkedLeft.value, checkedRight.value);
+                }
+                else if (!isShortCircuitOperator)
+                {
+                    result.value = m_emitter.emitBinary(operation, checkedLeft.value, checkedRight.value, operatorSignature->resultType, leftType);
+                }
+                return result;
             }
             default:
             {
@@ -3520,10 +4845,12 @@ namespace Caracal
         return Type::Undefined();
     }
 
-    Type TypeChecker::typeCheckNameExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckNameExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.name");
         // one lookup covers the type, the kind and marking it read
-        if (auto* binding = tryGetBindingMutable(nameIdOf(unit, index)); binding != nullptr)
+        const auto nameId = nameIdOf(unit, index);
+        if (auto* binding = tryGetBindingMutable(nameId); binding != nullptr)
         {
             const auto isLeadingDotRoot = m_leadingDotRootPending;
             m_leadingDotRootPending = false;
@@ -3534,14 +4861,56 @@ namespace Caracal
             }
 
             binding->wasRead = true;
-            return noteType(unit, index, binding->type);
+            auto result = CheckedValue{ recordType(unit, index, binding->type) };
+            if (binding->kind == VariableBindingKind::Field)
+            {
+                if (m_currentType != Type::Undefined() && (context.receiverPosition || !context.wantsAddress))
+                {
+                    const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
+                    const auto& fieldDefinition = m_module.getTypeDefinition(m_currentType).tryGetFieldByName(nameOf(unit, index));
+                    if (thisAddress.id() >= 0 && fieldDefinition.type() != Type::Undefined())
+                    {
+                        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+                        if (context.receiverPosition)
+                        {
+                            // a field used as a receiver returns its address, not its value
+                            result.value = fieldAddress;
+                        }
+                        else
+                        {
+                            result.value = m_emitter.emitLoad(fieldAddress, fieldDefinition.type());
+                        }
+                    }
+                }
+                return result;
+            }
+            if (context.wantsAddress)
+            {
+                // a local without a slot returns its value, the consumer can spill it
+                // a local with a slot returns nothing, the consumer takes the address from the node
+                result.value = m_emitter.peekLocal(nameId);
+                return result;
+            }
+            if (binding->kind == VariableBindingKind::LocalConstant)
+            {
+                result.folded = binding->folded;
+            }
+            if (binding->scopeIndex == 0 && !currentScopeIsGlobal())
+            {
+                result.value = m_emitter.readGlobal(std::string(nameOf(unit, index)));
+            }
+            else
+            {
+                result.value = m_emitter.readLocal(nameId);
+            }
+            return result;
         }
 
         const auto name = nameOf(unit, index);
         auto type = m_module.tryGetTypeByName(name);
         if (type != Type::Undefined())
         {
-            return noteType(unit, index, type);
+            return recordType(unit, index, type);
         }
 
         m_diagnostics.addUnknownNameError(unit.source, nameLocation(unit, index), std::string(name));
@@ -3549,8 +4918,9 @@ namespace Caracal
         return Type::Undefined();
     }
 
-    Type TypeChecker::typeCheckFunctionCallExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckFunctionCallExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.call");
         const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, index);
         const auto name = nameOf(unit, nameExpressionIndex);
         auto functionType = m_module.tryGetFunctionTypeByName(name);
@@ -3580,7 +4950,7 @@ namespace Caracal
         return typeCheckResolvedFunctionCall(unit, index, functionType, context);
     }
 
-    Type TypeChecker::typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context)
     {
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
 
@@ -3598,7 +4968,9 @@ namespace Caracal
             }
         }
 
-        if (!typeCheckCallArguments(unit, index, functionType, context))
+        auto emittedCallValue = ValueRef{};
+        auto emittedCallFold = std::optional<FoldValue>{};
+        if (!typeCheckCallArguments(unit, index, functionType, context, emittedCallValue, emittedCallFold))
         {
             return Type::Undefined();
         }
@@ -3615,14 +4987,17 @@ namespace Caracal
             TODO("Handle multiple return types");
         }
 
-        noteType(unit, index, returnType);
-        noteType(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, index), functionType);
-        return returnType;
+        auto result = CheckedValue{ recordType(unit, index, returnType) };
+        result.value = emittedCallValue;
+        recordType(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, index), functionType);
+        return result;
     }
 
-    Type TypeChecker::finishResolvedMethodCall(const CompilationUnit& unit, u32 index, u32 callIndex, u32 nameExpressionIndex, Type methodType, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::finishResolvedMethodCall(const CompilationUnit& unit, u32 index, u32 callIndex, u32 nameExpressionIndex, Type methodType, const ExpressionContext& context, std::optional<ValueRef> implicitArgument)
     {
-        if (!typeCheckCallArguments(unit, callIndex, methodType, context))
+        auto callValue = ValueRef{};
+        auto callFold = std::optional<FoldValue>{};
+        if (!typeCheckCallArguments(unit, callIndex, methodType, context, callValue, callFold, implicitArgument))
         {
             return Type::Undefined();
         }
@@ -3634,14 +5009,18 @@ namespace Caracal
             returnType = returnTypes[0];
         }
 
-        noteType(unit, index, returnType);
-        noteType(unit, callIndex, returnType);
-        noteType(unit, nameExpressionIndex, methodType);
-        return returnType;
+        recordType(unit, index, returnType);
+        recordType(unit, callIndex, returnType);
+        recordType(unit, nameExpressionIndex, methodType);
+        auto result = CheckedValue{ returnType };
+        result.value = callValue;
+        result.folded = callFold;
+        return result;
     }
 
-    Type TypeChecker::typeCheckMemberAccessExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckMemberAccessExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.memberAccess");
         if (currentScopeKind() == ScopeKind::StaticMethod)
         {
             m_diagnostics.addMemberAccessInStaticMethodError(
@@ -3649,7 +5028,7 @@ namespace Caracal
                 ExpressionSourceLocation(m_compilationContext, unit, index),
                 m_currentFunctionName);
 
-            return noteType(unit, index, Type::Undefined());
+            return recordType(unit, index, Type::Undefined());
         }
 
         if (m_currentType == Type::Undefined())
@@ -3658,7 +5037,7 @@ namespace Caracal
                 unit.source,
                 ExpressionSourceLocation(m_compilationContext, unit, index));
 
-            return noteType(unit, index, Type::Undefined());
+            return recordType(unit, index, Type::Undefined());
         }
 
         auto& typeDefinition = m_module.getTypeDefinition(m_currentType);
@@ -3676,21 +5055,23 @@ namespace Caracal
                     typeDefinition.name(),
                     std::string(methodName));
 
-                return noteType(unit, index, Type::Undefined());
+                return recordType(unit, index, Type::Undefined());
             }
 
-            const auto type = typeCheckResolvedFunctionCall(unit, inner, methodType, context);
-            return noteType(unit, index, type);
+            auto result = typeCheckResolvedFunctionCall(unit, inner, methodType, context);
+            result.type = recordType(unit, index, result.type);
+            return result;
         }
 
         m_leadingDotRootPending = true;
-        auto type = typeCheckExpression(unit, inner, context);
-
-        return noteType(unit, index, type);
+        auto result = typeCheckExpression(unit, inner, context);
+        result.type = recordType(unit, index, result.type);
+        return result;
     }
 
-    bool TypeChecker::typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context)
+    bool TypeChecker::typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context, ValueRef& emittedCallValue, std::optional<FoldValue>& emittedCallFold, std::optional<ValueRef> implicitArgument)
     {
+        CARACAL_ZONE_NAMED("check.callArguments");
         const auto& buffer = unit.nodeBuffer;
 
         // the argument walk below can grow the definition store, resolve again
@@ -3757,6 +5138,14 @@ namespace Caracal
             return false;
         }
 
+        struct EmittedArgument
+        {
+            u32 node;
+            ValueRef value;
+            std::optional<FoldValue> folded;
+        };
+        std::vector<EmittedArgument> argumentValues;
+        argumentValues.reserve(argumentsEnd - argumentsStart);
         for (auto argumentPosition = argumentsStart; argumentPosition < argumentsEnd; ++argumentPosition)
         {
             const auto argumentValue = NodeLayout::argumentValue(buffer, m_callArgumentStack[argumentPosition]);
@@ -3764,6 +5153,7 @@ namespace Caracal
             const auto& parameters = m_module.getFunctionDefinition(functionType).parameters();
 
             auto contextualType = std::optional<Type>{};
+            auto parameterWantsAddress = false;
             auto isVariadicArgument = true;
             for (size_t i = 0; i < fixedParameterCount; ++i)
             {
@@ -3773,6 +5163,15 @@ namespace Caracal
                 }
 
                 contextualType = contextualTypeForExpectedType(parameters[i + parameterOffset].type());
+                parameterWantsAddress = parameters[i + parameterOffset].type().isReference();
+                if (!parameterWantsAddress
+                    && parameters[i + parameterOffset].type().kind() == TypeKind::DynamicArray
+                    && unit.nodeBuffer.kind(NodeLayout::stripGroupings(buffer, argumentValue)) == NodeKind::NameExpression)
+                {
+                    // a dynamic array passed by name is deep copied through its address when the call is emitted
+                    // the argument is not loaded
+                    parameterWantsAddress = true;
+                }
                 isVariadicArgument = false;
                 break;
             }
@@ -3791,9 +5190,32 @@ namespace Caracal
                 }
             }
 
+            // a constructor call as argument builds the object in a temp slot and passes it to the call
+            auto pushedTempDestination = false;
+            if (!currentScopeIsGlobal())
+            {
+                const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(buffer, argumentValue));
+                if (constructedType != Type::Undefined())
+                {
+                    const auto destination = m_emitter.allocateTempAggregateSlot("constructed", constructedType);
+                    if (destination.id() >= 0)
+                    {
+                        m_constructorDestinations.push_back(ConstructorDestination{ destination, true });
+                        pushedTempDestination = true;
+                    }
+                }
+            }
+
             auto argumentContext = context;
             argumentContext.contextualNumberType = contextualType;
-            static_cast<void>(typeCheckExpression(unit, argumentValue, argumentContext));
+            argumentContext.wantsAddress = parameterWantsAddress;
+            argumentContext.receiverPosition = false;
+            const auto checkedArgument = typeCheckExpression(unit, argumentValue, argumentContext);
+            if (pushedTempDestination)
+            {
+                m_constructorDestinations.pop_back();
+            }
+            argumentValues.push_back(EmittedArgument{ argumentValue, checkedArgument.value, checkedArgument.folded });
         }
 
         const auto expectedArgumentCount = parameterCount - parameterOffset;
@@ -3871,13 +5293,425 @@ namespace Caracal
             return false;
         }
 
+        m_emitter.recordCalledPreludeFunction(functionType);
+
+        const auto intrinsicKind = checkedDefinition.intrinsicKind();
+        const auto isElementIntrinsic = intrinsicKind == IntrinsicKind::ArrayAt
+            || intrinsicKind == IntrinsicKind::ArraySet;
+        const auto isSliceIntrinsic = intrinsicKind == IntrinsicKind::ArraySlice;
+        const auto isToCStringIntrinsic = intrinsicKind == IntrinsicKind::StringToCString;
+        const auto isGrowthIntrinsic = intrinsicKind == IntrinsicKind::ArrayAdd
+            || intrinsicKind == IntrinsicKind::ArrayRemove;
+        const auto isBitwiseIntrinsic = intrinsicKind == IntrinsicKind::BitAnd
+            || intrinsicKind == IntrinsicKind::BitOr
+            || intrinsicKind == IntrinsicKind::BitXor
+            || intrinsicKind == IntrinsicKind::BitNot
+            || intrinsicKind == IntrinsicKind::ShiftLeft
+            || intrinsicKind == IntrinsicKind::ShiftRight;
+
+        auto foldedCall = std::optional<FoldValue>{};
+        if (isBitwiseIntrinsic)
+        {
+            std::vector<const FoldValue*> foldedArguments(fixedParameterCount, nullptr);
+            for (size_t i = 0; i < fixedParameterCount; ++i)
+            {
+                const auto argumentNode = m_orderedSlotStack[orderedStart + i];
+                for (const auto& argument : argumentValues)
+                {
+                    if (argument.node == argumentNode && argument.folded.has_value())
+                    {
+                        foldedArguments[i] = &argument.folded.value();
+                    }
+                }
+            }
+
+            auto foldResult = FoldResult{ FoldResultKind::NotFoldable, FoldValue{} };
+            if (intrinsicKind == IntrinsicKind::BitNot)
+            {
+                if (fixedParameterCount >= 1 && foldedArguments[0] != nullptr)
+                {
+                    foldResult = foldBitNot(*foldedArguments[0]);
+                }
+            }
+            else if (fixedParameterCount >= 2 && foldedArguments[0] != nullptr && foldedArguments[1] != nullptr)
+            {
+                switch (intrinsicKind)
+                {
+                    case IntrinsicKind::BitAnd:
+                    {
+                        foldResult = foldBitAnd(*foldedArguments[0], *foldedArguments[1]);
+                        break;
+                    }
+                    case IntrinsicKind::BitOr:
+                    {
+                        foldResult = foldBitOr(*foldedArguments[0], *foldedArguments[1]);
+                        break;
+                    }
+                    case IntrinsicKind::BitXor:
+                    {
+                        foldResult = foldBitXor(*foldedArguments[0], *foldedArguments[1]);
+                        break;
+                    }
+                    case IntrinsicKind::ShiftLeft:
+                    {
+                        foldResult = foldShiftLeft(*foldedArguments[0], *foldedArguments[1]);
+                        break;
+                    }
+                    case IntrinsicKind::ShiftRight:
+                    {
+                        foldResult = foldShiftRight(*foldedArguments[0], *foldedArguments[1]);
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (foldResult.kind == FoldResultKind::Value)
+            {
+                foldedCall = foldResult.value;
+            }
+            else
+            {
+                m_sawUnfoldedBitwiseCall = true;
+            }
+        }
+
+        // the call is not emitted when it folded, a parameter got no argument or the receiver is missing
+        const auto calleeKind = checkedDefinition.functionType();
+        auto canEmitCall = !foldedCall.has_value()
+            && (isBitwiseIntrinsic
+                || isElementIntrinsic
+                || isSliceIntrinsic
+                || isGrowthIntrinsic
+                || isToCStringIntrinsic
+                || checkedDefinition.symbolName().has_value()
+                || calleeKind == FunctionType::FreeFunction
+                || calleeKind == FunctionType::StaticMethod
+                || calleeKind == FunctionType::PublicMethod
+                || calleeKind == FunctionType::PrivateMethod
+                || calleeKind == FunctionType::SynthesizedConstructor);
+
+        auto receiverAddress = ValueRef{};
+        const auto needsReceiver = calleeKind == FunctionType::PublicMethod
+            || calleeKind == FunctionType::PrivateMethod
+            || calleeKind == FunctionType::SynthesizedConstructor;
+        if (canEmitCall && (isElementIntrinsic || isSliceIntrinsic || isGrowthIntrinsic || isToCStringIntrinsic)
+            && (!implicitArgument.has_value() || implicitArgument.value().id() < 0))
+        {
+            canEmitCall = false;
+        }
+        if (canEmitCall && needsReceiver)
+        {
+            if (implicitArgument.has_value())
+            {
+                receiverAddress = implicitArgument.value();
+            }
+            else if (calleeKind == FunctionType::SynthesizedConstructor)
+            {
+                if (!m_constructorDestinations.empty())
+                {
+                    receiverAddress = m_constructorDestinations.back().address;
+                }
+            }
+            else
+            {
+                receiverAddress = m_emitter.addressOfLocal(m_thisNameId);
+            }
+
+            if (receiverAddress.id() < 0)
+            {
+                canEmitCall = false;
+            }
+        }
+        std::vector<ValueRef> callArguments;
+        if (canEmitCall)
+        {
+            callArguments.reserve(fixedParameterCount);
+            for (size_t i = 0; i < fixedParameterCount; ++i)
+            {
+                const auto argumentNode = m_orderedSlotStack[orderedStart + i];
+                const auto& parameter = checkedParameters[i + parameterOffset];
+                if (argumentNode == UnboundArgumentSlot)
+                {
+                    canEmitCall = false;
+                    break;
+                }
+
+                if (argumentNode == DefaultBoundArgumentSlot)
+                {
+                    // an omitted argument re-emits the default's folded value at the call site
+                    auto emittedDefault = ValueRef{};
+                    if (parameter.hasDefaultNode())
+                    {
+                        const auto defaultNode = parameter.defaultValueNode();
+                        emittedDefault = m_emitter.emitDefaultArgument(
+                            defaultNode.fileId,
+                            defaultNode.index,
+                            m_module.typeOfNode(defaultNode).toValue(),
+                            parameter.type().toValue());
+                        if (emittedDefault.id() < 0)
+                        {
+                            // a non-scalar default has no fold, its expression emits here
+                            emittedDefault = emitDefaultArgumentExpression(defaultNode, parameter.type());
+                        }
+                    }
+                    if (emittedDefault.id() < 0)
+                    {
+                        canEmitCall = false;
+                        break;
+                    }
+                    callArguments.push_back(emittedDefault);
+                    continue;
+                }
+
+                if (parameter.type().isReference())
+                {
+                    const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+                    const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, argumentNode);
+                    auto addressNode = stripped;
+                    auto aliasesConstant = false;
+                    if (unit.nodeBuffer.kind(stripped) == NodeKind::UnaryExpression
+                        && TokenKindAt(tokens, unit.nodeBuffer.mainToken(stripped)) == TokenKind::RefKeyword)
+                    {
+                        addressNode = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(stripped));
+                        if (unit.nodeBuffer.kind(addressNode) == NodeKind::NameExpression)
+                        {
+                            const auto* innerBinding = tryGetBinding(nameIdOf(unit, addressNode));
+                            aliasesConstant = innerBinding != nullptr
+                                && (innerBinding->kind == VariableBindingKind::LocalConstant || innerBinding->referencesConstant);
+                        }
+                    }
+                    else if (unit.nodeBuffer.kind(stripped) == NodeKind::NameExpression)
+                    {
+                        const auto* passthroughBinding = tryGetBinding(nameIdOf(unit, stripped));
+                        aliasesConstant = passthroughBinding != nullptr && passthroughBinding->referencesConstant;
+                    }
+
+                    auto address = addressOfExpression(unit, addressNode);
+                    if (aliasesConstant)
+                    {
+                        address = m_emitter.emitDefensiveRefCopy(address, parameter.type().toValue());
+                    }
+                    if (address.id() < 0)
+                    {
+                        canEmitCall = false;
+                        break;
+                    }
+                    callArguments.push_back(address);
+                    continue;
+                }
+
+                const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode }).toValue();
+
+                {
+                    // a literal argument materializes in a temp slot and loads back
+                    const auto strippedArgument = NodeLayout::stripGroupings(unit.nodeBuffer, argumentNode);
+                    if (unit.nodeBuffer.kind(strippedArgument) == NodeKind::ArrayLiteral
+                        && (argumentType.kind() == TypeKind::FixedArray || argumentType.kind() == TypeKind::DynamicArray))
+                    {
+                        const auto temp = m_emitter.allocateTempAggregateSlot("temp", argumentType);
+                        emitCapturedArrayLiteral(unit, strippedArgument, temp, argumentType);
+                        const auto loaded = m_emitter.emitLoad(temp, argumentType);
+                        if (loaded.id() < 0)
+                        {
+                            canEmitCall = false;
+                            break;
+                        }
+                        callArguments.push_back(m_emitter.emitWidened(loaded, argumentType, parameter.type().toValue()));
+                        continue;
+                    }
+                }
+
+                if (parameter.type().kind() == TypeKind::DynamicArray && !parameter.type().isReference())
+                {
+                    // owning dynamic arrays deep copy on the way into a call
+                    const auto strippedArgument = NodeLayout::stripGroupings(unit.nodeBuffer, argumentNode);
+                    if (unit.nodeBuffer.kind(strippedArgument) == NodeKind::NameExpression)
+                    {
+                        auto sourceAddress = m_emitter.addressOfLocal(nameIdOf(unit, strippedArgument));
+                        if (sourceAddress.id() < 0)
+                        {
+                            sourceAddress = m_emitter.emitGlobalAddress(std::string(nameOf(unit, strippedArgument)));
+                        }
+                        const auto copied = m_emitter.emitArrayCopy(sourceAddress, parameter.type().toValue());
+                        if (copied.id() < 0)
+                        {
+                            canEmitCall = false;
+                            break;
+                        }
+                        callArguments.push_back(copied);
+                        continue;
+                    }
+                }
+
+                auto argumentRef = ValueRef{};
+                for (const auto& argument : argumentValues)
+                {
+                    if (argument.node != argumentNode)
+                    {
+                        continue;
+                    }
+
+                    if (argument.folded.has_value())
+                    {
+                        argumentRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), argumentType);
+                    }
+                    else
+                    {
+                        argumentRef = argument.value;
+                    }
+                    break;
+                }
+                if (argumentRef.id() < 0)
+                {
+                    canEmitCall = false;
+                    break;
+                }
+                callArguments.push_back(m_emitter.emitWidened(argumentRef, argumentType, parameter.type().toValue()));
+            }
+
+            // variadic arguments
+            for (size_t i = 0; canEmitCall && i < binding.variadic.size(); ++i)
+            {
+                const auto variadicNode = binding.variadic[i];
+                auto variadicRef = ValueRef{};
+                for (const auto& argument : argumentValues)
+                {
+                    if (argument.node != variadicNode)
+                    {
+                        continue;
+                    }
+
+                    if (argument.folded.has_value())
+                    {
+                        variadicRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), m_module.typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
+                    }
+                    else
+                    {
+                        variadicRef = argument.value;
+                    }
+                    break;
+                }
+                if (variadicRef.id() < 0)
+                {
+                    canEmitCall = false;
+                    break;
+                }
+                callArguments.push_back(variadicRef);
+            }
+        }
+
+        if (!foldedCall.has_value() && !canEmitCall)
+        {
+            // TODO add diagnostics for calls the emitter cannot lower
+            m_emitter.recordEmissionFailure();
+        }
+
+        if (foldedCall.has_value())
+        {
+            auto callReturnType = Type::Void();
+            if (!checkedDefinition.returnTypes().empty())
+            {
+                callReturnType = checkedDefinition.returnTypes().front();
+            }
+            emittedCallFold = foldedCall;
+            emittedCallValue = m_emitter.emitConstant(IREmitter::constantFromFold(foldedCall.value()), callReturnType.toValue());
+        }
+        else if (canEmitCall)
+        {
+            auto callReturnType = Type::Void();
+            if (!checkedDefinition.returnTypes().empty())
+            {
+                callReturnType = checkedDefinition.returnTypes().front();
+            }
+            if (needsReceiver)
+            {
+                callArguments.insert(callArguments.begin(), receiverAddress);
+            }
+            if (isElementIntrinsic)
+            {
+                const auto receiverType = checkedDefinition.parameters().front().type().toBaseType();
+                if (!callArguments.empty())
+                {
+                    if (intrinsicKind == IntrinsicKind::ArrayAt)
+                    {
+                        emittedCallValue = m_emitter.emitElementAccess(
+                            implicitArgument.value(), receiverType, callArguments[0], callReturnType.toValue(), context.receiverPosition);
+                    }
+                    else if (callArguments.size() >= 2)
+                    {
+                        const auto elementAddress = m_emitter.emitElementAddressForReceiver(implicitArgument.value(), receiverType, callArguments[0]);
+
+                        // set() emits its value after the element address
+                        // a folded value is emitted again here, dce removes the earlier unused constant
+                        auto storedValue = callArguments[1];
+                        const auto valueNode = m_orderedSlotStack[orderedStart + 1];
+                        for (const auto& argument : argumentValues)
+                        {
+                            if (argument.node == valueNode && argument.folded.has_value())
+                            {
+                                storedValue = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), checkedDefinition.parameters()[2].type().toValue());
+                                break;
+                            }
+                        }
+                        m_emitter.emitStoreValue(storedValue, elementAddress, checkedDefinition.parameters()[2].type());
+                    }
+                }
+            }
+            else if (isToCStringIntrinsic)
+            {
+                const auto receiverType = checkedDefinition.parameters().front().type().toBaseType();
+                emittedCallValue = m_emitter.emitStringToCString(implicitArgument.value(), receiverType);
+            }
+            else if (isGrowthIntrinsic)
+            {
+                const auto receiverType = checkedDefinition.parameters().front().type().toBaseType();
+                if (!callArguments.empty())
+                {
+                    if (intrinsicKind == IntrinsicKind::ArrayAdd)
+                    {
+                        m_emitter.emitArrayAdd(implicitArgument.value(), callArguments[0], receiverType);
+                    }
+                    else
+                    {
+                        m_emitter.emitArrayRemove(implicitArgument.value(), callArguments[0], receiverType);
+                    }
+                }
+            }
+            else if (isSliceIntrinsic)
+            {
+                emittedCallValue = m_emitter.emitSliceIntrinsic(
+                    implicitArgument.value(), checkedDefinition.parameters().front().type().toBaseType(), callReturnType.toValue());
+            }
+            else if (isBitwiseIntrinsic)
+            {
+                emittedCallValue = m_emitter.emitBitwiseIntrinsic(intrinsicKind, callArguments, callReturnType.toValue());
+            }
+            else
+            {
+                emittedCallValue = m_emitter.emitCall(functionType.id(), std::move(callArguments), callReturnType);
+            }
+
+            if (calleeKind == FunctionType::SynthesizedConstructor
+                && !m_constructorDestinations.empty()
+                && m_constructorDestinations.back().loadResult)
+            {
+                emittedCallValue = m_emitter.emitLoad(m_constructorDestinations.back().address, checkedDefinition.parentType());
+            }
+        }
+
         popFrames();
         return true;
     }
 
-    Type TypeChecker::typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
+        CARACAL_ZONE_DETAIL("expr.numberLiteral");
         auto numberType = Type::Undefined();
+        auto literalConsumedSign = false;
         auto parsedValue = std::optional<NumberLiteral::ParsedValue>{};
         const auto lexeme = nameOf(unit, index);
         const auto suffix = NodeLayout::optionalChild(unit.nodeBuffer, index);
@@ -3921,6 +5755,7 @@ namespace Caracal
                 if (negatedValue.has_value())
                 {
                     parsedValue = NumberLiteral::ParsedValue{ negatedValue.value() };
+                    literalConsumedSign = true;
                 }
             }
 
@@ -3935,10 +5770,18 @@ namespace Caracal
             }
         }
 
-        return noteType(unit, index, numberType);
+        auto result = CheckedValue{ recordType(unit, index, numberType) };
+        if (parsedValue.has_value())
+        {
+            result.signFolded = literalConsumedSign;
+            result.folded = MakeFoldValue(parsedValue.value());
+            // the fold covers every width
+            result.value = m_emitter.emitConstant(IREmitter::constantFromFold(result.folded.value()), numberType);
+        }
+        return result;
     }
 
-    Type TypeChecker::typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
+    TypeChecker::CheckedValue TypeChecker::typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context)
     {
         const auto& buffer = unit.nodeBuffer;
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
@@ -3957,13 +5800,15 @@ namespace Caracal
                 && context.contextualNumberType.value().kind() == TypeKind::DynamicArray)
             {
                 const auto arrayType = context.contextualNumberType.value().toValue();
-                return noteType(unit, index, arrayType);
+                // the empty fill still allocates storage, register the capture
+                m_arrayLiteralElements[ArrayLiteralKey(unit.fileId, index)].clear();
+                return recordType(unit, index, arrayType);
             }
 
             m_diagnostics.addEmptyArrayLiteralError(
                 unit.source,
                 ExpressionSourceLocation(m_compilationContext, unit, index));
-            return noteType(unit, index, Type::Undefined());
+            return recordType(unit, index, Type::Undefined());
         }
 
         // an enclosing array type provides the element type, everything else provides none
@@ -3985,10 +5830,14 @@ namespace Caracal
         {
             auto elementContext = context;
             elementContext.contextualNumberType = contextualElementType;
+            auto& capturedElements = m_arrayLiteralElements[ArrayLiteralKey(unit.fileId, index)];
+            capturedElements.clear();
             for (auto position = childrenStart; position < childrenEnd; ++position)
             {
                 const auto element = m_childrenStack[position];
-                const auto type = typeCheckExpression(unit, element, elementContext);
+                const auto checkedElement = typeCheckExpression(unit, element, elementContext);
+                capturedElements.push_back(CapturedArrayElement{ element, checkedElement.value, checkedElement.folded });
+                const auto type = checkedElement.type;
                 if (type == Type::Undefined())
                 {
                     hasElementError = true;
@@ -4018,7 +5867,7 @@ namespace Caracal
 
         if (hasElementError || elementType == Type::Undefined())
         {
-            return noteType(unit, index, Type::Undefined());
+            return recordType(unit, index, Type::Undefined());
         }
 
         // ownership rule: arrays cant store references or slices
@@ -4045,7 +5894,7 @@ namespace Caracal
             const auto length = static_cast<i32>(elementCount);
             arrayType = m_module.getOrCreateArrayType(TypeKind::FixedArray, elementType, length);
         }
-        return noteType(unit, index, arrayType);
+        return recordType(unit, index, arrayType);
     }
 
     Type TypeChecker::coerceConditionType(Type conditionType, const CompilationUnit& unit, u32 conditionIndex)
@@ -4060,7 +5909,7 @@ namespace Caracal
             auto& enumDefinition = m_module.getEnumDefinition(conditionType);
             if (enumDefinition.baseType() == m_module.wellKnown().boolean)
             {
-                noteType(unit, conditionIndex, m_module.wellKnown().boolean);
+                recordType(unit, conditionIndex, m_module.wellKnown().boolean);
                 return m_module.wellKnown().boolean;
             }
         }

@@ -1,0 +1,74 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: c
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        ArrayTypeNameNode: {
+            Type: undefined
+            Lexeme: [i32; 3]
+            Kind: Fixed
+            DataType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            Length: {
+                NumberLiteral: 3
+            }
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: undefined
+                    Name: c
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        ArrayLiteral(3): {
+                            Type: undefined
+                            NumberLiteral: 1
+                            NumberLiteral: 2
+                            NumberLiteral: 3
+                        }
+                    }
+                }
+            }
+            False: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        ArrayLiteral(3): {
+                            Type: undefined
+                            NumberLiteral: 4
+                            NumberLiteral: 5
+                            NumberLiteral: 6
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            ArrayLiteral(3): {
+                Type: undefined
+                NumberLiteral: 7
+                NumberLiteral: 8
+                NumberLiteral: 9
+            }
+        }
+    }
+}

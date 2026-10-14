@@ -18,6 +18,7 @@
 #include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Syntax/ParseTree.h>
 #include <Caracal/Semantic/Parameter.h>
+#include <Caracal/Semantic/PreludeFunctionPool.h>
 #include <Caracal/Text/TransparentStringHash.h>
 #include <filesystem>
 #include <string>
@@ -36,6 +37,7 @@ namespace Caracal
 
         [[nodiscard]] static SemanticContext WithBuiltins() noexcept;
         void finalizePrelude(bool preludeWasLoaded) noexcept;
+        [[nodiscard]] PreludeFunctionPool& preludeFunctionPool() noexcept { return m_preludeFunctionPool; }
 
         [[nodiscard]] Type tryGetFunctionTypeByName(std::string_view typeName) const noexcept;
         [[nodiscard]] EnumDefinition& getEnumDefinition(Type type) noexcept;
@@ -126,6 +128,7 @@ namespace Caracal
         std::vector<Type> m_requiredExternFunctions;
         std::vector<Type> m_requiredPreludeTypes;
         size_t m_preludeFunctionDefinitionCount{ 0 };
+        PreludeFunctionPool m_preludeFunctionPool;
         size_t m_preludeTypeDefinitionCount{ 0 };
         std::vector<FunctionDefinition> m_functionDefinitions;
         std::vector<ConstantDefinition> m_constantDefinitions;
