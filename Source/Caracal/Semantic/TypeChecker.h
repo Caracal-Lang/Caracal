@@ -200,7 +200,7 @@ namespace Caracal
         [[nodiscard]] std::string_view nameOf(const CompilationUnit& unit, u32 index) const noexcept;
         [[nodiscard]] const SourceLocation& nameLocation(const CompilationUnit& unit, u32 index) const noexcept;
         [[nodiscard]] SourceLocation annotationLocation(const CompilationUnit& unit, u32 index) const noexcept;
-        void locateDefinitionName(NodeIndex definitionNode, const std::optional<Token>& statementNameToken, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
+        void locateDefinitionName(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
         [[nodiscard]] bool pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept;
 
         Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept

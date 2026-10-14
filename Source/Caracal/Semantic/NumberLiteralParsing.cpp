@@ -84,7 +84,7 @@ namespace Caracal
         return value;
     }
 
-    std::optional<NumberLiteral::ParsedValue> tryParseNumberLiteralValue(std::string_view lexeme, Type type, const SemanticContext& module)
+    std::optional<NumberLiteralValue> tryParseNumberLiteralValue(std::string_view lexeme, Type type, const SemanticContext& module)
     {
         const auto* description = module.tryGetBuiltinTypeDescription(type);
         if (description == nullptr)
@@ -102,7 +102,7 @@ namespace Caracal
                     return std::nullopt;
                 }
 
-                return NumberLiteral::ParsedValue{ value.value() };
+                return NumberLiteralValue{ value.value() };
             }
 
             const auto value = tryParseF64Literal(lexeme);
@@ -111,7 +111,7 @@ namespace Caracal
                 return std::nullopt;
             }
 
-            return NumberLiteral::ParsedValue{ value.value() };
+            return NumberLiteralValue{ value.value() };
         }
 
         if (description->kind != BuiltinTypeKind::Int)
@@ -151,60 +151,31 @@ namespace Caracal
         {
             if (description->bits <= 8)
             {
-                return NumberLiteral::ParsedValue{ static_cast<i8>(magnitude) };
+                return NumberLiteralValue{ static_cast<i8>(magnitude) };
             }
             if (description->bits <= 16)
             {
-                return NumberLiteral::ParsedValue{ static_cast<i16>(magnitude) };
+                return NumberLiteralValue{ static_cast<i16>(magnitude) };
             }
             if (description->bits <= 32)
             {
-                return NumberLiteral::ParsedValue{ static_cast<i32>(magnitude) };
+                return NumberLiteralValue{ static_cast<i32>(magnitude) };
             }
-            return NumberLiteral::ParsedValue{ static_cast<i64>(magnitude) };
+            return NumberLiteralValue{ static_cast<i64>(magnitude) };
         }
 
         if (description->bits <= 8)
         {
-            return NumberLiteral::ParsedValue{ static_cast<u8>(magnitude) };
+            return NumberLiteralValue{ static_cast<u8>(magnitude) };
         }
         if (description->bits <= 16)
         {
-            return NumberLiteral::ParsedValue{ static_cast<u16>(magnitude) };
+            return NumberLiteralValue{ static_cast<u16>(magnitude) };
         }
         if (description->bits <= 32)
         {
-            return NumberLiteral::ParsedValue{ static_cast<u32>(magnitude) };
+            return NumberLiteralValue{ static_cast<u32>(magnitude) };
         }
-        return NumberLiteral::ParsedValue{ static_cast<u64>(magnitude) };
+        return NumberLiteralValue{ static_cast<u64>(magnitude) };
     }
-
-    std::optional<i32> tryConvertEnumFieldLiteralValue(const NumberLiteral& literal)
-    {
-        if (!literal.hasParsedValue())
-        {
-            return std::nullopt;
-        }
-
-        return std::visit([](const auto value) -> std::optional<i32>
-            {
-                using Payload = std::decay_t<decltype(value)>;
-                if constexpr (std::is_integral_v<Payload> && !std::is_same_v<Payload, bool>)
-                {
-                    // the EnumDefinition stores field values as i32
-                    if (static_cast<i64>(value) < std::numeric_limits<i32>::min()
-                        || static_cast<i64>(value) > std::numeric_limits<i32>::max())
-                    {
-                        return std::nullopt;
-                    }
-
-                    return static_cast<i32>(value);
-                }
-                else
-                {
-                    return std::nullopt;
-                }
-            }, literal.parsedValue().value());
-    }
-
 }

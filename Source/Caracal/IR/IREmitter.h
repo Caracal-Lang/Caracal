@@ -13,8 +13,8 @@
 #include <Caracal/IR/WhileFrame.h>
 #include <Caracal/Optimization/OperatorFolding.h>
 #include <Caracal/Semantic/Parameter.h>
-#include <Caracal/Syntax/BinaryExpression.h>
-#include <Caracal/Syntax/UnaryExpression.h>
+#include <Caracal/Syntax/BinaryOperatorKind.h>
+#include <Caracal/Syntax/UnaryOperatorKind.h>
 
 #include <vector>
 #include <Caracal/Semantic/SemanticContext.h>

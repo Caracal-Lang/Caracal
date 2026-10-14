@@ -8,12 +8,12 @@
 #include <Caracal/Semantic/NumberLiteralParsing.h>
 #include <Caracal/Semantic/OperatorRegistration.h>
 #include <Caracal/Semantic/SliceParameterPromotion.h>
-#include <Caracal/Syntax/BinaryExpression.h>
+#include <Caracal/Syntax/BinaryOperatorKind.h>
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/NodeSpans.h>
 #include <Caracal/Syntax/StringEscapes.h>
 #include <Caracal/Syntax/TokenBuffer.h>
-#include <Caracal/Syntax/UnaryExpression.h>
+#include <Caracal/Syntax/UnaryOperatorKind.h>
 
 #include <algorithm>
 #include <limits>
@@ -39,7 +39,7 @@ namespace Caracal
         return (static_cast<u64>(fileId) << 32) | literalIndex;
     }
 
-    [[nodiscard]] static FoldValue MakeFoldValue(const NumberLiteral::ParsedValue& parsedValue) noexcept
+    [[nodiscard]] static FoldValue MakeFoldValue(const NumberLiteralValue& parsedValue) noexcept
     {
         return std::visit([](const auto value) { return FoldValue{ value }; }, parsedValue);
     }
@@ -624,15 +624,8 @@ namespace Caracal
             const auto& existingDefinition = m_module.getFunctionDefinition(existingFunctionType);
             auto otherSource = SourceTextSharedPtr{};
             auto otherLocation = std::optional<SourceLocation>{};
-            const auto* otherStatement = static_cast<const FunctionDefinitionStatement*>(existingDefinition.statement());
-            auto otherNameToken = std::optional<Token>{};
-            if (otherStatement != nullptr)
-            {
-                otherNameToken = otherStatement->nameToken();
-            }
             locateDefinitionName(
                 existingDefinition.definitionNode(),
-                otherNameToken,
                 otherSource,
                 otherLocation);
 
@@ -647,7 +640,7 @@ namespace Caracal
 
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
         auto parameters = collectParameterNames(unit, functionLayout.parameters);
-        auto& functionDefinition = m_module.createFunction(functionName, std::move(parameters), std::vector<Type>(), nullptr);
+        auto& functionDefinition = m_module.createFunction(functionName, std::move(parameters), std::vector<Type>());
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
         m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
@@ -657,29 +650,17 @@ namespace Caracal
     {
         auto otherSource = SourceTextSharedPtr{};
         auto otherLocation = std::optional<SourceLocation>{};
-        auto otherNameToken = std::optional<Token>{};
         auto otherDefinitionNode = NodeIndex{};
         if (existingType.kind() == TypeKind::Enum)
         {
-            const auto& other = m_module.getEnumDefinition(existingType);
-            otherDefinitionNode = other.definitionNode();
-            if (other.statement() != nullptr)
-            {
-                otherNameToken = other.statement()->nameToken();
-            }
+            otherDefinitionNode = m_module.getEnumDefinition(existingType).definitionNode();
         }
         else if (existingType.kind() == TypeKind::Type)
         {
-            const auto& other = m_module.getTypeDefinition(existingType);
-            otherDefinitionNode = other.definitionNode();
-            if (other.statement() != nullptr)
-            {
-                otherNameToken = other.statement()->nameToken();
-            }
+            otherDefinitionNode = m_module.getTypeDefinition(existingType).definitionNode();
         }
         locateDefinitionName(
             otherDefinitionNode,
-            otherNameToken,
             otherSource,
             otherLocation);
 
@@ -701,7 +682,7 @@ namespace Caracal
             return;
         }
 
-        auto& enumDefinition = m_module.createEnum(enumName, nullptr);
+        auto& enumDefinition = m_module.createEnum(enumName);
         enumDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, enumDefinition.type());
         m_enumDeclarations.push_back(NodeIndex{ unit.fileId, index });
@@ -714,7 +695,7 @@ namespace Caracal
         if (builtinType == Type::Undefined())
         {
             const auto description = extractPendingBuiltinTypeDescription(unit);
-            auto& typeDefinition = m_module.createBuiltinTypeFromDescription(typeName, description, nullptr);
+            auto& typeDefinition = m_module.createBuiltinTypeFromDescription(typeName, description);
             typeDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
             m_module.setNodeType(NodeIndex{ unit.fileId, index }, typeDefinition.type());
             m_typeDeclarations.push_back(NodeIndex{ unit.fileId, index });
@@ -735,14 +716,8 @@ namespace Caracal
         {
             auto otherSource = SourceTextSharedPtr{};
             auto otherLocation = std::optional<SourceLocation>{};
-            auto otherNameToken = std::optional<Token>{};
-            if (existingDefinition.statement() != nullptr)
-            {
-                otherNameToken = existingDefinition.statement()->nameToken();
-            }
             locateDefinitionName(
                 existingDefinition.definitionNode(),
-                otherNameToken,
                 otherSource,
                 otherLocation);
 
@@ -754,7 +729,7 @@ namespace Caracal
             return;
         }
 
-        auto& typeDefinition = m_module.bindBuiltinTypeDefinition(builtinType, nullptr);
+        auto& typeDefinition = m_module.bindBuiltinTypeDefinition(builtinType);
         typeDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, builtinType);
         m_typeDeclarations.push_back(NodeIndex{ unit.fileId, index });
@@ -776,7 +751,7 @@ namespace Caracal
             return;
         }
 
-        auto& typeDefinition = m_module.createType(typeName, nullptr);
+        auto& typeDefinition = m_module.createType(typeName);
         typeDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, typeDefinition.type());
         m_typeDeclarations.push_back(NodeIndex{ unit.fileId, index });
@@ -916,7 +891,7 @@ namespace Caracal
                     continue;
                 }
 
-                auto& methodDefinition = m_module.createMethod(typeDefinition, modifier, std::string(methodName), std::move(declarationParameters), std::vector<Type>(), nullptr);
+                auto& methodDefinition = m_module.createMethod(typeDefinition, modifier, std::string(methodName), std::move(declarationParameters), std::vector<Type>());
                 methodDefinition.setDefinitionNode(NodeIndex{ unit.fileId, bodyStatement });
                 m_module.setNodeType(NodeIndex{ unit.fileId, bodyStatement }, methodDefinition.type());
             }
@@ -1045,24 +1020,18 @@ namespace Caracal
 
     void TypeChecker::locateDefinitionName(
         NodeIndex definitionNode,
-        const std::optional<Token>& statementNameToken,
         SourceTextSharedPtr& source,
         std::optional<SourceLocation>& location) const noexcept
     {
-        if (definitionNode.index != InvalidNodeIndex)
+        if (definitionNode.index == InvalidNodeIndex)
         {
-            const auto& buffer = m_compilationContext.nodeBuffer(definitionNode.fileId);
-            const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
-            source = m_compilationContext.source(nameToken);
-            location = m_compilationContext.sourceLocation(nameToken);
             return;
         }
 
-        if (statementNameToken.has_value())
-        {
-            source = m_compilationContext.source(statementNameToken.value());
-            location = m_compilationContext.sourceLocation(statementNameToken.value());
-        }
+        const auto& buffer = m_compilationContext.nodeBuffer(definitionNode.fileId);
+        const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
+        source = m_compilationContext.source(nameToken);
+        location = m_compilationContext.sourceLocation(nameToken);
     }
 
     CompilationUnit& TypeChecker::unitFor(NodeIndex index) const noexcept
@@ -2825,11 +2794,6 @@ namespace Caracal
             }
             recordType(unit, declarationLayout.left, bindingType);
         }
-        else if (isGlobalConstant && leftKind == NodeKind::DiscardLiteral)
-        {
-            // a discarded global still needs to evaluate for potential side effects
-            m_module.addGlobalDiscardExpression(nullptr);
-        }
 
         if (declaredType != Type::Undefined() && rightType != Type::Undefined() && !isAssignableTo(rightType, declaredType))
         {
@@ -3553,13 +3517,13 @@ namespace Caracal
                     }
                     else
                     {
-                        enumDefinition.addField(fieldName, nullptr, fieldLocation);
+                        enumDefinition.addField(fieldName, fieldLocation);
                         recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
                     }
                 }
                 else
                 {
-                    enumDefinition.addField(fieldName, nullptr, fieldLocation);
+                    enumDefinition.addField(fieldName, fieldLocation);
                     recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
                 }
             }
@@ -3658,7 +3622,7 @@ namespace Caracal
         recordType(unit, declarationLayout.left, fieldType);
         recordType(unit, index, fieldType);
 
-        typeDefinition.addField(fieldType, std::string(fieldName), fieldIndex, nullptr, unit.nodeBuffer.isConstantTypeField(tokens, index));
+        typeDefinition.addField(fieldType, std::string(fieldName), fieldIndex, unit.nodeBuffer.isConstantTypeField(tokens, index));
 
         const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
         if (thisAddress.id() >= 0)
@@ -5712,7 +5676,7 @@ namespace Caracal
         CARACAL_ZONE_DETAIL("expr.numberLiteral");
         auto numberType = Type::Undefined();
         auto literalConsumedSign = false;
-        auto parsedValue = std::optional<NumberLiteral::ParsedValue>{};
+        auto parsedValue = std::optional<NumberLiteralValue>{};
         const auto lexeme = nameOf(unit, index);
         const auto suffix = NodeLayout::optionalChild(unit.nodeBuffer, index);
         if (suffix.hasChild)
@@ -5754,7 +5718,7 @@ namespace Caracal
                 const auto negatedValue = tryParseNegatedI32Literal(lexeme);
                 if (negatedValue.has_value())
                 {
-                    parsedValue = NumberLiteral::ParsedValue{ negatedValue.value() };
+                    parsedValue = NumberLiteralValue{ negatedValue.value() };
                     literalConsumedSign = true;
                 }
             }

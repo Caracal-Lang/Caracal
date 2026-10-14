@@ -11,12 +11,8 @@
 #include <Caracal/Semantic/TypeDefinition.h>
 #include <Caracal/Semantic/UnitSemantics.h>
 #include <Caracal/Semantic/FunctionDefinition.h>
-#include <Caracal/Syntax/EnumDefinitionStatement.h>
-#include <Caracal/Syntax/TypeDefinitionStatement.h>
-#include <Caracal/Syntax/FunctionDefinitionStatement.h>
-#include <Caracal/Syntax/MethodDefinitionStatement.h>
+#include <Caracal/Syntax/MethodModifier.h>
 #include <Caracal/Syntax/NodeIndex.h>
-#include <Caracal/Syntax/ParseTree.h>
 #include <Caracal/Semantic/Parameter.h>
 #include <Caracal/Semantic/PreludeFunctionPool.h>
 #include <Caracal/Text/TransparentStringHash.h>
@@ -44,7 +40,7 @@ namespace Caracal
         [[nodiscard]] TypeDefinition& getTypeDefinition(Type type) noexcept;
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(Type type, BinaryOperatorKind operation) const noexcept;
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(Type type, UnaryOperatorKind operation) const noexcept;
-        TypeDefinition& bindBuiltinTypeDefinition(Type type, const TypeDefinitionStatement* statement) noexcept;
+        TypeDefinition& bindBuiltinTypeDefinition(Type type) noexcept;
         [[nodiscard]] FunctionDefinition& getFunctionDefinition(Type type) noexcept;
         [[nodiscard]] const FunctionDefinition* tryGetFunctionDefinition(Type type) const noexcept;
         [[nodiscard]] Type tryGetTypeByName(std::string_view name) const noexcept;
@@ -57,31 +53,22 @@ namespace Caracal
         [[nodiscard]] const std::vector<Type>& arrayTypes() const noexcept { return m_arrayTypes; }
         [[nodiscard]] Type tryGetOrCreateArrayIntrinsic(Type arrayType, std::string_view methodName) noexcept;
 
-        [[nodiscard]] EnumDefinition& createEnum(
-            std::string_view name,
-            const EnumDefinitionStatement* statement) noexcept;
-        [[nodiscard]] TypeDefinition& createType(
-            std::string_view name,
-            const TypeDefinitionStatement* statement) noexcept;
+        [[nodiscard]] EnumDefinition& createEnum(std::string_view name) noexcept;
+        [[nodiscard]] TypeDefinition& createType(std::string_view name) noexcept;
         [[nodiscard]] FunctionDefinition& createFunction(
             std::string_view name,
             std::vector<Parameter> parameters,
-            std::vector<Type> returnTypes,
-            const FunctionDefinitionStatement* statement) noexcept;
+            std::vector<Type> returnTypes) noexcept;
         [[nodiscard]] FunctionDefinition& createMethod(
             TypeDefinition& typeDefinition,
             MethodModifier modifier,
             const std::string& methodName,
             std::vector<Parameter> parameters,
-            std::vector<Type> returnTypes,
-            const MethodDefinitionStatement* statement) noexcept;
+            std::vector<Type> returnTypes) noexcept;
         [[nodiscard]] FunctionDefinition& createConstructor(
             TypeDefinition& typeDefinition,
             std::vector<Parameter> parameters) noexcept;
         [[nodiscard]] const ConstantDefinition* tryGetConstantDefinition(std::string_view name) const noexcept;
-        [[nodiscard]] ConstantDefinition& createConstant(
-            std::string_view name,
-            Expression* expression) noexcept;
         [[nodiscard]] ConstantDefinition& createConstant(
             std::string_view name,
             Type type,
@@ -89,9 +76,8 @@ namespace Caracal
         [[nodiscard]] ConstantDefinition& createInitConstant(
             std::string_view name,
             Type type) noexcept;
-        void addGlobalDiscardExpression(const Expression* expression) noexcept;
         void createBuiltinType(Type type, std::string_view name, bool addVariants = false);
-        [[nodiscard]] TypeDefinition& createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description, const TypeDefinitionStatement* statement) noexcept;
+        [[nodiscard]] TypeDefinition& createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description) noexcept;
         [[nodiscard]] const BuiltinTypeDescription* tryGetBuiltinTypeDescription(Type type) const noexcept;
         [[nodiscard]] const std::unordered_map<i32, BuiltinTypeDescription>& builtinTypeDescriptions() const noexcept { return m_builtinTypeDescriptionsById; }
         void refreshWellKnownTypes() noexcept;
@@ -99,7 +85,6 @@ namespace Caracal
 
         [[nodiscard]] const std::vector<TypeDefinition>& typeDefinitions() const noexcept { return m_typeDefinitions; }
         [[nodiscard]] const std::vector<ConstantDefinition>& constantDefinitions() const noexcept { return m_constantDefinitions; }
-        [[nodiscard]] const std::vector<const Expression*>& globalDiscardExpressions() const noexcept { return m_globalDiscardExpressions; }
         [[nodiscard]] const std::vector<EnumDefinition>& enumDefinitions() const noexcept { return m_enumDefinitions; }
         [[nodiscard]] const std::vector<FunctionDefinition>& functionDefinitions() const noexcept { return m_functionDefinitions; }
         [[nodiscard]] const std::vector<Type>& requiredExternFunctions() const noexcept { return m_requiredExternFunctions; }
@@ -132,7 +117,6 @@ namespace Caracal
         size_t m_preludeTypeDefinitionCount{ 0 };
         std::vector<FunctionDefinition> m_functionDefinitions;
         std::vector<ConstantDefinition> m_constantDefinitions;
-        std::vector<const Expression*> m_globalDiscardExpressions;
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;
         std::unordered_map<i32, size_t> m_functionDefinitionIndexById;

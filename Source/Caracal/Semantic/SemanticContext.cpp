@@ -108,19 +108,19 @@ namespace Caracal
             ValidateCompilerEmittedCall(*this, "memmove", { wellKnownTypes.rawptr, wellKnownTypes.rawptr, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
             ValidateCompilerEmittedCall(*this, "strcmp", { wellKnownTypes.cstring, wellKnownTypes.cstring }, wellKnownTypes.i32);
 
-            // slice() hands out a read-only view of the string's bytes, intrinsic-blessed like the array methods
+            // slice() returns a read-only view of the string's bytes
             auto& stringDefinition = getTypeDefinition(wellKnownTypes.string);
             const auto immutableByteSlice = getOrCreateArrayType(TypeKind::Slice, wellKnownTypes.u8, 0, true);
             auto sliceParameters = std::vector<Parameter>{};
             sliceParameters.emplace_back(ImplicitThisName, wellKnownTypes.string.toReference());
-            auto& sliceDefinition = createMethod(stringDefinition, MethodModifier::Public, "slice", sliceParameters, { immutableByteSlice }, nullptr);
+            auto& sliceDefinition = createMethod(stringDefinition, MethodModifier::Public, "slice", sliceParameters, { immutableByteSlice });
             sliceDefinition.setFunctionType(FunctionType::Intrinsic);
             sliceDefinition.setIntrinsicKind(IntrinsicKind::ArraySlice);
 
-            // toCString() hands out the NUL-terminated data pointer for FFI, construction guarantees the NUL
+            // toCString() returns the string's bytes as a nul terminated cstring for C calls
             auto toCStringParameters = std::vector<Parameter>{};
             toCStringParameters.emplace_back(ImplicitThisName, wellKnownTypes.string.toReference());
-            auto& toCStringDefinition = createMethod(stringDefinition, MethodModifier::Public, "toCString", toCStringParameters, { wellKnownTypes.cstring }, nullptr);
+            auto& toCStringDefinition = createMethod(stringDefinition, MethodModifier::Public, "toCString", toCStringParameters, { wellKnownTypes.cstring });
             toCStringDefinition.setFunctionType(FunctionType::Intrinsic);
             toCStringDefinition.setIntrinsicKind(IntrinsicKind::StringToCString);
         }
@@ -142,7 +142,7 @@ namespace Caracal
 
     EnumDefinition& SemanticContext::getEnumDefinition(Type type) noexcept
     {
-        static auto invalidEnum = EnumDefinition{ nullptr, Type::Undefined(), std::string("???") };
+        static auto invalidEnum = EnumDefinition{ Type::Undefined(), std::string("???") };
 
         auto baseType = type.toBaseType();
         auto id = baseType.id();
@@ -154,7 +154,7 @@ namespace Caracal
 
     TypeDefinition& SemanticContext::getTypeDefinition(Type type) noexcept
     {
-        static auto invalidType = TypeDefinition{ nullptr, Type::Undefined(), std::string("???") };
+        static auto invalidType = TypeDefinition{ Type::Undefined(), std::string("???") };
 
         auto baseType = type.toBaseType();
         auto id = baseType.id();
@@ -198,7 +198,7 @@ namespace Caracal
 
     FunctionDefinition& SemanticContext::getFunctionDefinition(Type type) noexcept
     {
-        static auto invalidFunction = FunctionDefinition{ nullptr, Type::Undefined(), Type::Undefined(), FunctionType::None, std::string("???"), std::string("???"), false };
+        static auto invalidFunction = FunctionDefinition{ Type::Undefined(), Type::Undefined(), FunctionType::None, std::string("???"), std::string("???"), false };
 
         auto id = type.id();
         if (const auto index = m_functionDefinitionIndexById.find(id); index != m_functionDefinitionIndexById.end())
@@ -443,7 +443,7 @@ namespace Caracal
 
         auto methodId = m_nextId += VariantCount;
         auto methodType = Type{ methodId, TypeKind::Method };
-        m_functionDefinitions.emplace_back(nullptr, methodType, baseArrayType, FunctionType::Intrinsic, std::string(methodName), fullMethodName, false, parameters, returnTypes);
+        m_functionDefinitions.emplace_back(methodType, baseArrayType, FunctionType::Intrinsic, std::string(methodName), fullMethodName, false, parameters, returnTypes);
         if (methodName == "at")
         {
             m_functionDefinitions.back().setIntrinsicKind(IntrinsicKind::ArrayAt);
@@ -474,37 +474,33 @@ namespace Caracal
         return methodType;
     }
 
-    EnumDefinition& SemanticContext::createEnum(
-        std::string_view name,
-        const EnumDefinitionStatement* statement) noexcept
+    EnumDefinition& SemanticContext::createEnum(std::string_view name) noexcept
     {
         auto enumName = std::string(name);
         auto enumId = m_nextId += VariantCount;
         auto valueType = Type{ enumId, TypeKind::Enum };
         m_typeNames.try_emplace(enumId, enumName);
         m_nameToTypes.try_emplace(enumName, valueType);
-        m_enumDefinitions.emplace_back(statement, valueType, enumName);
+        m_enumDefinitions.emplace_back(valueType, enumName);
         m_enumDefinitionIndexById.try_emplace(enumId, m_enumDefinitions.size() - 1);
 
         return m_enumDefinitions.back();
     }
 
-    TypeDefinition& SemanticContext::createType(
-        std::string_view name,
-        const TypeDefinitionStatement* statement) noexcept
+    TypeDefinition& SemanticContext::createType(std::string_view name) noexcept
     {
         auto typeName = std::string(name);
         auto typeId = m_nextId += VariantCount;
         auto valueType = Type{ typeId, TypeKind::Type };
         m_typeNames.try_emplace(typeId, typeName);
         m_nameToTypes.try_emplace(typeName, valueType);
-        m_typeDefinitions.emplace_back(statement, valueType, typeName);
+        m_typeDefinitions.emplace_back(valueType, typeName);
         m_typeDefinitionIndexById.try_emplace(typeId, m_typeDefinitions.size() - 1);
 
         return m_typeDefinitions.back();
     }
 
-    TypeDefinition& SemanticContext::createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description, const TypeDefinitionStatement* statement) noexcept
+    TypeDefinition& SemanticContext::createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description) noexcept
     {
         auto typeName = std::string(name);
         auto typeId = m_nextId += VariantCount;
@@ -512,7 +508,7 @@ namespace Caracal
         m_typeNames.try_emplace(typeId, typeName);
         m_nameToTypes.try_emplace(typeName, valueType);
         m_builtinTypeDescriptionsById.try_emplace(typeId, description);
-        m_typeDefinitions.emplace_back(statement, valueType, typeName);
+        m_typeDefinitions.emplace_back(valueType, typeName);
         m_typeDefinitionIndexById.try_emplace(typeId, m_typeDefinitions.size() - 1);
 
         return m_typeDefinitions.back();
@@ -547,10 +543,10 @@ namespace Caracal
         m_wellKnownTypes.string = tryGetTypeByName("string");
     }
 
-    TypeDefinition& SemanticContext::bindBuiltinTypeDefinition(Type type, const TypeDefinitionStatement* statement) noexcept
+    TypeDefinition& SemanticContext::bindBuiltinTypeDefinition(Type type) noexcept
     {
         const auto typeId = type.id();
-        m_typeDefinitions.emplace_back(statement, type, m_typeNames.at(typeId));
+        m_typeDefinitions.emplace_back(type, m_typeNames.at(typeId));
         m_typeDefinitionIndexById.try_emplace(typeId, m_typeDefinitions.size() - 1);
 
         return m_typeDefinitions.back();
@@ -559,15 +555,13 @@ namespace Caracal
     FunctionDefinition& SemanticContext::createFunction(
         std::string_view name,
         std::vector<Parameter> parameters,
-        std::vector<Type> returnTypes,
-        const FunctionDefinitionStatement* functionStatement) noexcept
+        std::vector<Type> returnTypes) noexcept
     {
         auto functionName = std::string(name);
         auto functionId = m_nextId += VariantCount;
         auto functionType = Type{ functionId, TypeKind::Function };
         auto isVariadic = !parameters.empty() && parameters.back().type() == Type::CVariadic();
-        const Statement* statement = static_cast<const Statement*>(functionStatement);
-        m_functionDefinitions.emplace_back(statement, functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, std::move(parameters), std::move(returnTypes));
+        m_functionDefinitions.emplace_back(functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(functionId, m_functionDefinitions.size() - 1);
         m_functionNameToType.try_emplace(std::move(functionName), functionType);
 
@@ -579,16 +573,14 @@ namespace Caracal
         MethodModifier modifier,
         const std::string& methodName,
         std::vector<Parameter> parameters,
-        std::vector<Type> returnTypes,
-        const MethodDefinitionStatement* methodStatement) noexcept
+        std::vector<Type> returnTypes) noexcept
     {
         auto parentType = typeDefinition.type();
         auto fullMethodName = typeDefinition.name() + "." + methodName;
         auto methodId = m_nextId += VariantCount;
         auto methodType = Type{ methodId, TypeKind::Method };
         auto functionType = ToFunctionType(modifier);
-        const Statement* statement = static_cast<const Statement*>(methodStatement);
-        m_functionDefinitions.emplace_back(statement, methodType, parentType, functionType, methodName, std::move(fullMethodName), false, std::move(parameters), std::move(returnTypes));
+        m_functionDefinitions.emplace_back(methodType, parentType, functionType, methodName, std::move(fullMethodName), false, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(methodId, m_functionDefinitions.size() - 1);
         typeDefinition.addMethod(methodType, methodName);
 
@@ -604,7 +596,7 @@ namespace Caracal
         auto fullConstructorName = typeDefinition.name() + "." + constructorName;
         auto constructorId = m_nextId += VariantCount;
         auto methodType = Type{ constructorId, TypeKind::Constructor };
-        m_functionDefinitions.emplace_back(nullptr, methodType, parentType, FunctionType::SynthesizedConstructor, constructorName, std::move(fullConstructorName), false, std::move(parameters), std::vector<Type>{ Type::Void() });
+        m_functionDefinitions.emplace_back(methodType, parentType, FunctionType::SynthesizedConstructor, constructorName, std::move(fullConstructorName), false, std::move(parameters), std::vector<Type>{ Type::Void() });
         m_functionDefinitionIndexById.try_emplace(constructorId, m_functionDefinitions.size() - 1);
         typeDefinition.addMethod(methodType, constructorName);
 
@@ -617,17 +609,6 @@ namespace Caracal
             return &m_constantDefinitions.at(result->second);
 
         return nullptr;
-    }
-
-    ConstantDefinition& SemanticContext::createConstant(
-        std::string_view name,
-        Expression* expression) noexcept
-    {
-        auto constantName = std::string(name);
-        m_constantDefinitions.emplace_back(constantName, expression);
-        m_constantDefinitionIndexByName.try_emplace(constantName, m_constantDefinitions.size() - 1);
-
-        return m_constantDefinitions.back();
     }
 
     ConstantDefinition& SemanticContext::createConstant(
@@ -651,11 +632,6 @@ namespace Caracal
         m_constantDefinitionIndexByName.try_emplace(constantName, m_constantDefinitions.size() - 1);
 
         return m_constantDefinitions.back();
-    }
-
-    void SemanticContext::addGlobalDiscardExpression(const Expression* expression) noexcept
-    {
-        m_globalDiscardExpressions.push_back(expression);
     }
 
     void SemanticContext::createBuiltinType(Type type, std::string_view name, bool addVariants)

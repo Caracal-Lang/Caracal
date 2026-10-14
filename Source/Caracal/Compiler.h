@@ -1,5 +1,6 @@
 ﻿#include <Caracal/API.h>
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
+#include <Caracal/IR/Module.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <filesystem>
 #include <string>
@@ -10,6 +11,5 @@ namespace Caracal
         const std::filesystem::path& filePath,
         const DiagnosticOptions& diagnosticOptions = {});
 
-    CARACAL_API std::pair<bool, std::string> generateIRText(SemanticContext& semanticContext);
-    CARACAL_API std::pair<bool, std::string> generateLLVMIRFromIR(SemanticContext& semanticContext, std::string targetTriple);
+    CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple);
 };

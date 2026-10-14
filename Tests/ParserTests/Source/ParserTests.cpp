@@ -4,7 +4,6 @@
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/Debug/ParseTreePrinter.h>
-#include <Caracal/Debug/ParseTreePrinterOld.h>
 #include <Caracal/Syntax/NodeBuffer.h>
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Text/SourceEncoding.h>
@@ -99,63 +98,6 @@ static std::vector<std::tuple<std::string, std::filesystem::path, std::filesyste
         }
     }
     return data;
-}
-
-static void FileTestsFlat(
-    const std::string& /*fileName*/,
-    const std::filesystem::path& inputFilePath,
-    const std::filesystem::path& /*outputFilePath*/)
-{
-    const auto input = Caracal::File::readText(inputFilePath);
-    if (!input.has_value())
-    {
-        CaraTest::fail();
-    }
-
-    const auto source = std::make_shared<Caracal::SourceText>(input.value());
-
-    Caracal::DiagnosticsBag treeDiagnostics;
-    const auto tokens = Caracal::lex(source, treeDiagnostics);
-    const auto parseTree = Caracal::parseOld(tokens, treeDiagnostics);
-
-    Caracal::DiagnosticsBag flatDiagnostics;
-    Caracal::DiagnosticsBag flatLexDiagnostics;
-    const auto flatTokens = Caracal::lex(source, flatLexDiagnostics);
-    const auto flatBuffer = Caracal::parse(flatTokens, flatDiagnostics);
-
-    const auto treeText = Caracal::formatDiagnostics(treeDiagnostics, {});
-    auto combinedFlat = Caracal::formatDiagnostics(flatLexDiagnostics, {}) + Caracal::formatDiagnostics(flatDiagnostics, {});
-    if (treeText != combinedFlat)
-    {
-        std::cout << "      diagnostics mismatch in " << inputFilePath.string() << std::endl;
-        std::cout << "      tree parser:\n" << treeText << std::endl;
-        std::cout << "      flat parser:\n" << combinedFlat << std::endl;
-        CaraTest::fail();
-    }
-
-    CaraTest::isTrue(flatBuffer.nodeCount() >= 1);
-
-    std::string layoutFailure;
-    if (!Caracal::verifyNodeLayout(flatBuffer, layoutFailure))
-    {
-        std::cout << "      node layout violation in " << inputFilePath.string() << ": " << layoutFailure << std::endl;
-        CaraTest::fail();
-    }
-
-    // the new printer must produce the same output as the old printer
-    if (treeDiagnostics.diagnostics().empty())
-    {
-        Caracal::ParseTreePrinterOld classPrinter{ *parseTree, nullptr };
-        const auto classText = classPrinter.prettyPrint();
-        const auto flatText = Caracal::prettyPrint(flatBuffer, flatTokens, nullptr);
-        if (classText != flatText)
-        {
-            std::cout << "      printer mismatch in " << inputFilePath.string() << std::endl;
-            std::cout << "      class:\n" << classText << std::endl;
-            std::cout << "      flat:\n" << flatText << std::endl;
-            CaraTest::fail();
-        }
-    }
 }
 
 static void NodeBufferRoundTrips()
@@ -263,33 +205,6 @@ static void PrintBenchmarkLine(const char* label, std::vector<double>& milliseco
     return Caracal::lex(source, lexDiagnostics);
 }
 
-static void BenchmarkParseFileOld(const std::filesystem::path& absolutePath, const char* label)
-{
-    size_t byteCount = 0;
-    const auto tokens = LexBenchmarkFile(absolutePath, byteCount);
-
-    constexpr int RunCount = 10;
-    std::vector<double> milliseconds;
-    milliseconds.reserve(RunCount);
-    for (int run = 0; run < RunCount; run++)
-    {
-        Caracal::DiagnosticsBag diagnostics;
-        const auto startTime = std::chrono::high_resolution_clock::now();
-        const auto parseTree = Caracal::parseOld(tokens, diagnostics);
-        const auto endTime = std::chrono::high_resolution_clock::now();
-
-        if (!diagnostics.diagnostics().empty())
-        {
-            CaraTest::fail();// ("benchmark input must parse without diagnostics");
-        }
-
-        const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        milliseconds.push_back(static_cast<double>(nanoseconds) / 1000000.0);
-    }
-
-    PrintBenchmarkLine(label, milliseconds, byteCount);
-}
-
 static void BenchmarkParseFile(const std::filesystem::path& absolutePath, const char* label)
 {
     size_t byteCount = 0;
@@ -317,18 +232,6 @@ static void BenchmarkParseFile(const std::filesystem::path& absolutePath, const 
     PrintBenchmarkLine(label, milliseconds, byteCount);
 }
 
-static void OneMillionLinesParseTimeOld()
-{
-#ifdef _DEBUG
-    CaraTest::skip();
-#endif
-
-    const auto currentFilePath = std::filesystem::path(__FILE__);
-    const auto inputDirectory = currentFilePath.parent_path() / "../../TestData/Input";
-    BenchmarkParseFileOld(std::filesystem::absolute(inputDirectory / "oneMilLines.cara"), "oneMilLinesShort");
-    BenchmarkParseFileOld(std::filesystem::absolute(inputDirectory / "oneMilLinesLongIdents.cara"), "oneMilLinesLong ");
-}
-
 static void OneMillionLinesParseTime()
 {
 #ifdef _DEBUG
@@ -339,46 +242,6 @@ static void OneMillionLinesParseTime()
     const auto inputDirectory = currentFilePath.parent_path() / "../../TestData/Input";
     BenchmarkParseFile(std::filesystem::absolute(inputDirectory / "oneMilLines.cara"), "oneMilLinesShort");
     BenchmarkParseFile(std::filesystem::absolute(inputDirectory / "oneMilLinesLongIdents.cara"), "oneMilLinesLong ");
-}
-
-static void OneMillionLinesPrintTimeOld()
-{
-#ifdef _DEBUG
-    CaraTest::skip();
-#endif
-
-    const auto currentFilePath = std::filesystem::path(__FILE__);
-    const auto inputDirectory = currentFilePath.parent_path() / "../../TestData/Input";
-    const auto absolutePath = std::filesystem::absolute(inputDirectory / "oneMilLines.cara");
-
-    size_t byteCount = 0;
-    const auto tokens = LexBenchmarkFile(absolutePath, byteCount);
-    Caracal::DiagnosticsBag diagnostics;
-    const auto parseTree = Caracal::parseOld(tokens, diagnostics);
-    CaraTest::isTrue(diagnostics.diagnostics().empty());
-
-    Caracal::CompilationContext preludeContext;
-    const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
-    Caracal::loadPrelude(preludeContext, preludePath);
-    auto* module = &preludeContext.semanticContext();
-
-    constexpr int RunCount = 3;
-    std::vector<double> milliseconds;
-    milliseconds.reserve(RunCount);
-    size_t outputBytes = 0;
-    for (int run = 0; run < RunCount; run++)
-    {
-        const auto startTime = std::chrono::high_resolution_clock::now();
-        Caracal::ParseTreePrinterOld classPrinter{ *parseTree, module };
-        const auto output = classPrinter.prettyPrint();
-        const auto endTime = std::chrono::high_resolution_clock::now();
-        outputBytes = output.size();
-        const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        milliseconds.push_back(static_cast<double>(nanoseconds) / 1000000.0);
-    }
-
-    std::cout << "      print output " << (outputBytes / (1024.0 * 1024.0)) << " MB" << std::endl;
-    PrintBenchmarkLine("oneMilLinesShort", milliseconds, outputBytes);
 }
 
 static void OneMillionLinesPrintTime()
@@ -423,12 +286,9 @@ static void OneMillionLinesPrintTime()
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
-    CaraTest::addTest("FileTestsFlat", FileTestsFlat, FileTests_Data),
     CaraTest::addTest("NodeBufferRoundTrips", NodeBufferRoundTrips),
     CaraTest::addTest("CapacityBoundHoldsOnDegenerateInputs", CapacityBoundHoldsOnDegenerateInputs),
     CaraTest::addTest("CapacityFloorCoversLoneDef", CapacityFloorCoversLoneDef),
-    CaraTest::addTest("OneMillionLinesParseTimeOld", OneMillionLinesParseTimeOld),
     CaraTest::addTest("OneMillionLinesParseTime", OneMillionLinesParseTime),
-    CaraTest::addTest("OneMillionLinesPrintTimeOld", OneMillionLinesPrintTimeOld),
     CaraTest::addTest("OneMillionLinesPrintTime", OneMillionLinesPrintTime),
 };

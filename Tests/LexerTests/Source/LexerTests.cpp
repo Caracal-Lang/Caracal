@@ -595,8 +595,8 @@ static void TokenResolutionAcrossUnits()
     CaraTest::isTrue(!diagnostics.hasErrors());
 
     const auto& units = compilationContext.units();
-    const auto firstToken = units[0].parseTree->tokens().getToken(0);
-    const auto secondToken = units[1].parseTree->tokens().getToken(0);
+    const auto firstToken = units[0].tokenBuffer.value().getToken(0);
+    const auto secondToken = units[1].tokenBuffer.value().getToken(0);
 
     CaraTest::areEqual(u16{ 0 }, firstToken.fileId);
     CaraTest::areEqual(u16{ 1 }, secondToken.fileId);

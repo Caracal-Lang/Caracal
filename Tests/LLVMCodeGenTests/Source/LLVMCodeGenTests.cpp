@@ -32,34 +32,29 @@ static void FileTests(
     compilationContext.addSource(std::move(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
     Caracal::lexAndParse(compilationContext, diagnostics);
 
-    const auto& parseTrees = compilationContext.parseTrees();
-    if (parseTrees.empty())
+    if (diagnostics.hasErrors())
     {
         Caracal::writeDiagnostics(std::cout, diagnostics);
         CaraTest::fail();
     }
 
-    CaraTest::isTrue(!diagnostics.hasErrors());
     const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
     Caracal::loadPrelude(compilationContext, preludePath);
 
-    auto wasSuccessful = Caracal::typeCheckOld(compilationContext, diagnostics);
-    if (wasSuccessful)
-    {
-        wasSuccessful = Caracal::optimizeOld(compilationContext, diagnostics);
-    }
-
+    Caracal::Module module{};
+    const auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics, module);
     if (!wasSuccessful)
     {
         std::cout << "Type checking failed!";
         CaraTest::fail();
     }
+    Caracal::optimize(module);
 
     const auto startTime = std::chrono::high_resolution_clock::now();
-    const auto [irGenerated, output] = Caracal::generateLLVMIRFromIR(compilationContext.semanticContext(), TestTargetTriple);
+    const auto [irGenerated, output] = Caracal::generateLLVMIRFromModule(module, TestTargetTriple);
     const auto endTime = std::chrono::high_resolution_clock::now();
 
-    std::cout << "      generateLLVMIRFromIR(): " << CaraTest::stringify(endTime - startTime) << std::endl;
+    std::cout << "      generateLLVMIRFromModule(): " << CaraTest::stringify(endTime - startTime) << std::endl;
 
     CaraTest::isTrue(irGenerated);
     CaraTest::isTrue(!diagnostics.hasErrors());

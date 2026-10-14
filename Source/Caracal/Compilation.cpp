@@ -1,12 +1,9 @@
 #include <Caracal/Compilation.h>
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
-#include <Caracal/Optimization/ConstantFolder.h>
 #include <Caracal/Optimization/DeadCodeElimination.h>
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeChecker.h>
-#include <Caracal/Semantic/TypeCheckerOld.h>
 #include <Caracal/Syntax/Parser.h>
-#include <Caracal/Syntax/ParserOld.h>
 #include <Caracal/Text/File.h>
 #include <Caracal/Text/SourceEncoding.h>
 
@@ -25,19 +22,14 @@ namespace Caracal
         }
 
         const auto errorCount = diagnostics.errorCount();
-        const auto tokens = lex(unit.source, diagnostics, unit.fileId);
+        unit.tokenBuffer = lex(unit.source, diagnostics, unit.fileId);
         if (diagnostics.errorCount() != errorCount)
         {
             // skip parsing when lexing reported errors
             return;
         }
 
-        auto parseTree = parseOld(tokens, diagnostics);
-        compilationContext.storeParseTree(unit, std::move(parseTree));
-
-        // TODO remove the old parser once we use the nodebuffer for the whole pipeline
-        DiagnosticsBag flatParseDiagnostics{};
-        unit.nodeBuffer = parse(tokens, flatParseDiagnostics);
+        unit.nodeBuffer = parse(unit.tokenBuffer.value(), diagnostics);
     }
 
     std::vector<std::string> collectPreludeSources(const std::filesystem::path& preludeDirectory) noexcept
@@ -148,25 +140,5 @@ namespace Caracal
     {
         CARACAL_ZONE_NAMED("optimize");
         eliminateDeadCode(irModule);
-    }
-
-    ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept
-    {
-        CARACAL_ZONE_NAMED("parseOld");
-        ParserOld parser{ tokens, diagnostics };
-        return parser.parse();
-    }
-
-    bool typeCheckOld(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass) noexcept
-    {
-        CARACAL_ZONE_NAMED("typeCheckOld");
-        TypeCheckerOld typeChecker{ compilationContext, isPreludePass, diagnostics };
-        return typeChecker.typeCheck();
-    }
-
-    bool optimizeOld(const CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass)
-    {
-        CARACAL_ZONE_NAMED("optimizeOld");
-        return foldConstants(compilationContext, diagnostics, isPreludePass);
     }
 }

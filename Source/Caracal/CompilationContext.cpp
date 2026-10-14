@@ -30,19 +30,6 @@ namespace Caracal
         });
     }
 
-    void CompilationContext::storeParseTree(CompilationUnit& unit, ParseTreeUPtr parseTree)
-    {
-        unit.parseTree = parseTree.get();
-        if (unit.origin == UnitOrigin::Prelude)
-        {
-            m_preludeParseTrees.push_back(std::move(parseTree));
-        }
-        else
-        {
-            m_parseTrees.push_back(std::move(parseTree));
-        }
-    }
-
     const TypeCheckerOptions& CompilationContext::options() const noexcept
     {
         return m_options;
@@ -78,38 +65,18 @@ namespace Caracal
         m_preludeWasLoaded = true;
     }
 
-    const std::vector<ParseTreeUPtr>& CompilationContext::parseTrees() const noexcept
-    {
-        return m_parseTrees;
-    }
-
-    const std::vector<ParseTreeUPtr>& CompilationContext::preludeParseTrees() const noexcept
-    {
-        return m_preludeParseTrees;
-    }
-
-    const std::vector<ParseTreeUPtr>& CompilationContext::parseTreesFor(bool isPreludePass) const noexcept
-    {
-        if (isPreludePass)
-        {
-            return m_preludeParseTrees;
-        }
-
-        return m_parseTrees;
-    }
-
     const NodeBuffer& CompilationContext::nodeBuffer(u16 fileId) const noexcept
     {
         return m_units[fileId].nodeBuffer;
     }
     const TokenBuffer& CompilationContext::tokenBuffer(const Token& token) const noexcept
     {
-        return m_units[token.fileId].parseTree->tokens();
+        return m_units[token.fileId].tokenBuffer.value();
     }
 
     const TokenBuffer& CompilationContext::tokenBuffer(u16 fileId) const noexcept
     {
-        return m_units[fileId].parseTree->tokens();
+        return m_units[fileId].tokenBuffer.value();
     }
 
     std::string_view CompilationContext::getLexeme(const Token& token) const noexcept

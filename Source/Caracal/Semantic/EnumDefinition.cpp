@@ -3,13 +3,11 @@
 namespace Caracal 
 {
     EnumDefinition::EnumDefinition(
-        const EnumDefinitionStatement* statement,
         Type type, 
         const std::string& name)
         : m_type{ type }
         , m_baseType{ Type::Undefined() }
         , m_name{ name }
-        , m_statement{ statement }
     {
     }
     
@@ -29,10 +27,10 @@ namespace Caracal
         return m_fieldIndices.contains(fieldName);
     }
 
-    void EnumDefinition::addField(std::string_view name, Expression* expression, SourceLocation location) noexcept
+    void EnumDefinition::addField(std::string_view name, SourceLocation location) noexcept
     {
         m_fieldIndices.emplace(std::string(name), m_fields.size());
-        m_fields.emplace_back(name, expression, location);
+        m_fields.emplace_back(name, location);
     }
 
     void EnumDefinition::addField(std::string_view name, i32 value, SourceLocation location) noexcept

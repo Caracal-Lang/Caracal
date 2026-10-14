@@ -3,23 +3,21 @@
 namespace Caracal 
 {
     TypeDefinition::TypeDefinition(
-        const TypeDefinitionStatement* statement,
         Type type, 
         const std::string& name)
         : m_type{ type }
         , m_name{ name }
-        , m_statement{ statement }
     {
     }
 
-    void TypeDefinition::addField(Type fieldType, const std::string& fieldName, i32 fieldIndex, Expression* expression, bool isConstant) noexcept
+    void TypeDefinition::addField(Type fieldType, const std::string& fieldName, i32 fieldIndex, bool isConstant) noexcept
     {
-        m_fields.emplace_back(fieldType, fieldName, fieldIndex, expression, isConstant);
+        m_fields.emplace_back(fieldType, fieldName, fieldIndex, isConstant);
     }
 
     const FieldDefinition& TypeDefinition::tryGetFieldByName(std::string_view fieldName) const noexcept
     {
-        static auto invalidField = FieldDefinition{ Type::Undefined(), std::string("???"), 0, nullptr };
+        static auto invalidField = FieldDefinition{ Type::Undefined(), std::string("???"), 0 };
 
         for (const auto& field : m_fields)
         {

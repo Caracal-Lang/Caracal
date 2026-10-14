@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Caracal/Syntax/Statement.h>
 #include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Semantic/Type.h>
 #include <Caracal/Semantic/Parameter.h>
@@ -45,7 +44,6 @@ namespace Caracal
     {
     public:
         FunctionDefinition(
-            const Statement* statement,
             Type type,
             Type parentType,
             FunctionType functionType,
@@ -66,7 +64,6 @@ namespace Caracal
         [[nodiscard]] bool isVariadic() const noexcept { return m_isVariadic; }
         [[nodiscard]] const std::vector<Parameter>& parameters() const noexcept { return m_parameters; }
         [[nodiscard]] const std::vector<Type>& returnTypes() const noexcept { return m_returnTypes; }
-        [[nodiscard]] const Statement* statement() const noexcept { return m_statement; }
         [[nodiscard]] NodeIndex definitionNode() const noexcept { return m_definitionNode; }
         void setDefinitionNode(NodeIndex definitionNode) noexcept { m_definitionNode = definitionNode; }
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
@@ -87,7 +84,6 @@ namespace Caracal
         bool m_isVariadic;
         std::vector<Parameter> m_parameters;
         std::vector<Type> m_returnTypes;
-        const Statement* m_statement;
         NodeIndex m_definitionNode{};
     };
 }

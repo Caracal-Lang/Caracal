@@ -3,13 +3,10 @@
 #include <Caracal/CompilationContext.h>
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
-#include <Caracal/Debug/IRPrinter.h>
 #include <Caracal/Text/File.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/Diagnostics/DiagnosticPrinter.h>
-#include <Caracal/Optimization/DeadCodeElimination.h>
 #include <Caracal/CodeGen/LLVMCodeGenerator.h>
-#include <Caracal/IR/IRLowerer.h>
 
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/LLVMContext.h>
@@ -97,27 +94,6 @@ namespace Caracal
             return false;
 
         // catch malformed IR before it is emitted, verifyModule returns true when broken
-        CARACAL_ZONE_NAMED("verify");
-        if (llvm::verifyModule(llvmModule, &llvm::errs()))
-            return false;
-
-        return true;
-    }
-
-    static bool PopulateModuleOld(SemanticContext& semanticContext, llvm::Module& llvmModule)
-    {
-        Module irModule{};
-        IRLowerer lowerer{ semanticContext };
-        if (!lowerer.lower(irModule))
-            return false;
-
-        eliminateDeadCode(irModule);
-
-        LLVMCodeGenerator codeGenerator{ irModule, llvmModule };
-        if (!codeGenerator.generate())
-            return false;
-
-        // catch malformed IR before it is emitted or snapshotted, verifyModule returns true when broken
         CARACAL_ZONE_NAMED("verify");
         if (llvm::verifyModule(llvmModule, &llvm::errs()))
             return false;
@@ -285,31 +261,13 @@ namespace Caracal
         return exeResult;
     }
 
-    std::pair<bool, std::string> generateIRText(SemanticContext& semanticContext)
-    {
-        Module module{};
-        IRLowerer lowerer{ semanticContext };
-        const auto wasSuccessful = lowerer.lower(module);
-        if (!wasSuccessful)
-            return std::make_pair(false, std::string{});
-
-        eliminateDeadCode(module);
-
-        IRPrinter printer{ module };
-        return std::make_pair(true, printer.prettyPrint());
-    }
-
-    std::pair<bool, std::string> generateLLVMIRFromIR(SemanticContext& semanticContext, std::string targetTriple)
+    std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple)
     {
         llvm::LLVMContext context;
         auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
         llvmModule->setTargetTriple(llvm::Triple(targetTriple));
 
-        if (!PopulateModuleOld(semanticContext, *llvmModule))
-            return std::make_pair(false, std::string{});
-
-        // catch malformed IR before it is snapshotted, verifyModule returns true when broken
-        if (llvm::verifyModule(*llvmModule, &llvm::errs()))
+        if (!GenerateModule(irModule, *llvmModule))
             return std::make_pair(false, std::string{});
 
         std::string irOutput;

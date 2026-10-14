@@ -1,10 +1,11 @@
 #include <Caracal/Debug/ParseTreePrinter.h>
 
-#include <Caracal/Syntax/ArrayTypeNameNode.h>
+#include <Caracal/Syntax/ArrayTypeKind.h>
 #include <Caracal/Syntax/NodeLayout.h>
-#include <Caracal/Syntax/BinaryExpression.h>
-#include <Caracal/Syntax/MethodDefinitionStatement.h>
-#include <Caracal/Syntax/UnaryExpression.h>
+#include <Caracal/Syntax/BinaryOperatorKind.h>
+#include <Caracal/Syntax/MethodModifier.h>
+#include <Caracal/Syntax/SpecialFunctionType.h>
+#include <Caracal/Syntax/UnaryOperatorKind.h>
 #include <Caracal/Text/StringBuilder.h>
 
 #include <string>
@@ -906,7 +907,7 @@ namespace Caracal
         {
             const auto trailingIfLayout = NodeLayout::trailingIf(m_buffer, index);
 
-            // TODO rename once the old parser is gone
+            // TODO rename to TrailingIfStatement
             m_builder.appendIndentedLine("IfStatement: {");
             m_builder.pushIndentation();
 

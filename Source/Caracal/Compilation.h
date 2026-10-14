@@ -5,7 +5,6 @@
 #include <Caracal/Defines.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/IR/Module.h>
-#include <Caracal/Syntax/ParseTree.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 #include <Caracal/Text/SourceText.h>
 
@@ -25,8 +24,4 @@ namespace Caracal
     CARACAL_API void lexAndParse(CompilationContext& compilationContext, DiagnosticsBag& diagnostics);
     CARACAL_API bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, Module& irModule) noexcept;
     CARACAL_API void optimize(Module& irModule);
-    
-    CARACAL_API ParseTreeUPtr parseOld(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept;
-    CARACAL_API bool typeCheckOld(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass = false) noexcept;
-    CARACAL_API bool optimizeOld(const CompilationContext& compilationContext, DiagnosticsBag& diagnostics, bool isPreludePass = false);
 }
