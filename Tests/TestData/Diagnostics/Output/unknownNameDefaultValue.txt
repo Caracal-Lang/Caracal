@@ -1,0 +1,10 @@
+ Error T0007 Unknown name
+    ,-[Diagnostics/Input/unknownNameDefaultValue.cara:1:25]
+  1 | def offset(value: i32 = missing) i32
+    .                         -------
+    .                            `-- Unknown name 'missing'
+  2 | {
+  3 |     return value;
+  4 | }
+    `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.

@@ -1,0 +1,7 @@
+#extern(symbol = "printf")
+def printf(format: cstring, ...) i32 {}
+
+def main() i32
+{
+    return printf("%d", missing);
+}

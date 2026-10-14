@@ -1,0 +1,9 @@
+def offset(value: i32 = missing) i32
+{
+    return value;
+}
+
+def main() i32
+{
+    return offset();
+}

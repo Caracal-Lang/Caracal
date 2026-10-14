@@ -5198,7 +5198,10 @@ namespace Caracal
                     const auto& defaultUnit = unitFor(defaultNode);
                     const auto defaultType = m_module.typeOfNode(defaultNode);
                     const auto expectedType = parameter.type();
-                    if (!isAssignableTo(defaultType, expectedType))
+                    // either side being undefined means its error was already reported
+                    if (defaultType != Type::Undefined() 
+                        && expectedType != Type::Undefined()
+                        && !isAssignableTo(defaultType, expectedType))
                     {
                         argumentTypeMismatches.push_back(ArgumentTypeMismatchInfo{
                             ExpressionSourceLocation(m_compilationContext, defaultUnit, defaultNode.index),
@@ -5213,7 +5216,10 @@ namespace Caracal
 
             const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode });
             const auto expectedType = checkedParameters[i + parameterOffset].type();
-            if (!isAssignableTo(argumentType, expectedType))
+            // either side being undefined means its error was already reported
+            if (argumentType != Type::Undefined() 
+                && expectedType != Type::Undefined()
+                && !isAssignableTo(argumentType, expectedType))
             {
                 argumentTypeMismatches.push_back(ArgumentTypeMismatchInfo{
                     ExpressionSourceLocation(m_compilationContext, unit, argumentNode),
@@ -5228,7 +5234,13 @@ namespace Caracal
         {
             const auto argumentNode = binding.variadic[j];
             const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode });
-            if (argumentType == Type::Undefined() || argumentType == Type::Void())
+            // an undefined argument means its error was already reported
+            if (argumentType == Type::Undefined())
+            {
+                popFrames();
+                return false;
+            }
+            if (argumentType == Type::Void())
             {
                 m_diagnostics.addInvalidVariadicArgumentTypeError(
                     unit.source,

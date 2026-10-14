@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+    ,-[Diagnostics/Input/unknownNameVariadicArgument.cara:6:25]
+  3 | 
+  4 | def main() i32
+  5 | {
+  6 |     return printf("%d", missing);
+    .                         -------
+    .                            `-- Unknown name 'missing'
+  7 | }
+  8 | 
+    `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.
