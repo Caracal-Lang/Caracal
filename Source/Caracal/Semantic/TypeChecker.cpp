@@ -3625,29 +3625,32 @@ namespace Caracal
         typeDefinition.addField(fieldType, std::string(fieldName), fieldIndex, unit.nodeBuffer.isConstantTypeField(tokens, index));
 
         const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
-        if (thisAddress.id() >= 0)
+        if (thisAddress.id() < 0)
         {
-            auto fieldValue = m_emitter.emitWidened(checkedFieldRight.value, expressionType.toValue(), fieldType.toValue());
-            const auto strippedField = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
-            if (unit.nodeBuffer.kind(strippedField) == NodeKind::ArrayLiteral
-                && (fieldType.kind() == TypeKind::FixedArray || fieldType.kind() == TypeKind::DynamicArray))
-            {
-                // a literal initializer materializes in a temp and loads back
-                const auto temp = m_emitter.allocateTempAggregateSlot("temp", fieldType);
-                emitCapturedArrayLiteral(unit, strippedField, temp, fieldType);
-                fieldValue = m_emitter.emitLoad(temp, fieldType);
-            }
-            else if (fieldType.kind() == TypeKind::DynamicArray && unit.nodeBuffer.kind(strippedField) == NodeKind::NameExpression)
-            {
-                // an owning array field deep copies its source
-                // string reserves the nul byte its c string view relies on
-                const auto sourceAddress = dynamicArraySourceAddress(unit, strippedField, fieldType);
-                const auto reserveNulByte = typeDefinition.type() == m_module.wellKnown().string;
-                fieldValue = m_emitter.emitArrayCopy(sourceAddress, fieldType, reserveNulByte);
-            }
-            const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
-            m_emitter.emitStoreValue(fieldValue, fieldAddress, fieldType);
+            return;
         }
+
+        const auto strippedField = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+        if (unit.nodeBuffer.kind(strippedField) == NodeKind::ArrayLiteral
+            && (fieldType.kind() == TypeKind::FixedArray || fieldType.kind() == TypeKind::DynamicArray))
+        {
+            // an array literal fills the field directly
+            const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
+            emitCapturedArrayLiteral(unit, strippedField, fieldAddress, fieldType);
+            return;
+        }
+
+        auto fieldValue = m_emitter.emitWidened(checkedFieldRight.value, expressionType.toValue(), fieldType.toValue());
+        if (fieldType.kind() == TypeKind::DynamicArray && unit.nodeBuffer.kind(strippedField) == NodeKind::NameExpression)
+        {
+            // an owning array field deep copies its source
+            // string reserves the nul byte its c string view relies on
+            const auto sourceAddress = dynamicArraySourceAddress(unit, strippedField, fieldType);
+            const auto reserveNulByte = typeDefinition.type() == m_module.wellKnown().string;
+            fieldValue = m_emitter.emitArrayCopy(sourceAddress, fieldType, reserveNulByte);
+        }
+        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
+        m_emitter.emitStoreValue(fieldValue, fieldAddress, fieldType);
     }
 
     void TypeChecker::typeCheckMethodDefinitionStatement(const CompilationUnit& unit, u32 index)

@@ -29,9 +29,7 @@ block entry(0):
 define Buffer.new(%0: ref Buffer ".this") void
 block entry(0):
     %0 = parameter 0 : ref Buffer ".this"
-    %slot0 = allocate_local : [u8; _] "temp"
-    %slot1 = allocate_local : [u8; _] "temp"
-    %1 = address_of %slot0 : ref [u8; _]
+    %1 = address_of_field %0.0 : ref [u8; _] "bytes"
     %2 = const 8 : i64
     %3 = size_of u8 : i64
     %4 = call C.calloc(%2, %3) : rawptr
@@ -51,22 +49,16 @@ block entry(0):
     %14 = element_address %4[%13] : u8
     %15 = const 9 : u8
     store_value %15, %14 : u8
-    %16 = load_value %1 : [u8; _]
-    %17 = address_of_field %0.0 : ref [u8; _] "bytes"
-    store_value %16, %17 : [u8; _]
-    %18 = address_of %slot1 : ref [u8; _]
-    %19 = const 8 : i64
-    %20 = size_of u8 : i64
-    %21 = call C.calloc(%19, %20) : rawptr
-    %22 = address_of_field %18.0 : ref u8 "data"
-    store_value %21, %22 : ref u8
-    %23 = const 0 : i32
-    %24 = address_of_field %18.1 : ref i32 "length"
+    %16 = address_of_field %0.1 : ref [u8; _] "spare"
+    %17 = const 8 : i64
+    %18 = size_of u8 : i64
+    %19 = call C.calloc(%17, %18) : rawptr
+    %20 = address_of_field %16.0 : ref u8 "data"
+    store_value %19, %20 : ref u8
+    %21 = const 0 : i32
+    %22 = address_of_field %16.1 : ref i32 "length"
+    store_value %21, %22 : i32
+    %23 = const 8 : i32
+    %24 = address_of_field %16.2 : ref i32 "capacity"
     store_value %23, %24 : i32
-    %25 = const 8 : i32
-    %26 = address_of_field %18.2 : ref i32 "capacity"
-    store_value %25, %26 : i32
-    %27 = load_value %18 : [u8; _]
-    %28 = address_of_field %0.1 : ref [u8; _] "spare"
-    store_value %27, %28 : [u8; _]
     return

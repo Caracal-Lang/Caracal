@@ -1,0 +1,167 @@
+TypeDefinitionStatement: {
+    Type: Grid
+    Name: Grid
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; 3]
+                    Name: cells
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: [i32; 3]
+                    Lexeme: [i32; 3]
+                    Kind: Fixed
+                    DataType: {
+                        TypeNameNode: {
+                            Type: i32
+                            Lexeme: i32
+                        }
+                    }
+                    Length: {
+                        NumberLiteral: 3
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; 3]
+                    NumberLiteral: 4
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: Grid
+            Left: {
+                NameExpression: {
+                    Type: Grid
+                    Name: grid
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Grid
+                    Left: {
+                        NameExpression: {
+                            Type: Grid
+                            Name: Grid
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Grid
+                            Function type: (ref Grid) -> void
+                            NameExpression: {
+                                Type: (ref Grid) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: [i32; 3]
+                                Left: {
+                                    NameExpression: {
+                                        Type: Grid
+                                        Name: grid
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: [i32; 3]
+                                        Name: cells
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref [i32; 3], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref [i32; 3], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: [i32; 3]
+                                Left: {
+                                    NameExpression: {
+                                        Type: Grid
+                                        Name: grid
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: [i32; 3]
+                                        Name: cells
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref [i32; 3], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref [i32; 3], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

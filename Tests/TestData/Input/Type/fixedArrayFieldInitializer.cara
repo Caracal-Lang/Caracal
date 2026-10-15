@@ -1,0 +1,10 @@
+type Grid
+{
+    cells : [i32; 3] = [4, 5, 6]
+}
+
+def main() i32
+{
+    grid := Grid.new();
+    return grid.cells.at(0) %+ grid.cells.at(2);
+}

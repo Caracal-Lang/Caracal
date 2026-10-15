@@ -1,0 +1,167 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Grid
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: cells
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: undefined
+                    Lexeme: [i32; 3]
+                    Kind: Fixed
+                    DataType: {
+                        TypeNameNode: {
+                            Type: undefined
+                            Lexeme: i32
+                        }
+                    }
+                    Length: {
+                        NumberLiteral: 3
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: undefined
+                    NumberLiteral: 4
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: grid
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Grid
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: grid
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: cells
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: grid
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: cells
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

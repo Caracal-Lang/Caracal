@@ -29,31 +29,25 @@ entry:
 
 define void @Buffer.new(ptr nonnull %0) {
 entry:
-  %temp = alloca { ptr, i32, i32 }, align 8
-  %temp1 = alloca { ptr, i32, i32 }, align 8
+  %bytes = getelementptr inbounds nuw %Buffer, ptr %0, i32 0, i32 0
   %call = call ptr @calloc(i64 8, i64 1)
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %bytes, i32 0, i32 0
   store ptr %call, ptr %data, align 8
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %bytes, i32 0, i32 1
   store i32 2, ptr %length, align 4
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 2
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %bytes, i32 0, i32 2
   store i32 8, ptr %capacity, align 4
   %element = getelementptr i8, ptr %call, i32 0
   store i8 7, ptr %element, align 1
-  %element2 = getelementptr i8, ptr %call, i32 1
-  store i8 9, ptr %element2, align 1
-  %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  %bytes = getelementptr inbounds nuw %Buffer, ptr %0, i32 0, i32 0
-  store { ptr, i32, i32 } %load, ptr %bytes, align 8
-  %call3 = call ptr @calloc(i64 8, i64 1)
-  %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp1, i32 0, i32 0
-  store ptr %call3, ptr %data4, align 8
-  %length5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp1, i32 0, i32 1
-  store i32 0, ptr %length5, align 4
-  %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp1, i32 0, i32 2
-  store i32 8, ptr %capacity6, align 4
-  %load7 = load { ptr, i32, i32 }, ptr %temp1, align 8
+  %element1 = getelementptr i8, ptr %call, i32 1
+  store i8 9, ptr %element1, align 1
   %spare = getelementptr inbounds nuw %Buffer, ptr %0, i32 0, i32 1
-  store { ptr, i32, i32 } %load7, ptr %spare, align 8
+  %call2 = call ptr @calloc(i64 8, i64 1)
+  %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %spare, i32 0, i32 0
+  store ptr %call2, ptr %data3, align 8
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %spare, i32 0, i32 1
+  store i32 0, ptr %length4, align 4
+  %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %spare, i32 0, i32 2
+  store i32 8, ptr %capacity5, align 4
   ret void
 }

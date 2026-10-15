@@ -1,0 +1,39 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+%Grid = type { [3 x i32] }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @main() {
+entry:
+  %grid = alloca %Grid, align 8
+  call void @Grid.new(ptr %grid)
+  %cells = getelementptr inbounds nuw %Grid, ptr %grid, i32 0, i32 0
+  %element = getelementptr [3 x i32], ptr %cells, i32 0, i32 0
+  %load = load i32, ptr %element, align 4
+  %cells1 = getelementptr inbounds nuw %Grid, ptr %grid, i32 0, i32 0
+  %element2 = getelementptr [3 x i32], ptr %cells1, i32 0, i32 2
+  %load3 = load i32, ptr %element2, align 4
+  %add = add i32 %load, %load3
+  ret i32 %add
+}
+
+define void @Grid.new(ptr nonnull %0) {
+entry:
+  %cells = getelementptr inbounds nuw %Grid, ptr %0, i32 0, i32 0
+  %element = getelementptr [3 x i32], ptr %cells, i32 0, i32 0
+  store i32 4, ptr %element, align 4
+  %element1 = getelementptr [3 x i32], ptr %cells, i32 0, i32 1
+  store i32 5, ptr %element1, align 4
+  %element2 = getelementptr [3 x i32], ptr %cells, i32 0, i32 2
+  store i32 6, ptr %element2, align 4
+  ret void
+}
