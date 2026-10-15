@@ -3,8 +3,7 @@
 namespace Caracal
 {
     ValueNegationInstruction::ValueNegationInstruction(TemporaryId resultId, ValueRef operandValue, Type type) noexcept
-        : Instruction{ InstructionKind::ValueNegation }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::ValueNegation, resultId }
         , m_operandValue{ operandValue }
         , m_type{ type }
     {
@@ -12,7 +11,7 @@ namespace Caracal
 
     void ValueNegationInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_operandValue = ValueRef{ remapTemporaryId(remap, m_operandValue.id()) };
     }
 }

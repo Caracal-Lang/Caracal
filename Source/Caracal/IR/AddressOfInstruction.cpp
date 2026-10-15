@@ -3,8 +3,7 @@
 namespace Caracal
 {
     AddressOfInstruction::AddressOfInstruction(TemporaryId resultId, LocalSlotRef local, Type type) noexcept
-        : Instruction{ InstructionKind::AddressOf }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::AddressOf, resultId }
         , m_local{ local }
         , m_type{ type }
     {
@@ -12,6 +11,6 @@ namespace Caracal
 
     void AddressOfInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
     }
 }

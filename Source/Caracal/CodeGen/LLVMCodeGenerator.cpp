@@ -392,11 +392,11 @@ namespace Caracal
                         m_irBuilder->SetInsertPoint(entryBlock);
                     }
 
-                    m_slots[allocate.resultId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
+                    m_slots[allocate.slotId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
                     return true;
                 }
 
-                m_slots[allocate.resultId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
+                m_slots[allocate.slotId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
                 return true;
             }
             case InstructionKind::AddressOf:

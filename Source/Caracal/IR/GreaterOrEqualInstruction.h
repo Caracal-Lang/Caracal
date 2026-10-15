@@ -10,7 +10,6 @@ namespace Caracal
     public:
         GreaterOrEqualInstruction(TemporaryId resultId, ValueRef leftValue, ValueRef rightValue, Type type, Type operandType) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] ValueRef leftValue() const noexcept { return m_leftValue; }
         [[nodiscard]] ValueRef rightValue() const noexcept { return m_rightValue; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
@@ -18,7 +17,6 @@ namespace Caracal
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         ValueRef m_leftValue;
         ValueRef m_rightValue;
         Type m_type;

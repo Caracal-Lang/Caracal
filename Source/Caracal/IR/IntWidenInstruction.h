@@ -10,7 +10,6 @@ namespace Caracal
     public:
         IntWidenInstruction(TemporaryId resultId, ValueRef operandValue, Type sourceType, Type type) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] ValueRef operandValue() const noexcept { return m_operandValue; }
         // type of the narrower operand, decides sign extension vs zero extension during codegen
         [[nodiscard]] Type sourceType() const noexcept { return m_sourceType; }
@@ -18,7 +17,6 @@ namespace Caracal
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         ValueRef m_operandValue;
         Type m_sourceType;
         Type m_type;

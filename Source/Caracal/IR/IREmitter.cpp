@@ -202,6 +202,7 @@ namespace Caracal
 
         if (m_pendingFunction.has_value())
         {
+            m_pendingFunction->setTemporaryCount(m_nextTemporaryId);
             if (m_isPreludePass)
             {
                 m_semanticContext.preludeFunctionPool().add(PreludeFunctionBody{ std::move(m_pendingFunction.value()), std::move(m_currentCalledPreludeFunctions) });
@@ -1823,6 +1824,7 @@ namespace Caracal
         {
             entry->setTerminator(std::make_unique<ReturnTerminator>());
         }
+        m_globalInit.function->setTemporaryCount(m_globalInit.nextTemporaryId);
         m_module.setGlobalInit(std::move(m_globalInit.function.value()));
         m_globalInit.function.reset();
     }

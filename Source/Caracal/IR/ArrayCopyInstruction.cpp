@@ -3,8 +3,7 @@
 namespace Caracal
 {
     ArrayCopyInstruction::ArrayCopyInstruction(TemporaryId resultId, ValueRef sourceAddress, Type arrayType, FunctionId callocFunctionId, FunctionId memmoveFunctionId, bool reserveNulByte) noexcept
-        : Instruction{ InstructionKind::ArrayCopy }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::ArrayCopy, resultId }
         , m_sourceAddress{ sourceAddress }
         , m_arrayType{ arrayType }
         , m_callocFunctionId{ callocFunctionId }
@@ -15,7 +14,7 @@ namespace Caracal
 
     void ArrayCopyInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_sourceAddress = ValueRef{ remapTemporaryId(remap, m_sourceAddress.id()) };
     }
 }

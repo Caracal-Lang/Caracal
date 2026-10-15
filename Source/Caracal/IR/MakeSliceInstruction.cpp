@@ -7,8 +7,7 @@ namespace Caracal
         ValueRef baseAddress,
         ValueRef length,
         Type type) noexcept
-        : Instruction{ InstructionKind::MakeSlice }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::MakeSlice, resultId }
         , m_baseAddress{ baseAddress }
         , m_length{ length }
         , m_type{ type }
@@ -17,7 +16,7 @@ namespace Caracal
 
     void MakeSliceInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_baseAddress = ValueRef{ remapTemporaryId(remap, m_baseAddress.id()) };
         m_length = ValueRef{ remapTemporaryId(remap, m_length.id()) };
     }

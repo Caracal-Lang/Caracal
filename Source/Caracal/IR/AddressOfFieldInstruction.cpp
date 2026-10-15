@@ -9,8 +9,7 @@ namespace Caracal
         std::string fieldName,
         i32 fieldIndex,
         Type type) noexcept
-        : Instruction{ InstructionKind::FieldAddress }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::FieldAddress, resultId }
         , m_objectAddress{ objectAddress }
         , m_objectType{ objectType }
         , m_fieldName{ std::move(fieldName) }
@@ -21,7 +20,7 @@ namespace Caracal
 
     void AddressOfFieldInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_objectAddress = ValueRef{ remapTemporaryId(remap, m_objectAddress.id()) };
     }
 }

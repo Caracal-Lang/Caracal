@@ -10,13 +10,11 @@ namespace Caracal
     public:
         BitNotInstruction(TemporaryId resultId, ValueRef operandValue, Type type) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] ValueRef operandValue() const noexcept { return m_operandValue; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         ValueRef m_operandValue;
         Type m_type;
     };

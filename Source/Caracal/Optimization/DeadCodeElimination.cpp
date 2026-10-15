@@ -1,4 +1,5 @@
 #include <Caracal/Optimization/DeadCodeElimination.h>
+#include <Caracal/Optimization/DefinitionUseTable.h>
 #include <Caracal/Profiling.h>
 
 #include <Caracal/IR/AddInstruction.h>
@@ -42,549 +43,424 @@
 #include <Caracal/IR/SubtractInstruction.h>
 #include <Caracal/IR/ValueNegationInstruction.h>
 
-#include <unordered_set>
+#include <vector>
 
 namespace Caracal
 {
-    namespace
+    enum class InstructionResult : u8
     {
-        void CollectInstructionUses(const Instruction& instruction, std::unordered_set<TemporaryId>& usedIds)
+        None,
+        Value,
+        RemovableValue,
+    };
+
+    template<typename TInstruction, typename TUseOperand>
+    [[nodiscard]] static InstructionResult VisitUnary(const Instruction& instruction, TUseOperand& useOperand)
+    {
+        const auto& unary = static_cast<const TInstruction&>(instruction);
+        useOperand(unary.operandValue());
+        return InstructionResult::RemovableValue;
+    }
+
+    template<typename TInstruction, typename TUseOperand>
+    [[nodiscard]] static InstructionResult VisitBinary(const Instruction& instruction, TUseOperand& useOperand)
+    {
+        const auto& binary = static_cast<const TInstruction&>(instruction);
+        useOperand(binary.leftValue());
+        useOperand(binary.rightValue());
+        return InstructionResult::RemovableValue;
+    }
+
+    template<typename TUseOperand>
+    static InstructionResult VisitInstruction(const Instruction& instruction, TUseOperand&& useOperand)
+    {
+        switch (instruction.kind())
         {
-            switch (instruction.kind())
+            case InstructionKind::Parameter:
             {
-                case InstructionKind::FieldAddress:
+                return InstructionResult::Value;
+            }
+            case InstructionKind::Constant:
+            {
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::AddressOf:
+            {
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::AddressOfGlobal:
+            {
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::FieldAddress:
+            {
+                const auto& fieldAddress = static_cast<const AddressOfFieldInstruction&>(instruction);
+                useOperand(fieldAddress.objectAddress());
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::ElementAddress:
+            {
+                const auto& elementAddress = static_cast<const ElementAddressInstruction&>(instruction);
+                useOperand(elementAddress.baseAddress());
+                useOperand(elementAddress.index());
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::MakeSlice:
+            {
+                const auto& makeSlice = static_cast<const MakeSliceInstruction&>(instruction);
+                useOperand(makeSlice.baseAddress());
+                useOperand(makeSlice.length());
+                return InstructionResult::Value;
+            }
+            case InstructionKind::LoadValue:
+            {
+                const auto& load = static_cast<const LoadValueInstruction&>(instruction);
+                useOperand(load.address());
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::StoreValue:
+            {
+                const auto& store = static_cast<const StoreValueInstruction&>(instruction);
+                useOperand(store.value());
+                useOperand(store.address());
+                return InstructionResult::None;
+            }
+            case InstructionKind::ValueNegation:
+            {
+                return VisitUnary<ValueNegationInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::IntToFloat:
+            {
+                return VisitUnary<IntToFloatInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::IntWiden:
+            {
+                return VisitUnary<IntWidenInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::SizeOf:
+            {
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::ArrayAdd:
+            {
+                const auto& arrayAdd = static_cast<const ArrayAddInstruction&>(instruction);
+                useOperand(arrayAdd.descriptorAddress());
+                useOperand(arrayAdd.value());
+                return InstructionResult::None;
+            }
+            case InstructionKind::ArrayRemove:
+            {
+                const auto& arrayRemove = static_cast<const ArrayRemoveInstruction&>(instruction);
+                useOperand(arrayRemove.descriptorAddress());
+                useOperand(arrayRemove.index());
+                return InstructionResult::None;
+            }
+            case InstructionKind::ArrayCopy:
+            {
+                const auto& arrayCopy = static_cast<const ArrayCopyInstruction&>(instruction);
+                useOperand(arrayCopy.sourceAddress());
+                return InstructionResult::Value;
+            }
+            case InstructionKind::LogicalNegation:
+            {
+                return VisitUnary<LogicalNegationInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::Call:
+            {
+                const auto& call = static_cast<const CallInstruction&>(instruction);
+                for (const auto& argument : call.arguments())
                 {
-                    usedIds.insert(static_cast<const AddressOfFieldInstruction&>(instruction).objectAddress().id());
-                    break;
+                    useOperand(argument);
                 }
-                case InstructionKind::ElementAddress:
+                return InstructionResult::Value;
+            }
+            case InstructionKind::CallVoid:
+            {
+                for (const auto& argument : static_cast<const CallVoidInstruction&>(instruction).arguments())
                 {
-                    const auto& elementAddress = static_cast<const ElementAddressInstruction&>(instruction);
-                    usedIds.insert(elementAddress.baseAddress().id());
-                    usedIds.insert(elementAddress.index().id());
-                    break;
+                    useOperand(argument);
                 }
-                case InstructionKind::MakeSlice:
+                return InstructionResult::None;
+            }
+            case InstructionKind::Add:
+            {
+                return VisitBinary<AddInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::Subtract:
+            {
+                return VisitBinary<SubtractInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::Multiply:
+            {
+                return VisitBinary<MultiplyInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::Divide:
+            {
+                return VisitBinary<DivideInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::Equal:
+            {
+                return VisitBinary<EqualInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::NotEqual:
+            {
+                return VisitBinary<NotEqualInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::LessThan:
+            {
+                return VisitBinary<LessThanInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::LessOrEqual:
+            {
+                return VisitBinary<LessOrEqualInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::GreaterThan:
+            {
+                return VisitBinary<GreaterThanInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::GreaterOrEqual:
+            {
+                return VisitBinary<GreaterOrEqualInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::BitAnd:
+            {
+                return VisitBinary<BitAndInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::BitOr:
+            {
+                return VisitBinary<BitOrInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::BitXor:
+            {
+                return VisitBinary<BitXorInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::BitNot:
+            {
+                return VisitUnary<BitNotInstruction>(instruction, useOperand);
+            }
+            case InstructionKind::ShiftLeft:
+            {
+                const auto& shiftLeft = static_cast<const ShiftLeftInstruction&>(instruction);
+                useOperand(shiftLeft.value());
+                useOperand(shiftLeft.amount());
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::ShiftRight:
+            {
+                const auto& shiftRight = static_cast<const ShiftRightInstruction&>(instruction);
+                useOperand(shiftRight.value());
+                useOperand(shiftRight.amount());
+                return InstructionResult::RemovableValue;
+            }
+            case InstructionKind::Phi:
+            {
+                const auto& phi = static_cast<const PhiInstruction&>(instruction);
+                for (const auto& input : phi.inputs())
                 {
-                    const auto& makeSlice = static_cast<const MakeSliceInstruction&>(instruction);
-                    usedIds.insert(makeSlice.baseAddress().id());
-                    usedIds.insert(makeSlice.length().id());
-                    break;
+                    useOperand(input.value());
                 }
-                case InstructionKind::LoadValue:
+                return InstructionResult::RemovableValue;
+            }
+            default:
+            {
+                return InstructionResult::None;
+            }
+        }
+    }
+
+    template<typename TUseOperand>
+    static void VisitTerminator(const Terminator* terminator, TUseOperand&& useOperand)
+    {
+        if (terminator == nullptr)
+        {
+            return;
+        }
+
+        switch (terminator->kind())
+        {
+            case TerminatorKind::Branch:
+            {
+                useOperand(static_cast<const BranchIfTerminator*>(terminator)->condition());
+                break;
+            }
+            case TerminatorKind::ReturnValue:
+            {
+                useOperand(static_cast<const ReturnValueTerminator*>(terminator)->value());
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
+
+    static void ResetDefinitionUseTable(DefinitionUseTable& table, size_t temporaryCount)
+    {
+        table.useCounts.assign(temporaryCount, 0);
+        table.definitions.assign(temporaryCount, nullptr);
+        table.definitionBlockIndexes.assign(temporaryCount, 0);
+    }
+
+    static void CountUse(DefinitionUseTable& table, ValueRef value)
+    {
+        // an empty ValueRef has the id -1
+        if (value.id() < 0)
+        {
+            return;
+        }
+
+        table.useCounts[value.id()]++;
+    }
+
+    static void BuildDefinitionUseTable(const Function& function, DefinitionUseTable& table)
+    {
+        CARACAL_ZONE_DETAIL("dce.buildDefinitionUseTable");
+        ResetDefinitionUseTable(table, static_cast<size_t>(function.temporaryCount()));
+        const auto countUse = [&table](ValueRef operand)
+        {
+            CountUse(table, operand);
+        };
+
+        const auto& blocks = function.blocks();
+        for (size_t blockIndex = 0; blockIndex < blocks.size(); ++blockIndex)
+        {
+            const auto& block = blocks[blockIndex];
+            for (const auto& instruction : block->instructions())
+            {
+                if (VisitInstruction(*instruction, countUse) == InstructionResult::RemovableValue)
                 {
-                    usedIds.insert(static_cast<const LoadValueInstruction&>(instruction).address().id());
-                    break;
+                    const auto resultId = instruction->resultId();
+                    table.definitions[resultId] = instruction.get();
+                    table.definitionBlockIndexes[resultId] = blockIndex;
                 }
-                case InstructionKind::StoreValue:
-                {
-                    const auto& store = static_cast<const StoreValueInstruction&>(instruction);
-                    usedIds.insert(store.value().id());
-                    usedIds.insert(store.address().id());
-                    break;
-                }
-                case InstructionKind::ValueNegation:
-                {
-                    usedIds.insert(static_cast<const ValueNegationInstruction&>(instruction).operandValue().id());
-                    break;
-                }
-                case InstructionKind::IntToFloat:
-                {
-                    usedIds.insert(static_cast<const IntToFloatInstruction&>(instruction).operandValue().id());
-                    break;
-                }
-                case InstructionKind::IntWiden:
-                {
-                    usedIds.insert(static_cast<const IntWidenInstruction&>(instruction).operandValue().id());
-                    break;
-                }
-                case InstructionKind::SizeOf:
-                {
-                    break;
-                }
-                case InstructionKind::ArrayAdd:
-                {
-                    const auto& arrayAdd = static_cast<const ArrayAddInstruction&>(instruction);
-                    usedIds.insert(arrayAdd.descriptorAddress().id());
-                    usedIds.insert(arrayAdd.value().id());
-                    break;
-                }
-                case InstructionKind::ArrayRemove:
-                {
-                    const auto& arrayRemove = static_cast<const ArrayRemoveInstruction&>(instruction);
-                    usedIds.insert(arrayRemove.descriptorAddress().id());
-                    usedIds.insert(arrayRemove.index().id());
-                    break;
-                }
-                case InstructionKind::ArrayCopy:
-                {
-                    usedIds.insert(static_cast<const ArrayCopyInstruction&>(instruction).sourceAddress().id());
-                    break;
-                }
-                case InstructionKind::LogicalNegation:
-                {
-                    usedIds.insert(static_cast<const LogicalNegationInstruction&>(instruction).operandValue().id());
-                    break;
-                }
-                case InstructionKind::Call:
-                {
-                    for (const auto& argument : static_cast<const CallInstruction&>(instruction).arguments())
-                    {
-                        usedIds.insert(argument.id());
-                    }
-                    break;
-                }
-                case InstructionKind::CallVoid:
-                {
-                    for (const auto& argument : static_cast<const CallVoidInstruction&>(instruction).arguments())
-                    {
-                        usedIds.insert(argument.id());
-                    }
-                    break;
-                }
-                case InstructionKind::Add:
-                {
-                    const auto& add = static_cast<const AddInstruction&>(instruction);
-                    usedIds.insert(add.leftValue().id());
-                    usedIds.insert(add.rightValue().id());
-                    break;
-                }
-                case InstructionKind::Subtract:
-                {
-                    const auto& subtract = static_cast<const SubtractInstruction&>(instruction);
-                    usedIds.insert(subtract.leftValue().id());
-                    usedIds.insert(subtract.rightValue().id());
-                    break;
-                }
-                case InstructionKind::Multiply:
-                {
-                    const auto& multiply = static_cast<const MultiplyInstruction&>(instruction);
-                    usedIds.insert(multiply.leftValue().id());
-                    usedIds.insert(multiply.rightValue().id());
-                    break;
-                }
-                case InstructionKind::Divide:
-                {
-                    const auto& divide = static_cast<const DivideInstruction&>(instruction);
-                    usedIds.insert(divide.leftValue().id());
-                    usedIds.insert(divide.rightValue().id());
-                    break;
-                }
-                case InstructionKind::Equal:
-                {
-                    const auto& equal = static_cast<const EqualInstruction&>(instruction);
-                    usedIds.insert(equal.leftValue().id());
-                    usedIds.insert(equal.rightValue().id());
-                    break;
-                }
-                case InstructionKind::NotEqual:
-                {
-                    const auto& notEqual = static_cast<const NotEqualInstruction&>(instruction);
-                    usedIds.insert(notEqual.leftValue().id());
-                    usedIds.insert(notEqual.rightValue().id());
-                    break;
-                }
-                case InstructionKind::LessThan:
-                {
-                    const auto& lessThan = static_cast<const LessThanInstruction&>(instruction);
-                    usedIds.insert(lessThan.leftValue().id());
-                    usedIds.insert(lessThan.rightValue().id());
-                    break;
-                }
-                case InstructionKind::LessOrEqual:
-                {
-                    const auto& lessOrEqual = static_cast<const LessOrEqualInstruction&>(instruction);
-                    usedIds.insert(lessOrEqual.leftValue().id());
-                    usedIds.insert(lessOrEqual.rightValue().id());
-                    break;
-                }
-                case InstructionKind::GreaterThan:
-                {
-                    const auto& greaterThan = static_cast<const GreaterThanInstruction&>(instruction);
-                    usedIds.insert(greaterThan.leftValue().id());
-                    usedIds.insert(greaterThan.rightValue().id());
-                    break;
-                }
-                case InstructionKind::GreaterOrEqual:
-                {
-                    const auto& greaterOrEqual = static_cast<const GreaterOrEqualInstruction&>(instruction);
-                    usedIds.insert(greaterOrEqual.leftValue().id());
-                    usedIds.insert(greaterOrEqual.rightValue().id());
-                    break;
-                }
-                case InstructionKind::BitAnd:
-                {
-                    const auto& bitAnd = static_cast<const BitAndInstruction&>(instruction);
-                    usedIds.insert(bitAnd.leftValue().id());
-                    usedIds.insert(bitAnd.rightValue().id());
-                    break;
-                }
-                case InstructionKind::BitOr:
-                {
-                    const auto& bitOr = static_cast<const BitOrInstruction&>(instruction);
-                    usedIds.insert(bitOr.leftValue().id());
-                    usedIds.insert(bitOr.rightValue().id());
-                    break;
-                }
-                case InstructionKind::BitXor:
-                {
-                    const auto& bitXor = static_cast<const BitXorInstruction&>(instruction);
-                    usedIds.insert(bitXor.leftValue().id());
-                    usedIds.insert(bitXor.rightValue().id());
-                    break;
-                }
-                case InstructionKind::BitNot:
-                {
-                    usedIds.insert(static_cast<const BitNotInstruction&>(instruction).operandValue().id());
-                    break;
-                }
-                case InstructionKind::ShiftLeft:
-                {
-                    const auto& shiftLeft = static_cast<const ShiftLeftInstruction&>(instruction);
-                    usedIds.insert(shiftLeft.value().id());
-                    usedIds.insert(shiftLeft.amount().id());
-                    break;
-                }
-                case InstructionKind::ShiftRight:
-                {
-                    const auto& shiftRight = static_cast<const ShiftRightInstruction&>(instruction);
-                    usedIds.insert(shiftRight.value().id());
-                    usedIds.insert(shiftRight.amount().id());
-                    break;
-                }
-                case InstructionKind::Phi:
-                {
-                    for (const auto& input : static_cast<const PhiInstruction&>(instruction).inputs())
-                    {
-                        usedIds.insert(input.value().id());
-                    }
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
+            }
+
+            VisitTerminator(block->terminator(), countUse);
+        }
+    }
+
+    [[nodiscard]] static bool IsMarkedDead(const Instruction& instruction, const std::vector<bool>& deadIds)
+    {
+        const auto resultId = instruction.resultId();
+        if (resultId < 0)
+        {
+            return false;
+        }
+
+        return deadIds[resultId];
+    }
+
+    // returns false when no instruction is dead
+    [[nodiscard]] static bool MarkDeadIds(const Function& function, DefinitionUseTable& table, std::vector<bool>& deadIds, std::vector<bool>& blocksWithDeadInstructions)
+    {
+        CARACAL_ZONE_DETAIL("dce.markDeadIds");
+        std::vector<TemporaryId> worklist{};
+        for (size_t id = 0; id < table.definitions.size(); ++id)
+        {
+            if (table.definitions[id] != nullptr && table.useCounts[id] == 0)
+            {
+                worklist.push_back(static_cast<TemporaryId>(id));
             }
         }
 
-        void CollectTerminatorUses(const Terminator* terminator, std::unordered_set<TemporaryId>& usedIds)
+        if (worklist.empty())
         {
-            if (terminator == nullptr)
+            return false;
+        }
+
+        deadIds.assign(table.definitions.size(), false);
+        blocksWithDeadInstructions.assign(function.blocks().size(), false);
+        const auto releaseUse = [&table, &worklist](ValueRef operand)
+        {
+            // an empty ValueRef has the id -1
+            const auto operandId = operand.id();
+            if (operandId < 0)
             {
                 return;
             }
 
-            switch (terminator->kind())
+            table.useCounts[operandId]--;
+            if (table.useCounts[operandId] == 0 && table.definitions[operandId] != nullptr)
             {
-                case TerminatorKind::Branch:
+                worklist.push_back(operandId);
+            }
+        };
+
+        while (!worklist.empty())
+        {
+            const auto deadId = worklist.back();
+            worklist.pop_back();
+            deadIds[deadId] = true;
+            blocksWithDeadInstructions[table.definitionBlockIndexes[deadId]] = true;
+
+            // we need to revisit to find more unused instructions
+            VisitInstruction(*table.definitions[deadId], releaseUse);
+        }
+
+        return true;
+    }
+
+    static void RemoveDeadInstructions(Function& function, const std::vector<bool>& deadIds, const std::vector<bool>& blocksWithDeadInstructions)
+    {
+        CARACAL_ZONE_DETAIL("dce.removeDeadInstructions");
+        const auto& blocks = function.blocks();
+        for (size_t blockIndex = 0; blockIndex < blocks.size(); ++blockIndex)
+        {
+            if (!blocksWithDeadInstructions[blockIndex])
+            {
+                continue;
+            }
+
+            blocks[blockIndex]->removeInstructions(
+                [&deadIds](const Instruction& instruction)
                 {
-                    usedIds.insert(static_cast<const BranchIfTerminator*>(terminator)->condition().id());
-                    break;
-                }
-                case TerminatorKind::ReturnValue:
+                    return IsMarkedDead(instruction, deadIds);
+                });
+        }
+    }
+
+    static void EliminateInFunction(Function& function, DefinitionUseTable& table)
+    {
+        std::vector<bool> deadIds{};
+        std::vector<bool> blocksWithDeadInstructions{};
+        if (!MarkDeadIds(function, table, deadIds, blocksWithDeadInstructions))
+        {
+            return;
+        }
+
+        RemoveDeadInstructions(function, deadIds, blocksWithDeadInstructions);
+    }
+
+    static void RenumberFunction(Function& function)
+    {
+        CARACAL_ZONE_DETAIL("dce.renumber");
+        ValueIdMap remap{};
+        auto nextId = TemporaryId{ 0 };
+        for (const auto& block : function.blocks())
+        {
+            for (const auto& instruction : block->instructions())
+            {
+                const auto resultId = instruction->resultId();
+                if (resultId >= 0)
                 {
-                    usedIds.insert(static_cast<const ReturnValueTerminator*>(terminator)->value().id());
-                    break;
-                }
-                default:
-                {
-                    break;
+                    remap.emplace(resultId, nextId);
+                    ++nextId;
                 }
             }
         }
 
-        [[nodiscard]] bool IsRemovableWhenUnused(const Instruction& instruction)
+        for (const auto& block : function.blocks())
         {
-            switch (instruction.kind())
+            for (const auto& instruction : block->instructions())
             {
-                case InstructionKind::Constant:
-                case InstructionKind::ValueNegation:
-                case InstructionKind::IntToFloat:
-                case InstructionKind::IntWiden:
-                case InstructionKind::SizeOf:
-                case InstructionKind::LogicalNegation:
-                case InstructionKind::Add:
-                case InstructionKind::Subtract:
-                case InstructionKind::Multiply:
-                case InstructionKind::Divide:
-                case InstructionKind::Equal:
-                case InstructionKind::NotEqual:
-                case InstructionKind::LessThan:
-                case InstructionKind::LessOrEqual:
-                case InstructionKind::GreaterThan:
-                case InstructionKind::GreaterOrEqual:
-                case InstructionKind::BitAnd:
-                case InstructionKind::BitOr:
-                case InstructionKind::BitXor:
-                case InstructionKind::BitNot:
-                case InstructionKind::ShiftLeft:
-                case InstructionKind::ShiftRight:
-                case InstructionKind::Phi:
-                case InstructionKind::LoadValue:
-                case InstructionKind::AddressOf:
-                case InstructionKind::AddressOfGlobal:
-                case InstructionKind::FieldAddress:
-                case InstructionKind::ElementAddress:
-                {
-                    return true;
-                }
-                default:
-                {
-                    return false;
-                }
-            }
-        }
-
-        [[nodiscard]] bool TryGetInstructionResultId(const Instruction& instruction, TemporaryId& resultId) noexcept
-        {
-            switch (instruction.kind())
-            {
-                case InstructionKind::Parameter:
-                {
-                    resultId = static_cast<const ParameterInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Constant:
-                {
-                    resultId = static_cast<const ConstantInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::AddressOf:
-                {
-                    resultId = static_cast<const AddressOfInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::AddressOfGlobal:
-                {
-                    resultId = static_cast<const AddressOfGlobalInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::FieldAddress:
-                {
-                    resultId = static_cast<const AddressOfFieldInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::ElementAddress:
-                {
-                    resultId = static_cast<const ElementAddressInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::MakeSlice:
-                {
-                    resultId = static_cast<const MakeSliceInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::LoadValue:
-                {
-                    resultId = static_cast<const LoadValueInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::ValueNegation:
-                {
-                    resultId = static_cast<const ValueNegationInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::IntToFloat:
-                {
-                    resultId = static_cast<const IntToFloatInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::IntWiden:
-                {
-                    resultId = static_cast<const IntWidenInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::SizeOf:
-                {
-                    resultId = static_cast<const SizeOfInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::ArrayCopy:
-                {
-                    resultId = static_cast<const ArrayCopyInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::LogicalNegation:
-                {
-                    resultId = static_cast<const LogicalNegationInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Call:
-                {
-                    resultId = static_cast<const CallInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Add:
-                {
-                    resultId = static_cast<const AddInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Subtract:
-                {
-                    resultId = static_cast<const SubtractInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Multiply:
-                {
-                    resultId = static_cast<const MultiplyInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Divide:
-                {
-                    resultId = static_cast<const DivideInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Equal:
-                {
-                    resultId = static_cast<const EqualInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::NotEqual:
-                {
-                    resultId = static_cast<const NotEqualInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::LessThan:
-                {
-                    resultId = static_cast<const LessThanInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::LessOrEqual:
-                {
-                    resultId = static_cast<const LessOrEqualInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::GreaterThan:
-                {
-                    resultId = static_cast<const GreaterThanInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::GreaterOrEqual:
-                {
-                    resultId = static_cast<const GreaterOrEqualInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::BitAnd:
-                {
-                    resultId = static_cast<const BitAndInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::BitOr:
-                {
-                    resultId = static_cast<const BitOrInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::BitXor:
-                {
-                    resultId = static_cast<const BitXorInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::BitNot:
-                {
-                    resultId = static_cast<const BitNotInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::ShiftLeft:
-                {
-                    resultId = static_cast<const ShiftLeftInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::ShiftRight:
-                {
-                    resultId = static_cast<const ShiftRightInstruction&>(instruction).resultId();
-                    return true;
-                }
-                case InstructionKind::Phi:
-                {
-                    resultId = static_cast<const PhiInstruction&>(instruction).resultId();
-                    return true;
-                }
-                default:
-                {
-                    return false;
-                }
-            }
-        }
-
-        [[nodiscard]] bool IsDeadInstruction(const Instruction& instruction, const std::unordered_set<TemporaryId>& usedIds)
-        {
-            if (!IsRemovableWhenUnused(instruction))
-            {
-                return false;
+                instruction->remapValueIds(remap);
             }
 
-            TemporaryId resultId{};
-            if (!TryGetInstructionResultId(instruction, resultId))
+            auto* terminator = block->terminator();
+            if (terminator != nullptr)
             {
-                return false;
-            }
-
-            return !usedIds.contains(resultId);
-        }
-
-        [[nodiscard]] bool EliminateInFunction(Function& function)
-        {
-            CARACAL_ZONE_DETAIL("dce.eliminatePass");
-            std::unordered_set<TemporaryId> usedIds{};
-            for (const auto& block : function.blocks())
-            {
-                for (const auto& instruction : block->instructions())
-                {
-                    CollectInstructionUses(*instruction, usedIds);
-                }
-
-                CollectTerminatorUses(block->terminator(), usedIds);
-            }
-
-            CARACAL_ZONE_DETAIL("dce.sweep");
-            auto removedAny = false;
-            for (const auto& block : function.blocks())
-            {
-                const auto removedInBlock = block->removeInstructions(
-                    [&usedIds](const Instruction& instruction)
-                    {
-                        return IsDeadInstruction(instruction, usedIds);
-                    });
-
-                if (removedInBlock)
-                {
-                    removedAny = true;
-                }
-            }
-
-            return removedAny;
-        }
-
-        void RenumberFunction(Function& function)
-        {
-            CARACAL_ZONE_DETAIL("dce.renumber");
-            ValueIdMap remap{};
-            auto nextId = TemporaryId{ 0 };
-            for (const auto& block : function.blocks())
-            {
-                for (const auto& instruction : block->instructions())
-                {
-                    TemporaryId resultId{};
-                    if (TryGetInstructionResultId(*instruction, resultId))
-                    {
-                        remap.emplace(resultId, nextId);
-                        ++nextId;
-                    }
-                }
-            }
-
-            for (const auto& block : function.blocks())
-            {
-                for (const auto& instruction : block->instructions())
-                {
-                    instruction->remapValueIds(remap);
-                }
-
-                auto* terminator = block->terminator();
-                if (terminator != nullptr)
-                {
-                    terminator->remapValueIds(remap);
-                }
+                terminator->remapValueIds(remap);
             }
         }
     }
@@ -592,12 +468,11 @@ namespace Caracal
     void eliminateDeadCode(Module& module) noexcept
     {
         CARACAL_ZONE_NAMED("deadCodeElimination");
+        DefinitionUseTable table{};
         for (auto& function : module.functions())
         {
-            // removing an instruction can strand its operands, so run to a fixed point
-            while (EliminateInFunction(function))
-            {
-            }
+            BuildDefinitionUseTable(function, table);
+            EliminateInFunction(function, table);
 
             // elimination leaves gaps in the value ids, renumber them densely in definition order
             RenumberFunction(function);
@@ -605,10 +480,8 @@ namespace Caracal
 
         if (auto* globalInit = module.tryGetGlobalInitMutable(); globalInit != nullptr)
         {
-            while (EliminateInFunction(*globalInit))
-            {
-            }
-
+            BuildDefinitionUseTable(*globalInit, table);
+            EliminateInFunction(*globalInit, table);
             RenumberFunction(*globalInit);
         }
     }

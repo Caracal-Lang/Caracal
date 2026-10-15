@@ -3,8 +3,7 @@
 namespace Caracal
 {
     CallInstruction::CallInstruction(TemporaryId resultId, FunctionId functionId, std::vector<ValueRef> arguments, Type type) noexcept
-        : Instruction{ InstructionKind::Call }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::Call, resultId }
         , m_functionId{ functionId }
         , m_arguments{ std::move(arguments) }
         , m_type{ type }
@@ -13,7 +12,7 @@ namespace Caracal
 
     void CallInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         for (auto& argument : m_arguments)
         {
             argument = ValueRef{ remapTemporaryId(remap, argument.id()) };

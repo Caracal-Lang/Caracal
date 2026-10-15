@@ -3,8 +3,7 @@
 namespace Caracal
 {
     SizeOfInstruction::SizeOfInstruction(TemporaryId resultId, Type measuredType, Type type) noexcept
-        : Instruction{ InstructionKind::SizeOf }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::SizeOf, resultId }
         , m_measuredType{ measuredType }
         , m_type{ type }
     {
@@ -12,6 +11,6 @@ namespace Caracal
 
     void SizeOfInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
     }
 }

@@ -3,8 +3,7 @@
 namespace Caracal
 {
     LoadValueInstruction::LoadValueInstruction(TemporaryId resultId, ValueRef address, Type type) noexcept
-        : Instruction{ InstructionKind::LoadValue }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::LoadValue, resultId }
         , m_address{ address }
         , m_type{ type }
     {
@@ -12,7 +11,7 @@ namespace Caracal
 
     void LoadValueInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_address = ValueRef{ remapTemporaryId(remap, m_address.id()) };
     }
 }

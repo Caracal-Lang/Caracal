@@ -30,10 +30,12 @@ namespace Caracal
         [[nodiscard]] const BasicBlock& firstBlock() const noexcept { return *m_blocks.front(); }
         [[nodiscard]] BasicBlock* tryGetBlock(BlockId id) noexcept;
         [[nodiscard]] const BasicBlock* tryGetBlock(BlockId id) const noexcept;
-        
+        [[nodiscard]] TemporaryId temporaryCount() const noexcept { return m_temporaryCount; }
+
         void addParameter(IRParameter parameter);
         void addBlock(BasicBlock block);
         void setSymbolName(std::optional<std::string> symbolName) noexcept { m_symbolName = std::move(symbolName); }
+        void setTemporaryCount(TemporaryId temporaryCount) noexcept { m_temporaryCount = temporaryCount; }
         [[nodiscard]] bool popLastBlock(BlockId expectedId) noexcept;
 
     private:
@@ -44,5 +46,6 @@ namespace Caracal
         Type m_returnType{ Type::Void() };
         std::vector<BasicBlockUPtr> m_blocks;
         std::unordered_map<BlockId, size_t> m_blockIndices;
+        TemporaryId m_temporaryCount{ 0 };
     };
 }

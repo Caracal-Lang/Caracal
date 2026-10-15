@@ -10,14 +10,12 @@ namespace Caracal
     public:
         ShiftLeftInstruction(TemporaryId resultId, ValueRef value, ValueRef amount, Type type) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] ValueRef value() const noexcept { return m_value; }
         [[nodiscard]] ValueRef amount() const noexcept { return m_amount; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         ValueRef m_value;
         ValueRef m_amount;
         Type m_type;

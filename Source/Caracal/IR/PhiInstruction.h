@@ -13,7 +13,6 @@ namespace Caracal
     public:
         PhiInstruction(TemporaryId resultId, std::vector<PhiInput> inputs, Type type) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] const std::vector<PhiInput>& inputs() const noexcept { return m_inputs; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
         
@@ -21,7 +20,6 @@ namespace Caracal
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         std::vector<PhiInput> m_inputs;
         Type m_type;
     };

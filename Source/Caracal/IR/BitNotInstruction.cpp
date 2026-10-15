@@ -3,8 +3,7 @@
 namespace Caracal
 {
     BitNotInstruction::BitNotInstruction(TemporaryId resultId, ValueRef operandValue, Type type) noexcept
-        : Instruction{ InstructionKind::BitNot }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::BitNot, resultId }
         , m_operandValue{ operandValue }
         , m_type{ type }
     {
@@ -12,7 +11,7 @@ namespace Caracal
 
     void BitNotInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_operandValue = ValueRef{ remapTemporaryId(remap, m_operandValue.id()) };
     }
 }

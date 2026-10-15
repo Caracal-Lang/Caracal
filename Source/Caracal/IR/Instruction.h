@@ -73,13 +73,16 @@ namespace Caracal
     {
     public:
         explicit Instruction(InstructionKind kind) noexcept;
+        Instruction(InstructionKind kind, TemporaryId resultId) noexcept;
         virtual ~Instruction() = default;
 
         [[nodiscard]] InstructionKind kind() const noexcept { return m_kind; }
-        virtual void remapValueIds(const ValueIdMap&) noexcept {}
+        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
+        virtual void remapValueIds(const ValueIdMap& remap) noexcept;
 
     private:
         InstructionKind m_kind;
+        TemporaryId m_resultId;
     };
 
     using InstructionUPtr = std::unique_ptr<Instruction>;

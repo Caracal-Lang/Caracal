@@ -10,13 +10,11 @@ namespace Caracal
     public:
         ParameterInstruction(TemporaryId resultId, i32 parameterIndex, IRParameter parameter) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] i32 parameterIndex() const noexcept { return m_parameterIndex; }
         [[nodiscard]] const IRParameter& parameter() const noexcept { return m_parameter; }
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         i32 m_parameterIndex;
         IRParameter m_parameter;
     };

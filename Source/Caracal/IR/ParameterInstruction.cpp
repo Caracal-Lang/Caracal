@@ -3,8 +3,7 @@
 namespace Caracal
 {
     ParameterInstruction::ParameterInstruction(TemporaryId resultId, i32 parameterIndex, IRParameter parameter) noexcept
-        : Instruction{ InstructionKind::Parameter }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::Parameter, resultId }
         , m_parameterIndex{ parameterIndex }
         , m_parameter{ std::move(parameter) }
     {
@@ -12,6 +11,6 @@ namespace Caracal
 
     void ParameterInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
     }
 }

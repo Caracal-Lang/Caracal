@@ -473,7 +473,7 @@ namespace Caracal
             {
                 const auto& allocateLocal = static_cast<const AllocateLocalInstruction&>(instruction);
                 m_builder.appendIndented("");
-                appendSlot(LocalSlotRef{ allocateLocal.resultId() });
+                appendSlot(LocalSlotRef{ allocateLocal.slotId() });
                 m_builder.append(" = allocate_local : ");
                 appendType(allocateLocal.type());
                 m_builder

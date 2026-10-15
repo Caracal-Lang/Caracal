@@ -3,8 +3,7 @@
 namespace Caracal
 {
     PhiInstruction::PhiInstruction(TemporaryId resultId, std::vector<PhiInput> inputs, Type type) noexcept
-        : Instruction{ InstructionKind::Phi }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::Phi, resultId }
         , m_inputs{ std::move(inputs) }
         , m_type{ type }
     {
@@ -17,7 +16,7 @@ namespace Caracal
 
     void PhiInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         for (auto& input : m_inputs)
         {
             input = PhiInput{ input.blockId(), ValueRef{ remapTemporaryId(remap, input.value().id()) } };

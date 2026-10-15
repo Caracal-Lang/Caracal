@@ -10,7 +10,6 @@ namespace Caracal
     public:
         ArrayCopyInstruction(TemporaryId resultId, ValueRef sourceAddress, Type arrayType, FunctionId callocFunctionId, FunctionId memmoveFunctionId, bool reserveNulByte = false) noexcept;
 
-        [[nodiscard]] TemporaryId resultId() const noexcept { return m_resultId; }
         [[nodiscard]] ValueRef sourceAddress() const noexcept { return m_sourceAddress; }
         [[nodiscard]] Type arrayType() const noexcept { return m_arrayType; }
         [[nodiscard]] FunctionId callocFunctionId() const noexcept { return m_callocFunctionId; }
@@ -19,7 +18,6 @@ namespace Caracal
         void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
-        TemporaryId m_resultId;
         ValueRef m_sourceAddress;
         Type m_arrayType;
         FunctionId m_callocFunctionId;

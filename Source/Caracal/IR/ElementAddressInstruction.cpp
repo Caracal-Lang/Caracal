@@ -8,8 +8,7 @@ namespace Caracal
         Type arrayType,
         ValueRef index,
         Type type) noexcept
-        : Instruction{ InstructionKind::ElementAddress }
-        , m_resultId{ resultId }
+        : Instruction{ InstructionKind::ElementAddress, resultId }
         , m_baseAddress{ baseAddress }
         , m_arrayType{ arrayType }
         , m_index{ index }
@@ -19,7 +18,7 @@ namespace Caracal
 
     void ElementAddressInstruction::remapValueIds(const ValueIdMap& remap) noexcept
     {
-        m_resultId = remapTemporaryId(remap, m_resultId);
+        Instruction::remapValueIds(remap);
         m_baseAddress = ValueRef{ remapTemporaryId(remap, m_baseAddress.id()) };
         m_index = ValueRef{ remapTemporaryId(remap, m_index.id()) };
     }
