@@ -1,0 +1,114 @@
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> i32
+    Name: takeRef
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: ref i32
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        ConstantDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: y
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (ref i32) -> i32
+                    NameExpression: {
+                        Type: (ref i32) -> i32
+                        Name: takeRef
+                    }
+                    ArgumentsNode(1): {
+                        UnaryExpression: {
+                            Type: ref i32
+                            Operation: ReferenceOf
+                            Expression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: x
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: x
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: y
+                    }
+                }
+            }
+        }
+    }
+}

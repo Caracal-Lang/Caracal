@@ -1,0 +1,11 @@
+def takeRef(value: ref i32) i32
+{
+    return value;
+}
+
+def main() i32
+{
+    x :: 5;
+    y := takeRef(ref x);
+    return x %+ 1 %+ y;
+}

@@ -1,0 +1,9 @@
+shared :: [4, 5, 6];
+
+def main() i32
+{
+    values : [i32; 3] = [1, 2, 3];
+    values.at(1);
+    shared.at(2);
+    return 0;
+}

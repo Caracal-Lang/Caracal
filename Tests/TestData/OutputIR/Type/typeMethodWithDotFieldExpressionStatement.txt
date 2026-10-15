@@ -12,8 +12,6 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 define Number.touch(%0: ref Number ".this") void
 block entry(0):
     %0 = parameter 0 : ref Number ".this"
-    %1 = address_of_field %0.0 : ref i32 "value"
-    %2 = load_value %1 : i32
     return
 
 define Number.new(%0: ref Number ".this", %1: i32 "value") void

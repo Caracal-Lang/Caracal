@@ -14,8 +14,6 @@ declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
 define void @Number.touch(ptr nonnull %0) {
 entry:
-  %value = getelementptr inbounds nuw %Number, ptr %0, i32 0, i32 0
-  %load = load i32, ptr %value, align 4
   ret void
 }
 

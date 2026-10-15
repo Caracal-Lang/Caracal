@@ -320,6 +320,11 @@ namespace Caracal
                 case InstructionKind::ShiftLeft:
                 case InstructionKind::ShiftRight:
                 case InstructionKind::Phi:
+                case InstructionKind::LoadValue:
+                case InstructionKind::AddressOf:
+                case InstructionKind::AddressOfGlobal:
+                case InstructionKind::FieldAddress:
+                case InstructionKind::ElementAddress:
                 {
                     return true;
                 }
