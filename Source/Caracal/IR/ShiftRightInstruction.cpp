@@ -9,11 +9,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void ShiftRightInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_value = ValueRef{ remapTemporaryId(remap, m_value.id()) };
-        m_amount = ValueRef{ remapTemporaryId(remap, m_amount.id()) };
-    }
 }

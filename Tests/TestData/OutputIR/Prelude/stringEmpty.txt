@@ -28,8 +28,8 @@ block entry(0):
     %9 = address_of %slot1 : ref string
     %10 = array_copy %0 : [u8; _]
     call string.new(%9, %10)
-    %11 = const 42 : i32
-    return %11
+    %12 = const 42 : i32
+    return %12
 
 define string.new(%0: ref string ".this", %1: [u8; _] "bytes") void
 block entry(0):

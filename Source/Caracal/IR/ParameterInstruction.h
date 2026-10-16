@@ -12,7 +12,6 @@ namespace Caracal
 
         [[nodiscard]] i32 parameterIndex() const noexcept { return m_parameterIndex; }
         [[nodiscard]] const IRParameter& parameter() const noexcept { return m_parameter; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         i32 m_parameterIndex;

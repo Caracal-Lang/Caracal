@@ -13,10 +13,10 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 define read() i32
 block entry(0):
     %0 = address_of_global @shared : ref [i32; 3]
-    %1 = const 2 : i32
-    %2 = element_address %0[%1] : i32
-    %3 = load_value %2 : i32
-    %4 = address_of_global @alias : ref i32
-    %5 = load_value %4 : i32
-    %6 = add %3, %5 : i32
-    return %6
+    %2 = const 2 : i32
+    %3 = element_address %0[%2] : i32
+    %4 = load_value %3 : i32
+    %5 = address_of_global @alias : ref i32
+    %6 = load_value %5 : i32
+    %7 = add %4, %6 : i32
+    return %7

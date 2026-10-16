@@ -8,10 +8,10 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 define mask() i32
 block entry(0):
-    %0 = const 4 : i32
-    return %0
+    %4 = const 4 : i32
+    return %4
 
 define flags() u8
 block entry(0):
-    %0 = const 7 : u8
-    return %0
+    %4 = const 7 : u8
+    return %4

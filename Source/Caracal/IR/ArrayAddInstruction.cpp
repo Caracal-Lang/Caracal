@@ -10,10 +10,4 @@ namespace Caracal
         , m_reallocFunctionId{ reallocFunctionId }
     {
     }
-
-    void ArrayAddInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        m_descriptorAddress = ValueRef{ remapTemporaryId(remap, m_descriptorAddress.id()) };
-        m_value = ValueRef{ remapTemporaryId(remap, m_value.id()) };
-    }
 }

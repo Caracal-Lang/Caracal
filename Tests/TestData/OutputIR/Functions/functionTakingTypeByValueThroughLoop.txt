@@ -35,12 +35,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Number "constructed"
     %0 = address_of %slot0 : ref Number
-    %1 = const 6 : i32
-    call Number.new(%0, %1)
-    %2 = load_value %0 : Number
-    %3 = const 2 : i32
-    %4 = call readLoop(%2, %3) : i32
-    return %4
+    %2 = const 6 : i32
+    call Number.new(%0, %2)
+    %3 = load_value %0 : Number
+    %5 = const 2 : i32
+    %6 = call readLoop(%3, %5) : i32
+    return %6
 
 define Number.new(%0: ref Number ".this", %1: i32 "value") void
 block entry(0):

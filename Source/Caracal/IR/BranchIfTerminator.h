@@ -13,7 +13,6 @@ namespace Caracal
         [[nodiscard]] ValueRef condition() const noexcept { return m_condition; }
         [[nodiscard]] BlockId trueBlockId() const noexcept { return m_trueBlockId; }
         [[nodiscard]] BlockId falseBlockId() const noexcept { return m_falseBlockId; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_condition;

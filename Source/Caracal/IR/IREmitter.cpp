@@ -900,7 +900,7 @@ namespace Caracal
             }
             default:
             {
-                // the id was reserved but nothing uses it, DCE renumbering closes gaps
+                // the reserved id stays unused
                 return ValueRef{};
             }
         }

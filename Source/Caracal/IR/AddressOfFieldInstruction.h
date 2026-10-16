@@ -23,7 +23,6 @@ namespace Caracal
         [[nodiscard]] const std::string& fieldName() const noexcept { return m_fieldName; }
         [[nodiscard]] i32 fieldIndex() const noexcept { return m_fieldIndex; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_objectAddress;

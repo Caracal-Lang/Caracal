@@ -35,100 +35,100 @@ block if.true(1):
     %11 = const 2 : i32
     return %11
 block if.continuation(2):
-    %12 = const 0 : i32
-    %13 = call string.byteAt(%0, %12) : u8
-    %14 = const 72 : u8
-    %15 = not_equal %13, %14 : bool
-    branch if %15, if.true(3), if.continuation(4)
+    %13 = const 0 : i32
+    %14 = call string.byteAt(%0, %13) : u8
+    %15 = const 72 : u8
+    %16 = not_equal %14, %15 : bool
+    branch if %16, if.true(3), if.continuation(4)
 block if.true(3):
-    %16 = const 3 : i32
-    return %16
+    %17 = const 3 : i32
+    return %17
 block if.continuation(4):
     %slot1 = allocate_local : string "u"
-    %17 = address_of %slot1 : ref string
-    %18 = address_of_field %17.0 : ref [u8; _] "_bytes"
-    %19 = const "grüße 🐈\0" : cstring
-    %20 = address_of_field %18.0 : ref u8 "data"
-    store_value %19, %20 : ref u8
-    %21 = const 12 : i32
-    %22 = address_of_field %18.1 : ref i32 "length"
-    store_value %21, %22 : i32
-    %23 = const 12 : i32
-    %24 = address_of_field %18.2 : ref i32 "capacity"
-    store_value %23, %24 : i32
-    %25 = call string.length(%17) : i32
-    %26 = const 12 : i32
-    %27 = not_equal %25, %26 : bool
-    branch if %27, if.true(5), if.continuation(6)
+    %18 = address_of %slot1 : ref string
+    %19 = address_of_field %18.0 : ref [u8; _] "_bytes"
+    %20 = const "grüße 🐈\0" : cstring
+    %21 = address_of_field %19.0 : ref u8 "data"
+    store_value %20, %21 : ref u8
+    %22 = const 12 : i32
+    %23 = address_of_field %19.1 : ref i32 "length"
+    store_value %22, %23 : i32
+    %24 = const 12 : i32
+    %25 = address_of_field %19.2 : ref i32 "capacity"
+    store_value %24, %25 : i32
+    %26 = call string.length(%18) : i32
+    %27 = const 12 : i32
+    %28 = not_equal %26, %27 : bool
+    branch if %28, if.true(5), if.continuation(6)
 block if.true(5):
-    %28 = const 4 : i32
-    return %28
+    %29 = const 4 : i32
+    return %29
 block if.continuation(6):
     %slot2 = allocate_local : string "e"
-    %29 = address_of %slot2 : ref string
-    %30 = address_of_field %29.0 : ref [u8; _] "_bytes"
-    %31 = const "\0" : cstring
-    %32 = address_of_field %30.0 : ref u8 "data"
-    store_value %31, %32 : ref u8
-    %33 = const 0 : i32
-    %34 = address_of_field %30.1 : ref i32 "length"
-    store_value %33, %34 : i32
-    %35 = const 0 : i32
-    %36 = address_of_field %30.2 : ref i32 "capacity"
-    store_value %35, %36 : i32
-    %37 = call string.isEmpty(%29) : bool
-    %38 = logical_negate %37 : bool
-    branch if %38, if.true(7), if.continuation(8)
+    %30 = address_of %slot2 : ref string
+    %31 = address_of_field %30.0 : ref [u8; _] "_bytes"
+    %32 = const "\0" : cstring
+    %33 = address_of_field %31.0 : ref u8 "data"
+    store_value %32, %33 : ref u8
+    %34 = const 0 : i32
+    %35 = address_of_field %31.1 : ref i32 "length"
+    store_value %34, %35 : i32
+    %36 = const 0 : i32
+    %37 = address_of_field %31.2 : ref i32 "capacity"
+    store_value %36, %37 : i32
+    %38 = call string.isEmpty(%30) : bool
+    %39 = logical_negate %38 : bool
+    branch if %39, if.true(7), if.continuation(8)
 block if.true(7):
-    %39 = const 5 : i32
-    return %39
+    %40 = const 5 : i32
+    return %40
 block if.continuation(8):
     %slot3 = allocate_local : string "t"
-    %40 = address_of %slot3 : ref string
-    %41 = address_of_field %40.0 : ref [u8; _] "_bytes"
-    %42 = const "Hello\0" : cstring
-    %43 = address_of_field %41.0 : ref u8 "data"
-    store_value %42, %43 : ref u8
-    %44 = const 5 : i32
-    %45 = address_of_field %41.1 : ref i32 "length"
-    store_value %44, %45 : i32
-    %46 = const 5 : i32
-    %47 = address_of_field %41.2 : ref i32 "capacity"
-    store_value %46, %47 : i32
-    %48 = load_value %0 : string
-    %49 = load_value %40 : string
-    %50 = call string.notEquals(%48, %49) : bool
-    branch if %50, if.true(9), if.continuation(10)
+    %41 = address_of %slot3 : ref string
+    %42 = address_of_field %41.0 : ref [u8; _] "_bytes"
+    %43 = const "Hello\0" : cstring
+    %44 = address_of_field %42.0 : ref u8 "data"
+    store_value %43, %44 : ref u8
+    %45 = const 5 : i32
+    %46 = address_of_field %42.1 : ref i32 "length"
+    store_value %45, %46 : i32
+    %47 = const 5 : i32
+    %48 = address_of_field %42.2 : ref i32 "capacity"
+    store_value %47, %48 : i32
+    %49 = load_value %0 : string
+    %50 = load_value %41 : string
+    %51 = call string.notEquals(%49, %50) : bool
+    branch if %51, if.true(9), if.continuation(10)
 block if.true(9):
-    %51 = const 6 : i32
-    return %51
+    %52 = const 6 : i32
+    return %52
 block if.continuation(10):
     %slot4 = allocate_local : string "temp"
-    %52 = address_of %slot4 : ref string
-    %53 = address_of_field %52.0 : ref [u8; _] "_bytes"
-    %54 = const "World\0" : cstring
-    %55 = address_of_field %53.0 : ref u8 "data"
-    store_value %54, %55 : ref u8
-    %56 = const 5 : i32
-    %57 = address_of_field %53.1 : ref i32 "length"
-    store_value %56, %57 : i32
-    %58 = const 5 : i32
-    %59 = address_of_field %53.2 : ref i32 "capacity"
-    store_value %58, %59 : i32
-    %60 = load_value %52 : string
-    store_value %60, %40 : string
-    %61 = load_value %0 : string
-    %62 = load_value %40 : string
-    %63 = call string.equals(%61, %62) : bool
-    branch if %63, if.true(11), if.continuation(12)
+    %53 = address_of %slot4 : ref string
+    %54 = address_of_field %53.0 : ref [u8; _] "_bytes"
+    %55 = const "World\0" : cstring
+    %56 = address_of_field %54.0 : ref u8 "data"
+    store_value %55, %56 : ref u8
+    %57 = const 5 : i32
+    %58 = address_of_field %54.1 : ref i32 "length"
+    store_value %57, %58 : i32
+    %59 = const 5 : i32
+    %60 = address_of_field %54.2 : ref i32 "capacity"
+    store_value %59, %60 : i32
+    %61 = load_value %53 : string
+    store_value %61, %41 : string
+    %62 = load_value %0 : string
+    %63 = load_value %41 : string
+    %64 = call string.equals(%62, %63) : bool
+    branch if %64, if.true(11), if.continuation(12)
 block if.true(11):
-    %64 = const 7 : i32
-    return %64
+    %65 = const 7 : i32
+    return %65
 block if.continuation(12):
-    %65 = const "done\0" : cstring
-    %66 = call C.puts(%65) : i32
-    %67 = const 42 : i32
-    return %67
+    %66 = const "done\0" : cstring
+    %67 = call C.puts(%66) : i32
+    %68 = const 42 : i32
+    return %68
 
 define string.length(%0: ref string ".this") i32
 block entry(0):

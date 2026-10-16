@@ -13,10 +13,10 @@ block entry(0):
     %slot1 = allocate_local : [i32; 4] "local"
     %1 = address_of %slot0 : ref [i32; 4]
     store_value %0, %1 : [i32; 4]
-    %2 = address_of %slot1 : ref [i32; 4]
-    %3 = load_value %1 : [i32; 4]
-    store_value %3, %2 : [i32; 4]
-    %4 = const 4 : i32
-    %5 = make_slice %1, %4 : [i32]
-    %6 = const 0 : i32
-    return %6
+    %3 = address_of %slot1 : ref [i32; 4]
+    %4 = load_value %1 : [i32; 4]
+    store_value %4, %3 : [i32; 4]
+    %5 = const 4 : i32
+    %6 = make_slice %1, %5 : [i32]
+    %8 = const 0 : i32
+    return %8

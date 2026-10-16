@@ -11,10 +11,4 @@ namespace Caracal
         , m_reserveNulByte{ reserveNulByte }
     {
     }
-
-    void ArrayCopyInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_sourceAddress = ValueRef{ remapTemporaryId(remap, m_sourceAddress.id()) };
-    }
 }

@@ -14,7 +14,7 @@ block entry(0):
 
 define func() i32
 block entry(0):
-    %0 = const 1 : i32
-    %1 = const 2 : i32
-    %2 = call foo(%0, %1) : i32
-    return %2
+    %2 = const 1 : i32
+    %3 = const 2 : i32
+    %4 = call foo(%2, %3) : i32
+    return %4

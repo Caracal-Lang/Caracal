@@ -10,11 +10,4 @@ namespace Caracal
         , m_operandType{ operandType }
     {
     }
-
-    void NotEqualInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_leftValue = ValueRef{ remapTemporaryId(remap, m_leftValue.id()) };
-        m_rightValue = ValueRef{ remapTemporaryId(remap, m_rightValue.id()) };
-    }
 }

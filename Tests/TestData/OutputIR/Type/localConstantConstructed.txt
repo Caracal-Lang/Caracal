@@ -14,11 +14,11 @@ define use() i32
 block entry(0):
     %slot0 = allocate_local : Point "p"
     %0 = address_of %slot0 : ref Point
-    %1 = const 3 : i32
-    %2 = const 4 : i32
-    call Point.new(%0, %1, %2)
-    %3 = call Point.sum(%0) : i32
-    return %3
+    %3 = const 3 : i32
+    %4 = const 4 : i32
+    call Point.new(%0, %3, %4)
+    %5 = call Point.sum(%0) : i32
+    return %5
 
 define Point.sum(%0: ref Point ".this") i32
 block entry(0):

@@ -10,9 +10,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void AddressOfGlobalInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-    }
 }

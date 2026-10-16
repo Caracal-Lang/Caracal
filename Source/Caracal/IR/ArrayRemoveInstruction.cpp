@@ -10,10 +10,4 @@ namespace Caracal
         , m_memmoveFunctionId{ memmoveFunctionId }
     {
     }
-
-    void ArrayRemoveInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        m_descriptorAddress = ValueRef{ remapTemporaryId(remap, m_descriptorAddress.id()) };
-        m_index = ValueRef{ remapTemporaryId(remap, m_index.id()) };
-    }
 }

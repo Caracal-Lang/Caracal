@@ -13,10 +13,10 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : Box "b"
     %0 = address_of %slot0 : ref Box
-    %1 = const 40 : i32
-    call Box.new(%0, %1)
-    %2 = call Box.sum(%0) : i32
-    return %2
+    %2 = const 40 : i32
+    call Box.new(%0, %2)
+    %3 = call Box.sum(%0) : i32
+    return %3
 
 define Box.sum(%0: ref Box ".this") i32
 block entry(0):

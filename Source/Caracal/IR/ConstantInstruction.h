@@ -12,7 +12,6 @@ namespace Caracal
 
         [[nodiscard]] const ConstantValue& value() const noexcept { return m_value; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ConstantValue m_value;

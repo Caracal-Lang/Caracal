@@ -10,62 +10,62 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : [i32; _] "xs"
     %slot1 = allocate_local : [i32; _] "ys"
-    %0 = address_of %slot0 : ref [i32; _]
-    %1 = const 8 : i64
-    %2 = size_of i32 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
-    %4 = address_of_field %0.0 : ref i32 "data"
-    store_value %3, %4 : ref i32
-    %5 = const 2 : i32
-    %6 = address_of_field %0.1 : ref i32 "length"
-    store_value %5, %6 : i32
-    %7 = const 8 : i32
-    %8 = address_of_field %0.2 : ref i32 "capacity"
+    %2 = address_of %slot0 : ref [i32; _]
+    %3 = const 8 : i64
+    %4 = size_of i32 : i64
+    %5 = call C.calloc(%3, %4) : rawptr
+    %6 = address_of_field %2.0 : ref i32 "data"
+    store_value %5, %6 : ref i32
+    %7 = const 2 : i32
+    %8 = address_of_field %2.1 : ref i32 "length"
     store_value %7, %8 : i32
-    %9 = const 0 : i32
-    %10 = element_address %3[%9] : i32
-    %11 = const 40 : i32
-    store_value %11, %10 : i32
-    %12 = const 1 : i32
-    %13 = element_address %3[%12] : i32
-    %14 = const 2 : i32
-    store_value %14, %13 : i32
-    %15 = address_of %slot1 : ref [i32; _]
-    %16 = const 8 : i64
-    %17 = size_of i32 : i64
-    %18 = call C.calloc(%16, %17) : rawptr
-    %19 = address_of_field %15.0 : ref i32 "data"
-    store_value %18, %19 : ref i32
-    %20 = const 1 : i32
-    %21 = address_of_field %15.1 : ref i32 "length"
-    store_value %20, %21 : i32
-    %22 = const 8 : i32
-    %23 = address_of_field %15.2 : ref i32 "capacity"
-    store_value %22, %23 : i32
-    %24 = const 0 : i32
-    %25 = element_address %18[%24] : i32
-    %26 = const 1 : i32
-    store_value %26, %25 : i32
-    %27 = array_copy %0 : [i32; _]
-    store_value %27, %15 : [i32; _]
-    %28 = const 0 : i32
-    %29 = address_of_field %15.0 : ref i32 "data"
-    %30 = load_value %29 : ref i32
-    %31 = element_address %30[%28] : i32
-    %32 = const 7 : i32
-    store_value %32, %31 : i32
+    %9 = const 8 : i32
+    %10 = address_of_field %2.2 : ref i32 "capacity"
+    store_value %9, %10 : i32
+    %11 = const 0 : i32
+    %12 = element_address %5[%11] : i32
+    %13 = const 40 : i32
+    store_value %13, %12 : i32
+    %14 = const 1 : i32
+    %15 = element_address %5[%14] : i32
+    %16 = const 2 : i32
+    store_value %16, %15 : i32
+    %18 = address_of %slot1 : ref [i32; _]
+    %19 = const 8 : i64
+    %20 = size_of i32 : i64
+    %21 = call C.calloc(%19, %20) : rawptr
+    %22 = address_of_field %18.0 : ref i32 "data"
+    store_value %21, %22 : ref i32
+    %23 = const 1 : i32
+    %24 = address_of_field %18.1 : ref i32 "length"
+    store_value %23, %24 : i32
+    %25 = const 8 : i32
+    %26 = address_of_field %18.2 : ref i32 "capacity"
+    store_value %25, %26 : i32
+    %27 = const 0 : i32
+    %28 = element_address %21[%27] : i32
+    %29 = const 1 : i32
+    store_value %29, %28 : i32
+    %30 = array_copy %2 : [i32; _]
+    store_value %30, %18 : [i32; _]
     %33 = const 0 : i32
-    %34 = address_of_field %0.0 : ref i32 "data"
-    %35 = load_value %34 : ref i32
-    %36 = element_address %35[%33] : i32
-    %37 = load_value %36 : i32
-    %38 = const 0 : i32
-    %39 = address_of_field %15.0 : ref i32 "data"
-    %40 = load_value %39 : ref i32
-    %41 = element_address %40[%38] : i32
-    %42 = load_value %41 : i32
-    %43 = add %37, %42 : i32
-    %44 = address_of_field %0.1 : ref i32 "length"
-    %45 = load_value %44 : i32
-    %46 = add %43, %45 : i32
-    return %46
+    %35 = address_of_field %18.0 : ref i32 "data"
+    %36 = load_value %35 : ref i32
+    %37 = element_address %36[%33] : i32
+    %38 = const 7 : i32
+    store_value %38, %37 : i32
+    %40 = const 0 : i32
+    %41 = address_of_field %2.0 : ref i32 "data"
+    %42 = load_value %41 : ref i32
+    %43 = element_address %42[%40] : i32
+    %44 = load_value %43 : i32
+    %46 = const 0 : i32
+    %47 = address_of_field %18.0 : ref i32 "data"
+    %48 = load_value %47 : ref i32
+    %49 = element_address %48[%46] : i32
+    %50 = load_value %49 : i32
+    %51 = add %44, %50 : i32
+    %52 = address_of_field %2.1 : ref i32 "length"
+    %53 = load_value %52 : i32
+    %54 = add %51, %53 : i32
+    return %54

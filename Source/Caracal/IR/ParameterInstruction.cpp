@@ -8,9 +8,4 @@ namespace Caracal
         , m_parameter{ std::move(parameter) }
     {
     }
-
-    void ParameterInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-    }
 }

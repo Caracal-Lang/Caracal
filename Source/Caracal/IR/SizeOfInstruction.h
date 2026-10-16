@@ -12,7 +12,6 @@ namespace Caracal
 
         [[nodiscard]] Type measuredType() const noexcept { return m_measuredType; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         Type m_measuredType;

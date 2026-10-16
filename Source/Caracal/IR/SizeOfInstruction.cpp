@@ -8,9 +8,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void SizeOfInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-    }
 }

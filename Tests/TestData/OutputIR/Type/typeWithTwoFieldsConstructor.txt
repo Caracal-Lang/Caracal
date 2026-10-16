@@ -14,12 +14,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Pair "pair"
     %0 = address_of %slot0 : ref Pair
-    %1 = const 1 : i32
-    %2 = const 2 : i32
-    call Pair.new(%0, %1, %2)
-    %3 = address_of_field %0.1 : ref i32 "right"
-    %4 = load_value %3 : i32
-    return %4
+    %3 = const 1 : i32
+    %4 = const 2 : i32
+    call Pair.new(%0, %3, %4)
+    %5 = address_of_field %0.1 : ref i32 "right"
+    %6 = load_value %5 : i32
+    return %6
 
 define Pair.new(%0: ref Pair ".this", %1: i32 "left", %2: i32 "right") void
 block entry(0):

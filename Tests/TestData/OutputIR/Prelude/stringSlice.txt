@@ -44,17 +44,17 @@ block if.continuation(2):
     %slot2 = allocate_local : const [u8] "temp"
     %20 = address_of %slot2 : ref const [u8]
     store_value %13, %20 : const [u8]
-    %21 = const 0 : i32
-    %22 = address_of_field %20.0 : ref u8 "data"
-    %23 = load_value %22 : ref u8
-    %24 = element_address %23[%21] : u8
-    %25 = load_value %24 : u8
-    %26 = const 72 : u8
-    %27 = not_equal %25, %26 : bool
-    branch if %27, if.true(3), if.continuation(4)
+    %22 = const 0 : i32
+    %23 = address_of_field %20.0 : ref u8 "data"
+    %24 = load_value %23 : ref u8
+    %25 = element_address %24[%22] : u8
+    %26 = load_value %25 : u8
+    %27 = const 72 : u8
+    %28 = not_equal %26, %27 : bool
+    branch if %28, if.true(3), if.continuation(4)
 block if.true(3):
-    %28 = const 3 : i32
-    return %28
-block if.continuation(4):
-    %29 = const 42 : i32
+    %29 = const 3 : i32
     return %29
+block if.continuation(4):
+    %30 = const 42 : i32
+    return %30

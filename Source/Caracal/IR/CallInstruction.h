@@ -15,7 +15,6 @@ namespace Caracal
         [[nodiscard]] FunctionId functionId() const noexcept { return m_functionId; }
         [[nodiscard]] const std::vector<ValueRef>& arguments() const noexcept { return m_arguments; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         FunctionId m_functionId;

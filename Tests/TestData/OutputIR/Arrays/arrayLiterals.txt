@@ -11,36 +11,36 @@ block entry(0):
     %slot0 = allocate_local : [i32; 4] "numbers"
     %slot1 = allocate_local : [i32; 1] "single"
     %slot2 = allocate_local : [i32; 2] "computed"
-    %0 = address_of %slot0 : ref [i32; 4]
-    %1 = const 0 : i32
-    %2 = element_address %0[%1] : i32
-    %3 = const 1 : i32
-    store_value %3, %2 : i32
-    %4 = const 1 : i32
-    %5 = element_address %0[%4] : i32
-    %6 = const 2 : i32
-    store_value %6, %5 : i32
-    %7 = const 2 : i32
-    %8 = element_address %0[%7] : i32
-    %9 = const 3 : i32
-    store_value %9, %8 : i32
-    %10 = const 3 : i32
-    %11 = element_address %0[%10] : i32
-    %12 = const 4 : i32
-    store_value %12, %11 : i32
-    %13 = address_of %slot1 : ref [i32; 1]
-    %14 = const 0 : i32
-    %15 = element_address %13[%14] : i32
-    %16 = const 42 : i32
+    %4 = address_of %slot0 : ref [i32; 4]
+    %5 = const 0 : i32
+    %6 = element_address %4[%5] : i32
+    %7 = const 1 : i32
+    store_value %7, %6 : i32
+    %8 = const 1 : i32
+    %9 = element_address %4[%8] : i32
+    %10 = const 2 : i32
+    store_value %10, %9 : i32
+    %11 = const 2 : i32
+    %12 = element_address %4[%11] : i32
+    %13 = const 3 : i32
+    store_value %13, %12 : i32
+    %14 = const 3 : i32
+    %15 = element_address %4[%14] : i32
+    %16 = const 4 : i32
     store_value %16, %15 : i32
-    %17 = address_of %slot2 : ref [i32; 2]
-    %18 = const 0 : i32
-    %19 = element_address %17[%18] : i32
-    %20 = const 3 : i32
-    store_value %20, %19 : i32
-    %21 = const 1 : i32
-    %22 = element_address %17[%21] : i32
-    %23 = const 12 : i32
-    store_value %23, %22 : i32
-    %24 = const 0 : i32
-    return %24
+    %18 = address_of %slot1 : ref [i32; 1]
+    %19 = const 0 : i32
+    %20 = element_address %18[%19] : i32
+    %21 = const 42 : i32
+    store_value %21, %20 : i32
+    %28 = address_of %slot2 : ref [i32; 2]
+    %29 = const 0 : i32
+    %30 = element_address %28[%29] : i32
+    %31 = const 3 : i32
+    store_value %31, %30 : i32
+    %32 = const 1 : i32
+    %33 = element_address %28[%32] : i32
+    %34 = const 12 : i32
+    store_value %34, %33 : i32
+    %35 = const 0 : i32
+    return %35

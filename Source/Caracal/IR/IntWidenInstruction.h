@@ -14,7 +14,6 @@ namespace Caracal
         // type of the narrower operand, decides sign extension vs zero extension during codegen
         [[nodiscard]] Type sourceType() const noexcept { return m_sourceType; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_operandValue;

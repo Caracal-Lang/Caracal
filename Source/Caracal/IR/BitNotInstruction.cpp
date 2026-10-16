@@ -8,10 +8,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void BitNotInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_operandValue = ValueRef{ remapTemporaryId(remap, m_operandValue.id()) };
-    }
 }

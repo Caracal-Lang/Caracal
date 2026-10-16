@@ -15,11 +15,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void ElementAddressInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_baseAddress = ValueRef{ remapTemporaryId(remap, m_baseAddress.id()) };
-        m_index = ValueRef{ remapTemporaryId(remap, m_index.id()) };
-    }
 }

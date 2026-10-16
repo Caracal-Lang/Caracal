@@ -8,8 +8,8 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 define func() void
 block entry(0):
-    %0 = const true : bool
-    branch if %0, if.true(1), if.continuation(2)
+    %6 = const true : bool
+    branch if %6, if.true(1), if.continuation(2)
 block if.true(1):
     return
 block if.continuation(2):

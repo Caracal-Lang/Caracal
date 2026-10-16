@@ -19,7 +19,6 @@ namespace Caracal
         [[nodiscard]] Type arrayType() const noexcept { return m_arrayType; }
         [[nodiscard]] ValueRef index() const noexcept { return m_index; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_baseAddress;

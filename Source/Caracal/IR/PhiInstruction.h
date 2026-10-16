@@ -17,7 +17,6 @@ namespace Caracal
         [[nodiscard]] Type type() const noexcept { return m_type; }
         
         void setInputs(std::vector<PhiInput> inputs) noexcept;
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         std::vector<PhiInput> m_inputs;

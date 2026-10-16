@@ -15,7 +15,6 @@ namespace Caracal
         [[nodiscard]] FunctionId callocFunctionId() const noexcept { return m_callocFunctionId; }
         [[nodiscard]] bool reserveNulByte() const noexcept { return m_reserveNulByte; }
         [[nodiscard]] FunctionId memmoveFunctionId() const noexcept { return m_memmoveFunctionId; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_sourceAddress;

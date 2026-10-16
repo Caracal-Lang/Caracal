@@ -432,39 +432,6 @@ namespace Caracal
         RemoveDeadInstructions(function, deadIds, blocksWithDeadInstructions);
     }
 
-    static void RenumberFunction(Function& function)
-    {
-        CARACAL_ZONE_DETAIL("dce.renumber");
-        ValueIdMap remap{};
-        auto nextId = TemporaryId{ 0 };
-        for (const auto& block : function.blocks())
-        {
-            for (const auto& instruction : block->instructions())
-            {
-                const auto resultId = instruction->resultId();
-                if (resultId >= 0)
-                {
-                    remap.emplace(resultId, nextId);
-                    ++nextId;
-                }
-            }
-        }
-
-        for (const auto& block : function.blocks())
-        {
-            for (const auto& instruction : block->instructions())
-            {
-                instruction->remapValueIds(remap);
-            }
-
-            auto* terminator = block->terminator();
-            if (terminator != nullptr)
-            {
-                terminator->remapValueIds(remap);
-            }
-        }
-    }
-
     void eliminateDeadCode(Module& module) noexcept
     {
         CARACAL_ZONE_NAMED("deadCodeElimination");
@@ -473,16 +440,12 @@ namespace Caracal
         {
             BuildDefinitionUseTable(function, table);
             EliminateInFunction(function, table);
-
-            // elimination leaves gaps in the value ids, renumber them densely in definition order
-            RenumberFunction(function);
         }
 
         if (auto* globalInit = module.tryGetGlobalInitMutable(); globalInit != nullptr)
         {
             BuildDefinitionUseTable(*globalInit, table);
             EliminateInFunction(*globalInit, table);
-            RenumberFunction(*globalInit);
         }
     }
 }

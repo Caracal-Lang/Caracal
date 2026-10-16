@@ -36,5 +36,5 @@ block entry(0):
 
 define foldedHighByteIsGreater() bool
 block entry(0):
-    %0 = const true : bool
-    return %0
+    %2 = const true : bool
+    return %2

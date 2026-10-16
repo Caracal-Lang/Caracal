@@ -8,12 +8,4 @@ namespace Caracal
         , m_arguments{ std::move(arguments) }
     {
     }
-
-    void CallVoidInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        for (auto& argument : m_arguments)
-        {
-            argument = ValueRef{ remapTemporaryId(remap, argument.id()) };
-        }
-    }
 }

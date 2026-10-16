@@ -13,7 +13,6 @@ namespace Caracal
         virtual ~Terminator() = default;
 
         [[nodiscard]] TerminatorKind kind() const noexcept { return m_kind; }
-        virtual void remapValueIds(const ValueIdMap&) noexcept {}
 
     private:
         TerminatorKind m_kind;

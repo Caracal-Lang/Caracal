@@ -7,9 +7,4 @@ namespace Caracal
         , m_value{ value }
     {
     }
-
-    void ReturnValueTerminator::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        m_value = ValueRef{ remapTemporaryId(remap, m_value.id()) };
-    }
 }

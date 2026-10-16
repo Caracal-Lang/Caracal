@@ -17,10 +17,4 @@ namespace Caracal
         , m_type{ type }
     {
     }
-
-    void AddressOfFieldInstruction::remapValueIds(const ValueIdMap& remap) noexcept
-    {
-        Instruction::remapValueIds(remap);
-        m_objectAddress = ValueRef{ remapTemporaryId(remap, m_objectAddress.id()) };
-    }
 }

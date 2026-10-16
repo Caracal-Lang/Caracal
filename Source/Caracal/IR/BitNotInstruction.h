@@ -12,7 +12,6 @@ namespace Caracal
 
         [[nodiscard]] ValueRef operandValue() const noexcept { return m_operandValue; }
         [[nodiscard]] Type type() const noexcept { return m_type; }
-        void remapValueIds(const ValueIdMap& remap) noexcept override;
 
     private:
         ValueRef m_operandValue;
