@@ -29,6 +29,6 @@ block entry(0):
 define .global_init() void
 block entry(0):
     %0 = address_of_global @number : ref Number
-    %2 = const 8 : i32
-    call Number.new(%0, %2)
+    %1 = const 8 : i32
+    call Number.new(%0, %1)
     return

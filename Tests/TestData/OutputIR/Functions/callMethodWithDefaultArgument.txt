@@ -13,11 +13,11 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Calc "calc"
     %0 = address_of %slot0 : ref Calc
-    %2 = const 10 : i32
-    call Calc.new(%0, %2)
-    %3 = const 5 : i32
-    %4 = call Calc.addToBase(%0, %3) : i32
-    return %4
+    %1 = const 10 : i32
+    call Calc.new(%0, %1)
+    %2 = const 5 : i32
+    %3 = call Calc.addToBase(%0, %2) : i32
+    return %3
 
 define Calc.addToBase(%0: ref Calc ".this", %1: i32 "amount") i32
 block entry(0):

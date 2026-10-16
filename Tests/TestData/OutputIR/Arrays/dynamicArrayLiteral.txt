@@ -9,29 +9,29 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 define make() i32
 block entry(0):
     %slot0 = allocate_local : [i32; _] "values"
-    %3 = address_of %slot0 : ref [i32; _]
-    %4 = const 8 : i64
-    %5 = size_of i32 : i64
-    %6 = call C.calloc(%4, %5) : rawptr
-    %7 = address_of_field %3.0 : ref i32 "data"
-    store_value %6, %7 : ref i32
-    %8 = const 3 : i32
-    %9 = address_of_field %3.1 : ref i32 "length"
-    store_value %8, %9 : i32
-    %10 = const 8 : i32
-    %11 = address_of_field %3.2 : ref i32 "capacity"
-    store_value %10, %11 : i32
-    %12 = const 0 : i32
-    %13 = element_address %6[%12] : i32
-    %14 = const 1 : i32
+    %0 = address_of %slot0 : ref [i32; _]
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call C.calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 3 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 1 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
     store_value %14, %13 : i32
-    %15 = const 1 : i32
-    %16 = element_address %6[%15] : i32
-    %17 = const 2 : i32
+    %15 = const 2 : i32
+    %16 = element_address %3[%15] : i32
+    %17 = const 3 : i32
     store_value %17, %16 : i32
-    %18 = const 2 : i32
-    %19 = element_address %6[%18] : i32
-    %20 = const 3 : i32
-    store_value %20, %19 : i32
-    %21 = const 0 : i32
-    return %21
+    %18 = const 0 : i32
+    return %18

@@ -13,6 +13,6 @@ block entry(0):
 
 define outer() void
 block entry(0):
-    %1 = const 10 : i32
-    call inner(%1)
+    %0 = const 10 : i32
+    call inner(%0)
     return

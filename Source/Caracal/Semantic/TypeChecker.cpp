@@ -1069,12 +1069,23 @@ namespace Caracal
         auto context = ExpressionContext{};
         context.contextualNumberType = contextualTypeForExpectedType(parameterType);
         const auto checkedDefault = typeCheckExpression(defaultUnit, defaultNode.index, context);
-        if (checkedDefault.value.id() < 0)
+        const auto defaultValue = materializeValue(checkedDefault);
+        if (defaultValue.id() < 0)
         {
             return ValueRef{};
         }
 
-        return m_emitter.emitWidened(checkedDefault.value, checkedDefault.type.toValue(), parameterType.toValue());
+        return m_emitter.emitWidened(defaultValue, checkedDefault.type.toValue(), parameterType.toValue());
+    }
+
+    ValueRef TypeChecker::materializeValue(const CheckedValue& checked)
+    {
+        if (checked.value.id() >= 0 || !checked.folded.has_value())
+        {
+            return checked.value;
+        }
+
+        return m_emitter.emitConstant(IREmitter::constantFromFold(checked.folded.value()), checked.type.toValue());
     }
 
     void TypeChecker::checkUninitializedInitConstants()
@@ -1873,7 +1884,12 @@ namespace Caracal
             auto elementValue = element.value;
             if (element.folded.has_value())
             {
-                elementValue = m_emitter.emitConstant(IREmitter::constantFromFold(element.folded.value()), elementType.toValue());
+                // the checked value is reused unless it has another type than the array's elements
+                const auto checkedType = m_module.typeOfNode(NodeIndex{ unit.fileId, element.node }).toValue();
+                if (elementValue.id() < 0 || checkedType != elementType.toValue())
+                {
+                    elementValue = m_emitter.emitConstant(IREmitter::constantFromFold(element.folded.value()), elementType.toValue());
+                }
             }
             m_emitter.emitStoreValue(elementValue, elementAddress, elementType);
         }
@@ -2376,7 +2392,7 @@ namespace Caracal
             }
             else
             {
-                m_emitter.emitStoreValue(checkedRight.value, aggregateDestination, bindingType.toValue());
+                m_emitter.emitStoreValue(materializeValue(checkedRight), aggregateDestination, bindingType.toValue());
             }
             return;
         }
@@ -2412,7 +2428,7 @@ namespace Caracal
             else
             {
                 // a ref typed initializer without an explicit ref copies the value for now
-                m_emitter.emitLocalDeclaration(nameId, name, bindingType.toValue(), checkedRight.value);
+                m_emitter.emitLocalDeclaration(nameId, name, bindingType.toValue(), materializeValue(checkedRight));
             }
             return;
         }
@@ -2421,11 +2437,11 @@ namespace Caracal
         {
             // aggregates without a preallocated slot allocate one here and store the value into it
             const auto destination = m_emitter.allocateAggregateSlot(nameId, name, bindingType);
-            m_emitter.emitStoreValue(checkedRight.value, destination, bindingType.toValue());
+            m_emitter.emitStoreValue(materializeValue(checkedRight), destination, bindingType.toValue());
             return;
         }
 
-        const auto initializerValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), bindingType.toValue());
+        const auto initializerValue = m_emitter.emitWidened(materializeValue(checkedRight), rightType.toValue(), bindingType.toValue());
         m_emitter.emitLocalDeclaration(nameId, name, bindingType, initializerValue);
     }
 
@@ -3269,7 +3285,7 @@ namespace Caracal
         // a constructor right side already stored through the target's address
         if (!pushedAssignmentConstruction && leftKind == NodeKind::NameExpression)
         {
-            auto assignedValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), leftType.toValue());
+            auto assignedValue = m_emitter.emitWidened(materializeValue(checkedRight), rightType.toValue(), leftType.toValue());
             if (dynamicAssignmentCopy)
             {
                 const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
@@ -3291,7 +3307,7 @@ namespace Caracal
         {
             // a field assignment emits the value before the field's address
             // nested fields like a.b.c resolve their address recursively
-            const auto assignedValue = m_emitter.emitWidened(checkedRight.value, rightType.toValue(), leftType.toValue());
+            const auto assignedValue = m_emitter.emitWidened(materializeValue(checkedRight), rightType.toValue(), leftType.toValue());
             const auto targetAddress = addressOfExpression(unit, assignmentLayout.target);
             if (targetAddress.id() < 0)
             {
@@ -3640,7 +3656,7 @@ namespace Caracal
             return;
         }
 
-        auto fieldValue = m_emitter.emitWidened(checkedFieldRight.value, expressionType.toValue(), fieldType.toValue());
+        auto fieldValue = m_emitter.emitWidened(materializeValue(checkedFieldRight), expressionType.toValue(), fieldType.toValue());
         if (fieldType.kind() == TypeKind::DynamicArray && unit.nodeBuffer.kind(strippedField) == NodeKind::NameExpression)
         {
             // an owning array field deep copies its source
@@ -3763,7 +3779,7 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
-        auto ifFrame = m_emitter.beginIf(checkedCondition.value, ifLayout.hasFalse);
+        auto ifFrame = m_emitter.beginIf(materializeValue(checkedCondition), ifLayout.hasFalse);
         typeCheckStatement(unit, ifLayout.trueStatement);
         m_emitter.endIfThen(ifFrame);
 
@@ -3789,7 +3805,7 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
-        auto ifFrame = m_emitter.beginIf(checkedCondition.value, false);
+        auto ifFrame = m_emitter.beginIf(materializeValue(checkedCondition), false);
         typeCheckStatement(unit, trailingIfLayout.statement);
         m_emitter.endIfThen(ifFrame);
         m_emitter.endIf(ifFrame);
@@ -3811,7 +3827,7 @@ namespace Caracal
                 formatTypeName(m_module, conditionType));
         }
 
-        m_emitter.beginWhileBody(whileFrame, checkedCondition.value);
+        m_emitter.beginWhileBody(whileFrame, materializeValue(checkedCondition));
         typeCheckStatement(unit, whileLayout.body);
         m_emitter.endWhile(whileFrame);
     }
@@ -3886,7 +3902,7 @@ namespace Caracal
                 checkedValue.value = m_emitter.emitLoad(destination, type);
             }
 
-            m_emitter.emitReturnValue(m_emitter.emitWidened(checkedValue.value, type.toValue(), declaredReturnType.toValue()));
+            m_emitter.emitReturnValue(m_emitter.emitWidened(materializeValue(checkedValue), type.toValue(), declaredReturnType.toValue()));
         }
         else
         {
@@ -3988,7 +4004,6 @@ namespace Caracal
                 const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
                 const auto isTrue = TokenKindAt(tokens, unit.nodeBuffer.mainToken(index)) == TokenKind::TrueKeyword;
                 result.folded = FoldValue{ isTrue };
-                result.value = m_emitter.emitConstant(ConstantValue::FromBool(isTrue), m_module.wellKnown().boolean);
                 return result;
             }
             case NodeKind::NumberLiteral:
@@ -4075,14 +4090,13 @@ namespace Caracal
                     if (foldResult.kind == FoldResultKind::Value)
                     {
                         result.folded = foldResult.value;
-                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), type);
                         return result;
                     }
 
                     reportUnaryFoldFailure(unit, foldResult.kind, operandType, index);
                 }
 
-                result.value = m_emitter.emitUnary(UnaryOperatorKind::LogicalNegation, checkedOperand.value, type);
+                result.value = m_emitter.emitUnary(UnaryOperatorKind::LogicalNegation, materializeValue(checkedOperand), type);
                 return result;
             }
             case UnaryOperatorKind::ValueNegation:
@@ -4122,14 +4136,13 @@ namespace Caracal
                     if (foldResult.kind == FoldResultKind::Value)
                     {
                         result.folded = foldResult.value;
-                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), type);
                         return result;
                     }
 
                     reportUnaryFoldFailure(unit, foldResult.kind, operandType, index);
                 }
 
-                result.value = m_emitter.emitUnary(UnaryOperatorKind::ValueNegation, checkedOperand.value, type);
+                result.value = m_emitter.emitUnary(UnaryOperatorKind::ValueNegation, materializeValue(checkedOperand), type);
                 return result;
             }
             case UnaryOperatorKind::ReferenceOf:
@@ -4308,7 +4321,7 @@ namespace Caracal
                                 }
                                 if (receiverAddress.id() < 0)
                                 {
-                                    receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                                    receiverAddress = m_emitter.spillToTempSlot(materializeValue(checkedLeft), leftType.toValue());
                                 }
                                 implicitReceiver = receiverAddress;
                             }
@@ -4400,7 +4413,7 @@ namespace Caracal
                             if (receiverAddress.id() < 0 && !context.wantsAddress)
                             {
                                 // a temporary receiver spills so the field has an address
-                                receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                                receiverAddress = m_emitter.spillToTempSlot(materializeValue(checkedLeft), leftType.toValue());
                             }
                             if (receiverAddress.id() >= 0)
                             {
@@ -4500,7 +4513,7 @@ namespace Caracal
                             }
                             else
                             {
-                                arrayReceiver = m_emitter.spillToTempSlot(checkedLeft.value, leftType.toValue());
+                                arrayReceiver = m_emitter.spillToTempSlot(materializeValue(checkedLeft), leftType.toValue());
                             }
                         }
                         return finishResolvedMethodCall(unit, index, binaryLayout.right, nameExpressionIndex, methodType, context, arrayReceiver);
@@ -4531,7 +4544,7 @@ namespace Caracal
                                 }
                                 if (receiverAddress.id() < 0)
                                 {
-                                    receiverAddress = m_emitter.spillToTempSlot(checkedLeft.value, receiverType);
+                                    receiverAddress = m_emitter.spillToTempSlot(materializeValue(checkedLeft), receiverType);
                                 }
                                 if (receiverAddress.id() >= 0)
                                 {
@@ -4642,29 +4655,28 @@ namespace Caracal
                     if (foldResult.kind == FoldResultKind::Value)
                     {
                         result.folded = foldResult.value;
-                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), operatorSignature->resultType);
                         return result;
                     }
 
                     reportBinaryFoldFailure(unit, foldResult.kind, leftType, index, binaryLayout.right);
                 }
 
+                auto leftValue = materializeValue(checkedLeft);
+                auto rightValue = materializeValue(checkedRight);
                 if (operatorSignature->callee != Type::Undefined())
                 {
                     // runtime operators call their backing function by value
                     m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
-                    if (checkedLeft.value.id() >= 0 && checkedRight.value.id() >= 0)
+                    if (leftValue.id() >= 0 && rightValue.id() >= 0)
                     {
                         result.value = m_emitter.emitCall(
                             operatorSignature->callee.id(),
-                            std::vector<ValueRef>{ checkedLeft.value, checkedRight.value },
+                            std::vector<ValueRef>{ leftValue, rightValue },
                             operatorSignature->resultType);
                     }
                     return result;
                 }
 
-                auto leftValue = checkedLeft.value;
-                auto rightValue = checkedRight.value;
                 if (binaryOperator == BinaryOperatorKind::Division && leftValue.id() >= 0 && rightValue.id() >= 0)
                 {
                     // convert the int operands to float for the float return type
@@ -4702,7 +4714,7 @@ namespace Caracal
                 const auto isShortCircuitOperator = binaryOperator == BinaryOperatorKind::LogicalAnd || binaryOperator == BinaryOperatorKind::LogicalOr;
                 if (isShortCircuitOperator && leftType == m_module.wellKnown().boolean)
                 {
-                    shortCircuit = m_emitter.beginShortCircuit(binaryOperator == BinaryOperatorKind::LogicalAnd, checkedLeft.value);
+                    shortCircuit = m_emitter.beginShortCircuit(binaryOperator == BinaryOperatorKind::LogicalAnd, materializeValue(checkedLeft));
                 }
 
                 const auto checkedRight = typeCheckExpression(unit, binaryLayout.right, context);
@@ -4766,7 +4778,6 @@ namespace Caracal
                     {
                         m_emitter.discardShortCircuit(shortCircuit);
                         result.folded = foldResult.value;
-                        result.value = m_emitter.emitConstant(IREmitter::constantFromFold(foldResult.value), operatorSignature->resultType);
                         return result;
                     }
 
@@ -4775,30 +4786,38 @@ namespace Caracal
 
                 if (shortCircuit.active)
                 {
-                    result.value = m_emitter.endShortCircuit(shortCircuit, checkedRight.value);
+                    result.value = m_emitter.endShortCircuit(shortCircuit, materializeValue(checkedRight));
                     return result;
+                }
+
+                auto leftValue = ValueRef{};
+                auto rightValue = ValueRef{};
+                if (!isShortCircuitOperator)
+                {
+                    leftValue = materializeValue(checkedLeft);
+                    rightValue = materializeValue(checkedRight);
                 }
 
                 if (!isShortCircuitOperator && operatorSignature->callee != Type::Undefined())
                 {
                     // runtime operators call their backing function by value
                     m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
-                    if (checkedLeft.value.id() >= 0 && checkedRight.value.id() >= 0)
+                    if (leftValue.id() >= 0 && rightValue.id() >= 0)
                     {
                         result.value = m_emitter.emitCall(
                             operatorSignature->callee.id(),
-                            std::vector<ValueRef>{ checkedLeft.value, checkedRight.value },
+                            std::vector<ValueRef>{ leftValue, rightValue },
                             operatorSignature->resultType);
                     }
                 }
                 else if (!isShortCircuitOperator && leftType == m_module.wellKnown().cstring
                     && leftType != Type::Undefined())
                 {
-                    result.value = m_emitter.emitCStringEquality(operation, checkedLeft.value, checkedRight.value);
+                    result.value = m_emitter.emitCStringEquality(operation, leftValue, rightValue);
                 }
                 else if (!isShortCircuitOperator)
                 {
-                    result.value = m_emitter.emitBinary(operation, checkedLeft.value, checkedRight.value, operatorSignature->resultType, leftType);
+                    result.value = m_emitter.emitBinary(operation, leftValue, rightValue, operatorSignature->resultType, leftType);
                 }
                 return result;
             }
@@ -5534,13 +5553,10 @@ namespace Caracal
                         continue;
                     }
 
-                    if (argument.folded.has_value())
+                    argumentRef = argument.value;
+                    if (argumentRef.id() < 0 && argument.folded.has_value())
                     {
                         argumentRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), argumentType);
-                    }
-                    else
-                    {
-                        argumentRef = argument.value;
                     }
                     break;
                 }
@@ -5564,13 +5580,10 @@ namespace Caracal
                         continue;
                     }
 
-                    if (argument.folded.has_value())
+                    variadicRef = argument.value;
+                    if (variadicRef.id() < 0 && argument.folded.has_value())
                     {
                         variadicRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), m_module.typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
-                    }
-                    else
-                    {
-                        variadicRef = argument.value;
                     }
                     break;
                 }
@@ -5623,20 +5636,7 @@ namespace Caracal
                     else if (callArguments.size() >= 2)
                     {
                         const auto elementAddress = m_emitter.emitElementAddressForReceiver(implicitArgument.value(), receiverType, callArguments[0]);
-
-                        // set() emits its value after the element address
-                        // a folded value is emitted again here, dce removes the earlier unused constant
-                        auto storedValue = callArguments[1];
-                        const auto valueNode = m_orderedSlotStack[orderedStart + 1];
-                        for (const auto& argument : argumentValues)
-                        {
-                            if (argument.node == valueNode && argument.folded.has_value())
-                            {
-                                storedValue = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), checkedDefinition.parameters()[2].type().toValue());
-                                break;
-                            }
-                        }
-                        m_emitter.emitStoreValue(storedValue, elementAddress, checkedDefinition.parameters()[2].type());
+                        m_emitter.emitStoreValue(callArguments[1], elementAddress, checkedDefinition.parameters()[2].type());
                     }
                 }
             }
@@ -5754,8 +5754,6 @@ namespace Caracal
         {
             result.signFolded = literalConsumedSign;
             result.folded = MakeFoldValue(parsedValue.value());
-            // the fold covers every width
-            result.value = m_emitter.emitConstant(IREmitter::constantFromFold(result.folded.value()), numberType);
         }
         return result;
     }

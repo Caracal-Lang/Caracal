@@ -11,34 +11,34 @@ block entry(0):
     %slot0 = allocate_local : [i32; 3] "xs"
     %slot1 = allocate_local : [i32] "temp"
     %slot2 = allocate_local : [i32] "temp"
-    %3 = address_of %slot0 : ref [i32; 3]
-    %4 = const 0 : i32
-    %5 = element_address %3[%4] : i32
-    %6 = const 40 : i32
+    %0 = address_of %slot0 : ref [i32; 3]
+    %1 = const 0 : i32
+    %2 = element_address %0[%1] : i32
+    %3 = const 40 : i32
+    store_value %3, %2 : i32
+    %4 = const 1 : i32
+    %5 = element_address %0[%4] : i32
+    %6 = const 2 : i32
     store_value %6, %5 : i32
-    %7 = const 1 : i32
-    %8 = element_address %3[%7] : i32
-    %9 = const 2 : i32
+    %7 = const 2 : i32
+    %8 = element_address %0[%7] : i32
+    %9 = const 3 : i32
     store_value %9, %8 : i32
-    %10 = const 2 : i32
-    %11 = element_address %3[%10] : i32
-    %12 = const 3 : i32
-    store_value %12, %11 : i32
-    %13 = const 3 : i32
-    %14 = make_slice %3, %13 : [i32]
-    %15 = address_of %slot1 : ref [i32]
-    store_value %14, %15 : [i32]
-    %17 = const 0 : i32
-    %18 = address_of_field %15.0 : ref i32 "data"
-    %19 = load_value %18 : ref i32
-    %20 = element_address %19[%17] : i32
-    %21 = load_value %20 : i32
-    %22 = address_of %slot2 : ref [i32]
-    store_value %14, %22 : [i32]
-    %24 = const 1 : i32
-    %25 = address_of_field %22.0 : ref i32 "data"
-    %26 = load_value %25 : ref i32
-    %27 = element_address %26[%24] : i32
-    %28 = load_value %27 : i32
-    %29 = add %21, %28 : i32
-    return %29
+    %10 = const 3 : i32
+    %11 = make_slice %0, %10 : [i32]
+    %12 = address_of %slot1 : ref [i32]
+    store_value %11, %12 : [i32]
+    %13 = const 0 : i32
+    %14 = address_of_field %12.0 : ref i32 "data"
+    %15 = load_value %14 : ref i32
+    %16 = element_address %15[%13] : i32
+    %17 = load_value %16 : i32
+    %18 = address_of %slot2 : ref [i32]
+    store_value %11, %18 : [i32]
+    %19 = const 1 : i32
+    %20 = address_of_field %18.0 : ref i32 "data"
+    %21 = load_value %20 : ref i32
+    %22 = element_address %21[%19] : i32
+    %23 = load_value %22 : i32
+    %24 = add %17, %23 : i32
+    return %24

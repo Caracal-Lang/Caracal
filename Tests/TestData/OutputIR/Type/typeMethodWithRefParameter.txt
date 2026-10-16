@@ -17,12 +17,12 @@ block entry(0):
     %1 = address_of %slot0 : ref i32
     store_value %0, %1 : i32
     %2 = address_of %slot1 : ref Number
-    %4 = const 1 : i32
-    call Number.new(%2, %4)
+    %3 = const 1 : i32
+    call Number.new(%2, %3)
     call Number.setFrom(%2, %1)
-    %5 = address_of_field %2.0 : ref i32 "value"
-    %6 = load_value %5 : i32
-    return %6
+    %4 = address_of_field %2.0 : ref i32 "value"
+    %5 = load_value %4 : i32
+    return %5
 
 define Number.setFrom(%0: ref Number ".this", %1: ref i32 "other") void
 block entry(0):

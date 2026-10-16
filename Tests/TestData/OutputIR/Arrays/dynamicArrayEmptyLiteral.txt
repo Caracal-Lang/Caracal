@@ -21,8 +21,8 @@ block entry(0):
     %7 = const 8 : i32
     %8 = address_of_field %0.2 : ref i32 "capacity"
     store_value %7, %8 : i32
-    %10 = const 1 : i32
-    array_add %0, %10 : [i32; _]
-    %11 = address_of_field %0.1 : ref i32 "length"
-    %12 = load_value %11 : i32
-    return %12
+    %9 = const 1 : i32
+    array_add %0, %9 : [i32; _]
+    %10 = address_of_field %0.1 : ref i32 "length"
+    %11 = load_value %10 : i32
+    return %11

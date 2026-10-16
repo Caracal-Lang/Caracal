@@ -44,15 +44,15 @@ block if.true(9):
     %15 = const 6 : i32
     return %15
 block if.continuation(10):
-    %18 = const 64 : rune
-    %20 = const 2 : rune
-    %21 = bit_or %18, %20 : rune
-    %22 = const 66 : rune
-    %23 = not_equal %21, %22 : bool
-    branch if %23, if.true(11), if.continuation(12)
+    %16 = const 64 : rune
+    %17 = const 2 : rune
+    %18 = bit_or %16, %17 : rune
+    %19 = const 66 : rune
+    %20 = not_equal %18, %19 : bool
+    branch if %20, if.true(11), if.continuation(12)
 block if.true(11):
-    %24 = const 7 : i32
-    return %24
+    %21 = const 7 : i32
+    return %21
 block if.continuation(12):
-    %25 = const 42 : i32
-    return %25
+    %22 = const 42 : i32
+    return %22

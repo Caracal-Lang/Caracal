@@ -13,12 +13,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Calc "calc"
     %0 = address_of %slot0 : ref Calc
-    %2 = const 0 : i32
-    call Calc.new(%0, %2)
-    %5 = const 13 : i32
-    %6 = const 10 : i32
-    %7 = call Calc.applyDiff(%0, %5, %6) : i32
-    return %7
+    %1 = const 0 : i32
+    call Calc.new(%0, %1)
+    %2 = const 13 : i32
+    %3 = const 10 : i32
+    %4 = call Calc.applyDiff(%0, %2, %3) : i32
+    return %4
 
 define Calc.applyDiff(%0: ref Calc ".this", %1: i32 "a", %2: i32 "b") i32
 block entry(0):

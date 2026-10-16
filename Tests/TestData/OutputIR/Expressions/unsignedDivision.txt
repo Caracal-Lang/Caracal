@@ -26,5 +26,5 @@ block entry(0):
 
 define foldedHighByteDivision() f32
 block entry(0):
-    %2 = const 100.000000 : f32
-    return %2
+    %0 = const 100.000000 : f32
+    return %0

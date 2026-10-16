@@ -15,8 +15,8 @@ block entry(0):
     %slot1 = allocate_local : [u8; 2] "bytes"
     %1 = address_of %slot0 : ref [u8; 2]
     store_value %0, %1 : [u8; 2]
-    %3 = address_of %slot1 : ref [u8; 2]
-    %4 = load_value %1 : [u8; 2]
-    store_value %4, %3 : [u8; 2]
-    %5 = const 0 : i32
-    return %5
+    %2 = address_of %slot1 : ref [u8; 2]
+    %3 = load_value %1 : [u8; 2]
+    store_value %3, %2 : [u8; 2]
+    %4 = const 0 : i32
+    return %4

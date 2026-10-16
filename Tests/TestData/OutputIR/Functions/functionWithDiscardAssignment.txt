@@ -8,5 +8,5 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 define func() i32
 block entry(0):
-    %1 = const 0 : i32
-    return %1
+    %0 = const 0 : i32
+    return %0

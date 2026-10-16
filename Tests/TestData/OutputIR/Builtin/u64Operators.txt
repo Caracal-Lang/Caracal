@@ -22,47 +22,47 @@ block entry(0):
 
 define main() i32
 block entry(0):
-    %2 = const 18446744073709551615 : u64
-    %3 = const 1 : u64
-    %4 = call wrapAdd(%2, %3) : u64
-    %5 = const 0 : u64
-    %6 = equal %4, %5 : bool
-    %9 = const 4294967296 : u64
-    %10 = const 4294967296 : u64
-    %11 = call wrapMultiply(%9, %10) : u64
-    %12 = const 0 : u64
-    %13 = equal %11, %12 : bool
-    %18 = const true : bool
-    %22 = const true : bool
-    %25 = const 18446744073709551615 : u64
-    %26 = const 0 : u64
-    %27 = call wrapAdd(%25, %26) : u64
-    %28 = const 1 : u64
-    %29 = greater_than %27, %28 : bool
-    branch if %6, and.rhs(1), and.merge(2)
+    %0 = const 18446744073709551615 : u64
+    %1 = const 1 : u64
+    %2 = call wrapAdd(%0, %1) : u64
+    %3 = const 0 : u64
+    %4 = equal %2, %3 : bool
+    %5 = const 4294967296 : u64
+    %6 = const 4294967296 : u64
+    %7 = call wrapMultiply(%5, %6) : u64
+    %8 = const 0 : u64
+    %9 = equal %7, %8 : bool
+    %11 = const true : bool
+    %13 = const true : bool
+    %14 = const 18446744073709551615 : u64
+    %15 = const 0 : u64
+    %16 = call wrapAdd(%14, %15) : u64
+    %17 = const 1 : u64
+    %18 = greater_than %16, %17 : bool
+    branch if %4, and.rhs(1), and.merge(2)
 block and.rhs(1):
     jump and.merge(2)
 block and.merge(2):
-    %30 = phi [entry(0): %6], [and.rhs(1): %13] : bool
-    branch if %30, and.rhs(3), and.merge(4)
+    %19 = phi [entry(0): %4], [and.rhs(1): %9] : bool
+    branch if %19, and.rhs(3), and.merge(4)
 block and.rhs(3):
     jump and.merge(4)
 block and.merge(4):
-    %31 = phi [and.merge(2): %30], [and.rhs(3): %18] : bool
-    branch if %31, and.rhs(5), and.merge(6)
+    %20 = phi [and.merge(2): %19], [and.rhs(3): %11] : bool
+    branch if %20, and.rhs(5), and.merge(6)
 block and.rhs(5):
     jump and.merge(6)
 block and.merge(6):
-    %32 = phi [and.merge(4): %31], [and.rhs(5): %22] : bool
-    branch if %32, and.rhs(7), and.merge(8)
+    %21 = phi [and.merge(4): %20], [and.rhs(5): %13] : bool
+    branch if %21, and.rhs(7), and.merge(8)
 block and.rhs(7):
     jump and.merge(8)
 block and.merge(8):
-    %33 = phi [and.merge(6): %32], [and.rhs(7): %29] : bool
-    branch if %33, if.true(9), if.continuation(10)
+    %22 = phi [and.merge(6): %21], [and.rhs(7): %18] : bool
+    branch if %22, if.true(9), if.continuation(10)
 block if.true(9):
-    %34 = const 42 : i32
-    return %34
+    %23 = const 42 : i32
+    return %23
 block if.continuation(10):
-    %35 = const 0 : i32
-    return %35
+    %24 = const 0 : i32
+    return %24

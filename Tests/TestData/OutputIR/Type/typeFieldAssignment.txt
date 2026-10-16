@@ -13,14 +13,14 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Number "n"
     %0 = address_of %slot0 : ref Number
-    %2 = const 7 : i32
-    call Number.new(%0, %2)
-    %3 = const 9 : i32
+    %1 = const 7 : i32
+    call Number.new(%0, %1)
+    %2 = const 9 : i32
+    %3 = address_of_field %0.0 : ref i32 "value"
+    store_value %2, %3 : i32
     %4 = address_of_field %0.0 : ref i32 "value"
-    store_value %3, %4 : i32
-    %5 = address_of_field %0.0 : ref i32 "value"
-    %6 = load_value %5 : i32
-    return %6
+    %5 = load_value %4 : i32
+    return %5
 
 define Number.new(%0: ref Number ".this", %1: i32 "value") void
 block entry(0):

@@ -15,12 +15,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Number "local"
     %0 = address_of %slot0 : ref Number
-    %2 = const 3 : i32
-    call Number.new(%0, %2)
-    %3 = address_of_global @number : ref Number
-    %4 = address_of_field %3.0 : ref i32 "value"
-    %5 = load_value %4 : i32
-    return %5
+    %1 = const 3 : i32
+    call Number.new(%0, %1)
+    %2 = address_of_global @number : ref Number
+    %3 = address_of_field %2.0 : ref i32 "value"
+    %4 = load_value %3 : i32
+    return %4
 
 define Number.new(%0: ref Number ".this", %1: i32 "value") void
 block entry(0):
@@ -33,6 +33,6 @@ block entry(0):
 define .global_init() void
 block entry(0):
     %0 = address_of_global @number : ref Number
-    %2 = const 8 : i32
-    call Number.new(%0, %2)
+    %1 = const 8 : i32
+    call Number.new(%0, %1)
     return

@@ -11,7 +11,7 @@ extern printf(%0: cstring "message", %1: ... "varargs") i32
 define func() i32
 block entry(0):
     %0 = const "value: %d\n\0" : cstring
-    %2 = const 42 : i32
-    %3 = call printf(%0, %2) : i32
-    %4 = const 0 : i32
-    return %4
+    %1 = const 42 : i32
+    %2 = call printf(%0, %1) : i32
+    %3 = const 0 : i32
+    return %3

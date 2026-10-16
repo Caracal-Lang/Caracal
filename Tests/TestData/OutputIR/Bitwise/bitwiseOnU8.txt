@@ -8,41 +8,41 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 define results() bool
 block entry(0):
-    %4 = const true : bool
+    %1 = const true : bool
+    %3 = const true : bool
+    %5 = const true : bool
+    %7 = const true : bool
     %9 = const true : bool
-    %14 = const true : bool
-    %18 = const true : bool
-    %23 = const true : bool
-    %28 = const true : bool
-    %33 = const true : bool
-    branch if %4, and.rhs(1), and.merge(2)
+    %11 = const true : bool
+    %13 = const true : bool
+    branch if %1, and.rhs(1), and.merge(2)
 block and.rhs(1):
     jump and.merge(2)
 block and.merge(2):
-    %34 = phi [entry(0): %4], [and.rhs(1): %9] : bool
-    branch if %34, and.rhs(3), and.merge(4)
+    %14 = phi [entry(0): %1], [and.rhs(1): %3] : bool
+    branch if %14, and.rhs(3), and.merge(4)
 block and.rhs(3):
     jump and.merge(4)
 block and.merge(4):
-    %35 = phi [and.merge(2): %34], [and.rhs(3): %14] : bool
-    branch if %35, and.rhs(5), and.merge(6)
+    %15 = phi [and.merge(2): %14], [and.rhs(3): %5] : bool
+    branch if %15, and.rhs(5), and.merge(6)
 block and.rhs(5):
     jump and.merge(6)
 block and.merge(6):
-    %36 = phi [and.merge(4): %35], [and.rhs(5): %18] : bool
-    branch if %36, and.rhs(7), and.merge(8)
+    %16 = phi [and.merge(4): %15], [and.rhs(5): %7] : bool
+    branch if %16, and.rhs(7), and.merge(8)
 block and.rhs(7):
     jump and.merge(8)
 block and.merge(8):
-    %37 = phi [and.merge(6): %36], [and.rhs(7): %23] : bool
-    branch if %37, and.rhs(9), and.merge(10)
+    %17 = phi [and.merge(6): %16], [and.rhs(7): %9] : bool
+    branch if %17, and.rhs(9), and.merge(10)
 block and.rhs(9):
     jump and.merge(10)
 block and.merge(10):
-    %38 = phi [and.merge(8): %37], [and.rhs(9): %28] : bool
-    branch if %38, and.rhs(11), and.merge(12)
+    %18 = phi [and.merge(8): %17], [and.rhs(9): %11] : bool
+    branch if %18, and.rhs(11), and.merge(12)
 block and.rhs(11):
     jump and.merge(12)
 block and.merge(12):
-    %39 = phi [and.merge(10): %38], [and.rhs(11): %33] : bool
-    return %39
+    %19 = phi [and.merge(10): %18], [and.rhs(11): %13] : bool
+    return %19

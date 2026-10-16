@@ -10,27 +10,27 @@ define make() [i32; _]
 block entry(0):
     %slot0 = allocate_local : [i32; _] "xs"
     %0 = address_of %slot0 : ref [i32; _]
-    %3 = const 8 : i64
-    %4 = size_of i32 : i64
-    %5 = call C.calloc(%3, %4) : rawptr
-    %6 = address_of_field %0.0 : ref i32 "data"
-    store_value %5, %6 : ref i32
-    %7 = const 2 : i32
-    %8 = address_of_field %0.1 : ref i32 "length"
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call C.calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
     store_value %7, %8 : i32
-    %9 = const 8 : i32
-    %10 = address_of_field %0.2 : ref i32 "capacity"
-    store_value %9, %10 : i32
-    %11 = const 0 : i32
-    %12 = element_address %5[%11] : i32
-    %13 = const 1 : i32
-    store_value %13, %12 : i32
-    %14 = const 1 : i32
-    %15 = element_address %5[%14] : i32
-    %16 = const 2 : i32
-    store_value %16, %15 : i32
-    %17 = load_value %0 : [i32; _]
-    return %17
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 1 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
+    store_value %14, %13 : i32
+    %15 = load_value %0 : [i32; _]
+    return %15
 
 define main() i32
 block entry(0):

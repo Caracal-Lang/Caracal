@@ -47,77 +47,77 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : [u8; _] "xs"
     %slot1 = allocate_local : string "s"
-    %2 = address_of %slot0 : ref [u8; _]
-    %3 = const 8 : i64
-    %4 = size_of u8 : i64
-    %5 = call C.calloc(%3, %4) : rawptr
-    %6 = address_of_field %2.0 : ref u8 "data"
-    store_value %5, %6 : ref u8
-    %7 = const 2 : i32
-    %8 = address_of_field %2.1 : ref i32 "length"
+    %0 = address_of %slot0 : ref [u8; _]
+    %1 = const 8 : i64
+    %2 = size_of u8 : i64
+    %3 = call C.calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref u8 "data"
+    store_value %3, %4 : ref u8
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
     store_value %7, %8 : i32
-    %9 = const 8 : i32
-    %10 = address_of_field %2.2 : ref i32 "capacity"
-    store_value %9, %10 : i32
-    %11 = const 0 : i32
-    %12 = element_address %5[%11] : u8
-    %13 = const 7 : u8
-    store_value %13, %12 : u8
-    %14 = const 1 : i32
-    %15 = element_address %5[%14] : u8
-    %16 = const 8 : u8
-    store_value %16, %15 : u8
-    %17 = address_of %slot1 : ref string
-    %18 = address_of_field %17.0 : ref [u8; _] "_bytes"
-    %19 = const "Hello\0" : cstring
-    %20 = address_of_field %18.0 : ref u8 "data"
-    store_value %19, %20 : ref u8
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : u8
+    %11 = const 7 : u8
+    store_value %11, %10 : u8
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : u8
+    %14 = const 8 : u8
+    store_value %14, %13 : u8
+    %15 = address_of %slot1 : ref string
+    %16 = address_of_field %15.0 : ref [u8; _] "_bytes"
+    %17 = const "Hello\0" : cstring
+    %18 = address_of_field %16.0 : ref u8 "data"
+    store_value %17, %18 : ref u8
+    %19 = const 5 : i32
+    %20 = address_of_field %16.1 : ref i32 "length"
+    store_value %19, %20 : i32
     %21 = const 5 : i32
-    %22 = address_of_field %18.1 : ref i32 "length"
+    %22 = address_of_field %16.2 : ref i32 "capacity"
     store_value %21, %22 : i32
-    %23 = const 5 : i32
-    %24 = address_of_field %18.2 : ref i32 "capacity"
-    store_value %23, %24 : i32
-    %25 = address_of_field %2.0 : ref u8 "data"
-    %26 = load_value %25 : ref u8
-    %27 = address_of_field %2.1 : ref i32 "length"
-    %28 = load_value %27 : i32
-    %29 = make_slice %26, %28 : [u8]
-    %30 = call sum(%29) : i32
-    %31 = address_of_field %17.0 : ref [u8; _] "_bytes"
-    %32 = address_of_field %31.0 : ref u8 "data"
-    %33 = load_value %32 : ref u8
-    %34 = address_of_field %31.1 : ref i32 "length"
-    %35 = load_value %34 : i32
-    %36 = make_slice %33, %35 : const [u8]
-    %37 = call sum(%36) : i32
-    %38 = address_of_field %17.0 : ref [u8; _] "_bytes"
-    %39 = address_of_field %38.0 : ref u8 "data"
-    %40 = load_value %39 : ref u8
-    %41 = address_of_field %38.1 : ref i32 "length"
-    %42 = load_value %41 : i32
-    %43 = make_slice %40, %42 : const [u8]
-    %44 = call double(%43) : i32
-    %45 = const 2 : i32
-    %46 = not_equal %30, %45 : bool
-    branch if %46, if.true(1), if.continuation(2)
+    %23 = address_of_field %0.0 : ref u8 "data"
+    %24 = load_value %23 : ref u8
+    %25 = address_of_field %0.1 : ref i32 "length"
+    %26 = load_value %25 : i32
+    %27 = make_slice %24, %26 : [u8]
+    %28 = call sum(%27) : i32
+    %29 = address_of_field %15.0 : ref [u8; _] "_bytes"
+    %30 = address_of_field %29.0 : ref u8 "data"
+    %31 = load_value %30 : ref u8
+    %32 = address_of_field %29.1 : ref i32 "length"
+    %33 = load_value %32 : i32
+    %34 = make_slice %31, %33 : const [u8]
+    %35 = call sum(%34) : i32
+    %36 = address_of_field %15.0 : ref [u8; _] "_bytes"
+    %37 = address_of_field %36.0 : ref u8 "data"
+    %38 = load_value %37 : ref u8
+    %39 = address_of_field %36.1 : ref i32 "length"
+    %40 = load_value %39 : i32
+    %41 = make_slice %38, %40 : const [u8]
+    %42 = call double(%41) : i32
+    %43 = const 2 : i32
+    %44 = not_equal %28, %43 : bool
+    branch if %44, if.true(1), if.continuation(2)
 block if.true(1):
-    %47 = const 2 : i32
-    return %47
+    %45 = const 2 : i32
+    return %45
 block if.continuation(2):
-    %48 = const 5 : i32
-    %49 = not_equal %37, %48 : bool
-    branch if %49, if.true(3), if.continuation(4)
+    %46 = const 5 : i32
+    %47 = not_equal %35, %46 : bool
+    branch if %47, if.true(3), if.continuation(4)
 block if.true(3):
-    %50 = const 3 : i32
-    return %50
+    %48 = const 3 : i32
+    return %48
 block if.continuation(4):
-    %51 = const 10 : i32
-    %52 = not_equal %44, %51 : bool
-    branch if %52, if.true(5), if.continuation(6)
+    %49 = const 10 : i32
+    %50 = not_equal %42, %49 : bool
+    branch if %50, if.true(5), if.continuation(6)
 block if.true(5):
-    %53 = const 4 : i32
-    return %53
+    %51 = const 4 : i32
+    return %51
 block if.continuation(6):
-    %54 = const 42 : i32
-    return %54
+    %52 = const 42 : i32
+    return %52

@@ -13,12 +13,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Number "n"
     %0 = address_of %slot0 : ref Number
-    %3 = const -1 : i32
-    call Number.new(%0, %3)
+    %1 = const -1 : i32
+    call Number.new(%0, %1)
     call Number.clamp(%0)
-    %4 = address_of_field %0.0 : ref i32 "value"
-    %5 = load_value %4 : i32
-    return %5
+    %2 = address_of_field %0.0 : ref i32 "value"
+    %3 = load_value %2 : i32
+    return %3
 
 define Number.clamp(%0: ref Number ".this") void
 block entry(0):

@@ -13,48 +13,48 @@ block entry(0):
     %slot1 = allocate_local : const [i32] "temp"
     %1 = address_of %slot0 : ref const [i32]
     store_value %0, %1 : const [i32]
-    %3 = const 0 : i32
-    %4 = address_of_field %1.0 : ref i32 "data"
-    %5 = load_value %4 : ref i32
-    %6 = element_address %5[%3] : i32
-    %7 = load_value %6 : i32
-    %8 = address_of %slot1 : ref const [i32]
-    store_value %0, %8 : const [i32]
-    %10 = const 1 : i32
-    %11 = address_of_field %8.0 : ref i32 "data"
-    %12 = load_value %11 : ref i32
-    %13 = element_address %12[%10] : i32
-    %14 = load_value %13 : i32
-    %15 = add %7, %14 : i32
-    return %15
+    %2 = const 0 : i32
+    %3 = address_of_field %1.0 : ref i32 "data"
+    %4 = load_value %3 : ref i32
+    %5 = element_address %4[%2] : i32
+    %6 = load_value %5 : i32
+    %7 = address_of %slot1 : ref const [i32]
+    store_value %0, %7 : const [i32]
+    %8 = const 1 : i32
+    %9 = address_of_field %7.0 : ref i32 "data"
+    %10 = load_value %9 : ref i32
+    %11 = element_address %10[%8] : i32
+    %12 = load_value %11 : i32
+    %13 = add %6, %12 : i32
+    return %13
 
 define main() i32
 block entry(0):
     %slot0 = allocate_local : [i32; _] "xs"
-    %2 = address_of %slot0 : ref [i32; _]
-    %3 = const 8 : i64
-    %4 = size_of i32 : i64
-    %5 = call C.calloc(%3, %4) : rawptr
-    %6 = address_of_field %2.0 : ref i32 "data"
-    store_value %5, %6 : ref i32
-    %7 = const 2 : i32
-    %8 = address_of_field %2.1 : ref i32 "length"
+    %0 = address_of %slot0 : ref [i32; _]
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call C.calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
     store_value %7, %8 : i32
-    %9 = const 8 : i32
-    %10 = address_of_field %2.2 : ref i32 "capacity"
-    store_value %9, %10 : i32
-    %11 = const 0 : i32
-    %12 = element_address %5[%11] : i32
-    %13 = const 40 : i32
-    store_value %13, %12 : i32
-    %14 = const 1 : i32
-    %15 = element_address %5[%14] : i32
-    %16 = const 2 : i32
-    store_value %16, %15 : i32
-    %17 = address_of_field %2.0 : ref i32 "data"
-    %18 = load_value %17 : ref i32
-    %19 = address_of_field %2.1 : ref i32 "length"
-    %20 = load_value %19 : i32
-    %21 = make_slice %18, %20 : [i32]
-    %22 = call sum(%21) : i32
-    return %22
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 40 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
+    store_value %14, %13 : i32
+    %15 = address_of_field %0.0 : ref i32 "data"
+    %16 = load_value %15 : ref i32
+    %17 = address_of_field %0.1 : ref i32 "length"
+    %18 = load_value %17 : i32
+    %19 = make_slice %16, %18 : [i32]
+    %20 = call sum(%19) : i32
+    return %20

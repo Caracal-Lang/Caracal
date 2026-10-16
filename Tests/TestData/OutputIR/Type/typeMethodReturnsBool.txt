@@ -13,10 +13,10 @@ define func() bool
 block entry(0):
     %slot0 = allocate_local : Number "n"
     %0 = address_of %slot0 : ref Number
-    %2 = const 1 : i32
-    call Number.new(%0, %2)
-    %3 = call Number.isPositive(%0) : bool
-    return %3
+    %1 = const 1 : i32
+    call Number.new(%0, %1)
+    %2 = call Number.isPositive(%0) : bool
+    return %2
 
 define Number.isPositive(%0: ref Number ".this") bool
 block entry(0):

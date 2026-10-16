@@ -13,12 +13,12 @@ define func() i32
 block entry(0):
     %slot0 = allocate_local : Counter "counter"
     %0 = address_of %slot0 : ref Counter
-    %2 = const 1 : i32
-    call Counter.new(%0, %2)
+    %1 = const 1 : i32
+    call Counter.new(%0, %1)
     call Counter.incTwice(%0)
-    %3 = address_of_field %0.0 : ref i32 "value"
-    %4 = load_value %3 : i32
-    return %4
+    %2 = address_of_field %0.0 : ref i32 "value"
+    %3 = load_value %2 : i32
+    return %3
 
 define Counter.inc(%0: ref Counter ".this") void
 block entry(0):

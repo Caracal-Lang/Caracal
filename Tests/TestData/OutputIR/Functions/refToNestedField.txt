@@ -18,18 +18,18 @@ block entry(0):
     %slot1 = allocate_local : Inner "constructed"
     %0 = address_of %slot0 : ref Outer
     %1 = address_of %slot1 : ref Inner
-    %3 = const 1 : i32
-    call Inner.new(%1, %3)
-    %4 = load_value %1 : Inner
-    call Outer.new(%0, %4)
-    %5 = address_of_field %0.0 : ref Inner "inner"
-    %6 = address_of_field %5.0 : ref i32 "value"
-    %7 = const 7 : i32
-    store_value %7, %6 : i32
-    %8 = address_of_field %0.0 : ref Inner "inner"
-    %9 = address_of_field %8.0 : ref i32 "value"
-    %10 = load_value %9 : i32
-    return %10
+    %2 = const 1 : i32
+    call Inner.new(%1, %2)
+    %3 = load_value %1 : Inner
+    call Outer.new(%0, %3)
+    %4 = address_of_field %0.0 : ref Inner "inner"
+    %5 = address_of_field %4.0 : ref i32 "value"
+    %6 = const 7 : i32
+    store_value %6, %5 : i32
+    %7 = address_of_field %0.0 : ref Inner "inner"
+    %8 = address_of_field %7.0 : ref i32 "value"
+    %9 = load_value %8 : i32
+    return %9
 
 define Inner.new(%0: ref Inner ".this", %1: i32 "v") void
 block entry(0):

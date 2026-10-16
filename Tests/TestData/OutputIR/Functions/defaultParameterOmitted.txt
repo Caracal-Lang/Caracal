@@ -15,7 +15,7 @@ block entry(0):
 
 define func() i32
 block entry(0):
-    %1 = const 10 : i32
-    %2 = const 5 : i32
-    %3 = call addWithDefault(%1, %2) : i32
-    return %3
+    %0 = const 10 : i32
+    %1 = const 5 : i32
+    %2 = call addWithDefault(%0, %1) : i32
+    return %2

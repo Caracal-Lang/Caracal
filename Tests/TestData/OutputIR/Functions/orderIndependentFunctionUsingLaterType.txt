@@ -13,10 +13,10 @@ define make() Number
 block entry(0):
     %slot0 = allocate_local : Number "constructed"
     %0 = address_of %slot0 : ref Number
-    %2 = const 7 : i32
-    call Number.new(%0, %2)
-    %3 = load_value %0 : Number
-    return %3
+    %1 = const 7 : i32
+    call Number.new(%0, %1)
+    %2 = load_value %0 : Number
+    return %2
 
 define func() i32
 block entry(0):

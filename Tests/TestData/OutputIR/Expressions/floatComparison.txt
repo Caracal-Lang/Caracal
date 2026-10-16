@@ -8,5 +8,5 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 define func() bool
 block entry(0):
-    %2 = const true : bool
-    return %2
+    %0 = const true : bool
+    return %0
