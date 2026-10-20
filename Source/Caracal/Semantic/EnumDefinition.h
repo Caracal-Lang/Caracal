@@ -6,6 +6,7 @@
 #include <Caracal/Text/TransparentStringHash.h>
 
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -17,6 +18,10 @@ namespace Caracal
         EnumDefinition(
             Type type, 
             const std::string& name);
+        EnumDefinition(const EnumDefinition&) = default;
+        EnumDefinition& operator=(const EnumDefinition&) = default;
+        EnumDefinition(EnumDefinition&&) noexcept = default;
+        EnumDefinition& operator=(EnumDefinition&&) noexcept = default;
 
         [[nodiscard]] Type type() const noexcept { return m_type; }
         [[nodiscard]] Type baseType() const noexcept { return m_baseType; }
@@ -39,4 +44,6 @@ namespace Caracal
         std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<>> m_fieldIndices;
         NodeIndex m_definitionNode{};
     };
+
+    static_assert(std::is_nothrow_move_constructible_v<EnumDefinition>, "a growing std::vector would copy every EnumDefinition");
 }

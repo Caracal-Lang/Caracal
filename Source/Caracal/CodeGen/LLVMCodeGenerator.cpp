@@ -1,53 +1,13 @@
 #include <Caracal/CodeGen/LLVMCodeGenerator.h>
 #include <Caracal/Profiling.h>
 
-#include <Caracal/IR/AddInstruction.h>
-#include <Caracal/IR/AddressOfFieldInstruction.h>
-#include <Caracal/IR/AddressOfGlobalInstruction.h>
-#include <Caracal/IR/AddressOfInstruction.h>
-#include <Caracal/IR/AllocateLocalInstruction.h>
-#include <Caracal/IR/BasicBlock.h>
-#include <Caracal/IR/BranchIfTerminator.h>
-#include <Caracal/IR/CallInstruction.h>
-#include <Caracal/IR/CallVoidInstruction.h>
-#include <Caracal/IR/ConstantInstruction.h>
+#include <Caracal/IR/BlockLabel.h>
+#include <Caracal/IR/ConstructedGlobalDeclaration.h>
 #include <Caracal/IR/GlobalConstantDeclaration.h>
 #include <Caracal/IR/GlobalReferenceDeclaration.h>
-#include <Caracal/IR/DivideInstruction.h>
-#include <Caracal/IR/ElementAddressInstruction.h>
-#include <Caracal/IR/EqualInstruction.h>
-#include <Caracal/IR/Function.h>
-#include <Caracal/IR/GreaterOrEqualInstruction.h>
-#include <Caracal/IR/GreaterThanInstruction.h>
-#include <Caracal/IR/IntToFloatInstruction.h>
-#include <Caracal/IR/IntWidenInstruction.h>
-#include <Caracal/IR/ArrayAddInstruction.h>
-#include <Caracal/IR/ArrayCopyInstruction.h>
-#include <Caracal/IR/ArrayRemoveInstruction.h>
-#include <Caracal/IR/SizeOfInstruction.h>
-#include <Caracal/IR/JumpTerminator.h>
-#include <Caracal/IR/LessOrEqualInstruction.h>
-#include <Caracal/IR/LessThanInstruction.h>
-#include <Caracal/IR/LoadValueInstruction.h>
-#include <Caracal/IR/BitAndInstruction.h>
-#include <Caracal/IR/BitNotInstruction.h>
-#include <Caracal/IR/BitOrInstruction.h>
-#include <Caracal/IR/BitXorInstruction.h>
-#include <Caracal/IR/LogicalNegationInstruction.h>
-#include <Caracal/IR/ShiftLeftInstruction.h>
-#include <Caracal/IR/ShiftRightInstruction.h>
-#include <Caracal/IR/MakeSliceInstruction.h>
-#include <Caracal/IR/MultiplyInstruction.h>
-#include <Caracal/IR/NotEqualInstruction.h>
-#include <Caracal/IR/ParameterInstruction.h>
-#include <Caracal/IR/PhiInstruction.h>
-#include <Caracal/IR/ReturnValueTerminator.h>
-#include <Caracal/IR/StoreValueInstruction.h>
-#include <Caracal/IR/SubtractInstruction.h>
-#include <Caracal/IR/Terminator.h>
-#include <Caracal/IR/ValueNegationInstruction.h>
 
 #include <llvm/ADT/APFloat.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/IR/Attributes.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
@@ -305,32 +265,32 @@ namespace Caracal
         // pre-create every block (the first is the entry) so jumps, branches and phis can reference them
         auto& context = m_llvmModule.getContext();
         for (const auto& block : function.blocks())
-            m_blocks[block->id()] = llvm::BasicBlock::Create(context, block->label(), m_currentFunction);
+        {
+            m_blocks[block.id] = llvm::BasicBlock::Create(context, llvm::StringRef{ blockLabelText(block.label) }, m_currentFunction);
+        }
 
         for (const auto& block : function.blocks())
         {
-            m_irBuilder->SetInsertPoint(m_blocks[block->id()]);
+            m_irBuilder->SetInsertPoint(m_blocks[block.id]);
 
-            for (const auto& instruction : block->instructions())
+            for (auto instructionIndex = block.instructionStart; instructionIndex < block.instructionStart + block.instructionCount; ++instructionIndex)
             {
-                if (!lowerInstruction(*instruction))
+                if (!lowerInstruction(function, instructionIndex))
                     return false;
             }
 
-            if (!block->hasTerminator())
-                return false;
-
-            if (!lowerTerminator(*block->terminator()))
+            // a block without a terminator cannot be lowered
+            if (block.instructionCount == 0 || !isTerminatorKind(function.kindAt(block.instructionStart + block.instructionCount - 1)))
                 return false;
         }
 
         // wire up phi incomings now that every block is built and every value is defined
-        for (const auto& [phi, node] : m_pendingPhis)
+        for (const auto& [phiInstructionIndex, node] : m_pendingPhis)
         {
-            for (const auto& input : phi->inputs())
+            for (const auto& input : function.phiInputsAt(phiInstructionIndex))
             {
-                auto* incomingValue = tryResolve(input.value());
-                auto* incomingBlock = tryGetBlock(input.blockId());
+                auto* incomingValue = tryResolve(input.value);
+                auto* incomingBlock = tryGetBlock(input.blockId);
                 if (incomingValue == nullptr || incomingBlock == nullptr)
                     return false;
 
@@ -341,42 +301,45 @@ namespace Caracal
         return true;
     }
 
-    bool LLVMCodeGenerator::lowerInstruction(const Instruction& instruction) noexcept
+    bool LLVMCodeGenerator::lowerInstruction(const Function& function, u32 instructionIndex) noexcept
     {
-        switch (instruction.kind())
+        const auto& instruction = function.instructionAt(instructionIndex);
+        switch (instruction.kind)
         {
+            case InstructionKind::Nop:
+            {
+                return true;
+            }
             case InstructionKind::Parameter:
             {
-                const auto& parameter = static_cast<const ParameterInstruction&>(instruction);
-                defineValue(parameter.resultId(), m_currentFunction->getArg(static_cast<unsigned>(parameter.parameterIndex())));
+                defineValue(instruction.resultId, m_currentFunction->getArg(static_cast<unsigned>(instruction.a)));
                 return true;
             }
             case InstructionKind::Constant:
             {
-                const auto& constant = static_cast<const ConstantInstruction&>(instruction);
-                auto* value = lowerConstant(constant.value());
+                auto* value = lowerConstant(m_irModule.constantValue(instruction));
                 if (value == nullptr)
                     return false;
 
-                defineValue(constant.resultId(), value);
+                defineValue(instruction.resultId, value);
                 return true;
             }
             case InstructionKind::AddressOfGlobal:
             {
-                const auto& addressOfGlobal = static_cast<const AddressOfGlobalInstruction&>(instruction);
-                auto* global = m_llvmModule.getNamedGlobal(addressOfGlobal.name());
+                auto* global = m_llvmModule.getNamedGlobal(m_irModule.names()[static_cast<size_t>(instruction.a)]);
                 if (global == nullptr)
                     return false;
 
-                defineValue(addressOfGlobal.resultId(), global);
+                defineValue(instruction.resultId, global);
                 return true;
             }
             case InstructionKind::AllocateLocal:
             {
-                const auto& allocate = static_cast<const AllocateLocalInstruction&>(instruction);
-                auto* slotType = lowerType(allocate.type());
+                auto* slotType = lowerType(instruction.type);
                 if (slotType == nullptr)
                     return false;
+
+                const auto& localName = m_irModule.names()[static_cast<size_t>(instruction.b)];
 
                 // allocas always live in the entry block, so loops reuse one slot and phis stay first in their block
                 auto* entryBlock = &m_currentFunction->getEntryBlock();
@@ -392,87 +355,84 @@ namespace Caracal
                         m_irBuilder->SetInsertPoint(entryBlock);
                     }
 
-                    m_slots[allocate.slotId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
+                    m_slots[instruction.a] = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
                     return true;
                 }
 
-                m_slots[allocate.slotId()] = m_irBuilder->CreateAlloca(slotType, nullptr, allocate.localName());
+                m_slots[instruction.a] = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
                 return true;
             }
             case InstructionKind::AddressOf:
             {
                 // the address of a slot is just the slot's alloca pointer, no instruction is emitted
-                const auto& addressOf = static_cast<const AddressOfInstruction&>(instruction);
-                const auto slot = m_slots.find(addressOf.local().id());
+                const auto slot = m_slots.find(instruction.a);
                 if (slot == m_slots.end())
                     return false;
 
-                defineValue(addressOf.resultId(), slot->second);
+                defineValue(instruction.resultId, slot->second);
                 return true;
             }
             case InstructionKind::FieldAddress:
             {
-                const auto& fieldAddress = static_cast<const AddressOfFieldInstruction&>(instruction);
-                auto* objectAddress = tryResolve(fieldAddress.objectAddress());
-                auto* structType = lowerType(fieldAddress.objectType());
+                auto* objectAddress = tryResolve(instruction.a);
+                auto* structType = lowerType(instruction.secondType());
                 if (objectAddress == nullptr || structType == nullptr)
                     return false;
 
-                auto* fieldPointer = m_irBuilder->CreateStructGEP(structType, objectAddress, static_cast<unsigned>(fieldAddress.fieldIndex()), fieldAddress.fieldName());
-                defineValue(fieldAddress.resultId(), fieldPointer);
+                const auto fieldName = m_irModule.fieldName(instruction.secondType(), instruction.b);
+                auto* fieldPointer = m_irBuilder->CreateStructGEP(structType, objectAddress, static_cast<unsigned>(instruction.b), llvm::StringRef{ fieldName });
+                defineValue(instruction.resultId, fieldPointer);
                 return true;
             }
             case InstructionKind::ElementAddress:
             {
-                const auto& elementAddress = static_cast<const ElementAddressInstruction&>(instruction);
-                auto* baseAddress = tryResolve(elementAddress.baseAddress());
-                auto* index = tryResolve(elementAddress.index());
+                auto* baseAddress = tryResolve(instruction.a);
+                auto* index = tryResolve(instruction.b);
                 if (baseAddress == nullptr || index == nullptr)
                     return false;
 
                 // a slice's or dynamic array's base is its loaded data pointer, so the address is element-typed
-                if (elementAddress.arrayType().kind() == TypeKind::Slice
-                    || elementAddress.arrayType().kind() == TypeKind::DynamicArray)
+                const auto arrayType = instruction.secondType();
+                if (arrayType.kind() == TypeKind::Slice
+                    || arrayType.kind() == TypeKind::DynamicArray)
                 {
-                    auto* elementType = lowerType(elementAddress.type());
+                    auto* elementType = lowerType(instruction.type);
                     if (elementType == nullptr)
                         return false;
 
-                    defineValue(elementAddress.resultId(), m_irBuilder->CreateGEP(elementType, baseAddress, { index }, "element"));
+                    defineValue(instruction.resultId, m_irBuilder->CreateGEP(elementType, baseAddress, { index }, "element"));
                     return true;
                 }
 
-                auto* arrayType = lowerType(elementAddress.arrayType());
-                if (arrayType == nullptr)
+                auto* llvmArrayType = lowerType(arrayType);
+                if (llvmArrayType == nullptr)
                     return false;
 
                 auto* zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(m_llvmModule.getContext()), 0);
-                defineValue(elementAddress.resultId(), m_irBuilder->CreateGEP(arrayType, baseAddress, { zero, index }, "element"));
+                defineValue(instruction.resultId, m_irBuilder->CreateGEP(llvmArrayType, baseAddress, { zero, index }, "element"));
                 return true;
             }
             case InstructionKind::MakeSlice:
             {
-                const auto& makeSlice = static_cast<const MakeSliceInstruction&>(instruction);
-                auto* baseAddress = tryResolve(makeSlice.baseAddress());
-                auto* length = tryResolve(makeSlice.length());
-                auto* sliceType = lowerType(makeSlice.type());
+                auto* baseAddress = tryResolve(instruction.a);
+                auto* length = tryResolve(instruction.b);
+                auto* sliceType = lowerType(instruction.type);
                 if (baseAddress == nullptr || length == nullptr || sliceType == nullptr)
                     return false;
 
                 llvm::Value* slice = llvm::PoisonValue::get(sliceType);
                 slice = m_irBuilder->CreateInsertValue(slice, baseAddress, { 0 });
                 slice = m_irBuilder->CreateInsertValue(slice, length, { 1 }, "slice");
-                defineValue(makeSlice.resultId(), slice);
+                defineValue(instruction.resultId, slice);
                 return true;
             }
             case InstructionKind::ArrayAdd:
             {
-                const auto& arrayAdd = static_cast<const ArrayAddInstruction&>(instruction);
-                auto* descriptorAddress = tryResolve(arrayAdd.descriptorAddress());
-                auto* value = tryResolve(arrayAdd.value());
-                auto* descriptorType = lowerType(arrayAdd.arrayType());
-                auto* reallocCallee = tryResolveCallee(arrayAdd.reallocFunctionId());
-                const auto* arrayInfo = m_irModule.tryGetArrayType(arrayAdd.arrayType());
+                auto* descriptorAddress = tryResolve(instruction.a);
+                auto* value = tryResolve(instruction.b);
+                auto* descriptorType = lowerType(instruction.type);
+                auto* reallocCallee = tryResolveCallee(instruction.c);
+                const auto* arrayInfo = m_irModule.tryGetArrayType(instruction.type);
                 if (descriptorAddress == nullptr || value == nullptr || descriptorType == nullptr || reallocCallee == nullptr || arrayInfo == nullptr)
                     return false;
 
@@ -509,12 +469,11 @@ namespace Caracal
             }
             case InstructionKind::ArrayRemove:
             {
-                const auto& arrayRemove = static_cast<const ArrayRemoveInstruction&>(instruction);
-                auto* descriptorAddress = tryResolve(arrayRemove.descriptorAddress());
-                auto* index = tryResolve(arrayRemove.index());
-                auto* descriptorType = lowerType(arrayRemove.arrayType());
-                auto* memmoveCallee = tryResolveCallee(arrayRemove.memmoveFunctionId());
-                const auto* arrayInfo = m_irModule.tryGetArrayType(arrayRemove.arrayType());
+                auto* descriptorAddress = tryResolve(instruction.a);
+                auto* index = tryResolve(instruction.b);
+                auto* descriptorType = lowerType(instruction.type);
+                auto* memmoveCallee = tryResolveCallee(instruction.c);
+                const auto* arrayInfo = m_irModule.tryGetArrayType(instruction.type);
                 if (descriptorAddress == nullptr || index == nullptr || descriptorType == nullptr || memmoveCallee == nullptr || arrayInfo == nullptr)
                     return false;
 
@@ -545,12 +504,11 @@ namespace Caracal
             }
             case InstructionKind::ArrayCopy:
             {
-                const auto& arrayCopy = static_cast<const ArrayCopyInstruction&>(instruction);
-                auto* sourceAddress = tryResolve(arrayCopy.sourceAddress());
-                auto* descriptorType = lowerType(arrayCopy.arrayType());
-                auto* callocCallee = tryResolveCallee(arrayCopy.callocFunctionId());
-                auto* memmoveCallee = tryResolveCallee(arrayCopy.memmoveFunctionId());
-                const auto* arrayInfo = m_irModule.tryGetArrayType(arrayCopy.arrayType());
+                auto* sourceAddress = tryResolve(instruction.a);
+                auto* descriptorType = lowerType(instruction.type);
+                auto* callocCallee = tryResolveCallee(instruction.b);
+                auto* memmoveCallee = tryResolveCallee(instruction.c);
+                const auto* arrayInfo = m_irModule.tryGetArrayType(instruction.type);
                 if (sourceAddress == nullptr || descriptorType == nullptr || callocCallee == nullptr || memmoveCallee == nullptr || arrayInfo == nullptr)
                     return false;
 
@@ -575,7 +533,7 @@ namespace Caracal
                 llvm::Value* newData = nullptr;
                 llvm::Value* length64 = nullptr;
                 llvm::Value* descriptorCapacity = nullptr;
-                if (arrayCopy.reserveNulByte())
+                if (instruction.d != 0)
                 {
                     length64 = m_irBuilder->CreateSExt(length, i64Type, "widened");
                     auto* callocCount = m_irBuilder->CreateAdd(length64, llvm::ConstantInt::get(i64Type, 1), "nul_reserved");
@@ -596,25 +554,23 @@ namespace Caracal
                 descriptor = m_irBuilder->CreateInsertValue(descriptor, newData, { 0 });
                 descriptor = m_irBuilder->CreateInsertValue(descriptor, length, { 1 });
                 descriptor = m_irBuilder->CreateInsertValue(descriptor, descriptorCapacity, { 2 }, "array_copy");
-                defineValue(arrayCopy.resultId(), descriptor);
+                defineValue(instruction.resultId, descriptor);
                 return true;
             }
             case InstructionKind::LoadValue:
             {
-                const auto& load = static_cast<const LoadValueInstruction&>(instruction);
-                auto* address = tryResolve(load.address());
-                auto* valueType = lowerType(load.type());
+                auto* address = tryResolve(instruction.a);
+                auto* valueType = lowerType(instruction.type);
                 if (address == nullptr || valueType == nullptr)
                     return false;
 
-                defineValue(load.resultId(), m_irBuilder->CreateLoad(valueType, address, "load"));
+                defineValue(instruction.resultId, m_irBuilder->CreateLoad(valueType, address, "load"));
                 return true;
             }
             case InstructionKind::StoreValue:
             {
-                const auto& store = static_cast<const StoreValueInstruction&>(instruction);
-                auto* value = tryResolve(store.value());
-                auto* address = tryResolve(store.address());
+                auto* value = tryResolve(instruction.a);
+                auto* address = tryResolve(instruction.b);
                 if (value == nullptr || address == nullptr)
                     return false;
 
@@ -623,168 +579,118 @@ namespace Caracal
             }
             case InstructionKind::Phi:
             {
-                // create the empty node now, its incomings are wired up in lowerFunction once all blocks exist
-                const auto& phi = static_cast<const PhiInstruction&>(instruction);
-                auto* phiType = lowerType(phi.type());
+                // lowerFunctionBody adds the incoming values after every block is lowered
+                auto* phiType = lowerType(instruction.type);
                 if (phiType == nullptr)
                     return false;
 
-                auto* node = m_irBuilder->CreatePHI(phiType, static_cast<unsigned>(phi.inputs().size()), "phi");
-                defineValue(phi.resultId(), node);
-                m_pendingPhis.emplace_back(&phi, node);
+                auto* node = m_irBuilder->CreatePHI(phiType, static_cast<unsigned>(instruction.b), "phi");
+                defineValue(instruction.resultId, node);
+                m_pendingPhis.emplace_back(instructionIndex, node);
                 return true;
             }
             case InstructionKind::Call:
             {
-                const auto& call = static_cast<const CallInstruction&>(instruction);
-                auto* callee = tryResolveCallee(call.functionId());
+                auto* callee = tryResolveCallee(instruction.a);
                 if (callee == nullptr)
                     return false;
 
                 std::vector<llvm::Value*> argumentValues;
-                if (!buildCallArguments(call.arguments(), callee, argumentValues))
+                if (!buildCallArguments(function.operands(static_cast<u32>(instruction.b), static_cast<u32>(instruction.c)), callee, argumentValues))
                     return false;
 
                 auto value = m_irBuilder->CreateCall(callee, argumentValues, "call");
-                defineValue(call.resultId(), value);
+                defineValue(instruction.resultId, value);
                 return true;
             }
             case InstructionKind::CallVoid:
             {
-                const auto& call = static_cast<const CallVoidInstruction&>(instruction);
-                auto* callee = tryResolveCallee(call.functionId());
+                auto* callee = tryResolveCallee(instruction.a);
                 if (callee == nullptr)
                     return false;
 
                 std::vector<llvm::Value*> argumentValues;
-                if (!buildCallArguments(call.arguments(), callee, argumentValues))
+                if (!buildCallArguments(function.operands(static_cast<u32>(instruction.b), static_cast<u32>(instruction.c)), callee, argumentValues))
                     return false;
 
                 m_irBuilder->CreateCall(callee, argumentValues);
                 return true;
             }
             case InstructionKind::Add:
-            {
-                const auto& binary = static_cast<const AddInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
-            }
             case InstructionKind::Subtract:
-            {
-                const auto& binary = static_cast<const SubtractInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
-            }
             case InstructionKind::Multiply:
+            case InstructionKind::BitAnd:
+            case InstructionKind::BitOr:
+            case InstructionKind::BitXor:
             {
-                const auto& binary = static_cast<const MultiplyInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
+                return emitBinary(instruction.resultId, instruction.a, instruction.b, instruction.kind);
             }
             case InstructionKind::Divide:
             {
-                const auto& binary = static_cast<const DivideInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.type());
+                return emitBinary(instruction.resultId, instruction.a, instruction.b, instruction.kind, instruction.type);
             }
             case InstructionKind::Equal:
-            {
-                const auto& binary = static_cast<const EqualInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
             case InstructionKind::NotEqual:
-            {
-                const auto& binary = static_cast<const NotEqualInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
             case InstructionKind::LessThan:
-            {
-                const auto& binary = static_cast<const LessThanInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
             case InstructionKind::LessOrEqual:
-            {
-                const auto& binary = static_cast<const LessOrEqualInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
             case InstructionKind::GreaterThan:
-            {
-                const auto& binary = static_cast<const GreaterThanInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
             case InstructionKind::GreaterOrEqual:
             {
-                const auto& binary = static_cast<const GreaterOrEqualInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind(), binary.operandType());
-            }
-            case InstructionKind::BitAnd:
-            {
-                const auto& binary = static_cast<const BitAndInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
-            }
-            case InstructionKind::BitXor:
-            {
-                const auto& binary = static_cast<const BitXorInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
+                return emitBinary(instruction.resultId, instruction.a, instruction.b, instruction.kind, instruction.secondType());
             }
             case InstructionKind::BitNot:
             {
-                const auto& bitNot = static_cast<const BitNotInstruction&>(instruction);
-                auto* operand = tryResolve(bitNot.operandValue());
+                auto* operand = tryResolve(instruction.a);
                 if (operand == nullptr)
                     return false;
 
-                defineValue(bitNot.resultId(), m_irBuilder->CreateNot(operand, "bit_not"));
+                defineValue(instruction.resultId, m_irBuilder->CreateNot(operand, "bit_not"));
                 return true;
             }
             case InstructionKind::ShiftLeft:
             {
-                const auto& shiftLeft = static_cast<const ShiftLeftInstruction&>(instruction);
-                auto* value = tryResolve(shiftLeft.value());
-                auto* amount = tryResolve(shiftLeft.amount());
+                auto* value = tryResolve(instruction.a);
+                auto* amount = tryResolve(instruction.b);
                 if (value == nullptr || amount == nullptr)
                     return false;
 
                 amount = m_irBuilder->CreateZExtOrTrunc(amount, value->getType());
-                defineValue(shiftLeft.resultId(), m_irBuilder->CreateShl(value, amount, "shift_left"));
+                defineValue(instruction.resultId, m_irBuilder->CreateShl(value, amount, "shift_left"));
                 return true;
             }
             case InstructionKind::ShiftRight:
             {
-                const auto& shiftRight = static_cast<const ShiftRightInstruction&>(instruction);
-                auto* value = tryResolve(shiftRight.value());
-                auto* amount = tryResolve(shiftRight.amount());
+                auto* value = tryResolve(instruction.a);
+                auto* amount = tryResolve(instruction.b);
                 if (value == nullptr || amount == nullptr)
                     return false;
 
                 amount = m_irBuilder->CreateZExtOrTrunc(amount, value->getType());
                 // signed types shift arithmetic and unsigned types shift logical
-                const auto* description = m_irModule.tryGetBuiltinTypeDescription(shiftRight.type());
+                const auto* description = m_irModule.tryGetBuiltinTypeDescription(instruction.type);
                 if (description != nullptr && !description->isSigned)
                 {
-                    defineValue(shiftRight.resultId(), m_irBuilder->CreateLShr(value, amount, "shift_right"));
+                    defineValue(instruction.resultId, m_irBuilder->CreateLShr(value, amount, "shift_right"));
                 }
                 else
                 {
-                    defineValue(shiftRight.resultId(), m_irBuilder->CreateAShr(value, amount, "shift_right"));
+                    defineValue(instruction.resultId, m_irBuilder->CreateAShr(value, amount, "shift_right"));
                 }
 
                 return true;
             }
-            case InstructionKind::BitOr:
-            {
-                const auto& binary = static_cast<const BitOrInstruction&>(instruction);
-                return emitBinary(binary.resultId(), binary.leftValue(), binary.rightValue(), instruction.kind());
-            }
             case InstructionKind::IntToFloat:
             {
-                const auto& conversion = static_cast<const IntToFloatInstruction&>(instruction);
-                auto* operand = tryResolve(conversion.operandValue());
+                auto* operand = tryResolve(instruction.a);
                 if (operand == nullptr)
                     return false;
 
-                auto* floatType = lowerType(conversion.type());
+                auto* floatType = lowerType(instruction.type);
                 if (floatType == nullptr)
                     return false;
 
                 llvm::Value* result = nullptr;
-                const auto* sourceDescription = m_irModule.tryGetBuiltinTypeDescription(conversion.sourceType());
+                const auto* sourceDescription = m_irModule.tryGetBuiltinTypeDescription(instruction.secondType());
                 if (sourceDescription != nullptr && !sourceDescription->isSigned)
                 {
                     result = m_irBuilder->CreateUIToFP(operand, floatType, "int_to_float");
@@ -794,34 +700,32 @@ namespace Caracal
                     result = m_irBuilder->CreateSIToFP(operand, floatType, "int_to_float");
                 }
 
-                defineValue(conversion.resultId(), result);
+                defineValue(instruction.resultId, result);
                 return true;
             }
             case InstructionKind::SizeOf:
             {
-                const auto& sizeOf = static_cast<const SizeOfInstruction&>(instruction);
-                auto* measuredType = lowerType(sizeOf.measuredType());
-                auto* resultType = lowerType(sizeOf.type());
+                auto* measuredType = lowerType(instruction.secondType());
+                auto* resultType = lowerType(instruction.type);
                 if (measuredType == nullptr || resultType == nullptr)
                     return false;
 
                 const auto size = m_llvmModule.getDataLayout().getTypeAllocSize(measuredType);
-                defineValue(sizeOf.resultId(), llvm::ConstantInt::get(resultType, size.getFixedValue()));
+                defineValue(instruction.resultId, llvm::ConstantInt::get(resultType, size.getFixedValue()));
                 return true;
             }
             case InstructionKind::IntWiden:
             {
-                const auto& conversion = static_cast<const IntWidenInstruction&>(instruction);
-                auto* operand = tryResolve(conversion.operandValue());
+                auto* operand = tryResolve(instruction.a);
                 if (operand == nullptr)
                     return false;
 
-                auto* targetType = lowerType(conversion.type());
+                auto* targetType = lowerType(instruction.type);
                 if (targetType == nullptr)
                     return false;
 
                 // the source descriptor decides sign extension vs zero extension
-                const auto* description = m_irModule.tryGetBuiltinTypeDescription(conversion.sourceType());
+                const auto* description = m_irModule.tryGetBuiltinTypeDescription(instruction.secondType());
                 llvm::Value* result = nullptr;
                 if (description != nullptr && !description->isSigned)
                 {
@@ -832,13 +736,12 @@ namespace Caracal
                     result = m_irBuilder->CreateSExt(operand, targetType, "int_widen");
                 }
 
-                defineValue(conversion.resultId(), result);
+                defineValue(instruction.resultId, result);
                 return true;
             }
             case InstructionKind::ValueNegation:
             {
-                const auto& negation = static_cast<const ValueNegationInstruction&>(instruction);
-                auto* operand = tryResolve(negation.operandValue());
+                auto* operand = tryResolve(instruction.a);
                 if (operand == nullptr)
                     return false;
 
@@ -848,31 +751,68 @@ namespace Caracal
                 else
                     result = m_irBuilder->CreateNeg(operand);
 
-                defineValue(negation.resultId(), result);
+                defineValue(instruction.resultId, result);
                 return true;
             }
             case InstructionKind::LogicalNegation:
             {
-                const auto& negation = static_cast<const LogicalNegationInstruction&>(instruction);
-                auto* operand = tryResolve(negation.operandValue());
+                auto* operand = tryResolve(instruction.a);
                 if (operand == nullptr)
                     return false;
 
-                defineValue(negation.resultId(), m_irBuilder->CreateNot(operand));
+                defineValue(instruction.resultId, m_irBuilder->CreateNot(operand));
+                return true;
+            }
+            case InstructionKind::Return:
+            {
+                m_irBuilder->CreateRetVoid();
+                return true;
+            }
+            case InstructionKind::Unreachable:
+            {
+                m_irBuilder->CreateUnreachable();
+                return true;
+            }
+            case InstructionKind::ReturnValue:
+            {
+                auto* value = tryResolve(instruction.a);
+                if (value == nullptr)
+                    return false;
+
+                m_irBuilder->CreateRet(value);
+                return true;
+            }
+            case InstructionKind::Jump:
+            {
+                auto* target = tryGetBlock(instruction.a);
+                if (target == nullptr)
+                    return false;
+
+                m_irBuilder->CreateBr(target);
+                return true;
+            }
+            case InstructionKind::Branch:
+            {
+                auto* condition = tryResolve(instruction.a);
+                auto* trueBlock = tryGetBlock(instruction.b);
+                auto* falseBlock = tryGetBlock(instruction.c);
+                if (condition == nullptr || trueBlock == nullptr || falseBlock == nullptr)
+                    return false;
+
+                m_irBuilder->CreateCondBr(condition, trueBlock, falseBlock);
                 return true;
             }
             default:
             {
-                // todo other stuff
                 return false;
             }
         }
     }
 
-    bool LLVMCodeGenerator::emitBinary(TemporaryId resultId, ValueRef leftRef, ValueRef rightRef, InstructionKind kind, Type operandType) noexcept
+    bool LLVMCodeGenerator::emitBinary(TemporaryId resultId, TemporaryId leftId, TemporaryId rightId, InstructionKind kind, Type operandType) noexcept
     {
-        auto* lhs = tryResolve(leftRef);
-        auto* rhs = tryResolve(rightRef);
+        auto* lhs = tryResolve(leftId);
+        auto* rhs = tryResolve(rightId);
         if (lhs == nullptr || rhs == nullptr)
             return false;
 
@@ -1056,59 +996,6 @@ namespace Caracal
         }
     }
 
-    bool LLVMCodeGenerator::lowerTerminator(const Terminator& terminator) noexcept
-    {
-        switch (terminator.kind())
-        {
-            case TerminatorKind::Return:
-            {
-                m_irBuilder->CreateRetVoid();
-                return true;
-            }
-            case TerminatorKind::Unreachable:
-            {
-                m_irBuilder->CreateUnreachable();
-                return true;
-            }
-            case TerminatorKind::ReturnValue:
-            {
-                const auto& returnValue = static_cast<const ReturnValueTerminator&>(terminator);
-                auto* value = tryResolve(returnValue.value());
-                if (value == nullptr)
-                    return false;
-
-                m_irBuilder->CreateRet(value);
-                return true;
-            }
-            case TerminatorKind::Jump:
-            {
-                const auto& jump = static_cast<const JumpTerminator&>(terminator);
-                auto* target = tryGetBlock(jump.targetBlockId());
-                if (target == nullptr)
-                    return false;
-
-                m_irBuilder->CreateBr(target);
-                return true;
-            }
-            case TerminatorKind::Branch:
-            {
-                const auto& branch = static_cast<const BranchIfTerminator&>(terminator);
-                auto* condition = tryResolve(branch.condition());
-                auto* trueBlock = tryGetBlock(branch.trueBlockId());
-                auto* falseBlock = tryGetBlock(branch.falseBlockId());
-                if (condition == nullptr || trueBlock == nullptr || falseBlock == nullptr)
-                    return false;
-
-                m_irBuilder->CreateCondBr(condition, trueBlock, falseBlock);
-                return true;
-            }
-            default:
-            {
-                return false;
-            }
-        }
-    }
-
     llvm::Type* LLVMCodeGenerator::lowerType(Type type) const noexcept
     {
         auto& context = m_llvmModule.getContext();
@@ -1256,9 +1143,9 @@ namespace Caracal
             *literalData);
     }
 
-    llvm::Value* LLVMCodeGenerator::tryResolve(ValueRef value) const noexcept
+    llvm::Value* LLVMCodeGenerator::tryResolve(TemporaryId id) const noexcept
     {
-        const auto result = m_values.find(value.id());
+        const auto result = m_values.find(id);
         if (result == m_values.end())
             return nullptr;
 
@@ -1338,7 +1225,7 @@ namespace Caracal
         return value;
     }
 
-    bool LLVMCodeGenerator::buildCallArguments(const std::vector<ValueRef>& arguments, llvm::Function* callee, std::vector<llvm::Value*>& argumentValues) noexcept
+    bool LLVMCodeGenerator::buildCallArguments(std::span<const TemporaryId> arguments, llvm::Function* callee, std::vector<llvm::Value*>& argumentValues) noexcept
     {
         const auto isVariadic = callee->isVarArg();
         const auto fixedParameterCount = callee->getFunctionType()->getNumParams();

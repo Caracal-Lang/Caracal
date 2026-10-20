@@ -1,11 +1,14 @@
 #pragma once
 
 #include <Caracal/Defines.h>
+#include <Caracal/IR/ConstantPool.h>
 #include <Caracal/IR/Function.h>
 #include <Caracal/Semantic/Type.h>
 
 #include <optional>
+#include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Caracal
@@ -40,7 +43,18 @@ namespace Caracal
 
         [[nodiscard]] size_t size() const noexcept { return m_bodies.size(); }
 
+        void setPools(ConstantPool constants, std::vector<std::string> names)
+        {
+            m_constants = std::move(constants);
+            m_names = std::move(names);
+        }
+
+        [[nodiscard]] const ConstantPool& constants() const noexcept { return m_constants; }
+        [[nodiscard]] const std::vector<std::string>& names() const noexcept { return m_names; }
+
     private:
         std::unordered_map<FunctionId, PreludeFunctionBody> m_bodies;
+        ConstantPool m_constants;
+        std::vector<std::string> m_names;
     };
 }

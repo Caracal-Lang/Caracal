@@ -29,6 +29,17 @@
 
 namespace Caracal
 {
+    struct CallArgumentScope
+    {
+        std::vector<ValueRef>& stack;
+        size_t start;
+
+        ~CallArgumentScope()
+        {
+            stack.resize(start);
+        }
+    };
+
     static bool ShouldIgnoreUnusedVariableWarning(std::string_view name)
     {
         return name == "_" || name == ImplicitThisName;
@@ -1054,7 +1065,7 @@ namespace Caracal
             return m_emitter.spillToTempSlot(value, arrayType);
         }
 
-        return m_emitter.emitGlobalAddress(std::string(nameOf(unit, nameNode)));
+        return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
     }
 
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
@@ -1085,7 +1096,7 @@ namespace Caracal
             return checked.value;
         }
 
-        return m_emitter.emitConstant(IREmitter::constantFromFold(checked.folded.value()), checked.type.toValue());
+        return m_emitter.emitFoldedConstant(checked.folded.value(), checked.type.toValue());
     }
 
     void TypeChecker::checkUninitializedInitConstants()
@@ -1810,7 +1821,7 @@ namespace Caracal
                 }
 
                 const auto thisAddress = m_emitter.addressOfLocal(m_thisNameId);
-                return m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+                return m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.index(), fieldDefinition.type());
             }
             case NodeKind::BinaryExpression:
             {
@@ -1839,7 +1850,7 @@ namespace Caracal
                     return ValueRef{};
                 }
 
-                return m_emitter.emitFieldAddress(receiverAddress, receiverType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+                return m_emitter.emitFieldAddress(receiverAddress, receiverType, fieldDefinition.index(), fieldDefinition.type());
             }
             default:
             {
@@ -1888,7 +1899,7 @@ namespace Caracal
                 const auto checkedType = m_module.typeOfNode(NodeIndex{ unit.fileId, element.node }).toValue();
                 if (elementValue.id() < 0 || checkedType != elementType.toValue())
                 {
-                    elementValue = m_emitter.emitConstant(IREmitter::constantFromFold(element.folded.value()), elementType.toValue());
+                    elementValue = m_emitter.emitFoldedConstant(element.folded.value(), elementType.toValue());
                 }
             }
             m_emitter.emitStoreValue(elementValue, elementAddress, elementType);
@@ -3294,7 +3305,7 @@ namespace Caracal
             const auto* emitBinding = tryGetBinding(nameIdOf(unit, assignmentLayout.target));
             if (emitBinding != nullptr && emitBinding->scopeIndex == 0 && !currentScopeIsGlobal())
             {
-                m_emitter.emitGlobalAssignment(std::string(nameOf(unit, assignmentLayout.target)), assignedValue);
+                m_emitter.emitGlobalAssignment(nameOf(unit, assignmentLayout.target), assignedValue);
             }
             else
             {
@@ -3651,7 +3662,7 @@ namespace Caracal
             && (fieldType.kind() == TypeKind::FixedArray || fieldType.kind() == TypeKind::DynamicArray))
         {
             // an array literal fills the field directly
-            const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
+            const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldIndex, fieldType);
             emitCapturedArrayLiteral(unit, strippedField, fieldAddress, fieldType);
             return;
         }
@@ -3665,7 +3676,7 @@ namespace Caracal
             const auto reserveNulByte = typeDefinition.type() == m_module.wellKnown().string;
             fieldValue = m_emitter.emitArrayCopy(sourceAddress, fieldType, reserveNulByte);
         }
-        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldName, fieldIndex, fieldType);
+        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldIndex, fieldType);
         m_emitter.emitStoreValue(fieldValue, fieldAddress, fieldType);
     }
 
@@ -4200,7 +4211,7 @@ namespace Caracal
                     result.value = m_emitter.emitRefValue(nameIdOf(unit, strippedOperand), type);
                     if (result.value.id() < 0)
                     {
-                        result.value = m_emitter.readGlobal(std::string(nameOf(unit, strippedOperand)));
+                        result.value = m_emitter.readGlobal(nameOf(unit, strippedOperand));
                     }
                 }
                 return result;
@@ -4417,7 +4428,7 @@ namespace Caracal
                             }
                             if (receiverAddress.id() >= 0)
                             {
-                                const auto fieldAddress = m_emitter.emitFieldAddress(receiverAddress, leftType.toValue(), fieldDefinition.name(), fieldDefinition.index(), fieldType);
+                                const auto fieldAddress = m_emitter.emitFieldAddress(receiverAddress, leftType.toValue(), fieldDefinition.index(), fieldType);
                                 if (context.receiverPosition)
                                 {
                                     // a field used as a receiver returns its address, not its value
@@ -4548,7 +4559,7 @@ namespace Caracal
                                 }
                                 if (receiverAddress.id() >= 0)
                                 {
-                                    const auto lengthAddress = m_emitter.emitFieldAddress(receiverAddress, receiverType, ArrayLengthMemberName, 1, lengthType);
+                                    const auto lengthAddress = m_emitter.emitFieldAddress(receiverAddress, receiverType, 1, lengthType);
                                     result.value = m_emitter.emitLoad(lengthAddress, lengthType);
                                 }
                             }
@@ -4669,10 +4680,8 @@ namespace Caracal
                     m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
                     if (leftValue.id() >= 0 && rightValue.id() >= 0)
                     {
-                        result.value = m_emitter.emitCall(
-                            operatorSignature->callee.id(),
-                            std::vector<ValueRef>{ leftValue, rightValue },
-                            operatorSignature->resultType);
+                        const ValueRef operands[] = { leftValue, rightValue };
+                        result.value = m_emitter.emitCall(operatorSignature->callee.id(), operands, operatorSignature->resultType);
                     }
                     return result;
                 }
@@ -4804,10 +4813,8 @@ namespace Caracal
                     m_emitter.recordCalledPreludeFunction(operatorSignature->callee);
                     if (leftValue.id() >= 0 && rightValue.id() >= 0)
                     {
-                        result.value = m_emitter.emitCall(
-                            operatorSignature->callee.id(),
-                            std::vector<ValueRef>{ leftValue, rightValue },
-                            operatorSignature->resultType);
+                        const ValueRef operands[] = { leftValue, rightValue };
+                        result.value = m_emitter.emitCall(operatorSignature->callee.id(), operands, operatorSignature->resultType);
                     }
                 }
                 else if (!isShortCircuitOperator && leftType == m_module.wellKnown().cstring
@@ -4856,7 +4863,7 @@ namespace Caracal
                     const auto& fieldDefinition = m_module.getTypeDefinition(m_currentType).tryGetFieldByName(nameOf(unit, index));
                     if (thisAddress.id() >= 0 && fieldDefinition.type() != Type::Undefined())
                     {
-                        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.name(), fieldDefinition.index(), fieldDefinition.type());
+                        const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, m_currentType, fieldDefinition.index(), fieldDefinition.type());
                         if (context.receiverPosition)
                         {
                             // a field used as a receiver returns its address, not its value
@@ -4883,7 +4890,7 @@ namespace Caracal
             }
             if (binding->scopeIndex == 0 && !currentScopeIsGlobal())
             {
-                result.value = m_emitter.readGlobal(std::string(nameOf(unit, index)));
+                result.value = m_emitter.readGlobal(nameOf(unit, index));
             }
             else
             {
@@ -5424,10 +5431,10 @@ namespace Caracal
                 canEmitCall = false;
             }
         }
-        std::vector<ValueRef> callArguments;
+        const auto callArgumentStart = m_callArgumentValues.size();
+        const CallArgumentScope callArgumentScope{ m_callArgumentValues, callArgumentStart };
         if (canEmitCall)
         {
-            callArguments.reserve(fixedParameterCount);
             for (size_t i = 0; i < fixedParameterCount; ++i)
             {
                 const auto argumentNode = m_orderedSlotStack[orderedStart + i];
@@ -5461,7 +5468,7 @@ namespace Caracal
                         canEmitCall = false;
                         break;
                     }
-                    callArguments.push_back(emittedDefault);
+                    m_callArgumentValues.push_back(emittedDefault);
                     continue;
                 }
 
@@ -5498,7 +5505,7 @@ namespace Caracal
                         canEmitCall = false;
                         break;
                     }
-                    callArguments.push_back(address);
+                    m_callArgumentValues.push_back(address);
                     continue;
                 }
 
@@ -5518,7 +5525,7 @@ namespace Caracal
                             canEmitCall = false;
                             break;
                         }
-                        callArguments.push_back(m_emitter.emitWidened(loaded, argumentType, parameter.type().toValue()));
+                        m_callArgumentValues.push_back(m_emitter.emitWidened(loaded, argumentType, parameter.type().toValue()));
                         continue;
                     }
                 }
@@ -5532,7 +5539,7 @@ namespace Caracal
                         auto sourceAddress = m_emitter.addressOfLocal(nameIdOf(unit, strippedArgument));
                         if (sourceAddress.id() < 0)
                         {
-                            sourceAddress = m_emitter.emitGlobalAddress(std::string(nameOf(unit, strippedArgument)));
+                            sourceAddress = m_emitter.emitGlobalAddress(nameOf(unit, strippedArgument));
                         }
                         const auto copied = m_emitter.emitArrayCopy(sourceAddress, parameter.type().toValue());
                         if (copied.id() < 0)
@@ -5540,7 +5547,7 @@ namespace Caracal
                             canEmitCall = false;
                             break;
                         }
-                        callArguments.push_back(copied);
+                        m_callArgumentValues.push_back(copied);
                         continue;
                     }
                 }
@@ -5556,7 +5563,7 @@ namespace Caracal
                     argumentRef = argument.value;
                     if (argumentRef.id() < 0 && argument.folded.has_value())
                     {
-                        argumentRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), argumentType);
+                        argumentRef = m_emitter.emitFoldedConstant(argument.folded.value(), argumentType);
                     }
                     break;
                 }
@@ -5565,7 +5572,7 @@ namespace Caracal
                     canEmitCall = false;
                     break;
                 }
-                callArguments.push_back(m_emitter.emitWidened(argumentRef, argumentType, parameter.type().toValue()));
+                m_callArgumentValues.push_back(m_emitter.emitWidened(argumentRef, argumentType, parameter.type().toValue()));
             }
 
             // variadic arguments
@@ -5583,7 +5590,7 @@ namespace Caracal
                     variadicRef = argument.value;
                     if (variadicRef.id() < 0 && argument.folded.has_value())
                     {
-                        variadicRef = m_emitter.emitConstant(IREmitter::constantFromFold(argument.folded.value()), m_module.typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
+                        variadicRef = m_emitter.emitFoldedConstant(argument.folded.value(), m_module.typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
                     }
                     break;
                 }
@@ -5592,7 +5599,7 @@ namespace Caracal
                     canEmitCall = false;
                     break;
                 }
-                callArguments.push_back(variadicRef);
+                m_callArgumentValues.push_back(variadicRef);
             }
         }
 
@@ -5610,7 +5617,7 @@ namespace Caracal
                 callReturnType = checkedDefinition.returnTypes().front();
             }
             emittedCallFold = foldedCall;
-            emittedCallValue = m_emitter.emitConstant(IREmitter::constantFromFold(foldedCall.value()), callReturnType.toValue());
+            emittedCallValue = m_emitter.emitFoldedConstant(foldedCall.value(), callReturnType.toValue());
         }
         else if (canEmitCall)
         {
@@ -5621,8 +5628,9 @@ namespace Caracal
             }
             if (needsReceiver)
             {
-                callArguments.insert(callArguments.begin(), receiverAddress);
+                m_callArgumentValues.insert(m_callArgumentValues.begin() + static_cast<std::ptrdiff_t>(callArgumentStart), receiverAddress);
             }
+            const auto callArguments = std::span<const ValueRef>{ m_callArgumentValues }.subspan(callArgumentStart);
             if (isElementIntrinsic)
             {
                 const auto receiverType = checkedDefinition.parameters().front().type().toBaseType();
@@ -5671,7 +5679,7 @@ namespace Caracal
             }
             else
             {
-                emittedCallValue = m_emitter.emitCall(functionType.id(), std::move(callArguments), callReturnType);
+                emittedCallValue = m_emitter.emitCall(functionType.id(), callArguments, callReturnType);
             }
 
             if (calleeKind == FunctionType::SynthesizedConstructor

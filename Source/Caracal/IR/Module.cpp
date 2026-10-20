@@ -1,4 +1,9 @@
-﻿#include <Caracal/IR/Module.h>
+#include <Caracal/IR/Module.h>
+
+#include <Caracal/Constants.h>
+
+#include <iterator>
+#include <string>
 
 namespace Caracal
 {
@@ -162,5 +167,63 @@ namespace Caracal
             return nullptr;
 
         return &result->second;
+    }
+
+    ConstantValue Module::constantValue(const Instruction& constantInstruction) const
+    {
+        const auto form = static_cast<ConstantForm>(constantInstruction.a);
+        if (form == ConstantForm::Scalar)
+        {
+            return ConstantValue::FromLiteralData(scalarConstantFromBits(static_cast<u32>(constantInstruction.b), constantInstruction.constantBits()));
+        }
+
+        if (form == ConstantForm::String)
+        {
+            const auto range = StringRange{ static_cast<u32>(constantInstruction.c), static_cast<u32>(constantInstruction.d) };
+            return ConstantValue::FromString(std::string(m_constants.string(range)));
+        }
+
+        return m_constants.constant(static_cast<u32>(constantInstruction.b));
+    }
+
+    std::string_view Module::fieldName(Type objectType, i32 fieldIndex) const noexcept
+    {
+        static constexpr std::string_view descriptorFieldNames[] = { "data", ArrayLengthMemberName, "capacity" };
+
+        const auto baseType = objectType.toBaseType();
+        const auto kind = baseType.kind();
+        if (kind == TypeKind::DynamicArray || kind == TypeKind::Slice || kind == TypeKind::FixedArray)
+        {
+            if (fieldIndex >= 0 && static_cast<size_t>(fieldIndex) < std::size(descriptorFieldNames))
+            {
+                return descriptorFieldNames[fieldIndex];
+            }
+            return "<unknown-field>";
+        }
+
+        const auto found = m_typeIndices.find(baseType.id());
+        if (found != m_typeIndices.end())
+        {
+            const auto& fields = m_types[found->second].fields();
+            if (fieldIndex >= 0 && static_cast<size_t>(fieldIndex) < fields.size())
+            {
+                return fields[static_cast<size_t>(fieldIndex)].name;
+            }
+        }
+
+        return "<unknown-field>";
+    }
+
+    u32 Module::internName(std::string_view name)
+    {
+        if (const auto found = m_nameIds.find(name); found != m_nameIds.end())
+        {
+            return found->second;
+        }
+
+        const auto id = static_cast<u32>(m_names.size());
+        m_names.emplace_back(name);
+        m_nameIds.emplace(m_names.back(), id);
+        return id;
     }
 }

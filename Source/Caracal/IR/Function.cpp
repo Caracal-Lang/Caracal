@@ -1,4 +1,6 @@
-﻿#include <Caracal/IR/Function.h>
+#include <Caracal/IR/Function.h>
+
+#include <utility>
 
 namespace Caracal
 {
@@ -10,45 +12,26 @@ namespace Caracal
     {
     }
 
-    BasicBlock* Function::tryGetBlock(BlockId id) noexcept
+    void Function::setBody(std::vector<Instruction> instructions, std::vector<BasicBlock> blocks, std::span<const TemporaryId> operands, std::span<const PhiInput> phiInputs)
     {
-        const auto result = m_blockIndices.find(id);
-        if (result == m_blockIndices.end())
-            return nullptr;
-
-        return m_blocks[result->second].get();
+        m_instructions = std::move(instructions);
+        m_blocks = std::move(blocks);
+        m_operands.assign(operands.begin(), operands.end());
+        m_phiInputs.assign(phiInputs.begin(), phiInputs.end());
     }
 
-    const BasicBlock* Function::tryGetBlock(BlockId id) const noexcept
+    std::span<const TemporaryId> Function::operands(u32 start, u32 count) const noexcept
     {
-        const auto result = m_blockIndices.find(id);
-        if (result == m_blockIndices.end())
-            return nullptr;
-
-        return m_blocks[result->second].get();
+        return std::span<const TemporaryId>{ m_operands }.subspan(start, count);
     }
 
-    void Function::addParameter(IRParameter parameter)
+    std::span<const PhiInput> Function::phiInputsAt(u32 instructionIndex) const noexcept
     {
-        m_parameters.push_back(std::move(parameter));
+        return std::span<const PhiInput>{ m_phiInputs }.subspan(static_cast<size_t>(aAt(instructionIndex)), static_cast<size_t>(bAt(instructionIndex)));
     }
 
-    void Function::addBlock(BasicBlock block)
+    std::span<const PhiInput> Function::phiInputs(const Instruction& phi) const noexcept
     {
-        const auto blockId = block.id();
-        m_blockIndices.insert_or_assign(blockId, m_blocks.size());
-        m_blocks.push_back(std::make_unique<BasicBlock>(std::move(block)));
-    }
-
-    bool Function::popLastBlock(BlockId expectedId) noexcept
-    {
-        if (m_blocks.empty() || m_blocks.back()->id() != expectedId)
-        {
-            return false;
-        }
-
-        m_blockIndices.erase(expectedId);
-        m_blocks.pop_back();
-        return true;
+        return std::span<const PhiInput>{ m_phiInputs }.subspan(static_cast<size_t>(phi.a), static_cast<size_t>(phi.b));
     }
 }

@@ -91,6 +91,7 @@ namespace Caracal
                 std::cerr << "error: the prelude type checks but the compiler could not lower it\n";
                 std::abort();
             }
+            compilationContext.semanticContext().preludeFunctionPool().setPools(preludeModule.constants(), preludeModule.names());
         }
 
         // prelude is core library code, we will abort if there are errors

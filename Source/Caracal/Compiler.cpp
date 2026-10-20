@@ -87,18 +87,20 @@ namespace Caracal
         return preludeDirectory;
     }
 
+    // catches malformed IR before it is emitted, verifyModule returns true when broken
+    static bool VerifyModule(llvm::Module& llvmModule)
+    {
+        CARACAL_ZONE_NAMED("verify");
+        return !llvm::verifyModule(llvmModule, &llvm::errs());
+    }
+
     static bool GenerateModule(Module& irModule, llvm::Module& llvmModule)
     {
         LLVMCodeGenerator codeGenerator{ irModule, llvmModule };
         if (!codeGenerator.generate())
             return false;
 
-        // catch malformed IR before it is emitted, verifyModule returns true when broken
-        CARACAL_ZONE_NAMED("verify");
-        if (llvm::verifyModule(llvmModule, &llvm::errs()))
-            return false;
-
-        return true;
+        return VerifyModule(llvmModule);
     }
 
     int compileFile(
@@ -185,7 +187,7 @@ namespace Caracal
         auto features = "";
         llvm::TargetOptions targetOptions{};
         auto relocModel = std::optional<llvm::Reloc::Model>();
-        auto targetMachine = target->createTargetMachine(triple, CPU, features, targetOptions, relocModel);
+        auto targetMachine = target->createTargetMachine(triple, CPU, features, targetOptions, relocModel, std::nullopt, llvm::CodeGenOptLevel::None);
         llvmModule->setDataLayout(targetMachine->createDataLayout());
         llvmModule->setTargetTriple(triple);
 
@@ -196,11 +198,11 @@ namespace Caracal
             return 1;
         }
 
-        std::string irOutput;
-        llvm::raw_string_ostream irStream(irOutput);
-        llvmModule->print(irStream, nullptr);
-        irStream.flush();
-        llvm::outs() << "Module IR:\n" << irOutput << "\n";
+        // std::string irOutput;
+        // llvm::raw_string_ostream irStream(irOutput);
+        // llvmModule->print(irStream, nullptr);
+        // irStream.flush();
+        // llvm::outs() << "Module IR:\n" << irOutput << "\n";
 
         const auto inputFileName = filePath.stem().string();
         const auto objectFileName = inputFileName + ".o";

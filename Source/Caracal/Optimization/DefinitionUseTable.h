@@ -1,16 +1,17 @@
 #pragma once
 
 #include <Caracal/Defines.h>
-#include <Caracal/IR/Instruction.h>
 
+#include <limits>
 #include <vector>
 
 namespace Caracal
 {
     struct DefinitionUseTable
     {
+        static constexpr u32 NoDefinitionInstruction = std::numeric_limits<u32>::max();
+
         std::vector<i32> useCounts;
-        std::vector<const Instruction*> definitions;
-        std::vector<size_t> definitionBlockIndexes;
+        std::vector<u32> definitionInstructions;
     };
 }

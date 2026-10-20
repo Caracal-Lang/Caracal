@@ -1,47 +1,5 @@
 ﻿#include <Caracal/Debug/IRPrinter.h>
-#include <Caracal/IR/AddInstruction.h>
-#include <Caracal/IR/AddressOfInstruction.h>
-#include <Caracal/IR/AddressOfFieldInstruction.h>
-#include <Caracal/IR/AddressOfGlobalInstruction.h>
-#include <Caracal/IR/AllocateLocalInstruction.h>
-#include <Caracal/IR/BranchIfTerminator.h>
-#include <Caracal/IR/CallInstruction.h>
-#include <Caracal/IR/CallVoidInstruction.h>
-#include <Caracal/IR/ConstantInstruction.h>
-#include <Caracal/IR/DivideInstruction.h>
-#include <Caracal/IR/ElementAddressInstruction.h>
-#include <Caracal/IR/EqualInstruction.h>
 #include <Caracal/IR/ExternFunction.h>
-#include <Caracal/IR/Function.h>
-#include <Caracal/IR/GreaterOrEqualInstruction.h>
-#include <Caracal/IR/GreaterThanInstruction.h>
-#include <Caracal/IR/IntToFloatInstruction.h>
-#include <Caracal/IR/IntWidenInstruction.h>
-#include <Caracal/IR/ArrayAddInstruction.h>
-#include <Caracal/IR/ArrayCopyInstruction.h>
-#include <Caracal/IR/ArrayRemoveInstruction.h>
-#include <Caracal/IR/SizeOfInstruction.h>
-#include <Caracal/IR/LessOrEqualInstruction.h>
-#include <Caracal/IR/LessThanInstruction.h>
-#include <Caracal/IR/LoadValueInstruction.h>
-#include <Caracal/IR/BitAndInstruction.h>
-#include <Caracal/IR/BitNotInstruction.h>
-#include <Caracal/IR/BitOrInstruction.h>
-#include <Caracal/IR/BitXorInstruction.h>
-#include <Caracal/IR/LogicalNegationInstruction.h>
-#include <Caracal/IR/ShiftLeftInstruction.h>
-#include <Caracal/IR/ShiftRightInstruction.h>
-#include <Caracal/IR/MakeSliceInstruction.h>
-#include <Caracal/IR/MultiplyInstruction.h>
-#include <Caracal/IR/NotEqualInstruction.h>
-#include <Caracal/IR/ParameterInstruction.h>
-#include <Caracal/IR/PhiInstruction.h>
-#include <Caracal/IR/ReturnTerminator.h>
-#include <Caracal/IR/ReturnValueTerminator.h>
-#include <Caracal/IR/StoreValueInstruction.h>
-#include <Caracal/IR/SubtractInstruction.h>
-#include <Caracal/IR/JumpTerminator.h>
-#include <Caracal/IR/ValueNegationInstruction.h>
 
 #include <algorithm>
 #include <charconv>
@@ -386,647 +344,6 @@ namespace Caracal
         m_builder.appendLine("");
     }
 
-    void IRPrinter::prettyPrintFunction(const Function& function)
-    {
-        m_builder
-            .append("define ")
-            .append(function.name())
-            .append("(");
-
-        const auto& parameters = function.parameters();
-        for (size_t index = 0; index < parameters.size(); ++index)
-        {
-            if (index > 0)
-                m_builder.append(", ");
-
-            m_builder
-                .append("%")
-                .append(std::to_string(index))
-                .append(": ");
-            appendType(parameters[index].type());
-            m_builder
-                .append(" \"")
-                .append(parameters[index].name())
-                .append("\"");
-        }
-
-        m_builder.append(") ");
-        appendType(function.returnType());
-        m_builder.appendLine("");
-
-        for (const auto& block : function.blocks())
-        {
-            prettyPrintBlock(function, *block);
-        }
-    }
-
-    void IRPrinter::prettyPrintBlock(const Function& function, const BasicBlock& block)
-    {
-        m_builder.append("block ");
-        appendBlockLabel(function, block.id());
-        m_builder.appendLine(":");
-        m_builder.pushIndentation();
-
-        for (const auto& instruction : block.instructions())
-            prettyPrintInstruction(function, *instruction);
-
-        if (block.hasTerminator())
-            prettyPrintTerminator(function, *block.terminator());
-
-        m_builder.popIndentation();
-    }
-
-    void IRPrinter::prettyPrintInstruction(const Function& function, const Instruction& instruction)
-    {
-        switch (instruction.kind())
-        {
-            case InstructionKind::Parameter:
-            {
-                const auto& parameter = static_cast<const ParameterInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ parameter.resultId() });
-                m_builder
-                    .append(" = parameter ")
-                    .append(std::to_string(parameter.parameterIndex()))
-                    .append(" : ");
-                appendType(parameter.parameter().type());
-                m_builder
-                    .append(" \"")
-                    .append(parameter.parameter().name())
-                    .appendLine("\"");
-                break;
-            }
-            case InstructionKind::Constant:
-            {
-                const auto& constant = static_cast<const ConstantInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ constant.resultId() });
-                m_builder
-                    .append(" = const ")
-                    .append(FormatConstantValue(m_module, constant.value(), constant.type()))
-                    .append(" : ");
-                appendType(constant.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::AllocateLocal:
-            {
-                const auto& allocateLocal = static_cast<const AllocateLocalInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendSlot(LocalSlotRef{ allocateLocal.slotId() });
-                m_builder.append(" = allocate_local : ");
-                appendType(allocateLocal.type());
-                m_builder
-                    .append(" \"")
-                    .append(allocateLocal.localName())
-                    .appendLine("\"");
-                break;
-            }
-            case InstructionKind::AddressOf:
-            {
-                const auto& addressOf = static_cast<const AddressOfInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ addressOf.resultId() });
-                m_builder.append(" = address_of ");
-                appendSlot(addressOf.local());
-                m_builder.append(" : ");
-                appendType(addressOf.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::AddressOfGlobal:
-            {
-                const auto& addressOfGlobal = static_cast<const AddressOfGlobalInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ addressOfGlobal.resultId() });
-                m_builder.append(" = address_of_global @");
-                m_builder.append(addressOfGlobal.name());
-                m_builder.append(" : ");
-                appendType(addressOfGlobal.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::FieldAddress:
-            {
-                const auto& fieldAddress = static_cast<const AddressOfFieldInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ fieldAddress.resultId() });
-                m_builder.append(" = address_of_field ");
-                appendValue(fieldAddress.objectAddress());
-                m_builder
-                    .append(".")
-                    .append(std::to_string(fieldAddress.fieldIndex()))
-                    .append(" : ");
-                appendType(fieldAddress.type());
-                m_builder
-                    .append(" \"")
-                    .append(fieldAddress.fieldName())
-                    .appendLine("\"");
-                break;
-            }
-            case InstructionKind::ElementAddress:
-            {
-                const auto& elementAddress = static_cast<const ElementAddressInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ elementAddress.resultId() });
-                m_builder.append(" = element_address ");
-                appendValue(elementAddress.baseAddress());
-                m_builder.append("[");
-                appendValue(elementAddress.index());
-                m_builder.append("] : ");
-                appendType(elementAddress.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::MakeSlice:
-            {
-                const auto& makeSlice = static_cast<const MakeSliceInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ makeSlice.resultId() });
-                m_builder.append(" = make_slice ");
-                appendValue(makeSlice.baseAddress());
-                m_builder.append(", ");
-                appendValue(makeSlice.length());
-                m_builder.append(" : ");
-                appendType(makeSlice.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ArrayAdd:
-            {
-                const auto& arrayAdd = static_cast<const ArrayAddInstruction&>(instruction);
-                m_builder.appendIndented("array_add ");
-                appendValue(arrayAdd.descriptorAddress());
-                m_builder.append(", ");
-                appendValue(arrayAdd.value());
-                m_builder.append(" : ");
-                appendType(arrayAdd.arrayType());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ArrayRemove:
-            {
-                const auto& arrayRemove = static_cast<const ArrayRemoveInstruction&>(instruction);
-                m_builder.appendIndented("array_remove ");
-                appendValue(arrayRemove.descriptorAddress());
-                m_builder.append(", ");
-                appendValue(arrayRemove.index());
-                m_builder.append(" : ");
-                appendType(arrayRemove.arrayType());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ArrayCopy:
-            {
-                const auto& arrayCopy = static_cast<const ArrayCopyInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ arrayCopy.resultId() });
-                m_builder.append(" = array_copy ");
-                appendValue(arrayCopy.sourceAddress());
-                m_builder.append(" : ");
-                appendType(arrayCopy.arrayType());
-                if (arrayCopy.reserveNulByte())
-                {
-                    m_builder.append(" nul");
-                }
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::LoadValue:
-            {
-                const auto& load = static_cast<const LoadValueInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ load.resultId() });
-                m_builder.append(" = load_value ");
-                appendValue(load.address());
-                m_builder.append(" : ");
-                appendType(load.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::StoreValue:
-            {
-                const auto& store = static_cast<const StoreValueInstruction&>(instruction);
-                m_builder.appendIndented("store_value ");
-                appendValue(store.value());
-                m_builder.append(", ");
-                appendValue(store.address());
-                m_builder.append(" : ");
-                appendType(store.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::IntToFloat:
-            {
-                const auto& conversion = static_cast<const IntToFloatInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ conversion.resultId() });
-                m_builder.append(" = int_to_float ");
-                appendValue(conversion.operandValue());
-                m_builder.append(" : ");
-                appendType(conversion.sourceType());
-                m_builder.append(" -> ");
-                appendType(conversion.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::IntWiden:
-            {
-                const auto& conversion = static_cast<const IntWidenInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ conversion.resultId() });
-                m_builder.append(" = int_widen ");
-                appendValue(conversion.operandValue());
-                m_builder.append(" : ");
-                appendType(conversion.sourceType());
-                m_builder.append(" -> ");
-                appendType(conversion.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::SizeOf:
-            {
-                const auto& sizeOf = static_cast<const SizeOfInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ sizeOf.resultId() });
-                m_builder.append(" = size_of ");
-                appendType(sizeOf.measuredType());
-                m_builder.append(" : ");
-                appendType(sizeOf.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ValueNegation:
-            {
-                const auto& valueNegation = static_cast<const ValueNegationInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ valueNegation.resultId() });
-                m_builder.append(" = value_negate ");
-                appendValue(valueNegation.operandValue());
-                m_builder.append(" : ");
-                appendType(valueNegation.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::LogicalNegation:
-            {
-                const auto& logicalNegation = static_cast<const LogicalNegationInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ logicalNegation.resultId() });
-                m_builder.append(" = logical_negate ");
-                appendValue(logicalNegation.operandValue());
-                m_builder.append(" : ");
-                appendType(logicalNegation.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Call:
-            {
-                const auto& call = static_cast<const CallInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ call.resultId() });
-                m_builder.append(" = call ").append(ResolveFunctionName(m_module, call.functionId())).append("(");
-                for (size_t index = 0; index < call.arguments().size(); ++index)
-                {
-                    if (index > 0)
-                        m_builder.append(", ");
-
-                    appendValue(call.arguments()[index]);
-                }
-                m_builder.append(") : ");
-                appendType(call.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::CallVoid:
-            {
-                const auto& call = static_cast<const CallVoidInstruction&>(instruction);
-                m_builder.appendIndented("");
-                m_builder.append("call ").append(ResolveFunctionName(m_module, call.functionId())).append("(");
-                for (size_t index = 0; index < call.arguments().size(); ++index)
-                {
-                    if (index > 0)
-                        m_builder.append(", ");
-
-                    appendValue(call.arguments()[index]);
-                }
-                m_builder.appendLine(")");
-                break;
-            }
-            case InstructionKind::Add:
-            {
-                const auto& add = static_cast<const AddInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ add.resultId() });
-                m_builder.append(" = add ");
-                appendValue(add.leftValue());
-                m_builder.append(", ");
-                appendValue(add.rightValue());
-                m_builder.append(" : ");
-                appendType(add.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Subtract:
-            {
-                const auto& subtract = static_cast<const SubtractInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ subtract.resultId() });
-                m_builder.append(" = sub ");
-                appendValue(subtract.leftValue());
-                m_builder.append(", ");
-                appendValue(subtract.rightValue());
-                m_builder.append(" : ");
-                appendType(subtract.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Multiply:
-            {
-                const auto& multiply = static_cast<const MultiplyInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ multiply.resultId() });
-                m_builder.append(" = multiply ");
-                appendValue(multiply.leftValue());
-                m_builder.append(", ");
-                appendValue(multiply.rightValue());
-                m_builder.append(" : ");
-                appendType(multiply.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Divide:
-            {
-                const auto& divide = static_cast<const DivideInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ divide.resultId() });
-                m_builder.append(" = divide ");
-                appendValue(divide.leftValue());
-                m_builder.append(", ");
-                appendValue(divide.rightValue());
-                m_builder.append(" : ");
-                appendType(divide.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Equal:
-            {
-                const auto& equal = static_cast<const EqualInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ equal.resultId() });
-                m_builder.append(" = equal ");
-                appendValue(equal.leftValue());
-                m_builder.append(", ");
-                appendValue(equal.rightValue());
-                m_builder.append(" : ");
-                appendType(equal.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::NotEqual:
-            {
-                const auto& notEqual = static_cast<const NotEqualInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ notEqual.resultId() });
-                m_builder.append(" = not_equal ");
-                appendValue(notEqual.leftValue());
-                m_builder.append(", ");
-                appendValue(notEqual.rightValue());
-                m_builder.append(" : ");
-                appendType(notEqual.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::LessThan:
-            {
-                const auto& lessThan = static_cast<const LessThanInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ lessThan.resultId() });
-                m_builder.append(" = less_than ");
-                appendValue(lessThan.leftValue());
-                m_builder.append(", ");
-                appendValue(lessThan.rightValue());
-                m_builder.append(" : ");
-                appendType(lessThan.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::LessOrEqual:
-            {
-                const auto& lessOrEqual = static_cast<const LessOrEqualInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ lessOrEqual.resultId() });
-                m_builder.append(" = less_or_equal ");
-                appendValue(lessOrEqual.leftValue());
-                m_builder.append(", ");
-                appendValue(lessOrEqual.rightValue());
-                m_builder.append(" : ");
-                appendType(lessOrEqual.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::GreaterThan:
-            {
-                const auto& greaterThan = static_cast<const GreaterThanInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ greaterThan.resultId() });
-                m_builder.append(" = greater_than ");
-                appendValue(greaterThan.leftValue());
-                m_builder.append(", ");
-                appendValue(greaterThan.rightValue());
-                m_builder.append(" : ");
-                appendType(greaterThan.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::GreaterOrEqual:
-            {
-                const auto& greaterOrEqual = static_cast<const GreaterOrEqualInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ greaterOrEqual.resultId() });
-                m_builder.append(" = greater_or_equal ");
-                appendValue(greaterOrEqual.leftValue());
-                m_builder.append(", ");
-                appendValue(greaterOrEqual.rightValue());
-                m_builder.append(" : ");
-                appendType(greaterOrEqual.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::BitAnd:
-            {
-                const auto& bitAnd = static_cast<const BitAndInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ bitAnd.resultId() });
-                m_builder.append(" = bit_and ");
-                appendValue(bitAnd.leftValue());
-                m_builder.append(", ");
-                appendValue(bitAnd.rightValue());
-                m_builder.append(" : ");
-                appendType(bitAnd.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::BitOr:
-            {
-                const auto& bitOr = static_cast<const BitOrInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ bitOr.resultId() });
-                m_builder.append(" = bit_or ");
-                appendValue(bitOr.leftValue());
-                m_builder.append(", ");
-                appendValue(bitOr.rightValue());
-                m_builder.append(" : ");
-                appendType(bitOr.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::BitXor:
-            {
-                const auto& bitXor = static_cast<const BitXorInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ bitXor.resultId() });
-                m_builder.append(" = bit_xor ");
-                appendValue(bitXor.leftValue());
-                m_builder.append(", ");
-                appendValue(bitXor.rightValue());
-                m_builder.append(" : ");
-                appendType(bitXor.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::BitNot:
-            {
-                const auto& bitNot = static_cast<const BitNotInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ bitNot.resultId() });
-                m_builder.append(" = bit_not ");
-                appendValue(bitNot.operandValue());
-                m_builder.append(" : ");
-                appendType(bitNot.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ShiftLeft:
-            {
-                const auto& shiftLeft = static_cast<const ShiftLeftInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ shiftLeft.resultId() });
-                m_builder.append(" = shift_left ");
-                appendValue(shiftLeft.value());
-                m_builder.append(", ");
-                appendValue(shiftLeft.amount());
-                m_builder.append(" : ");
-                appendType(shiftLeft.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::ShiftRight:
-            {
-                const auto& shiftRight = static_cast<const ShiftRightInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ shiftRight.resultId() });
-                m_builder.append(" = shift_right ");
-                appendValue(shiftRight.value());
-                m_builder.append(", ");
-                appendValue(shiftRight.amount());
-                m_builder.append(" : ");
-                appendType(shiftRight.type());
-                m_builder.appendLine("");
-                break;
-            }
-            case InstructionKind::Phi:
-            {
-                const auto& phi = static_cast<const PhiInstruction&>(instruction);
-                m_builder.appendIndented("");
-                appendValue(ValueRef{ phi.resultId() });
-                m_builder.append(" = phi ");
-
-                const auto& phiInputs = phi.inputs();
-                for (size_t index = 0; index < phiInputs.size(); ++index)
-                {
-                    if (index > 0)
-                    {
-                        m_builder.append(", ");
-                    }
-
-                    const auto& input = phiInputs[index];
-                    m_builder.append("[");
-                    appendBlockLabel(function, input.blockId());
-                    m_builder.append(": ");
-                    appendValue(input.value());
-                    m_builder.append("]");
-                }
-
-                m_builder.append(" : ");
-                appendType(phi.type());
-                m_builder.appendLine("");
-                break;
-            }
-            default:
-            {
-                m_builder
-                    .appendIndented("<unknown instruction #")
-                    .append(std::to_string(static_cast<i32>(instruction.kind())))
-                    .appendLine(">");
-                break;
-            }
-        }
-    }
-
-    void IRPrinter::prettyPrintTerminator(const Function& function, const Terminator& terminator)
-    {
-        switch (terminator.kind())
-        {
-            case TerminatorKind::Jump:
-            {
-                const auto& jump = static_cast<const JumpTerminator&>(terminator);
-                m_builder.appendIndented("jump ");
-                appendBlockLabel(function, jump.targetBlockId());
-                m_builder.appendLine("");
-                break;
-            }
-            case TerminatorKind::Branch:
-            {
-                const auto& branch = static_cast<const BranchIfTerminator&>(terminator);
-                m_builder.appendIndented("branch if ");
-                appendValue(branch.condition());
-                m_builder.append(", ");
-                appendBlockLabel(function, branch.trueBlockId());
-                m_builder.append(", ");
-                appendBlockLabel(function, branch.falseBlockId());
-                m_builder.appendLine("");
-                break;
-            }
-            case TerminatorKind::Return:
-            {
-                m_builder.appendIndentedLine("return");
-                break;
-            }
-            case TerminatorKind::ReturnValue:
-            {
-                const auto& ret = static_cast<const ReturnValueTerminator&>(terminator);
-                m_builder.appendIndented("return ");
-                appendValue(ret.value());
-                m_builder.appendLine("");
-                break;
-            }
-            case TerminatorKind::Unreachable:
-            {
-                m_builder.appendIndentedLine("unreachable");
-                break;
-            }
-            default:
-            {
-                m_builder
-                    .appendIndented("<unknown terminator #")
-                    .append(std::to_string(static_cast<i32>(terminator.kind())))
-                    .appendLine(">");
-                break;
-            }
-        }
-    }
-
     void IRPrinter::appendType(Type type)
     {
         const auto baseType = type.toBaseType();
@@ -1066,17 +383,471 @@ namespace Caracal
             .append(std::to_string(slot.id()));
     }
 
+    void IRPrinter::prettyPrintFunction(const Function& function)
+    {
+        m_builder
+            .append("define ")
+            .append(function.name())
+            .append("(");
+
+        const auto& parameters = function.parameters();
+        for (size_t index = 0; index < parameters.size(); ++index)
+        {
+            if (index > 0)
+            {
+                m_builder.append(", ");
+            }
+
+            m_builder
+                .append("%")
+                .append(std::to_string(index))
+                .append(": ");
+            appendType(parameters[index].type());
+            m_builder
+                .append(" \"")
+                .append(parameters[index].name())
+                .append("\"");
+        }
+
+        m_builder.append(") ");
+        appendType(function.returnType());
+        m_builder.appendLine("");
+
+        for (const auto& block : function.blocks())
+        {
+            m_builder.append("block ");
+            appendBlockLabel(function, block.id);
+            m_builder.appendLine(":");
+            m_builder.pushIndentation();
+            for (auto instructionIndex = block.instructionStart; instructionIndex < block.instructionStart + block.instructionCount; ++instructionIndex)
+            {
+                prettyPrintInstruction(function, function.instructionAt(instructionIndex));
+            }
+            m_builder.popIndentation();
+        }
+    }
+
+    void IRPrinter::appendResult(const Instruction& instruction)
+    {
+        m_builder.appendIndented("");
+        appendValue(ValueRef{ instruction.resultId });
+    }
+
+    void IRPrinter::appendOneOperand(const Instruction& instruction, std::string_view name)
+    {
+        appendResult(instruction);
+        m_builder.append(" = ").append(std::string(name)).append(" ");
+        appendValue(ValueRef{ instruction.a });
+        m_builder.append(" : ");
+        appendType(instruction.type);
+        m_builder.appendLine("");
+    }
+
+    void IRPrinter::appendTwoOperands(const Instruction& instruction, std::string_view name)
+    {
+        appendResult(instruction);
+        m_builder.append(" = ").append(std::string(name)).append(" ");
+        appendValue(ValueRef{ instruction.a });
+        m_builder.append(", ");
+        appendValue(ValueRef{ instruction.b });
+        m_builder.append(" : ");
+        appendType(instruction.type);
+        m_builder.appendLine("");
+    }
+
+    void IRPrinter::prettyPrintInstruction(const Function& function, const Instruction& instruction)
+    {
+        switch (instruction.kind)
+        {
+            case InstructionKind::Nop:
+            {
+                break;
+            }
+            case InstructionKind::Parameter:
+            {
+                appendResult(instruction);
+                m_builder
+                    .append(" = parameter ")
+                    .append(std::to_string(instruction.a))
+                    .append(" : ");
+                appendType(instruction.type);
+                m_builder
+                    .append(" \"")
+                    .append(function.parameters()[static_cast<size_t>(instruction.a)].name())
+                    .appendLine("\"");
+                break;
+            }
+            case InstructionKind::Constant:
+            {
+                const auto constant = m_module.constantValue(instruction);
+                appendResult(instruction);
+                m_builder
+                    .append(" = const ")
+                    .append(FormatConstantValue(m_module, constant, instruction.type))
+                    .append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::AllocateLocal:
+            {
+                m_builder.appendIndented("");
+                appendSlot(LocalSlotRef{ instruction.a });
+                m_builder.append(" = allocate_local : ");
+                appendType(instruction.type);
+                m_builder
+                    .append(" \"")
+                    .append(m_module.names()[static_cast<size_t>(instruction.b)])
+                    .appendLine("\"");
+                break;
+            }
+            case InstructionKind::AddressOf:
+            {
+                appendResult(instruction);
+                m_builder.append(" = address_of ");
+                appendSlot(LocalSlotRef{ instruction.a });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::AddressOfGlobal:
+            {
+                appendResult(instruction);
+                m_builder
+                    .append(" = address_of_global @")
+                    .append(m_module.names()[static_cast<size_t>(instruction.a)])
+                    .append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::FieldAddress:
+            {
+                appendResult(instruction);
+                m_builder.append(" = address_of_field ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder
+                    .append(".")
+                    .append(std::to_string(instruction.b))
+                    .append(" : ");
+                appendType(instruction.type);
+                m_builder
+                    .append(" \"")
+                    .append(std::string(m_module.fieldName(instruction.secondType(), instruction.b)))
+                    .appendLine("\"");
+                break;
+            }
+            case InstructionKind::ElementAddress:
+            {
+                appendResult(instruction);
+                m_builder.append(" = element_address ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append("[");
+                appendValue(ValueRef{ instruction.b });
+                m_builder.append("] : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::MakeSlice:
+            {
+                appendResult(instruction);
+                m_builder.append(" = make_slice ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(", ");
+                appendValue(ValueRef{ instruction.b });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::ArrayAdd:
+            {
+                m_builder.appendIndented("array_add ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(", ");
+                appendValue(ValueRef{ instruction.b });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::ArrayRemove:
+            {
+                m_builder.appendIndented("array_remove ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(", ");
+                appendValue(ValueRef{ instruction.b });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::ArrayCopy:
+            {
+                appendResult(instruction);
+                m_builder.append(" = array_copy ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                if (instruction.d != 0)
+                {
+                    m_builder.append(" nul");
+                }
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::LoadValue:
+            {
+                appendOneOperand(instruction, "load_value");
+                break;
+            }
+            case InstructionKind::StoreValue:
+            {
+                m_builder.appendIndented("store_value ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(", ");
+                appendValue(ValueRef{ instruction.b });
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::IntToFloat:
+            case InstructionKind::IntWiden:
+            {
+                appendResult(instruction);
+                if (instruction.kind == InstructionKind::IntToFloat)
+                {
+                    m_builder.append(" = int_to_float ");
+                }
+                else
+                {
+                    m_builder.append(" = int_widen ");
+                }
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(" : ");
+                appendType(instruction.secondType());
+                m_builder.append(" -> ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::SizeOf:
+            {
+                appendResult(instruction);
+                m_builder.append(" = size_of ");
+                appendType(instruction.secondType());
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::ValueNegation:
+            {
+                appendOneOperand(instruction, "value_negate");
+                break;
+            }
+            case InstructionKind::LogicalNegation:
+            {
+                appendOneOperand(instruction, "logical_negate");
+                break;
+            }
+            case InstructionKind::BitNot:
+            {
+                appendOneOperand(instruction, "bit_not");
+                break;
+            }
+            case InstructionKind::Call:
+            case InstructionKind::CallVoid:
+            {
+                m_builder.appendIndented("");
+                if (instruction.kind == InstructionKind::Call)
+                {
+                    appendValue(ValueRef{ instruction.resultId });
+                    m_builder.append(" = ");
+                }
+                m_builder.append("call ").append(ResolveFunctionName(m_module, instruction.a)).append("(");
+                const auto arguments = function.operands(static_cast<u32>(instruction.b), static_cast<u32>(instruction.c));
+                for (size_t index = 0; index < arguments.size(); ++index)
+                {
+                    if (index > 0)
+                    {
+                        m_builder.append(", ");
+                    }
+
+                    appendValue(ValueRef{ arguments[index] });
+                }
+                if (instruction.kind == InstructionKind::Call)
+                {
+                    m_builder.append(") : ");
+                    appendType(instruction.type);
+                    m_builder.appendLine("");
+                }
+                else
+                {
+                    m_builder.appendLine(")");
+                }
+                break;
+            }
+            case InstructionKind::Add:
+            {
+                appendTwoOperands(instruction, "add");
+                break;
+            }
+            case InstructionKind::Subtract:
+            {
+                appendTwoOperands(instruction, "sub");
+                break;
+            }
+            case InstructionKind::Multiply:
+            {
+                appendTwoOperands(instruction, "multiply");
+                break;
+            }
+            case InstructionKind::Divide:
+            {
+                appendTwoOperands(instruction, "divide");
+                break;
+            }
+            case InstructionKind::Equal:
+            {
+                appendTwoOperands(instruction, "equal");
+                break;
+            }
+            case InstructionKind::NotEqual:
+            {
+                appendTwoOperands(instruction, "not_equal");
+                break;
+            }
+            case InstructionKind::LessThan:
+            {
+                appendTwoOperands(instruction, "less_than");
+                break;
+            }
+            case InstructionKind::LessOrEqual:
+            {
+                appendTwoOperands(instruction, "less_or_equal");
+                break;
+            }
+            case InstructionKind::GreaterThan:
+            {
+                appendTwoOperands(instruction, "greater_than");
+                break;
+            }
+            case InstructionKind::GreaterOrEqual:
+            {
+                appendTwoOperands(instruction, "greater_or_equal");
+                break;
+            }
+            case InstructionKind::BitAnd:
+            {
+                appendTwoOperands(instruction, "bit_and");
+                break;
+            }
+            case InstructionKind::BitOr:
+            {
+                appendTwoOperands(instruction, "bit_or");
+                break;
+            }
+            case InstructionKind::BitXor:
+            {
+                appendTwoOperands(instruction, "bit_xor");
+                break;
+            }
+            case InstructionKind::ShiftLeft:
+            {
+                appendTwoOperands(instruction, "shift_left");
+                break;
+            }
+            case InstructionKind::ShiftRight:
+            {
+                appendTwoOperands(instruction, "shift_right");
+                break;
+            }
+            case InstructionKind::Phi:
+            {
+                appendResult(instruction);
+                m_builder.append(" = phi ");
+                const auto inputs = function.phiInputs(instruction);
+                for (size_t index = 0; index < inputs.size(); ++index)
+                {
+                    if (index > 0)
+                    {
+                        m_builder.append(", ");
+                    }
+
+                    m_builder.append("[");
+                    appendBlockLabel(function, inputs[index].blockId);
+                    m_builder.append(": ");
+                    appendValue(ValueRef{ inputs[index].value });
+                    m_builder.append("]");
+                }
+                m_builder.append(" : ");
+                appendType(instruction.type);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::Jump:
+            {
+                m_builder.appendIndented("jump ");
+                appendBlockLabel(function, instruction.a);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::Branch:
+            {
+                m_builder.appendIndented("branch if ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.append(", ");
+                appendBlockLabel(function, instruction.b);
+                m_builder.append(", ");
+                appendBlockLabel(function, instruction.c);
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::Return:
+            {
+                m_builder.appendIndentedLine("return");
+                break;
+            }
+            case InstructionKind::ReturnValue:
+            {
+                m_builder.appendIndented("return ");
+                appendValue(ValueRef{ instruction.a });
+                m_builder.appendLine("");
+                break;
+            }
+            case InstructionKind::Unreachable:
+            {
+                m_builder.appendIndentedLine("unreachable");
+                break;
+            }
+            default:
+            {
+                m_builder
+                    .appendIndented("<unknown instruction #")
+                    .append(std::to_string(static_cast<i32>(instruction.kind)))
+                    .appendLine(">");
+                break;
+            }
+        }
+    }
+
     void IRPrinter::appendBlockLabel(const Function& function, BlockId blockId)
     {
-        const auto* block = function.tryGetBlock(blockId);
-        if (block != nullptr)
+        for (const auto& block : function.blocks())
         {
-            m_builder
-                .append(block->label())
-                .append("(")
-                .append(std::to_string(block->id()))
-                .append(")");
-            return;
+            if (block.id == blockId)
+            {
+                m_builder
+                    .append(std::string(blockLabelText(block.label)))
+                    .append("(")
+                    .append(std::to_string(block.id))
+                    .append(")");
+                return;
+            }
         }
 
         m_builder.append("unknown");

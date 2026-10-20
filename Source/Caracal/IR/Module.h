@@ -1,6 +1,8 @@
 ﻿#pragma once
 
-#include <Caracal/Semantic/BuiltinTypeDescription.h>
+#include <Caracal/API.h>
+#include <Caracal/IR/ArrayTypeDescription.h>
+#include <Caracal/IR/ConstantPool.h>
 #include <Caracal/IR/ConstructedGlobalDeclaration.h>
 #include <Caracal/IR/EnumDeclaration.h>
 #include <Caracal/IR/ExternFunction.h>
@@ -8,22 +10,19 @@
 #include <Caracal/IR/GlobalConstantDeclaration.h>
 #include <Caracal/IR/GlobalReferenceDeclaration.h>
 #include <Caracal/IR/TypeDeclaration.h>
+#include <Caracal/Semantic/BuiltinTypeDescription.h>
+#include <Caracal/Text/TransparentStringHash.h>
 
+#include <functional>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace Caracal
 {
-    struct ArrayTypeDescription
-    {
-        Type elementType;
-        i32 length;
-    };
-
-    class Module
+    class CARACAL_API Module
     {
     public:
         [[nodiscard]] const std::vector<EnumDeclaration>& enums() const noexcept { return m_enums; }
@@ -41,6 +40,11 @@ namespace Caracal
         [[nodiscard]] const Function* tryGetFunction(FunctionId id) const noexcept;
         [[nodiscard]] const std::string* tryGetFunctionName(FunctionId id) const noexcept;
         [[nodiscard]] const std::string* tryGetTypeName(Type type) const noexcept;
+        [[nodiscard]] const ConstantPool& constants() const noexcept { return m_constants; }
+        [[nodiscard]] ConstantPool& constants() noexcept { return m_constants; }
+        [[nodiscard]] const std::vector<std::string>& names() const noexcept { return m_names; }
+        [[nodiscard]] ConstantValue constantValue(const Instruction& constantInstruction) const;
+        [[nodiscard]] std::string_view fieldName(Type objectType, i32 fieldIndex) const noexcept;
 
         void addEnum(EnumDeclaration enumDeclaration);
         void addExternFunction(ExternFunction function);
@@ -58,6 +62,7 @@ namespace Caracal
         [[nodiscard]] const WellKnownTypes& wellKnown() const noexcept { return m_wellKnownTypes; }
         void registerBuiltinTypeDescription(Type type, const BuiltinTypeDescription& description);
         [[nodiscard]] const BuiltinTypeDescription* tryGetBuiltinTypeDescription(Type type) const noexcept;
+        [[nodiscard]] u32 internName(std::string_view name);
 
     private:
         std::vector<EnumDeclaration> m_enums;
@@ -76,5 +81,8 @@ namespace Caracal
         std::unordered_map<i32, ArrayTypeDescription> m_arrayTypes;
         WellKnownTypes m_wellKnownTypes;
         std::unordered_map<i32, BuiltinTypeDescription> m_builtinTypeDescriptionsById;
+        ConstantPool m_constants;
+        std::vector<std::string> m_names;
+        std::unordered_map<std::string, u32, TransparentStringHash, std::equal_to<>> m_nameIds;
     };
 }

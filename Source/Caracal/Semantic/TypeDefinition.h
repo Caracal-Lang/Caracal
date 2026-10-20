@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <type_traits>
 #include <vector>
 
 namespace Caracal
@@ -30,6 +31,10 @@ namespace Caracal
         TypeDefinition(
             Type type,
             const std::string& name);
+        TypeDefinition(const TypeDefinition&) = default;
+        TypeDefinition& operator=(const TypeDefinition&) = default;
+        TypeDefinition(TypeDefinition&&) noexcept = default;
+        TypeDefinition& operator=(TypeDefinition&&) noexcept = default;
 
         [[nodiscard]] Type type() const noexcept { return m_type; }
         [[nodiscard]] const std::string& name() const noexcept { return m_name; }
@@ -54,4 +59,6 @@ namespace Caracal
         std::unordered_map<UnaryOperatorKind, OperatorSignature> m_unaryOperators;
         NodeIndex m_definitionNode{};
     };
+
+    static_assert(std::is_nothrow_move_constructible_v<TypeDefinition>, "a growing std::vector would copy every TypeDefinition");
 }

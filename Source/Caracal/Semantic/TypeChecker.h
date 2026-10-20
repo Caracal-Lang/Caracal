@@ -233,6 +233,7 @@ namespace Caracal
         std::vector<u32> m_annotationScratch;
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
+        std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;
 
         Type m_defaultIntegerType = Type::Undefined();

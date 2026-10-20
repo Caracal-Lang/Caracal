@@ -1,12 +1,13 @@
 #pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/IR/Function.h>
 #include <Caracal/IR/Instruction.h>
 #include <Caracal/IR/Module.h>
-#include <Caracal/IR/ValueRef.h>
 #include <Caracal/Semantic/Type.h>
 
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -28,8 +29,6 @@ namespace llvm
 
 namespace Caracal
 {
-    class PhiInstruction;
-
     class LLVMCodeGenerator
     {
     public:
@@ -51,17 +50,16 @@ namespace Caracal
         [[nodiscard]] bool lowerFunctionBodies() noexcept;
         [[nodiscard]] bool lowerFunctionBody(const Function& function) noexcept;
         [[nodiscard]] bool lowerGlobalInit() noexcept;
-        [[nodiscard]] bool lowerInstruction(const Instruction& instruction) noexcept;
-        [[nodiscard]] bool lowerTerminator(const Terminator& terminator) noexcept;
-        [[nodiscard]] bool emitBinary(TemporaryId resultId, ValueRef leftRef, ValueRef rightRef, InstructionKind kind, Type operandType = Type::Undefined()) noexcept;
-        [[nodiscard]] bool buildCallArguments(const std::vector<ValueRef>& arguments, llvm::Function* callee, std::vector<llvm::Value*>& argumentValues) noexcept;
+        [[nodiscard]] bool lowerInstruction(const Function& function, u32 instructionIndex) noexcept;
+        [[nodiscard]] bool emitBinary(TemporaryId resultId, TemporaryId leftId, TemporaryId rightId, InstructionKind kind, Type operandType = Type::Undefined()) noexcept;
+        [[nodiscard]] bool buildCallArguments(std::span<const TemporaryId> arguments, llvm::Function* callee, std::vector<llvm::Value*>& argumentValues) noexcept;
 
         [[nodiscard]] llvm::FunctionType* tryLowerFunctionType(Type returnType, const std::vector<IRParameter>& parameters) const noexcept;
         [[nodiscard]] llvm::Type* lowerType(Type type) const noexcept;
         [[nodiscard]] llvm::Value* lowerConstant(const ConstantValue& value) noexcept;
         [[nodiscard]] llvm::Constant* lowerAggregateConstant(const ConstantValue& value, llvm::Type* type) noexcept;
         [[nodiscard]] llvm::Value* promoteVariadicArgument(llvm::Value* value) noexcept;
-        [[nodiscard]] llvm::Value* tryResolve(ValueRef value) const noexcept;
+        [[nodiscard]] llvm::Value* tryResolve(TemporaryId id) const noexcept;
         [[nodiscard]] llvm::Function* tryResolveCallee(FunctionId functionId) const noexcept;
         [[nodiscard]] llvm::BasicBlock* tryGetBlock(BlockId id) const noexcept;
         void defineValue(TemporaryId id, llvm::Value* value) noexcept;
@@ -74,6 +72,7 @@ namespace Caracal
         std::unordered_map<LocalSlotId, llvm::Value*> m_slots;
         std::unordered_map<BlockId, llvm::BasicBlock*> m_blocks;
         // phi incomings are resolved after every block is lowered, so back-edges and forward references work
-        std::vector<std::pair<const PhiInstruction*, llvm::PHINode*>> m_pendingPhis;
+        // the phi's instruction index and its node
+        std::vector<std::pair<u32, llvm::PHINode*>> m_pendingPhis;
     };
 }

@@ -1,58 +1,16 @@
 #include <Caracal/IR/IREmitter.h>
 
-
 #include <Caracal/Constants.h>
 #include <Caracal/Profiling.h>
-#include <Caracal/IR/AddInstruction.h>
-#include <Caracal/IR/AddressOfInstruction.h>
-#include <Caracal/IR/DivideInstruction.h>
-#include <Caracal/IR/EqualInstruction.h>
-#include <Caracal/IR/GreaterOrEqualInstruction.h>
-#include <Caracal/IR/GreaterThanInstruction.h>
-#include <Caracal/IR/AddressOfFieldInstruction.h>
-#include <Caracal/IR/AddressOfGlobalInstruction.h>
-#include <Caracal/IR/BitAndInstruction.h>
-#include <Caracal/IR/BitNotInstruction.h>
-#include <Caracal/IR/BitOrInstruction.h>
-#include <Caracal/IR/BitXorInstruction.h>
-#include <Caracal/IR/ShiftLeftInstruction.h>
-#include <Caracal/IR/ShiftRightInstruction.h>
-#include <Caracal/IR/ElementAddressInstruction.h>
-#include <Caracal/IR/MakeSliceInstruction.h>
-#include <Caracal/IR/ArrayAddInstruction.h>
-#include <Caracal/IR/ArrayCopyInstruction.h>
-#include <Caracal/IR/ArrayRemoveInstruction.h>
-#include <Caracal/IR/SizeOfInstruction.h>
+#include <Caracal/IR/ConstantPool.h>
 #include <Caracal/IR/ConstructedGlobalDeclaration.h>
 #include <Caracal/IR/GlobalConstantDeclaration.h>
 #include <Caracal/IR/GlobalReferenceDeclaration.h>
-#include <Caracal/IR/IntToFloatInstruction.h>
-#include <Caracal/IR/IntWidenInstruction.h>
-#include <Caracal/IR/LessOrEqualInstruction.h>
-#include <Caracal/IR/LessThanInstruction.h>
-#include <Caracal/IR/MultiplyInstruction.h>
-#include <Caracal/IR/NotEqualInstruction.h>
-#include <Caracal/IR/SubtractInstruction.h>
-#include <Caracal/IR/AllocateLocalInstruction.h>
-#include <Caracal/IR/BranchIfTerminator.h>
-#include <Caracal/IR/CallInstruction.h>
-#include <Caracal/IR/CallVoidInstruction.h>
-#include <Caracal/IR/ConstantInstruction.h>
-#include <Caracal/IR/LogicalNegationInstruction.h>
-#include <Caracal/IR/ValueNegationInstruction.h>
-#include <Caracal/IR/JumpTerminator.h>
-#include <Caracal/IR/LoadValueInstruction.h>
-#include <Caracal/IR/LocalSlotRef.h>
-#include <Caracal/IR/ParameterInstruction.h>
-#include <Caracal/IR/ReturnTerminator.h>
-#include <Caracal/IR/ReturnValueTerminator.h>
-#include <Caracal/IR/StoreValueInstruction.h>
-#include <Caracal/IR/UnreachableTerminator.h>
 
 #include <algorithm>
-#include <memory>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace Caracal
@@ -67,17 +25,33 @@ namespace Caracal
         return typeDeclaration;
     }
 
+    ConstantValue IREmitter::constantFromFold(const FoldValue& value) noexcept
+    {
+        return std::visit(
+            [](const auto& payload)
+            {
+                return ConstantValue::FromLiteralData(ConstantValue::LiteralData{ payload });
+            },
+            value);
+    }
+
     IREmitter::IREmitter(SemanticContext& semanticContext, Module& module)
         : m_semanticContext{ semanticContext }
         , m_module{ module }
     {
+        const auto& preludePool = semanticContext.preludeFunctionPool();
+        m_module.constants() = preludePool.constants();
+        for (const auto& name : preludePool.names())
+        {
+            static_cast<void>(m_module.internName(name));
+        }
     }
 
     bool IREmitter::canEmit() const noexcept
     {
-        return m_currentFunction != nullptr
-            && m_currentBlock != nullptr
-            && !m_currentBlock->hasTerminator();
+        return m_currentBuilder != nullptr
+            && m_currentBlockIndex != NoBlockIndex
+            && !m_currentBuilder->hasTerminator(m_currentBlockIndex);
     }
 
     void IREmitter::recordEmissionFailure() noexcept
@@ -105,6 +79,92 @@ namespace Caracal
         }
 
         return true;
+    }
+
+    TemporaryId IREmitter::nextTemporaryId() noexcept
+    {
+        return m_nextTemporaryId++;
+    }
+
+    ValueRef IREmitter::appendValueInstruction(const Instruction& instruction)
+    {
+        m_currentBuilder->appendInstruction(m_currentBlockIndex, instruction);
+        return ValueRef{ instruction.resultId };
+    }
+
+    void IREmitter::appendInstruction(const Instruction& instruction)
+    {
+        m_currentBuilder->appendInstruction(m_currentBlockIndex, instruction);
+    }
+
+    ValueRef IREmitter::appendBinaryInstruction(InstructionKind kind, ValueRef left, ValueRef right, Type type)
+    {
+        return appendValueInstruction(Instruction::CreateBinary(kind, nextTemporaryId(), type, left.id(), right.id()));
+    }
+
+    ValueRef IREmitter::appendComparisonInstruction(InstructionKind kind, ValueRef left, ValueRef right, Type type, Type operandType)
+    {
+        return appendValueInstruction(Instruction::CreateComparison(kind, nextTemporaryId(), type, left.id(), right.id(), operandType));
+    }
+
+    ValueRef IREmitter::appendUnaryInstruction(InstructionKind kind, ValueRef operand, Type type)
+    {
+        return appendValueInstruction(Instruction::CreateUnary(kind, nextTemporaryId(), type, operand.id()));
+    }
+
+    void IREmitter::appendStoreInstruction(ValueRef value, ValueRef address, Type type)
+    {
+        appendInstruction(Instruction::CreateStoreValue(type, value.id(), address.id()));
+    }
+
+    ValueRef IREmitter::appendCallInstruction(FunctionId functionId, std::span<const ValueRef> arguments, Type resultType)
+    {
+        m_operandBuffer.clear();
+        for (const auto argument : arguments)
+        {
+            m_operandBuffer.push_back(argument.id());
+        }
+        const auto operandStart = m_currentBuilder->appendOperands(m_operandBuffer);
+
+        const auto operandCount = static_cast<u32>(arguments.size());
+        if (resultType == Type::Void())
+        {
+            return appendValueInstruction(Instruction::CreateCallVoid(functionId, operandStart, operandCount));
+        }
+
+        return appendValueInstruction(Instruction::CreateCall(nextTemporaryId(), resultType, functionId, operandStart, operandCount));
+    }
+
+    u32 IREmitter::appendPhiInstruction(u32 blockIndex, TemporaryId resultId, Type type, std::span<const PhiInput> inputs)
+    {
+        const auto instructionIndex = m_currentBuilder->appendInstruction(blockIndex, Instruction::CreatePhi(resultId, type));
+        m_currentBuilder->setPhiInputs(instructionIndex, inputs);
+        return instructionIndex;
+    }
+
+    u32 IREmitter::addBlock(BlockId id, BlockLabel label)
+    {
+        return m_currentBuilder->addBlock(id, label);
+    }
+
+    BlockId IREmitter::currentBlockId() const noexcept
+    {
+        return m_currentBuilder->blockId(m_currentBlockIndex);
+    }
+
+    bool IREmitter::currentBlockFallsThrough() const noexcept
+    {
+        return m_currentBlockIndex != NoBlockIndex && !m_currentBuilder->hasTerminator(m_currentBlockIndex);
+    }
+
+    void IREmitter::setJump(u32 blockIndex, BlockId targetBlockId)
+    {
+        m_currentBuilder->setTerminator(blockIndex, Instruction::CreateJump(targetBlockId));
+    }
+
+    void IREmitter::setBranch(u32 blockIndex, ValueRef condition, BlockId trueBlockId, BlockId falseBlockId)
+    {
+        m_currentBuilder->setTerminator(blockIndex, Instruction::CreateBranch(condition.id(), trueBlockId, falseBlockId));
     }
 
     // if both main and caracalMain exist, caracalMain becomes the C entry point and main is renamed
@@ -179,30 +239,30 @@ namespace Caracal
         }
 
         const auto blockId = m_nextBlockId++;
-        function->addBlock(BasicBlock{ blockId, "entry", nullptr });
-        m_currentFunction = function;
-        m_currentBlock = function->tryGetBlock(blockId);
+        m_currentBuilder = &m_functionBuilder;
+        m_currentBlockIndex = addBlock(blockId, BlockLabel::Entry);
         m_currentReturnType = returnType;
     }
 
     void IREmitter::endFunction()
     {
         CARACAL_ZONE_NAMED("emit.endFunction");
-        if (m_currentFunction != nullptr && m_currentBlock != nullptr && !m_currentBlock->hasTerminator())
+        if (canEmit())
         {
             if (m_currentReturnType == Type::Void())
             {
-                m_currentBlock->setTerminator(std::make_unique<ReturnTerminator>());
+                m_currentBuilder->setTerminator(m_currentBlockIndex, Instruction::CreateReturn());
             }
             else
             {
-                m_currentBlock->setTerminator(std::make_unique<UnreachableTerminator>());
+                m_currentBuilder->setTerminator(m_currentBlockIndex, Instruction::CreateUnreachable());
             }
         }
 
         if (m_pendingFunction.has_value())
         {
             m_pendingFunction->setTemporaryCount(m_nextTemporaryId);
+            m_functionBuilder.finish(m_pendingFunction.value());
             if (m_isPreludePass)
             {
                 m_semanticContext.preludeFunctionPool().add(PreludeFunctionBody{ std::move(m_pendingFunction.value()), std::move(m_currentCalledPreludeFunctions) });
@@ -215,8 +275,8 @@ namespace Caracal
             }
             m_pendingFunction.reset();
         }
-        m_currentFunction = nullptr;
-        m_currentBlock = nullptr;
+        m_currentBuilder = nullptr;
+        m_currentBlockIndex = NoBlockIndex;
         m_locals.clear();
         m_loopContexts.clear();
         m_addressTakenLocals.clear();
@@ -230,9 +290,31 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<ConstantInstruction>(result.id(), std::move(value), type));
-        return result;
+        const auto result = nextTemporaryId();
+        const auto* literal = value.tryGetLiteralData();
+        if (literal == nullptr)
+        {
+            const auto constantIndex = m_module.constants().addConstant(std::move(value));
+            return appendValueInstruction(Instruction::CreatePooledConstant(result, type, constantIndex));
+        }
+
+        if (const auto* text = std::get_if<std::string>(literal); text != nullptr)
+        {
+            const auto range = m_module.constants().addString(*text);
+            return appendValueInstruction(Instruction::CreateStringConstant(result, type, range.offset, range.length));
+        }
+
+        return appendValueInstruction(Instruction::CreateScalarConstant(result, type, static_cast<u32>(literal->index()), scalarConstantBits(*literal)));
+    }
+
+    ValueRef IREmitter::emitFoldedConstant(const FoldValue& value, Type type)
+    {
+        if (!canEmit())
+        {
+            return ValueRef{};
+        }
+
+        return appendValueInstruction(Instruction::CreateScalarConstant(nextTemporaryId(), type, static_cast<u32>(value.index()), scalarConstantBits(value)));
     }
 
     void IREmitter::emitReturn()
@@ -242,7 +324,7 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->setTerminator(std::make_unique<ReturnTerminator>());
+        m_currentBuilder->setTerminator(m_currentBlockIndex, Instruction::CreateReturn());
     }
 
     void IREmitter::emitReturnValue(ValueRef value)
@@ -252,7 +334,7 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->setTerminator(std::make_unique<ReturnValueTerminator>(value));
+        m_currentBuilder->setTerminator(m_currentBlockIndex, Instruction::CreateReturnValue(value.id()));
     }
 
     ValueRef IREmitter::emitLoad(ValueRef address, Type valueType)
@@ -262,23 +344,34 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<LoadValueInstruction>(result.id(), address, valueType));
-        return result;
+        return appendUnaryInstruction(InstructionKind::LoadValue, address, valueType);
     }
 
-    ValueRef IREmitter::allocateLocalSlot(std::string localName, Type valueType, ValueRef initialValue)
+    u32 IREmitter::moduleNameIdOf(u32 checkerNameId, std::string_view name)
+    {
+        if (checkerNameId >= m_moduleNameIdByCheckerNameId.size())
+        {
+            m_moduleNameIdByCheckerNameId.resize(static_cast<size_t>(checkerNameId) + 1, NoModuleNameId);
+        }
+
+        auto& moduleNameId = m_moduleNameIdByCheckerNameId[checkerNameId];
+        if (moduleNameId == NoModuleNameId)
+        {
+            moduleNameId = m_module.internName(name);
+        }
+        return moduleNameId;
+    }
+
+    ValueRef IREmitter::allocateLocalSlot(u32 moduleNameId, Type valueType, ValueRef initialValue)
     {
         CARACAL_ZONE_NAMED("emit.allocateLocalSlot");
         const auto localId = m_nextLocalSlotId++;
-        m_currentBlock->addPrologueInstruction(std::make_unique<AllocateLocalInstruction>(localId, std::move(localName), valueType));
-
-        const auto address = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<AddressOfInstruction>(address.id(), LocalSlotRef{ localId }, valueType.toReference()));
+        m_currentBuilder->appendPrologueInstruction(m_currentBlockIndex, Instruction::CreateAllocateLocal(valueType, localId, moduleNameId));
+        const auto address = appendValueInstruction(Instruction::CreateAddressOf(nextTemporaryId(), valueType.toReference(), localId));
 
         if (initialValue.id() >= 0)
         {
-            m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(initialValue, address, valueType));
+            appendStoreInstruction(initialValue, address, valueType);
         }
 
         return address;
@@ -292,12 +385,8 @@ namespace Caracal
             return;
         }
 
-        const auto parameterId = ValueRef{ m_nextTemporaryId++ };
         const auto parameterType = parameter.type();
-        m_currentBlock->addInstruction(std::make_unique<ParameterInstruction>(
-            parameterId.id(),
-            position,
-            IRParameter{ parameter.name(), parameterType }));
+        const auto parameterId = appendValueInstruction(Instruction::CreateParameter(nextTemporaryId(), parameterType, position));
 
         const auto needsAddressStorage = parameterType.isReference()
             || parameterType.kind() == TypeKind::Type
@@ -315,7 +404,7 @@ namespace Caracal
             return;
         }
 
-        const auto address = allocateLocalSlot(parameter.name(), parameterType, parameterId);
+        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, parameter.name()), parameterType, parameterId);
         m_locals.set(nameId, LocalState{ address, parameterType, LocalStorageKind::Address });
     }
 
@@ -336,14 +425,14 @@ namespace Caracal
 
         if (localType.kind() == TypeKind::Type)
         {
-            const auto address = allocateLocalSlot(std::string(name), localType, value);
+            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value);
             m_locals.set(nameId, LocalState{ address, localType, LocalStorageKind::Address });
             return;
         }
 
         if (std::binary_search(m_addressTakenLocals.begin(), m_addressTakenLocals.end(), nameId))
         {
-            const auto address = allocateLocalSlot(std::string(name), localType, value);
+            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value);
             m_locals.set(nameId, LocalState{ address, localType, LocalStorageKind::Address });
             return;
         }
@@ -409,7 +498,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto address = allocateLocalSlot(std::string(name), type, ValueRef{});
+        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), type, ValueRef{});
         m_locals.set(nameId, LocalState{ address, type, LocalStorageKind::Address });
         return address;
     }
@@ -421,7 +510,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        return allocateLocalSlot(std::string(name), type, ValueRef{});
+        return allocateLocalSlot(m_module.internName(name), type, ValueRef{});
     }
 
     ValueRef IREmitter::spillToTempSlot(ValueRef value, Type valueType)
@@ -431,25 +520,17 @@ namespace Caracal
             return ValueRef{};
         }
 
-        return allocateLocalSlot("temp", valueType, value);
+        return allocateLocalSlot(m_module.internName("temp"), valueType, value);
     }
 
-    ValueRef IREmitter::emitFieldAddress(ValueRef objectAddress, Type objectType, std::string_view fieldName, i32 fieldIndex, Type fieldType)
+    ValueRef IREmitter::emitFieldAddress(ValueRef objectAddress, Type objectType, i32 fieldIndex, Type fieldType)
     {
         if (!canEmitWith({ objectAddress }))
         {
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<AddressOfFieldInstruction>(
-            result.id(),
-            objectAddress,
-            objectType,
-            std::string(fieldName),
-            fieldIndex,
-            fieldType.toReference()));
-        return result;
+        return appendValueInstruction(Instruction::CreateFieldAddress(nextTemporaryId(), fieldType.toReference(), objectAddress.id(), fieldIndex, objectType));
     }
 
     ValueRef IREmitter::emitElementAddress(ValueRef baseAddress, Type arrayType, ValueRef index, Type elementType)
@@ -459,14 +540,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<ElementAddressInstruction>(
-            result.id(),
-            baseAddress,
-            arrayType,
-            index,
-            elementType));
-        return result;
+        return appendValueInstruction(Instruction::CreateElementAddress(nextTemporaryId(), elementType, baseAddress.id(), index.id(), arrayType));
     }
 
     ValueRef IREmitter::elementBaseAddress(ValueRef receiverAddress, Type receiverType, Type elementType)
@@ -476,7 +550,7 @@ namespace Caracal
             return receiverAddress;
         }
 
-        const auto dataPointerAddress = emitFieldAddress(receiverAddress, receiverType, "data", 0, elementType.toReference());
+        const auto dataPointerAddress = emitFieldAddress(receiverAddress, receiverType, 0, elementType.toReference());
         return emitLoad(dataPointerAddress, elementType.toReference());
     }
 
@@ -520,7 +594,7 @@ namespace Caracal
                 return ValueRef{};
             }
 
-            baseAddress = emitFieldAddress(baseAddress, receiverType, "_bytes", 0, bytesField.type());
+            baseAddress = emitFieldAddress(baseAddress, receiverType, 0, bytesField.type());
             sourceArrayType = bytesField.type();
         }
 
@@ -533,9 +607,9 @@ namespace Caracal
         {
             const auto elementType = m_semanticContext.getArrayElementType(sourceArrayType);
             const auto arrayAddress = baseAddress;
-            const auto dataPointerAddress = emitFieldAddress(arrayAddress, sourceArrayType, "data", 0, elementType.toReference());
+            const auto dataPointerAddress = emitFieldAddress(arrayAddress, sourceArrayType, 0, elementType.toReference());
             baseAddress = emitLoad(dataPointerAddress, elementType.toReference());
-            const auto lengthAddress = emitFieldAddress(arrayAddress, sourceArrayType, ArrayLengthMemberName, 1, m_semanticContext.wellKnown().i32);
+            const auto lengthAddress = emitFieldAddress(arrayAddress, sourceArrayType, 1, m_semanticContext.wellKnown().i32);
             sliceLength = emitLoad(lengthAddress, m_semanticContext.wellKnown().i32);
         }
 
@@ -556,8 +630,8 @@ namespace Caracal
         }
 
         const auto elementType = m_semanticContext.getArrayElementType(bytesField.type());
-        const auto bytesAddress = emitFieldAddress(receiverAddress, receiverType, "_bytes", 0, bytesField.type());
-        const auto dataPointerAddress = emitFieldAddress(bytesAddress, bytesField.type(), "data", 0, elementType.toReference());
+        const auto bytesAddress = emitFieldAddress(receiverAddress, receiverType, 0, bytesField.type());
+        const auto dataPointerAddress = emitFieldAddress(bytesAddress, bytesField.type(), 0, elementType.toReference());
         return emitLoad(dataPointerAddress, m_semanticContext.wellKnown().cstring);
     }
 
@@ -568,9 +642,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<MakeSliceInstruction>(result.id(), baseAddress, length, sliceType));
-        return result;
+        return appendBinaryInstruction(InstructionKind::MakeSlice, baseAddress, length, sliceType);
     }
 
     ValueRef IREmitter::emitDynamicArrayStorage(ValueRef destinationAddress, Type arrayType, i32 count)
@@ -589,19 +661,11 @@ namespace Caracal
 
         // calloc(capacity, sizeof(element)) provides the zeroed backing buffer
         const auto capacityArgument = emitConstant(ConstantValue::FromI64(capacity), m_semanticContext.wellKnown().i64);
-        const auto elementSize = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<SizeOfInstruction>(
-            elementSize.id(),
-            elementType,
-            m_semanticContext.wellKnown().i64));
+        const auto elementSize = appendValueInstruction(Instruction::CreateSizeOf(nextTemporaryId(), m_semanticContext.wellKnown().i64, elementType));
 
         const auto callocId = m_semanticContext.tryGetExternFunctionByFullName("C.calloc").id();
-        const auto dataPointer = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<CallInstruction>(
-            dataPointer.id(),
-            callocId,
-            std::vector<ValueRef>{ capacityArgument, elementSize },
-            m_semanticContext.wellKnown().rawptr));
+        const ValueRef callocArguments[] = { capacityArgument, elementSize };
+        const auto dataPointer = appendCallInstruction(callocId, callocArguments, m_semanticContext.wellKnown().rawptr);
 
         emitDynamicArrayDescriptor(destinationAddress, arrayType, dataPointer, count, capacity);
         return dataPointer;
@@ -610,16 +674,16 @@ namespace Caracal
     void IREmitter::emitDynamicArrayDescriptor(ValueRef destinationAddress, Type arrayType, ValueRef dataPointer, i32 length, i32 capacity)
     {
         const auto elementType = m_semanticContext.getArrayElementType(arrayType);
-        const auto dataFieldAddress = emitFieldAddress(destinationAddress, arrayType, "data", 0, elementType.toReference());
-        m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(dataPointer, dataFieldAddress, elementType.toReference()));
+        const auto dataFieldAddress = emitFieldAddress(destinationAddress, arrayType, 0, elementType.toReference());
+        appendStoreInstruction(dataPointer, dataFieldAddress, elementType.toReference());
 
         const auto lengthValue = emitConstant(ConstantValue::FromI32(length), m_semanticContext.wellKnown().i32);
-        const auto lengthFieldAddress = emitFieldAddress(destinationAddress, arrayType, "length", 1, m_semanticContext.wellKnown().i32);
-        m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(lengthValue, lengthFieldAddress, m_semanticContext.wellKnown().i32));
+        const auto lengthFieldAddress = emitFieldAddress(destinationAddress, arrayType, 1, m_semanticContext.wellKnown().i32);
+        appendStoreInstruction(lengthValue, lengthFieldAddress, m_semanticContext.wellKnown().i32);
 
         const auto capacityValue = emitConstant(ConstantValue::FromI32(capacity), m_semanticContext.wellKnown().i32);
-        const auto capacityFieldAddress = emitFieldAddress(destinationAddress, arrayType, "capacity", 2, m_semanticContext.wellKnown().i32);
-        m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(capacityValue, capacityFieldAddress, m_semanticContext.wellKnown().i32));
+        const auto capacityFieldAddress = emitFieldAddress(destinationAddress, arrayType, 2, m_semanticContext.wellKnown().i32);
+        appendStoreInstruction(capacityValue, capacityFieldAddress, m_semanticContext.wellKnown().i32);
     }
 
     ValueRef IREmitter::emitCStringEquality(BinaryOperatorKind operation, ValueRef left, ValueRef right)
@@ -630,12 +694,8 @@ namespace Caracal
         }
 
         const auto strcmpId = m_semanticContext.tryGetExternFunctionByFullName("C.strcmp").id();
-        const auto comparison = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<CallInstruction>(
-            comparison.id(),
-            strcmpId,
-            std::vector<ValueRef>{ left, right },
-            m_semanticContext.wellKnown().i32));
+        const ValueRef strcmpArguments[] = { left, right };
+        const auto comparison = appendCallInstruction(strcmpId, strcmpArguments, m_semanticContext.wellKnown().i32);
 
         const auto zero = emitConstant(ConstantValue::FromI32(0), m_semanticContext.wellKnown().i32);
         return emitBinary(operation, comparison, zero, m_semanticContext.wellKnown().boolean, m_semanticContext.wellKnown().i32);
@@ -657,7 +717,7 @@ namespace Caracal
         }
 
         const auto bytesType = bytesField.type();
-        const auto bytesAddress = emitFieldAddress(destinationAddress, stringType, "_bytes", 0, bytesType);
+        const auto bytesAddress = emitFieldAddress(destinationAddress, stringType, 0, bytesType);
         const auto data = emitConstant(ConstantValue::FromString(std::string(escaped)), m_semanticContext.wellKnown().cstring);
         const auto length = static_cast<i32>(escaped.size());
         emitDynamicArrayDescriptor(bytesAddress, bytesType, data, length, length);
@@ -670,11 +730,8 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->addInstruction(std::make_unique<ArrayAddInstruction>(
-            receiverAddress,
-            value,
-            receiverType,
-            m_semanticContext.tryGetExternFunctionByFullName("C.realloc").id()));
+        const auto reallocId = m_semanticContext.tryGetExternFunctionByFullName("C.realloc").id();
+        appendInstruction(Instruction::CreateArrayAdd(receiverType, receiverAddress.id(), value.id(), reallocId));
     }
 
     void IREmitter::emitArrayRemove(ValueRef receiverAddress, ValueRef index, Type receiverType)
@@ -684,11 +741,8 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->addInstruction(std::make_unique<ArrayRemoveInstruction>(
-            receiverAddress,
-            index,
-            receiverType,
-            m_semanticContext.tryGetExternFunctionByFullName("C.memmove").id()));
+        const auto memmoveId = m_semanticContext.tryGetExternFunctionByFullName("C.memmove").id();
+        appendInstruction(Instruction::CreateArrayRemove(receiverType, receiverAddress.id(), index.id(), memmoveId));
     }
 
     ValueRef IREmitter::emitArrayCopy(ValueRef sourceAddress, Type arrayType, bool reserveNulByte)
@@ -698,15 +752,9 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<ArrayCopyInstruction>(
-            result.id(),
-            sourceAddress,
-            arrayType,
-            m_semanticContext.tryGetExternFunctionByFullName("C.calloc").id(),
-            m_semanticContext.tryGetExternFunctionByFullName("C.memmove").id(),
-            reserveNulByte));
-        return result;
+        const auto callocId = m_semanticContext.tryGetExternFunctionByFullName("C.calloc").id();
+        const auto memmoveId = m_semanticContext.tryGetExternFunctionByFullName("C.memmove").id();
+        return appendValueInstruction(Instruction::CreateArrayCopy(nextTemporaryId(), arrayType, sourceAddress.id(), callocId, memmoveId, reserveNulByte));
     }
 
     void IREmitter::emitStoreValue(ValueRef value, ValueRef address, Type type)
@@ -716,7 +764,7 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(value, address, type));
+        appendStoreInstruction(value, address, type);
     }
 
     ValueRef IREmitter::emitRefValue(u32 nameId, Type valueType)
@@ -738,7 +786,7 @@ namespace Caracal
         }
 
         const auto value = emitLoad(address, valueType);
-        return allocateLocalSlot("refConstTemp", valueType, value);
+        return allocateLocalSlot(m_module.internName("refConstTemp"), valueType, value);
     }
 
     ValueRef IREmitter::peekLocal(u32 nameId)
@@ -773,7 +821,7 @@ namespace Caracal
 
         if (local->storageKind == LocalStorageKind::Address)
         {
-            m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(value, local->value, local->type.toValue()));
+            appendStoreInstruction(value, local->value, local->type.toValue());
             return;
         }
 
@@ -812,7 +860,7 @@ namespace Caracal
 
         const auto* sourceDescription = m_semanticContext.tryGetBuiltinTypeDescription(sourceType);
         const auto* targetDescription = m_semanticContext.tryGetBuiltinTypeDescription(targetType);
-        if (sourceDescription == nullptr 
+        if (sourceDescription == nullptr
             || targetDescription == nullptr
             || sourceDescription->kind != BuiltinTypeKind::Int
             || targetDescription->kind != BuiltinTypeKind::Int
@@ -821,9 +869,7 @@ namespace Caracal
             return value;
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<IntWidenInstruction>(result.id(), value, sourceType, targetType));
-        return result;
+        return appendValueInstruction(Instruction::CreateConversion(InstructionKind::IntWiden, nextTemporaryId(), targetType, value.id(), sourceType));
     }
 
     ValueRef IREmitter::emitIntToFloat(ValueRef value, Type sourceType, Type targetType)
@@ -833,9 +879,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<IntToFloatInstruction>(result.id(), value, sourceType, targetType));
-        return result;
+        return appendValueInstruction(Instruction::CreateConversion(InstructionKind::IntToFloat, nextTemporaryId(), targetType, value.id(), sourceType));
     }
 
     ValueRef IREmitter::emitBinary(BinaryOperatorKind binaryOperator, ValueRef left, ValueRef right, Type resultType, Type operandType)
@@ -845,67 +889,55 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
         switch (binaryOperator)
         {
             case BinaryOperatorKind::AdditionWrapping:
             {
-                m_currentBlock->addInstruction(std::make_unique<AddInstruction>(result.id(), left, right, resultType));
-                break;
+                return appendBinaryInstruction(InstructionKind::Add, left, right, resultType);
             }
             case BinaryOperatorKind::SubtractionWrapping:
             {
-                m_currentBlock->addInstruction(std::make_unique<SubtractInstruction>(result.id(), left, right, resultType));
-                break;
+                return appendBinaryInstruction(InstructionKind::Subtract, left, right, resultType);
             }
             case BinaryOperatorKind::MultiplicationWrapping:
             {
-                m_currentBlock->addInstruction(std::make_unique<MultiplyInstruction>(result.id(), left, right, resultType));
-                break;
+                return appendBinaryInstruction(InstructionKind::Multiply, left, right, resultType);
             }
             case BinaryOperatorKind::Division:
             {
-                m_currentBlock->addInstruction(std::make_unique<DivideInstruction>(result.id(), left, right, resultType));
-                break;
+                return appendBinaryInstruction(InstructionKind::Divide, left, right, resultType);
             }
             case BinaryOperatorKind::Equal:
             {
-                m_currentBlock->addInstruction(std::make_unique<EqualInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::Equal, left, right, resultType, operandType);
             }
             case BinaryOperatorKind::NotEqual:
             {
-                m_currentBlock->addInstruction(std::make_unique<NotEqualInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::NotEqual, left, right, resultType, operandType);
             }
             case BinaryOperatorKind::LessThan:
             {
-                m_currentBlock->addInstruction(std::make_unique<LessThanInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::LessThan, left, right, resultType, operandType);
             }
             case BinaryOperatorKind::LessOrEqual:
             {
-                m_currentBlock->addInstruction(std::make_unique<LessOrEqualInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::LessOrEqual, left, right, resultType, operandType);
             }
             case BinaryOperatorKind::GreaterThan:
             {
-                m_currentBlock->addInstruction(std::make_unique<GreaterThanInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::GreaterThan, left, right, resultType, operandType);
             }
             case BinaryOperatorKind::GreaterOrEqual:
             {
-                m_currentBlock->addInstruction(std::make_unique<GreaterOrEqualInstruction>(result.id(), left, right, resultType, operandType));
-                break;
+                return appendComparisonInstruction(InstructionKind::GreaterOrEqual, left, right, resultType, operandType);
             }
             default:
             {
-                // the reserved id stays unused
+                // the result id is used up even though no instruction is written
+                m_nextTemporaryId++;
                 return ValueRef{};
             }
         }
-
-        return result;
     }
 
     ValueRef IREmitter::emitUnary(UnaryOperatorKind unaryOperator, ValueRef operand, Type resultType)
@@ -915,29 +947,26 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
         switch (unaryOperator)
         {
             case UnaryOperatorKind::ValueNegation:
             {
-                m_currentBlock->addInstruction(std::make_unique<ValueNegationInstruction>(result.id(), operand, resultType));
-                break;
+                return appendUnaryInstruction(InstructionKind::ValueNegation, operand, resultType);
             }
             case UnaryOperatorKind::LogicalNegation:
             {
-                m_currentBlock->addInstruction(std::make_unique<LogicalNegationInstruction>(result.id(), operand, resultType));
-                break;
+                return appendUnaryInstruction(InstructionKind::LogicalNegation, operand, resultType);
             }
             default:
             {
+                // the result id is used up even though no instruction is written
+                m_nextTemporaryId++;
                 return ValueRef{};
             }
         }
-
-        return result;
     }
 
-    ValueRef IREmitter::emitBitwiseIntrinsic(IntrinsicKind intrinsicKind, const std::vector<ValueRef>& arguments, Type resultType)
+    ValueRef IREmitter::emitBitwiseIntrinsic(IntrinsicKind intrinsicKind, std::span<const ValueRef> arguments, Type resultType)
     {
         if (arguments.empty() || !canEmitWith({ arguments[0] }))
         {
@@ -946,9 +975,7 @@ namespace Caracal
 
         if (intrinsicKind == IntrinsicKind::BitNot)
         {
-            const auto result = ValueRef{ m_nextTemporaryId++ };
-            m_currentBlock->addInstruction(std::make_unique<BitNotInstruction>(result.id(), arguments[0], resultType));
-            return result;
+            return appendUnaryInstruction(InstructionKind::BitNot, arguments[0], resultType);
         }
 
         if (arguments.size() < 2 || arguments[1].id() < 0)
@@ -960,21 +987,15 @@ namespace Caracal
         {
             case IntrinsicKind::BitAnd:
             {
-                const auto result = ValueRef{ m_nextTemporaryId++ };
-                m_currentBlock->addInstruction(std::make_unique<BitAndInstruction>(result.id(), arguments[0], arguments[1], resultType));
-                return result;
+                return appendBinaryInstruction(InstructionKind::BitAnd, arguments[0], arguments[1], resultType);
             }
             case IntrinsicKind::BitOr:
             {
-                const auto result = ValueRef{ m_nextTemporaryId++ };
-                m_currentBlock->addInstruction(std::make_unique<BitOrInstruction>(result.id(), arguments[0], arguments[1], resultType));
-                return result;
+                return appendBinaryInstruction(InstructionKind::BitOr, arguments[0], arguments[1], resultType);
             }
             case IntrinsicKind::BitXor:
             {
-                const auto result = ValueRef{ m_nextTemporaryId++ };
-                m_currentBlock->addInstruction(std::make_unique<BitXorInstruction>(result.id(), arguments[0], arguments[1], resultType));
-                return result;
+                return appendBinaryInstruction(InstructionKind::BitXor, arguments[0], arguments[1], resultType);
             }
             case IntrinsicKind::ShiftLeft:
             case IntrinsicKind::ShiftRight:
@@ -986,22 +1007,13 @@ namespace Caracal
                     maskValue = description->bits - 1;
                 }
 
-                const auto mask = ValueRef{ m_nextTemporaryId++ };
-                m_currentBlock->addInstruction(std::make_unique<ConstantInstruction>(mask.id(), ConstantValue::FromI32(maskValue), m_semanticContext.wellKnown().i32));
-
-                const auto maskedAmount = ValueRef{ m_nextTemporaryId++ };
-                m_currentBlock->addInstruction(std::make_unique<BitAndInstruction>(maskedAmount.id(), arguments[1], mask, m_semanticContext.wellKnown().i32));
-
-                const auto result = ValueRef{ m_nextTemporaryId++ };
+                const auto mask = emitConstant(ConstantValue::FromI32(maskValue), m_semanticContext.wellKnown().i32);
+                const auto maskedAmount = appendBinaryInstruction(InstructionKind::BitAnd, arguments[1], mask, m_semanticContext.wellKnown().i32);
                 if (intrinsicKind == IntrinsicKind::ShiftLeft)
                 {
-                    m_currentBlock->addInstruction(std::make_unique<ShiftLeftInstruction>(result.id(), arguments[0], maskedAmount, resultType));
+                    return appendBinaryInstruction(InstructionKind::ShiftLeft, arguments[0], maskedAmount, resultType);
                 }
-                else
-                {
-                    m_currentBlock->addInstruction(std::make_unique<ShiftRightInstruction>(result.id(), arguments[0], maskedAmount, resultType));
-                }
-                return result;
+                return appendBinaryInstruction(InstructionKind::ShiftRight, arguments[0], maskedAmount, resultType);
             }
             default:
             {
@@ -1010,22 +1022,14 @@ namespace Caracal
         }
     }
 
-    ValueRef IREmitter::emitCall(FunctionId functionId, std::vector<ValueRef> arguments, Type resultType)
+    ValueRef IREmitter::emitCall(FunctionId functionId, std::span<const ValueRef> arguments, Type resultType)
     {
         if (!canEmit())
         {
             return ValueRef{};
         }
 
-        if (resultType == Type::Void())
-        {
-            m_currentBlock->addInstruction(std::make_unique<CallVoidInstruction>(functionId, std::move(arguments)));
-            return ValueRef{};
-        }
-
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<CallInstruction>(result.id(), functionId, std::move(arguments), resultType));
-        return result;
+        return appendCallInstruction(functionId, arguments, resultType);
     }
 
     ShortCircuitFrame IREmitter::beginShortCircuit(bool isLogicalAnd, ValueRef leftValue)
@@ -1036,38 +1040,37 @@ namespace Caracal
         }
 
         ShortCircuitFrame frame;
-        frame.conditionBlockId = m_currentBlock->id();
+        frame.conditionBlockId = currentBlockId();
         frame.rightBlockId = m_nextBlockId++;
         frame.leftValue = leftValue;
         frame.isLogicalAnd = isLogicalAnd;
         frame.active = true;
         if (isLogicalAnd)
         {
-            m_currentFunction->addBlock(BasicBlock{ frame.rightBlockId, "and.rhs", nullptr });
+            m_currentBlockIndex = addBlock(frame.rightBlockId, BlockLabel::AndRhs);
         }
         else
         {
-            m_currentFunction->addBlock(BasicBlock{ frame.rightBlockId, "or.rhs", nullptr });
+            m_currentBlockIndex = addBlock(frame.rightBlockId, BlockLabel::OrRhs);
         }
-        m_currentBlock = m_currentFunction->tryGetBlock(frame.rightBlockId);
         return frame;
     }
 
     void IREmitter::discardShortCircuit(const ShortCircuitFrame& frame)
     {
-        if (!frame.active || m_currentFunction == nullptr)
+        if (!frame.active || m_currentBuilder == nullptr)
         {
             return;
         }
 
         // if the right side folded, no blocks were added and the rhs block is still the last one
         // only reuse the block id if the block was really removed, otherwise two blocks share the id
-        if (m_currentFunction->popLastBlock(frame.rightBlockId))
+        if (m_currentBuilder->popLastBlock(frame.rightBlockId))
         {
             m_nextBlockId--;
         }
 
-        m_currentBlock = m_currentFunction->tryGetBlock(frame.conditionBlockId);
+        m_currentBlockIndex = m_currentBuilder->blockIndex(frame.conditionBlockId);
     }
 
     ValueRef IREmitter::endShortCircuit(const ShortCircuitFrame& frame, ValueRef rightValue)
@@ -1084,31 +1087,34 @@ namespace Caracal
         }
 
         const auto mergeId = m_nextBlockId++;
-        auto* conditionBlock = m_currentFunction->tryGetBlock(frame.conditionBlockId);
+        const auto conditionBlockIndex = m_currentBuilder->blockIndex(frame.conditionBlockId);
+        auto mergeBlockIndex = NoBlockIndex;
         if (frame.isLogicalAnd)
         {
             // a false left side jumps straight to the merge block
-            m_currentFunction->addBlock(BasicBlock{ mergeId, "and.merge", nullptr });
-            conditionBlock->setTerminator(std::make_unique<BranchIfTerminator>(frame.leftValue, frame.rightBlockId, mergeId));
+            mergeBlockIndex = addBlock(mergeId, BlockLabel::AndMerge);
+            setBranch(conditionBlockIndex, frame.leftValue, frame.rightBlockId, mergeId);
         }
         else
         {
             // a true left side jumps straight to the merge block
-            m_currentFunction->addBlock(BasicBlock{ mergeId, "or.merge", nullptr });
-            conditionBlock->setTerminator(std::make_unique<BranchIfTerminator>(frame.leftValue, mergeId, frame.rightBlockId));
+            mergeBlockIndex = addBlock(mergeId, BlockLabel::OrMerge);
+            setBranch(conditionBlockIndex, frame.leftValue, mergeId, frame.rightBlockId);
         }
 
-        auto* rightExitBlock = m_currentBlock;
-        rightExitBlock->setTerminator(std::make_unique<JumpTerminator>(mergeId));
-        m_currentBlock = m_currentFunction->tryGetBlock(mergeId);
+        const auto rightExitBlockId = currentBlockId();
+        setJump(m_currentBlockIndex, mergeId);
+        m_currentBlockIndex = mergeBlockIndex;
 
-        std::vector<PhiInput> phiInputs;
-        phiInputs.emplace_back(frame.conditionBlockId, frame.leftValue);
-        phiInputs.emplace_back(rightExitBlock->id(), rightValue);
+        const PhiInput phiInputs[] =
+        {
+            PhiInput{ frame.conditionBlockId, frame.leftValue.id() },
+            PhiInput{ rightExitBlockId, rightValue.id() },
+        };
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<PhiInstruction>(result.id(), std::move(phiInputs), m_semanticContext.wellKnown().boolean));
-        return result;
+        const auto result = m_nextTemporaryId++;
+        appendPhiInstruction(m_currentBlockIndex, result, m_semanticContext.wellKnown().boolean, phiInputs);
+        return ValueRef{ result };
     }
 
     std::vector<u32> IREmitter::sortedDefinedLocalIds(const LocalsMap& locals) const
@@ -1133,7 +1139,7 @@ namespace Caracal
         return ids;
     }
 
-    void IREmitter::mergeLocals(BasicBlock& block, const std::vector<IncomingLocals>& incomingValues)
+    void IREmitter::mergeLocals(u32 blockIndex, const std::vector<IncomingLocals>& incomingValues)
     {
         CARACAL_ZONE_NAMED("emit.mergeLocals");
         LocalsMap mergedLocals;
@@ -1146,6 +1152,7 @@ namespace Caracal
 
         const auto& firstIncoming = incomingValues.front().values;
         mergedLocals.reserve(firstIncoming.size());
+        std::vector<PhiInput> phiInputs;
         for (const auto nameId : sortedDefinedLocalIds(firstIncoming))
         {
             // only merge locals defined along every incoming edge
@@ -1175,11 +1182,10 @@ namespace Caracal
                 continue;
             }
 
-            std::vector<PhiInput> phiInputs;
-            phiInputs.reserve(incomingValues.size());
+            phiInputs.clear();
             for (const auto& incoming : incomingValues)
             {
-                phiInputs.emplace_back(incoming.predecessorBlockId, incoming.values.get(nameId).value);
+                phiInputs.push_back(PhiInput{ incoming.predecessorBlockId, incoming.values.get(nameId).value.id() });
             }
 
             const auto phiId = m_nextTemporaryId++;
@@ -1189,7 +1195,7 @@ namespace Caracal
                 phiType = phiType.toReference();
             }
 
-            block.addInstruction(std::make_unique<PhiInstruction>(phiId, std::move(phiInputs), phiType));
+            appendPhiInstruction(blockIndex, phiId, phiType, phiInputs);
             mergedLocals.append(nameId, LocalState{ ValueRef{ phiId }, firstState.type, firstState.storageKind });
         }
 
@@ -1208,23 +1214,23 @@ namespace Caracal
         IfFrame frame;
         frame.active = true;
         frame.hasElse = hasElse;
-        frame.conditionExitBlockId = m_currentBlock->id();
+        frame.conditionExitBlockId = currentBlockId();
         frame.preBranchValues = m_locals;
         frame.trueBlockId = m_nextBlockId++;
-        m_currentFunction->addBlock(BasicBlock{ frame.trueBlockId, "if.true", nullptr });
+        const auto trueBlockIndex = addBlock(frame.trueBlockId, BlockLabel::IfTrue);
 
         if (hasElse)
         {
             frame.falseBlockId = m_nextBlockId++;
-            m_currentBlock->setTerminator(std::make_unique<BranchIfTerminator>(condition, frame.trueBlockId, frame.falseBlockId));
+            setBranch(m_currentBlockIndex, condition, frame.trueBlockId, frame.falseBlockId);
         }
         else
         {
             frame.continuationBlockId = m_nextBlockId++;
-            m_currentBlock->setTerminator(std::make_unique<BranchIfTerminator>(condition, frame.trueBlockId, frame.continuationBlockId));
+            setBranch(m_currentBlockIndex, condition, frame.trueBlockId, frame.continuationBlockId);
         }
 
-        m_currentBlock = m_currentFunction->tryGetBlock(frame.trueBlockId);
+        m_currentBlockIndex = trueBlockIndex;
         return frame;
     }
 
@@ -1236,18 +1242,17 @@ namespace Caracal
             return;
         }
 
-        frame.trueFallsThrough = m_currentBlock != nullptr && !m_currentBlock->hasTerminator();
-        if (m_currentBlock != nullptr)
+        frame.trueFallsThrough = currentBlockFallsThrough();
+        if (m_currentBlockIndex != NoBlockIndex)
         {
-            frame.trueExitBlockId = m_currentBlock->id();
+            frame.trueExitBlockId = currentBlockId();
         }
         frame.trueExitValues = std::move(m_locals);
 
         if (frame.hasElse)
         {
-            m_currentFunction->addBlock(BasicBlock{ frame.falseBlockId, "if.false", nullptr });
+            m_currentBlockIndex = addBlock(frame.falseBlockId, BlockLabel::IfFalse);
             m_locals = std::move(frame.preBranchValues);
-            m_currentBlock = m_currentFunction->tryGetBlock(frame.falseBlockId);
         }
     }
 
@@ -1261,56 +1266,52 @@ namespace Caracal
 
         if (!frame.hasElse)
         {
-            m_currentFunction->addBlock(BasicBlock{ frame.continuationBlockId, "if.continuation", nullptr });
-            auto* continuationBlock = m_currentFunction->tryGetBlock(frame.continuationBlockId);
+            const auto continuationBlockIndex = addBlock(frame.continuationBlockId, BlockLabel::IfContinuation);
 
             std::vector<IncomingLocals> continuationInputs;
             continuationInputs.push_back(IncomingLocals{ frame.conditionExitBlockId, std::move(frame.preBranchValues) });
             if (frame.trueFallsThrough)
             {
-                auto* trueBlock = m_currentFunction->tryGetBlock(frame.trueExitBlockId);
-                trueBlock->setTerminator(std::make_unique<JumpTerminator>(frame.continuationBlockId));
+                setJump(m_currentBuilder->blockIndex(frame.trueExitBlockId), frame.continuationBlockId);
                 continuationInputs.push_back(IncomingLocals{ frame.trueExitBlockId, std::move(frame.trueExitValues) });
             }
 
-            mergeLocals(*continuationBlock, continuationInputs);
-            m_currentBlock = continuationBlock;
+            mergeLocals(continuationBlockIndex, continuationInputs);
+            m_currentBlockIndex = continuationBlockIndex;
             return;
         }
 
-        const auto falseFallsThrough = m_currentBlock != nullptr && !m_currentBlock->hasTerminator();
+        const auto falseFallsThrough = currentBlockFallsThrough();
         auto falseExitBlockId = BlockId{ -1 };
-        if (m_currentBlock != nullptr)
+        if (m_currentBlockIndex != NoBlockIndex)
         {
-            falseExitBlockId = m_currentBlock->id();
+            falseExitBlockId = currentBlockId();
         }
         auto falseExitValues = std::move(m_locals);
 
         if (!frame.trueFallsThrough && !falseFallsThrough)
         {
-            m_currentBlock = nullptr;
+            m_currentBlockIndex = NoBlockIndex;
             return;
         }
 
         frame.continuationBlockId = m_nextBlockId++;
-        m_currentFunction->addBlock(BasicBlock{ frame.continuationBlockId, "if.continuation", nullptr });
-        auto* continuationBlock = m_currentFunction->tryGetBlock(frame.continuationBlockId);
+        const auto continuationBlockIndex = addBlock(frame.continuationBlockId, BlockLabel::IfContinuation);
 
         std::vector<IncomingLocals> continuationInputs;
         if (frame.trueFallsThrough)
         {
-            auto* trueBlock = m_currentFunction->tryGetBlock(frame.trueExitBlockId);
-            trueBlock->setTerminator(std::make_unique<JumpTerminator>(frame.continuationBlockId));
+            setJump(m_currentBuilder->blockIndex(frame.trueExitBlockId), frame.continuationBlockId);
             continuationInputs.push_back(IncomingLocals{ frame.trueExitBlockId, std::move(frame.trueExitValues) });
         }
         if (falseFallsThrough)
         {
-            m_currentBlock->setTerminator(std::make_unique<JumpTerminator>(frame.continuationBlockId));
+            setJump(m_currentBlockIndex, frame.continuationBlockId);
             continuationInputs.push_back(IncomingLocals{ falseExitBlockId, std::move(falseExitValues) });
         }
 
-        mergeLocals(*continuationBlock, continuationInputs);
-        m_currentBlock = continuationBlock;
+        mergeLocals(continuationBlockIndex, continuationInputs);
+        m_currentBlockIndex = continuationBlockIndex;
     }
 
     WhileFrame IREmitter::beginWhile()
@@ -1323,15 +1324,14 @@ namespace Caracal
 
         WhileFrame frame;
         frame.active = true;
-        frame.entryBlockId = m_currentBlock->id();
+        frame.entryBlockId = currentBlockId();
         frame.preLoopValues = m_locals;
         frame.conditionBlockId = m_nextBlockId++;
         frame.loopBlockId = m_nextBlockId++;
         frame.continuationBlockId = m_nextBlockId++;
 
-        m_currentBlock->setTerminator(std::make_unique<JumpTerminator>(frame.conditionBlockId));
-        m_currentFunction->addBlock(BasicBlock{ frame.conditionBlockId, "while.condition", nullptr });
-        auto* conditionBlock = m_currentFunction->tryGetBlock(frame.conditionBlockId);
+        setJump(m_currentBlockIndex, frame.conditionBlockId);
+        const auto conditionBlockIndex = addBlock(frame.conditionBlockId, BlockLabel::WhileCondition);
 
         // every value local gets a loop header phi, its inputs patch at endWhile
         frame.loopHeaderValues.reserve(frame.preLoopValues.size());
@@ -1344,21 +1344,17 @@ namespace Caracal
                 continue;
             }
 
-            std::vector<PhiInput> phiInputs;
-            phiInputs.emplace_back(frame.entryBlockId, localState.value);
-
+            const PhiInput phiInputs[] = { PhiInput{ frame.entryBlockId, localState.value.id() } };
             const auto phiId = m_nextTemporaryId++;
-            auto phiInstruction = std::make_unique<PhiInstruction>(phiId, std::move(phiInputs), localState.type);
-            auto* phiInstructionPointer = phiInstruction.get();
-            conditionBlock->addInstruction(std::move(phiInstruction));
+            const auto phiInstructionIndex = appendPhiInstruction(conditionBlockIndex, phiId, localState.type, phiInputs);
 
             frame.loopHeaderValues.append(nameId, LocalState{ ValueRef{ phiId }, localState.type, LocalStorageKind::Value });
-            frame.loopHeaderPhis.push_back(LoopHeaderPhi{ nameId, phiInstructionPointer });
+            frame.loopHeaderPhis.push_back(LoopHeaderPhi{ nameId, phiInstructionIndex });
         }
 
         frame.loopHeaderValues.finishBuild();
         m_locals = frame.loopHeaderValues;
-        m_currentBlock = conditionBlock;
+        m_currentBlockIndex = conditionBlockIndex;
         return frame;
     }
 
@@ -1377,13 +1373,13 @@ namespace Caracal
             return;
         }
 
-        frame.conditionExitBlockId = m_currentBlock->id();
-        m_currentBlock->setTerminator(std::make_unique<BranchIfTerminator>(condition, frame.loopBlockId, frame.continuationBlockId));
+        frame.conditionExitBlockId = currentBlockId();
+        setBranch(m_currentBlockIndex, condition, frame.loopBlockId, frame.continuationBlockId);
 
-        m_currentFunction->addBlock(BasicBlock{ frame.loopBlockId, "while.body", nullptr });
+        const auto loopBlockIndex = addBlock(frame.loopBlockId, BlockLabel::WhileBody);
         m_loopContexts.push_back(LoopContext{ frame.conditionBlockId, frame.continuationBlockId, {}, {} });
         m_locals = frame.loopHeaderValues;
-        m_currentBlock = m_currentFunction->tryGetBlock(frame.loopBlockId);
+        m_currentBlockIndex = loopBlockIndex;
     }
 
     void IREmitter::endWhile(WhileFrame& frame)
@@ -1398,32 +1394,31 @@ namespace Caracal
         auto continuationInputs = std::move(m_loopContexts.back().continuationInputs);
         m_loopContexts.pop_back();
 
-        if (m_currentBlock != nullptr && !m_currentBlock->hasTerminator())
+        if (currentBlockFallsThrough())
         {
-            conditionInputs.push_back(IncomingLocals{ m_currentBlock->id(), std::move(m_locals) });
-            m_currentBlock->setTerminator(std::make_unique<JumpTerminator>(frame.conditionBlockId));
+            conditionInputs.push_back(IncomingLocals{ currentBlockId(), std::move(m_locals) });
+            setJump(m_currentBlockIndex, frame.conditionBlockId);
         }
 
+        std::vector<PhiInput> phiInputs;
         for (const auto& loopHeaderPhi : frame.loopHeaderPhis)
         {
-            std::vector<PhiInput> phiInputs;
-            phiInputs.reserve(1 + conditionInputs.size());
-            phiInputs.emplace_back(frame.entryBlockId, frame.preLoopValues.get(loopHeaderPhi.nameId).value);
+            phiInputs.clear();
+            phiInputs.push_back(PhiInput{ frame.entryBlockId, frame.preLoopValues.get(loopHeaderPhi.nameId).value.id() });
             for (const auto& conditionInput : conditionInputs)
             {
-                phiInputs.emplace_back(conditionInput.predecessorBlockId, conditionInput.values.get(loopHeaderPhi.nameId).value);
+                phiInputs.push_back(PhiInput{ conditionInput.predecessorBlockId, conditionInput.values.get(loopHeaderPhi.nameId).value.id() });
             }
 
-            loopHeaderPhi.instruction->setInputs(std::move(phiInputs));
+            m_currentBuilder->setPhiInputs(loopHeaderPhi.instructionIndex, phiInputs);
         }
 
-        m_currentFunction->addBlock(BasicBlock{ frame.continuationBlockId, "while.continuation", nullptr });
-        auto* continuationBlock = m_currentFunction->tryGetBlock(frame.continuationBlockId);
+        const auto continuationBlockIndex = addBlock(frame.continuationBlockId, BlockLabel::WhileContinuation);
 
         // a false condition leaves the loop with the locals as they were at the loop header
         continuationInputs.insert(continuationInputs.begin(), IncomingLocals{ frame.conditionExitBlockId, std::move(frame.loopHeaderValues) });
-        mergeLocals(*continuationBlock, continuationInputs);
-        m_currentBlock = continuationBlock;
+        mergeLocals(continuationBlockIndex, continuationInputs);
+        m_currentBlockIndex = continuationBlockIndex;
     }
 
     void IREmitter::emitBreak()
@@ -1434,9 +1429,9 @@ namespace Caracal
         }
 
         auto& loopContext = m_loopContexts.back();
-        loopContext.continuationInputs.push_back(IncomingLocals{ m_currentBlock->id(), m_locals });
-        m_currentBlock->setTerminator(std::make_unique<JumpTerminator>(loopContext.continuationBlockId));
-        m_currentBlock = nullptr;
+        loopContext.continuationInputs.push_back(IncomingLocals{ currentBlockId(), m_locals });
+        setJump(m_currentBlockIndex, loopContext.continuationBlockId);
+        m_currentBlockIndex = NoBlockIndex;
     }
 
     void IREmitter::emitSkip()
@@ -1447,9 +1442,9 @@ namespace Caracal
         }
 
         auto& loopContext = m_loopContexts.back();
-        loopContext.conditionInputs.push_back(IncomingLocals{ m_currentBlock->id(), m_locals });
-        m_currentBlock->setTerminator(std::make_unique<JumpTerminator>(loopContext.conditionBlockId));
-        m_currentBlock = nullptr;
+        loopContext.conditionInputs.push_back(IncomingLocals{ currentBlockId(), m_locals });
+        setJump(m_currentBlockIndex, loopContext.conditionBlockId);
+        m_currentBlockIndex = NoBlockIndex;
     }
 
     void IREmitter::emitGlobalConstant(std::string_view name, Type type, ConstantValue value)
@@ -1461,7 +1456,7 @@ namespace Caracal
     void IREmitter::emitGlobalReference(std::string_view name, Type type, std::string_view targetName)
     {
         // the target has to be emitted as a global before a reference to it
-        if (m_globalTypes.find(std::string(targetName)) == m_globalTypes.end())
+        if (m_globalTypes.find(targetName) == m_globalTypes.end())
         {
             return;
         }
@@ -1480,7 +1475,7 @@ namespace Caracal
     {
         emitConstructedGlobal(name, type);
         resumeGlobalInitEffects();
-        return emitGlobalAddress(std::string(name));
+        return emitGlobalAddress(name);
     }
 
     void IREmitter::resumeGlobalInitEffects()
@@ -1488,11 +1483,11 @@ namespace Caracal
         if (!m_globalInit.function.has_value())
         {
             m_globalInit.function.emplace(Function{ FunctionId{ -1 }, GlobalInitializerName, {}, Type::Void() });
-            m_globalInit.function->addBlock(BasicBlock{ m_globalInit.nextBlockId++, "entry", nullptr });
+            static_cast<void>(m_globalInit.builder.addBlock(m_globalInit.nextBlockId++, BlockLabel::Entry));
         }
 
-        m_currentFunction = &m_globalInit.function.value();
-        m_currentBlock = m_currentFunction->tryGetBlock(0);
+        m_currentBuilder = &m_globalInit.builder;
+        m_currentBlockIndex = m_currentBuilder->blockIndex(0);
         m_currentReturnType = Type::Void();
         m_nextTemporaryId = m_globalInit.nextTemporaryId;
         m_nextLocalSlotId = m_globalInit.nextLocalSlotId;
@@ -1501,7 +1496,7 @@ namespace Caracal
 
     void IREmitter::suspendGlobalInit()
     {
-        if (m_currentFunction == nullptr || !m_globalInit.function.has_value())
+        if (m_currentBuilder == nullptr || !m_globalInit.function.has_value())
         {
             return;
         }
@@ -1509,11 +1504,11 @@ namespace Caracal
         m_globalInit.nextTemporaryId = m_nextTemporaryId;
         m_globalInit.nextLocalSlotId = m_nextLocalSlotId;
         m_globalInit.nextBlockId = m_nextBlockId;
-        m_currentFunction = nullptr;
-        m_currentBlock = nullptr;
+        m_currentBuilder = nullptr;
+        m_currentBlockIndex = NoBlockIndex;
     }
 
-    ValueRef IREmitter::emitGlobalAddress(const std::string& name)
+    ValueRef IREmitter::emitGlobalAddress(std::string_view name)
     {
         if (!canEmit())
         {
@@ -1526,12 +1521,11 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto result = ValueRef{ m_nextTemporaryId++ };
-        m_currentBlock->addInstruction(std::make_unique<AddressOfGlobalInstruction>(result.id(), name, global->second.toReference()));
-        return result;
+        const auto nameId = m_module.internName(name);
+        return appendValueInstruction(Instruction::CreateAddressOfGlobal(nextTemporaryId(), global->second.toReference(), nameId));
     }
 
-    ValueRef IREmitter::readGlobal(const std::string& name)
+    ValueRef IREmitter::readGlobal(std::string_view name)
     {
         const auto address = emitGlobalAddress(name);
         if (address.id() < 0)
@@ -1542,7 +1536,7 @@ namespace Caracal
         return emitLoad(address, m_globalTypes.find(name)->second.toValue());
     }
 
-    void IREmitter::emitGlobalAssignment(const std::string& name, ValueRef value)
+    void IREmitter::emitGlobalAssignment(std::string_view name, ValueRef value)
     {
         if (value.id() < 0)
         {
@@ -1555,7 +1549,7 @@ namespace Caracal
             return;
         }
 
-        m_currentBlock->addInstruction(std::make_unique<StoreValueInstruction>(value, address, m_globalTypes.find(name)->second.toValue()));
+        appendStoreInstruction(value, address, m_globalTypes.find(name)->second.toValue());
     }
 
     void IREmitter::recordEnumFieldConstant(i32 enumTypeId, std::string fieldName, ConstantValue constant, std::optional<FoldValue> folded)
@@ -1627,16 +1621,6 @@ namespace Caracal
         m_pendingExternDefinitions.push_back(functionType);
     }
 
-    ConstantValue IREmitter::constantFromFold(const FoldValue& value) noexcept
-    {
-        return std::visit(
-            [](const auto& payload)
-            {
-                return ConstantValue::FromLiteralData(ConstantValue::LiteralData{ payload });
-            },
-            value);
-    }
-
     void IREmitter::recordCalledPreludeFunction(Type functionType)
     {
         if (!canEmit())
@@ -1684,7 +1668,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto defaultValue = emitConstant(constantFromFold(fold->second), defaultType);
+        const auto defaultValue = emitFoldedConstant(fold->second, defaultType);
         return emitWidened(defaultValue, defaultType, parameterType);
     }
 
@@ -1696,7 +1680,7 @@ namespace Caracal
             return address;
         }
 
-        return emitGlobalAddress(std::string(name));
+        return emitGlobalAddress(name);
     }
 
     void IREmitter::registerExternDefinition(const FunctionDefinition& definition)
@@ -1819,13 +1803,16 @@ namespace Caracal
             return;
         }
 
-        auto* entry = m_globalInit.function->tryGetBlock(0);
-        if (entry != nullptr && !entry->hasTerminator())
+        auto& function = m_globalInit.function.value();
+        auto& builder = m_globalInit.builder;
+        const auto entryBlockIndex = builder.blockIndex(0);
+        if (!builder.hasTerminator(entryBlockIndex))
         {
-            entry->setTerminator(std::make_unique<ReturnTerminator>());
+            builder.setTerminator(entryBlockIndex, Instruction::CreateReturn());
         }
-        m_globalInit.function->setTemporaryCount(m_globalInit.nextTemporaryId);
-        m_module.setGlobalInit(std::move(m_globalInit.function.value()));
+        function.setTemporaryCount(m_globalInit.nextTemporaryId);
+        builder.finish(function);
+        m_module.setGlobalInit(std::move(function));
         m_globalInit.function.reset();
     }
 

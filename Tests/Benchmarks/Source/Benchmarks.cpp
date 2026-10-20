@@ -16,6 +16,8 @@
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <optional>
 #include <vector>
 
 static std::filesystem::path InputDirectory()
@@ -44,6 +46,11 @@ static void PrintBenchmarkLine(const char* label, std::vector<double>& milliseco
         << " ms, " 
         << megabytesPerSecond 
         << " MB/s" << std::endl;
+}
+
+[[nodiscard]] static double MillisecondsBetween(std::chrono::high_resolution_clock::time_point start, std::chrono::high_resolution_clock::time_point end)
+{
+    return static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()) / 1000000.0;
 }
 
 [[nodiscard]] static std::string ReadBenchmarkInput(const std::filesystem::path& absolutePath)
@@ -131,8 +138,9 @@ static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, co
     const auto byteCount = data.size();
 
     constexpr int RunCount = 5;
-    std::vector<double> milliseconds;
-    milliseconds.reserve(RunCount);
+    std::vector<double> checkMilliseconds;
+    std::vector<double> eliminationMilliseconds;
+    std::vector<double> destroyMilliseconds;
     for (int run = 0; run < RunCount; run++)
     {
         Caracal::CompilationContext context;
@@ -146,12 +154,16 @@ static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, co
             CaraTest::fail();// ("benchmark input must parse without diagnostics");
         }
 
-        const auto startTime = std::chrono::high_resolution_clock::now();
-        Caracal::Module irModule{};
-        Caracal::TypeChecker checker{ context, false, diagnostics, irModule };
-        const auto checkedCleanly = checker.typeCheck();
-        Caracal::optimize(irModule);
-        const auto endTime = std::chrono::high_resolution_clock::now();
+        // type checking includes the IR emission
+        std::optional<Caracal::Module> irModule{ std::in_place };
+        auto checkedCleanly = false;
+        const auto checkStart = std::chrono::high_resolution_clock::now();
+        auto checkEnd = checkStart;
+        {
+            Caracal::TypeChecker checker{ context, false, diagnostics, irModule.value() };
+            checkedCleanly = checker.typeCheck();
+            checkEnd = std::chrono::high_resolution_clock::now();
+        }
 
         if (!checkedCleanly || !diagnostics.diagnostics().empty())
         {
@@ -159,11 +171,22 @@ static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, co
             CaraTest::fail();// ("benchmark input must check without diagnostics");
         }
 
-        const auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
-        milliseconds.push_back(static_cast<double>(nanoseconds) / 1000000.0);
+        const auto eliminationStart = std::chrono::high_resolution_clock::now();
+        Caracal::optimize(irModule.value());
+        const auto eliminationEnd = std::chrono::high_resolution_clock::now();
+
+        const auto destroyStart = std::chrono::high_resolution_clock::now();
+        irModule.reset();
+        const auto destroyEnd = std::chrono::high_resolution_clock::now();
+
+        checkMilliseconds.push_back(MillisecondsBetween(checkStart, checkEnd));
+        eliminationMilliseconds.push_back(MillisecondsBetween(eliminationStart, eliminationEnd));
+        destroyMilliseconds.push_back(MillisecondsBetween(destroyStart, destroyEnd));
     }
 
-    PrintBenchmarkLine(label, milliseconds, byteCount);
+    PrintBenchmarkLine((std::string("typecheck ") + label).c_str(), checkMilliseconds, byteCount);
+    PrintBenchmarkLine((std::string("DCE       ") + label).c_str(), eliminationMilliseconds, byteCount);
+    PrintBenchmarkLine((std::string("destroy   ") + label).c_str(), destroyMilliseconds, byteCount);
 }
 
 static void OneMillionLinesLexTime()
