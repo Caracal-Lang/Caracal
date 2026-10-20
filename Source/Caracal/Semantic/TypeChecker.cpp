@@ -3060,7 +3060,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckExpressionStatement(const CompilationUnit& unit, u32 index)
     {
-        const auto expressionType = typeCheckExpression(unit, NodeLayout::statementExpression(index)).type;
+        const auto expressionType = typeCheckExpression(unit, NodeLayout::statementExpression(index), ExpressionContext{}).type;
         recordType(unit, index, expressionType);
     }
 
@@ -3780,7 +3780,7 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto ifLayout = NodeLayout::ifStatement(unit.nodeBuffer, index);
 
-        const auto checkedCondition = typeCheckExpression(unit, ifLayout.condition);
+        const auto checkedCondition = typeCheckExpression(unit, ifLayout.condition, ExpressionContext{});
         auto conditionType = coerceConditionType(checkedCondition.type, unit, ifLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {
@@ -3806,7 +3806,7 @@ namespace Caracal
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
         const auto trailingIfLayout = NodeLayout::trailingIf(unit.nodeBuffer, index);
 
-        const auto checkedCondition = typeCheckExpression(unit, trailingIfLayout.condition);
+        const auto checkedCondition = typeCheckExpression(unit, trailingIfLayout.condition, ExpressionContext{});
         auto conditionType = coerceConditionType(checkedCondition.type, unit, trailingIfLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {
@@ -3828,7 +3828,7 @@ namespace Caracal
         const auto whileLayout = NodeLayout::whileStatement(unit.nodeBuffer, index);
 
         auto whileFrame = m_emitter.beginWhile();
-        const auto checkedCondition = typeCheckExpression(unit, whileLayout.condition);
+        const auto checkedCondition = typeCheckExpression(unit, whileLayout.condition, ExpressionContext{});
         auto conditionType = coerceConditionType(checkedCondition.type, unit, whileLayout.condition);
         if (conditionType != Type::Undefined() && conditionType != m_module.wellKnown().boolean)
         {

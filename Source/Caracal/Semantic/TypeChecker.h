@@ -158,7 +158,7 @@ namespace Caracal
         void typeCheckBlockNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] bool receiverChainIsConstant(const CompilationUnit& unit, u32 expressionIndex, std::string& rootName, bool& referencesConstant);
 
-        [[nodiscard]] CheckedValue typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context = {});
+        [[nodiscard]] CheckedValue typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] CheckedValue typeCheckGroupingExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] CheckedValue typeCheckUnaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] CheckedValue typeCheckBinaryExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
