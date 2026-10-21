@@ -286,7 +286,7 @@ namespace Caracal
         CARACAL_ZONE_NAMED_VAR(linkZone, "link");
         const auto linkingResult = llvm::sys::ExecuteAndWait(
             lldPath,
-            { "lld-link", "-flavor", "link", "/out:" + exeFileName, objectFileName, "/subsystem:console", "/defaultlib:msvcrt.lib", "/defaultlib:legacy_stdio_definitions.lib","/defaultlib:ucrt.lib" },
+            { "lld-link", "/out:" + exeFileName, objectFileName, "/defaultlib:msvcrt.lib", "/defaultlib:legacy_stdio_definitions.lib", "/defaultlib:ucrt.lib" },
             std::nullopt,
             {},
             0,
