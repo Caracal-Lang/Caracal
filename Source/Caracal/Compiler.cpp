@@ -1,6 +1,9 @@
 #include <Caracal/Compiler.h>
 #include <Caracal/Compilation.h>
+#include <Caracal/Compilation/BuildCommand.h>
 #include <Caracal/CompilationContext.h>
+#include <Caracal/Debug/IRPrinter.h>
+#include <Caracal/Debug/ParseTreePrinter.h>
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Text/File.h>
@@ -103,16 +106,14 @@ namespace Caracal
         return VerifyModule(llvmModule);
     }
 
-    int compileFile(
-        const std::filesystem::path& filePath,
-        const DiagnosticOptions& diagnosticOptions)
+    static bool RunFrontEnd(
+        const BuildCommand& buildCommand,
+        CompilationContext& compilationContext,
+        Module& irModule)
     {
-        CARACAL_ZONE_NAMED("compileFile");
-        const auto coreDirectoryPath = ResolveCoreDirectory();
-        auto caraFiles = CollectCaraFiles(coreDirectoryPath);
+        auto caraFiles = CollectCaraFiles(buildCommand.coreDirectory);
 
         Caracal::DiagnosticsBag diagnostics;
-        Caracal::CompilationContext compilationContext;
         for (const auto& caraFilePath : caraFiles)
         {
             auto content = Caracal::File::readText(caraFilePath);
@@ -125,29 +126,32 @@ namespace Caracal
             compilationContext.addSource(std::move(content.value()), caraFilePath, Caracal::UnitOrigin::Core);
         }
 
-        auto fileContent = Caracal::File::readText(filePath);
-        if (!fileContent.has_value())
+        for (const auto& sourceFilePath : buildCommand.sourceFiles)
         {
-            std::cout << "Failed to read the file content.\n";
-            return 1;
+            auto fileContent = Caracal::File::readText(sourceFilePath);
+            if (!fileContent.has_value())
+            {
+                std::cout << "Failed to read the file content.\n";
+                return false;
+            }
+
+            compilationContext.addSource(std::move(fileContent.value()), sourceFilePath, Caracal::UnitOrigin::User);
         }
 
-        compilationContext.addSource(std::move(fileContent.value()), filePath, Caracal::UnitOrigin::User);
         Caracal::lexAndParse(compilationContext, diagnostics);
 
         if (diagnostics.hasErrors())
         {
-            Caracal::writeDiagnostics(std::cout, diagnostics, diagnosticOptions);
-            return 1;
+            Caracal::writeDiagnostics(std::cout, diagnostics, buildCommand.diagnosticOptions);
+            return false;
         }
 
-        auto preludeSources = Caracal::collectPreludeSources(ResolvePreludeDirectory());
+        auto preludeSources = Caracal::collectPreludeSources(buildCommand.preludeDirectory);
         if (preludeSources.empty())
             std::cout << "Warning: no prelude found!! operators will not type check!!\n";
 
         Caracal::loadPrelude(compilationContext, preludeSources);
 
-        Module irModule{};
         auto wasSuccessful = typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful)
         {
@@ -155,88 +159,130 @@ namespace Caracal
             {
                 std::cout << "internal error: this program type checks but the compiler could not lower it\n";
             }
-            Caracal::writeDiagnostics(std::cout, diagnostics, diagnosticOptions);
-            return 1;
+            Caracal::writeDiagnostics(std::cout, diagnostics, buildCommand.diagnosticOptions);
+            return false;
         }
 
         optimize(irModule);
 
         if (!diagnostics.diagnostics().empty())
         {
-            Caracal::writeDiagnostics(std::cout, diagnostics, diagnosticOptions);
+            Caracal::writeDiagnostics(std::cout, diagnostics, buildCommand.diagnosticOptions);
         }
 
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
+        return true;
+    }
 
-        llvm::LLVMContext context;
-        auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
-
+    static std::unique_ptr<llvm::TargetMachine> CreateTargetMachine()
+    {
         auto defaultTargetTriple = llvm::sys::getDefaultTargetTriple();
-        llvm::outs() << "TargetTriple: " << defaultTargetTriple << '\n';
         std::string targetError;
         auto target = llvm::TargetRegistry::lookupTarget(defaultTargetTriple, targetError);
         auto triple = llvm::Triple(defaultTargetTriple);
         if (!target)
         {
             llvm::errs() << "Error: " << targetError << "\n";
-            return 1;
+            return nullptr;
         }
 
         auto CPU = "generic";
         auto features = "";
         llvm::TargetOptions targetOptions{};
         auto relocModel = std::optional<llvm::Reloc::Model>();
-        auto targetMachine = target->createTargetMachine(triple, CPU, features, targetOptions, relocModel, std::nullopt, llvm::CodeGenOptLevel::None);
-        llvmModule->setDataLayout(targetMachine->createDataLayout());
-        llvmModule->setTargetTriple(triple);
+        return std::unique_ptr<llvm::TargetMachine>(
+            target->createTargetMachine(triple, CPU, features, targetOptions, relocModel, std::nullopt, llvm::CodeGenOptLevel::None));
+    }
 
-        wasSuccessful = GenerateModule(irModule, *llvmModule);
-        if (!wasSuccessful)
+    static bool GenerateLLVMModule(Module& irModule, const llvm::TargetMachine& targetMachine, llvm::Module& llvmModule)
+    {
+        llvmModule.setDataLayout(targetMachine.createDataLayout());
+        llvmModule.setTargetTriple(targetMachine.getTargetTriple());
+
+        if (!GenerateModule(irModule, llvmModule))
         {
             std::cout << "Module not generated!";
-            return 1;
+            return false;
         }
 
-        // std::string irOutput;
-        // llvm::raw_string_ostream irStream(irOutput);
-        // llvmModule->print(irStream, nullptr);
-        // irStream.flush();
-        // llvm::outs() << "Module IR:\n" << irOutput << "\n";
+        return true;
+    }
 
-        const auto inputFileName = filePath.stem().string();
-        const auto objectFileName = inputFileName + ".o";
+    static void PrintParseTrees(CompilationContext& compilationContext)
+    {
+        for (const auto& unit : compilationContext.units())
+        {
+            if (unit.origin != UnitOrigin::User)
+                continue;
+
+            std::cout << prettyPrint(
+                unit.nodeBuffer,
+                compilationContext.tokenBuffer(unit.fileId),
+                &compilationContext.semanticContext(),
+                unit.fileId);
+        }
+    }
+
+    static void PrintLLVMModule(const llvm::Module& llvmModule)
+    {
+        std::string llvmIR;
+        llvm::raw_string_ostream llvmIRStream(llvmIR);
+        llvmModule.print(llvmIRStream, nullptr);
+        llvmIRStream.flush();
+        std::cout << llvmIR;
+    }
+
+    static bool EmitObjectFile(const BuildCommand& buildCommand, llvm::TargetMachine& targetMachine, llvm::Module& llvmModule)
+    {
         std::error_code errorCode;
-        llvm::raw_fd_ostream objectFile(objectFileName, errorCode, llvm::sys::fs::OF_None);
+        llvm::raw_fd_ostream objectFile(buildCommand.objectFilePath.string(), errorCode, llvm::sys::fs::OF_None);
         if (errorCode)
         {
             llvm::errs() << "Couldnt create object file: " << errorCode.message() << "\n";
-            return 1;
+            return false;
         }
 
         llvm::legacy::PassManager passManager;
-        if (targetMachine->addPassesToEmitFile(passManager, objectFile, nullptr, llvm::CodeGenFileType::ObjectFile))
+        if (targetMachine.addPassesToEmitFile(passManager, objectFile, nullptr, llvm::CodeGenFileType::ObjectFile))
         {
             llvm::errs() << "TargetMachine cant emit a file of this type\n";
-            return 1;
+            return false;
         }
         {
             CARACAL_ZONE_NAMED("emitObject");
-            passManager.run(*llvmModule);
+            passManager.run(llvmModule);
         }
         objectFile.flush();
+        return true;
+    }
 
-        const auto lldPathOrError = llvm::sys::findProgramByName("lld-link");
+    static llvm::ErrorOr<std::string> FindLinker()
+    {
+        const auto executablePath = llvm::sys::fs::getMainExecutable(nullptr, nullptr);
+        if (!executablePath.empty())
+        {
+            const auto compilerDirectory = std::filesystem::path(executablePath).parent_path().string();
+            auto bundledLinker = llvm::sys::findProgramByName("lld-link", { compilerDirectory });
+            if (bundledLinker)
+                return bundledLinker;
+        }
+
+        return llvm::sys::findProgramByName("lld-link");
+    }
+
+    static bool LinkExecutable(const BuildCommand& buildCommand)
+    {
+        const auto lldPathOrError = FindLinker();
         if (!lldPathOrError)
         {
-            llvm::errs() << "Error: lld-link not found in PATH.\n";
-            return 1;
+            llvm::errs() << "Error: lld-link not found next to the compiler or in PATH.\n";
+            return false;
         }
         const auto& lldPath = lldPathOrError.get();
 
         // TODO support linux
         std::string linkError;
-        const auto exeFileName = inputFileName + ".exe";
+        const auto exeFileName = buildCommand.executablePath.string();
+        const auto objectFileName = buildCommand.objectFilePath.string();
         CARACAL_ZONE_NAMED_VAR(linkZone, "link");
         const auto linkingResult = llvm::sys::ExecuteAndWait(
             lldPath,
@@ -252,15 +298,89 @@ namespace Caracal
         {
             llvm::errs() << "Linking failed with error code: " << linkingResult << "\n";
             llvm::errs() << "Error message: " << linkError << "\n";
-            return 1;
+            return false;
         }
         else
         {
             llvm::outs() << "Executable generated: " << exeFileName << "\n\n";
         }
 
-        const auto exeResult = ExecuteCommand(exeFileName);
-        return exeResult;
+        return true;
+    }
+
+    static int Build(const BuildCommand& buildCommand)
+    {
+        Caracal::CompilationContext compilationContext{ buildCommand.typeCheckerOptions };
+        Module irModule{};
+        if (!RunFrontEnd(buildCommand, compilationContext, irModule))
+            return 1;
+
+        const auto& printOptions = buildCommand.printOptions;
+        if (printOptions.printParseTree)
+            PrintParseTrees(compilationContext);
+
+        if (printOptions.printIR)
+        {
+            IRPrinter printer{ irModule };
+            std::cout << printer.prettyPrint();
+        }
+
+        const auto isPrintOnly = printOptions.printParseTree || printOptions.printIR || printOptions.printLLVMIR;
+        if (isPrintOnly && !printOptions.printLLVMIR)
+            return 0;
+
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+
+        llvm::LLVMContext context;
+        auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
+
+        if (!isPrintOnly)
+            llvm::outs() << "TargetTriple: " << llvm::sys::getDefaultTargetTriple() << '\n';
+
+        const auto targetMachine = CreateTargetMachine();
+        if (!targetMachine)
+            return 1;
+
+        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule))
+            return 1;
+
+        if (printOptions.printLLVMIR)
+        {
+            PrintLLVMModule(*llvmModule);
+            return 0;
+        }
+
+        if (!EmitObjectFile(buildCommand, *targetMachine, *llvmModule))
+            return 1;
+
+        if (!LinkExecutable(buildCommand))
+            return 1;
+
+        if (!buildCommand.shouldRunAfterBuild)
+            return 0;
+
+        return ExecuteCommand(buildCommand.executablePath.string());
+    }
+
+    int compileFile(
+        const std::filesystem::path& filePath,
+        const DiagnosticOptions& diagnosticOptions,
+        const PrintOptions& printOptions)
+    {
+        CARACAL_ZONE_NAMED("compileFile");
+        const auto inputFileName = filePath.stem().string();
+
+        BuildCommand buildCommand{};
+        buildCommand.sourceFiles.push_back(filePath);
+        buildCommand.coreDirectory = ResolveCoreDirectory();
+        buildCommand.preludeDirectory = ResolvePreludeDirectory();
+        buildCommand.diagnosticOptions = diagnosticOptions;
+        buildCommand.printOptions = printOptions;
+        buildCommand.objectFilePath = inputFileName + ".o";
+        buildCommand.executablePath = inputFileName + ".exe";
+        buildCommand.shouldRunAfterBuild = true;
+        return Build(buildCommand);
     }
 
     std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple)
