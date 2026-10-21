@@ -456,3 +456,6 @@ compile_commands.json
 
 # CaraTest snapshot artifacts from failed comparisons
 *.snapshot
+
+# Caracal version header, regenerated from git on every build
+Source/Caracal/Version.h
