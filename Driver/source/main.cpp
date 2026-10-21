@@ -1,10 +1,12 @@
 ﻿#include <Caracal/Compiler.h>
+#include <Caracal/Version.h>
 #include <iostream>
 
 int main(int argc, char* argv[])
 {
     if (argc < 2)
     {
+        std::cout << "Caracal " << CARA_VERSION << "\n";
         std::cout << "Please provide a file path as a parameter.\n";
         return 1;
     }

@@ -32,3 +32,16 @@ generate_export_header(${PROJECT_NAME}
     EXPORT_MACRO_NAME CARACAL_API
     EXPORT_FILE_NAME ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/API.h
 )
+
+find_package(Git QUIET)
+set(CARA_VERSION_HEADER "${PROJECT_SOURCE_DIR}/${PROJECT_NAME}/Version.h")
+add_custom_target(caracal_version_buildstep
+    COMMAND ${CMAKE_COMMAND}
+        -DCARA_ROOT_DIR="${CARA_ROOT_DIR}"
+        -DCARA_GIT_EXECUTABLE="${GIT_EXECUTABLE}"
+        -DCARA_VERSION_HEADER="${CARA_VERSION_HEADER}"
+        -P "${CARA_ROOT_DIR}/CMake/CaracalVersion.cmake"
+    BYPRODUCTS "${CARA_VERSION_HEADER}"
+    COMMENT "Updating the Caracal version from git"
+)
+add_dependencies(${PROJECT_NAME} caracal_version_buildstep)
