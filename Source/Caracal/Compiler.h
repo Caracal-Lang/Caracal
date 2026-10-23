@@ -1,10 +1,14 @@
-﻿#include <Caracal/API.h>
+﻿#pragma once
+
+#include <Caracal/API.h>
+#include <Caracal/Compilation/BuildCommand.h>
 #include <Caracal/Compilation/PrintOptions.h>
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
 #include <Caracal/IR/Module.h>
 #include <Caracal/Project/Project.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 namespace Caracal
@@ -13,6 +17,11 @@ namespace Caracal
         const std::filesystem::path& filePath,
         const DiagnosticOptions& diagnosticOptions = {},
         const PrintOptions& printOptions = {});
+
+    [[nodiscard]] CARACAL_API std::optional<BuildCommand> createProjectBuildCommand(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions = {},
+        bool shouldRunAfterBuild = false);
 
     CARACAL_API int buildProject(
         const Project& project,

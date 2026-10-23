@@ -3,8 +3,10 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cctype>
+#include <utility>
 
 namespace Caracal
 {
@@ -96,6 +98,91 @@ namespace Caracal
         return std::nullopt;
     }
 
+    static std::filesystem::path NormalizedFolder(const std::string& text)
+    {
+        auto folder = std::filesystem::path(text).lexically_normal();
+        if (folder.has_parent_path() && folder.filename().empty())
+            folder = folder.parent_path();
+
+        return folder;
+    }
+
+    static bool IsInsideProjectFolder(const std::filesystem::path& folder)
+    {
+        if (folder.empty() || folder.has_root_path() || folder == ".")
+            return false;
+
+        return *folder.begin() != "..";
+    }
+
+    static std::string FolderComparisonText(const std::filesystem::path& folder)
+    {
+        auto text = folder.generic_string();
+        for (auto& character : text)
+            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+
+        return text;
+    }
+
+    static bool IsFolderInside(const std::filesystem::path& folder, const std::filesystem::path& outerFolder)
+    {
+        return FolderComparisonText(folder).starts_with(FolderComparisonText(outerFolder) + "/");
+    }
+
+    static std::optional<std::string> ReadFolders(const nlohmann::json& document, const std::string& fileName, ProjectFolders& folders)
+    {
+        const std::array<std::pair<std::string_view, std::filesystem::path*>, 3> fields{ {
+            { "libraries", &folders.libraries },
+            { "temp", &folders.temp },
+            { "output", &folders.output } } };
+
+        const auto foldersField = document.find("folders");
+        if (foldersField != document.end())
+        {
+            if (!foldersField->is_object())
+                return "\"folders\" in " + fileName + " has to be an object";
+
+            for (const auto& [key, value] : foldersField->items())
+            {
+                const auto fieldName = "\"folders." + key + "\"";
+                const auto field = std::ranges::find(fields, std::string_view(key), &std::pair<std::string_view, std::filesystem::path*>::first);
+                if (field == fields.end())
+                    return fieldName + " in " + fileName + " is not supported";
+
+                if (!value.is_string())
+                    return fieldName + " in " + fileName + " has to be a string";
+
+                const auto folder = NormalizedFolder(value.get<std::string>());
+                if (!IsInsideProjectFolder(folder))
+                    return fieldName + " in " + fileName + " has to be a folder inside the project folder";
+
+                *field->second = folder;
+            }
+        }
+
+        for (size_t first = 0; first < fields.size(); ++first)
+        {
+            for (size_t second = first + 1; second < fields.size(); ++second)
+            {
+                const auto& [firstName, firstFolder] = fields[first];
+                const auto& [secondName, secondFolder] = fields[second];
+                const auto firstFieldName = "\"folders." + std::string(firstName) + "\"";
+                const auto secondFieldName = "\"folders." + std::string(secondName) + "\"";
+
+                if (FolderComparisonText(*firstFolder) == FolderComparisonText(*secondFolder))
+                    return firstFieldName + " and " + secondFieldName + " in " + fileName + " are the same folder";
+
+                if (IsFolderInside(*secondFolder, *firstFolder))
+                    return secondFieldName + " in " + fileName + " is inside " + firstFieldName;
+
+                if (IsFolderInside(*firstFolder, *secondFolder))
+                    return firstFieldName + " in " + fileName + " is inside " + secondFieldName;
+            }
+        }
+
+        return std::nullopt;
+    }
+
     ProjectResult loadProject(const std::filesystem::path& projectFilePath)
     {
         const auto fileName = projectFilePath.filename().string();
@@ -112,7 +199,7 @@ namespace Caracal
 
         for (const auto& [key, value] : document.items())
         {
-            if (key != "name" && key != "type" && key != "version")
+            if (key != "name" && key != "type" && key != "version" && key != "folders")
                 return Failure("\"" + key + "\" in " + fileName + " is not supported");
         }
 
@@ -146,7 +233,12 @@ namespace Caracal
             return Failure("\"version\" in " + fileName + " has to be a string");
 
         const auto& versionText = version->get_ref<const std::string&>();
-        return { Project{ nameText, projectFilePath.parent_path(), ProjectType::Executable, versionText }, {} };
+
+        ProjectFolders folders{};
+        if (const auto problem = ReadFolders(document, fileName, folders))
+            return Failure(problem.value());
+
+        return { Project{ nameText, projectFilePath.parent_path(), ProjectType::Executable, versionText, folders }, {} };
     }
 
     ProjectResult findProject(

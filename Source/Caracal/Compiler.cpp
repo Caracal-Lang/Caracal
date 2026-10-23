@@ -454,10 +454,10 @@ namespace Caracal
         return Build(buildCommand);
     }
 
-    static std::optional<BuildCommand> CreateProjectBuildCommand(
+    std::optional<BuildCommand> createProjectBuildCommand(
         const Project& project,
         const DiagnosticOptions& diagnosticOptions,
-        bool shouldRunAfterBuild = false)
+        bool shouldRunAfterBuild)
     {
         auto sources = collectProjectSources(project);
         if (!sources.error.empty())
@@ -474,8 +474,8 @@ namespace Caracal
 
         return CreateBuildCommand(
             std::move(sources.sourceFiles),
-            project.rootDirectory / "Temp" / "Debug" / (project.name + ".o"),
-            project.rootDirectory / "Build" / "Debug" / (project.name + ".exe"),
+            project.rootDirectory / project.folders.temp / "Debug" / (project.name + ".o"),
+            project.rootDirectory / project.folders.output / "Debug" / (project.name + ".exe"),
             diagnosticOptions,
             {},
             shouldRunAfterBuild);
@@ -486,7 +486,7 @@ namespace Caracal
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("buildProject");
-        const auto buildCommand = CreateProjectBuildCommand(project, diagnosticOptions);
+        const auto buildCommand = createProjectBuildCommand(project, diagnosticOptions);
         if (!buildCommand.has_value())
             return 1;
 
@@ -498,7 +498,7 @@ namespace Caracal
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("runProject");
-        const auto buildCommand = CreateProjectBuildCommand(project, diagnosticOptions, true);
+        const auto buildCommand = createProjectBuildCommand(project, diagnosticOptions, true);
         if (!buildCommand.has_value())
             return 1;
 

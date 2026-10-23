@@ -7,8 +7,13 @@ namespace Caracal
 {
     static bool IsSkippedDirectory(const Project& project, const std::filesystem::path& directory)
     {
-        if (directory == project.rootDirectory / "Temp" || directory == project.rootDirectory / "Build")
-            return true;
+        const auto& folders = project.folders;
+        for (const auto& folder : { folders.libraries, folders.temp, folders.output })
+        {
+            std::error_code errorCode;
+            if (std::filesystem::equivalent(directory, project.rootDirectory / folder, errorCode))
+                return true;
+        }
 
         return std::filesystem::exists(directory / "caracal.json");
     }
