@@ -19,7 +19,7 @@ namespace Caracal
 
     static constexpr std::string_view GitIgnore =
         "Temp/\n"
-        "Build/\n";
+        "Output/\n";
 
     static ProjectResult Failure(std::string error)
     {
@@ -54,6 +54,9 @@ namespace Caracal
         projectFile["name"] = project.name;
         projectFile["type"] = ProjectTypeText(project.type);
         projectFile["version"] = project.version;
+        projectFile["folders"]["libraries"] = project.folders.libraries.generic_string();
+        projectFile["folders"]["temp"] = project.folders.temp.generic_string();
+        projectFile["folders"]["output"] = project.folders.output.generic_string();
         return projectFile.dump(2, ' ', false, nlohmann::ordered_json::error_handler_t::replace) + "\n";
     }
 

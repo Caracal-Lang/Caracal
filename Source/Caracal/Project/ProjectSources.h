@@ -14,6 +14,6 @@ namespace Caracal
         std::string error;
     };
 
-    // skips Temp, Build and any subfolder with a caracal.json
+    // skips the project's libraries, temp and output folders and any subfolder with a caracal.json
     [[nodiscard]] CARACAL_API ProjectSourcesResult collectProjectSources(const Project& project);
 }
