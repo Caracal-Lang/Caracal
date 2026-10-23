@@ -112,7 +112,7 @@ namespace Caracal
 
         for (const auto& [key, value] : document.items())
         {
-            if (key != "name")
+            if (key != "name" && key != "type" && key != "version")
                 return Failure("\"" + key + "\" in " + fileName + " is not supported");
         }
 
@@ -127,7 +127,26 @@ namespace Caracal
         if (const auto problem = checkProjectName(nameText))
             return Failure("\"name\" in " + fileName + " has to be a valid file name, " + problem.value());
 
-        return { Project{ nameText, projectFilePath.parent_path() }, {} };
+        const auto type = document.find("type");
+        if (type == document.end())
+            return Failure(fileName + " has no \"type\"");
+
+        if (!type->is_string())
+            return Failure("\"type\" in " + fileName + " has to be a string");
+
+        const auto& typeText = type->get_ref<const std::string&>();
+        if (typeText != "exe")
+            return Failure("\"type\" in " + fileName + " is \"" + typeText + "\" but only \"exe\" is supported");
+
+        const auto version = document.find("version");
+        if (version == document.end())
+            return Failure(fileName + " has no \"version\"");
+
+        if (!version->is_string())
+            return Failure("\"version\" in " + fileName + " has to be a string");
+
+        const auto& versionText = version->get_ref<const std::string&>();
+        return { Project{ nameText, projectFilePath.parent_path(), ProjectType::Executable, versionText }, {} };
     }
 
     ProjectResult findProject(

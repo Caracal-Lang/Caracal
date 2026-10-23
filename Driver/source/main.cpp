@@ -2,6 +2,8 @@
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Version.h>
+#include <chrono>
+#include <ctime>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -19,6 +21,18 @@ void printHelp()
     std::cout << "  caracal help\n";
 }
 
+std::chrono::year_month_day today()
+{
+    const auto now = std::time(nullptr);
+    std::tm localTime{};
+#ifdef _WIN32
+    localtime_s(&localTime, &now);
+#else
+    localtime_r(&now, &localTime);
+#endif
+    return std::chrono::year(localTime.tm_year + 1900) / (localTime.tm_mon + 1) / localTime.tm_mday;
+}
+
 int createNewProject(int argc, char* argv[])
 {
     if (argc > 3)
@@ -33,7 +47,7 @@ int createNewProject(int argc, char* argv[])
         name = argv[2];
     }
 
-    const auto result = Caracal::createProject(std::filesystem::current_path(), name);
+    const auto result = Caracal::createProject(std::filesystem::current_path(), name, today());
     if (!result.project.has_value())
     {
         std::cout << result.error << "\n";
