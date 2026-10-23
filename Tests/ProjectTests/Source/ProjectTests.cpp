@@ -6,10 +6,13 @@
 #include <Caracal/Text/File.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <string>
 #include <tuple>
 #include <vector>
+
+static constexpr std::chrono::year_month_day CreationDay{ std::chrono::year(2026), std::chrono::month(10), std::chrono::day(20) };
 
 static std::filesystem::path ProjectsDataDirectory()
 {
@@ -58,7 +61,7 @@ static std::string FileNamesIn(const std::filesystem::path& directory)
 static void CreatingProjectWithNameUsesThatName()
 {
     const auto workingDirectory = EmptyScratchDirectory("NamedProject");
-    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"));
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay);
 
     CaraTest::isTrue(result.project.has_value());
     const auto& project = result.project.value();
@@ -78,13 +81,13 @@ static void CreatingProjectWithNameUsesThatName()
 static void CreatingProjectWithoutNameUsesNameOfCurrentFolder()
 {
     const auto workingDirectory = EmptyScratchDirectory("Greeter");
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
 
     CaraTest::isTrue(result.project.has_value());
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Greeter"), project.name);
     CaraTest::areEqual(workingDirectory, project.rootDirectory);
-    CaraTest::areEqual(std::string("{\n  \"name\": \"Greeter\"\n}\n"), ReadText(workingDirectory / "caracal.json"));
+    CaraTest::areEqual(std::string("{\n  \"name\": \"Greeter\",\n  \"type\": \"exe\",\n  \"version\": \"2026.10.20\"\n}\n"), ReadText(workingDirectory / "caracal.json"));
 }
 
 static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
@@ -93,7 +96,7 @@ static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
     Caracal::File::writeText(workingDirectory / "caracal.json", "{ \"name\": \"Old\" }\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "old main\n");
 
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
 
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(workingDirectory.string() + " already has a caracal.json", result.error);
@@ -109,19 +112,19 @@ static void CreatingProjectKeepsMainCaraAndGitIgnoreItFinds()
     Caracal::File::writeText(workingDirectory / ".gitignore", "*.log\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "existing main\n");
 
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
 
     CaraTest::isTrue(result.project.has_value());
     CaraTest::areEqual(std::string("*.log\n"), ReadText(workingDirectory / ".gitignore"));
     CaraTest::areEqual(std::string("existing main\n"), ReadText(workingDirectory / "main.cara"));
     CaraTest::areEqual(std::string("# Cloned\n"), ReadText(workingDirectory / "README.md"));
-    CaraTest::areEqual(std::string("{\n  \"name\": \"Cloned\"\n}\n"), ReadText(workingDirectory / "caracal.json"));
+    CaraTest::areEqual(std::string("{\n  \"name\": \"Cloned\",\n  \"type\": \"exe\",\n  \"version\": \"2026.10.20\"\n}\n"), ReadText(workingDirectory / "caracal.json"));
 }
 
 static void CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder()
 {
     const auto workingDirectory = EmptyScratchDirectory("BadName");
-    const auto result = Caracal::createProject(workingDirectory, std::string("Hello/World"));
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello/World"), CreationDay);
 
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(std::string("\"Hello/World\" cannot be a project name because it contains '/'"), result.error);
@@ -143,7 +146,7 @@ static void FindingProjectDoesNotLookInParentFolder()
 static void FindingProjectFromPathToJsonFileLoadsThatFile()
 {
     const auto workingDirectory = EmptyScratchDirectory("JsonFileGiven");
-    Caracal::File::writeText(workingDirectory / "other.json", "{ \"name\": \"Other\" }\n");
+    Caracal::File::writeText(workingDirectory / "other.json", "{ \"name\": \"Other\", \"type\": \"exe\", \"version\": \"2026.10.20\" }\n");
 
     const auto result = Caracal::findProject(workingDirectory, std::filesystem::path("other.json"));
 
@@ -159,6 +162,30 @@ static void LoadingCaracalJsonWithNameThatCannotBeFileNameFails()
 
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(std::string("\"name\" in caracal.json has to be a valid file name, it contains '/'"), result.error);
+}
+
+static void LoadingCaracalJsonWithoutRequiredFieldFails(const std::string& /*testName*/, const std::string& fixtureName, const std::string& expectedError)
+{
+    const auto result = Caracal::loadProject(FixtureProjectFile(fixtureName));
+
+    CaraTest::isFalse(result.project.has_value());
+    CaraTest::areEqual(expectedError, result.error);
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithoutRequiredFieldFails_Data()
+{
+    return {
+        std::make_tuple("only a name", "NameOnly", "caracal.json has no \"type\""),
+        std::make_tuple("no version", "NoVersion", "caracal.json has no \"version\""),
+    };
+}
+
+static void LoadingCaracalJsonWithVersionThatIsNotStringFails()
+{
+    const auto result = Caracal::loadProject(FixtureProjectFile("InvalidVersion"));
+
+    CaraTest::isFalse(result.project.has_value());
+    CaraTest::areEqual(std::string("\"version\" in caracal.json has to be a string"), result.error);
 }
 
 static void LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn()
@@ -283,6 +310,8 @@ static auto tests =
     CaraTest::addTest("finding a project does not look in the parent folder", FindingProjectDoesNotLookInParentFolder),
     CaraTest::addTest("finding a project from a path to a .json file loads that file", FindingProjectFromPathToJsonFileLoadsThatFile),
     CaraTest::addTest("loading a caracal.json with a name that cannot be a file name fails", LoadingCaracalJsonWithNameThatCannotBeFileNameFails),
+    CaraTest::addTest("loading a caracal.json without a type or version fails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
+    CaraTest::addTest("loading a caracal.json with a version that is not a string fails", LoadingCaracalJsonWithVersionThatIsNotStringFails),
     CaraTest::addTest("loading a caracal.json that is not valid JSON reports the line and column", LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn),
     CaraTest::addTest("collecting sources skips a nested project", CollectingSourcesSkipsNestedProject),
     CaraTest::addTest("collecting sources skips the project's Temp and Build folders", CollectingSourcesSkipsProjectTempAndBuildFolders),

@@ -1,3 +1,5 @@
 {
-  "name": "Hello/World"
+  "name": "Hello/World",
+  "type": "exe",
+  "version": "2026.10.20"
 }
