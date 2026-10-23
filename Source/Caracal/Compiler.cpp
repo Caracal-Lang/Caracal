@@ -5,6 +5,7 @@
 #include <Caracal/Debug/IRPrinter.h>
 #include <Caracal/Debug/ParseTreePrinter.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Project/ProjectSources.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Text/File.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
@@ -18,17 +19,32 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Program.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/xxhash.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <format>
 #include <iostream>
 
 namespace Caracal
 {
-    static int ExecuteCommand(const std::string& command)
+    static int RunExecutable(const std::filesystem::path& executablePath)
     {
-        return std::system(command.c_str());
+        const auto absolutePath = std::filesystem::absolute(executablePath).string();
+
+        llvm::outs().flush();
+        std::cout.flush();
+
+        std::string runError;
+        const auto exitCode = llvm::sys::ExecuteAndWait(absolutePath, { absolutePath }, std::nullopt, {}, 0, 0, &runError);
+        if (!runError.empty())
+        {
+            std::cout << "Could not run " << absolutePath << ", " << runError << "\n";
+            return 1;
+        }
+
+        return exitCode;
     }
 
     static std::vector<std::filesystem::path> CollectCaraFiles(
@@ -308,6 +324,26 @@ namespace Caracal
         return true;
     }
 
+    static bool CreateOutputDirectories(const BuildCommand& buildCommand)
+    {
+        for (const auto& outputPath : { buildCommand.objectFilePath, buildCommand.executablePath })
+        {
+            const auto directory = outputPath.parent_path();
+            if (directory.empty())
+                continue;
+
+            std::error_code errorCode;
+            std::filesystem::create_directories(directory, errorCode);
+            if (errorCode)
+            {
+                std::cout << "Could not create " << directory.string() << ", " << errorCode.message() << "\n";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     static int Build(const BuildCommand& buildCommand)
     {
         Caracal::CompilationContext compilationContext{ buildCommand.typeCheckerOptions };
@@ -351,6 +387,9 @@ namespace Caracal
             return 0;
         }
 
+        if (!CreateOutputDirectories(buildCommand))
+            return 1;
+
         if (!EmitObjectFile(buildCommand, *targetMachine, *llvmModule))
             return 1;
 
@@ -360,7 +399,42 @@ namespace Caracal
         if (!buildCommand.shouldRunAfterBuild)
             return 0;
 
-        return ExecuteCommand(buildCommand.executablePath.string());
+        return RunExecutable(buildCommand.executablePath);
+    }
+
+    static BuildCommand CreateBuildCommand(
+        std::vector<std::filesystem::path> sourceFiles,
+        std::filesystem::path objectFilePath,
+        std::filesystem::path executablePath,
+        const DiagnosticOptions& diagnosticOptions,
+        const PrintOptions& printOptions,
+        bool shouldRunAfterBuild)
+    {
+        return BuildCommand{
+            .sourceFiles = std::move(sourceFiles),
+            .preludeDirectory = ResolvePreludeDirectory(),
+            .coreDirectory = ResolveCoreDirectory(),
+            .diagnosticOptions = diagnosticOptions,
+            .printOptions = printOptions,
+            .objectFilePath = std::move(objectFilePath),
+            .executablePath = std::move(executablePath),
+            .shouldRunAfterBuild = shouldRunAfterBuild,
+        };
+    }
+
+    static std::filesystem::path ResolveTemporaryDirectory(const std::filesystem::path& filePath)
+    {
+        std::error_code errorCode;
+        const auto temporaryDirectory = std::filesystem::temp_directory_path(errorCode);
+        if (errorCode)
+        {
+            std::cout << "Warning: could not find the temp folder, writing the object file to the current folder\n";
+            return {};
+        }
+
+        const auto absolutePath = std::filesystem::absolute(filePath).generic_string();
+        const auto pathHash = llvm::xxh3_64bits(llvm::StringRef(absolutePath));
+        return temporaryDirectory / "Caracal" / std::format("{}-{:016x}", filePath.stem().string(), pathHash);
     }
 
     int compileFile(
@@ -370,17 +444,65 @@ namespace Caracal
     {
         CARACAL_ZONE_NAMED("compileFile");
         const auto inputFileName = filePath.stem().string();
-
-        BuildCommand buildCommand{};
-        buildCommand.sourceFiles.push_back(filePath);
-        buildCommand.coreDirectory = ResolveCoreDirectory();
-        buildCommand.preludeDirectory = ResolvePreludeDirectory();
-        buildCommand.diagnosticOptions = diagnosticOptions;
-        buildCommand.printOptions = printOptions;
-        buildCommand.objectFilePath = inputFileName + ".o";
-        buildCommand.executablePath = inputFileName + ".exe";
-        buildCommand.shouldRunAfterBuild = true;
+        const auto buildCommand = CreateBuildCommand(
+            { filePath },
+            ResolveTemporaryDirectory(filePath) / (inputFileName + ".o"),
+            inputFileName + ".exe",
+            diagnosticOptions,
+            printOptions,
+            true);
         return Build(buildCommand);
+    }
+
+    static std::optional<BuildCommand> CreateProjectBuildCommand(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions,
+        bool shouldRunAfterBuild = false)
+    {
+        auto sources = collectProjectSources(project);
+        if (!sources.error.empty())
+        {
+            std::cout << sources.error << "\n";
+            return std::nullopt;
+        }
+
+        if (sources.sourceFiles.empty())
+        {
+            std::cout << "No .cara files in " << project.rootDirectory.string() << "\n";
+            return std::nullopt;
+        }
+
+        return CreateBuildCommand(
+            std::move(sources.sourceFiles),
+            project.rootDirectory / "Temp" / "Debug" / (project.name + ".o"),
+            project.rootDirectory / "Build" / "Debug" / (project.name + ".exe"),
+            diagnosticOptions,
+            {},
+            shouldRunAfterBuild);
+    }
+
+    int buildProject(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions)
+    {
+        CARACAL_ZONE_NAMED("buildProject");
+        const auto buildCommand = CreateProjectBuildCommand(project, diagnosticOptions);
+        if (!buildCommand.has_value())
+            return 1;
+
+        return Build(buildCommand.value());
+    }
+
+    int runProject(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions)
+    {
+        CARACAL_ZONE_NAMED("runProject");
+        const auto buildCommand = CreateProjectBuildCommand(project, diagnosticOptions, true);
+        if (!buildCommand.has_value())
+            return 1;
+
+        return Build(buildCommand.value());
     }
 
     std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple)

@@ -1,6 +1,10 @@
 ﻿#include <Caracal/Compiler.h>
+#include <Caracal/Project/ProjectCreator.h>
+#include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Version.h>
 #include <iostream>
+#include <optional>
+#include <string>
 #include <string_view>
 
 void printHelp()
@@ -8,8 +12,83 @@ void printHelp()
     std::cout << "Caracal " << CARA_VERSION << "\n";
     std::cout << "\n";
     std::cout << "Usage:\n";
-    std::cout << "  caracal <file.cara> [-ast] [-ir] [-llvm]       compiles and runs the resulting <file>.exe\n";
+    std::cout << "  caracal <file.cara> [-ast] [-ir] [-llvm]       builds and runs the resulting <file>.exe\n";
+    std::cout << "  caracal new [name]                             creates a project in the current folder or in [name] \n";
+    std::cout << "  caracal build [path]                           builds the project in the current folder, or in [path]\n";
+    std::cout << "  caracal run [path]                             builds and runs the project in the current folder, or in [path]\n";
     std::cout << "  caracal help\n";
+}
+
+int createNewProject(int argc, char* argv[])
+{
+    if (argc > 3)
+    {
+        std::cout << "\"caracal new\" expects a project name but got " << argc - 2 << ".\n";
+        return 1;
+    }
+
+    std::optional<std::string> name{};
+    if (argc == 3)
+    {
+        name = argv[2];
+    }
+
+    const auto result = Caracal::createProject(std::filesystem::current_path(), name);
+    if (!result.project.has_value())
+    {
+        std::cout << result.error << "\n";
+        return 1;
+    }
+
+    const auto& projectName = result.project->name;
+    const auto projectDirectory = result.project->rootDirectory.string();
+    std::cout << "Created the project " << projectName << " in " << projectDirectory << "\n";
+    return 0;
+}
+
+std::optional<Caracal::Project> findProjectFromArguments(int argc, char* argv[])
+{
+    if (argc > 3)
+    {
+        std::cout << "\"caracal " << argv[1] << "\" takes a path but got " << argc - 2 << ".\n";
+        return std::nullopt;
+    }
+
+    std::optional<std::filesystem::path> path{};
+    if (argc == 3)
+    {
+        path = argv[2];
+    }
+
+    const auto result = Caracal::findProject(std::filesystem::current_path(), path);
+    if (!result.project.has_value())
+    {
+        std::cout << result.error << "\n";
+    }
+
+    return result.project;
+}
+
+int buildProject(int argc, char* argv[])
+{
+    const auto project = findProjectFromArguments(argc, argv);
+    if (!project.has_value())
+    {
+        return 1;
+    }
+
+    return Caracal::buildProject(project.value());
+}
+
+int runProject(int argc, char* argv[])
+{
+    const auto project = findProjectFromArguments(argc, argv);
+    if (!project.has_value())
+    {
+        return 1;
+    }
+
+    return Caracal::runProject(project.value());
 }
 
 int main(int argc, char* argv[])
@@ -25,6 +104,21 @@ int main(int argc, char* argv[])
     {
         printHelp();
         return 0;
+    }
+
+    if (std::string_view(argv[1]) == "new")
+    {
+        return createNewProject(argc, argv);
+    }
+
+    if (std::string_view(argv[1]) == "build")
+    {
+        return buildProject(argc, argv);
+    }
+
+    if (std::string_view(argv[1]) == "run")
+    {
+        return runProject(argc, argv);
     }
 
     std::filesystem::path parameterFilePath{};

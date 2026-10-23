@@ -21,4 +21,16 @@ namespace Caracal::File
         contentStream << file.rdbuf();
         return contentStream.str();
     }
+
+    bool writeText(const std::filesystem::path& filePath, std::string_view content)
+    {
+        std::ofstream file(filePath, std::ios::out | std::ios::binary | std::ios::trunc);
+        if (!file.is_open())
+        {
+            return false;
+        }
+
+        file.write(content.data(), static_cast<std::streamsize>(content.size()));
+        return file.good();
+    }
 }

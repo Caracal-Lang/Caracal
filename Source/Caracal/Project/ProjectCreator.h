@@ -1,0 +1,14 @@
+#pragma once
+
+#include <Caracal/API.h>
+#include <Caracal/Project/Project.h>
+#include <filesystem>
+#include <optional>
+#include <string>
+
+namespace Caracal
+{
+    [[nodiscard]] CARACAL_API ProjectResult createProject(
+        const std::filesystem::path& workingDirectory,
+        const std::optional<std::string>& name);
+}

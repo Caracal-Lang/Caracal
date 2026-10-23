@@ -7,6 +7,7 @@ add_executable(
     "${PROJECT_SOURCE_DIR}/../LLVMCodeGenTests/Source/LLVMCodeGenTests.cpp"
     "${PROJECT_SOURCE_DIR}/../LexerTests/Source/LexerTests.cpp"
     "${PROJECT_SOURCE_DIR}/../ParserTests/Source/ParserTests.cpp"
+    "${PROJECT_SOURCE_DIR}/../ProjectTests/Source/ProjectTests.cpp"
     "${PROJECT_SOURCE_DIR}/../TypeCheckerTests/Source/TypeCheckerTests.cpp"
     "${PROJECT_SOURCE_DIR}/../SourceLocationTests/Source/SourceLocationTests.cpp"
     "Source/main.cpp")

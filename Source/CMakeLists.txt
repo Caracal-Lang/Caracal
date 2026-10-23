@@ -19,7 +19,7 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${LLVM_DEFINITIONS})
 
 llvm_map_components_to_libnames(LLVM_LIBS core support native)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LLVM_LIBS} CaraReport)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LLVM_LIBS} CaraReport nlohmann_json::nlohmann_json)
 if(CARACAL_TRACY)
     target_link_libraries(${PROJECT_NAME} PRIVATE TracyClient)
 endif()
