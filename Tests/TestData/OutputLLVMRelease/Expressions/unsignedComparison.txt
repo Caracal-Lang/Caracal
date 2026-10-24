@@ -1,0 +1,40 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @unsignedGreater(i8 %0, i8 %1) local_unnamed_addr #0 {
+entry:
+  %greater_than = icmp ugt i8 %0, %1
+  ret i1 %greater_than
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @unsignedLess(i8 %0, i8 %1) local_unnamed_addr #0 {
+entry:
+  %less_than = icmp ult i8 %0, %1
+  ret i1 %less_than
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @unsignedGreaterOrEqual(i8 %0, i8 %1) local_unnamed_addr #0 {
+entry:
+  %greater_or_equal = icmp uge i8 %0, %1
+  ret i1 %greater_or_equal
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @unsignedLessOrEqual(i8 %0, i8 %1) local_unnamed_addr #0 {
+entry:
+  %less_or_equal = icmp ule i8 %0, %1
+  ret i1 %less_or_equal
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i1 @foldedHighByteIsGreater() local_unnamed_addr #0 {
+entry:
+  ret i1 true
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

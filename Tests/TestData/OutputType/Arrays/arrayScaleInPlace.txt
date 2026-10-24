@@ -1,0 +1,283 @@
+FunctionDefinitionStatement: {
+    Type: (ref [i32; 4], i32) -> i32
+    Name: scaleInPlace
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: ref [i32; 4]
+                Lexeme: [i32; 4]
+                Ref: true
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 4
+                }
+            }
+        }
+        ParameterNode: {
+            Name: factor
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: ref [i32; 4]
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; 4], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; 4], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 0
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            NameExpression: {
+                                                Type: ref [i32; 4]
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: i32
+                                                Function type: (ref [i32; 4], i32) -> i32
+                                                NameExpression: {
+                                                    Type: (ref [i32; 4], i32) -> i32
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: ref [i32; 4]
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; 4], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; 4], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 1
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            NameExpression: {
+                                                Type: ref [i32; 4]
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: i32
+                                                Function type: (ref [i32; 4], i32) -> i32
+                                                NameExpression: {
+                                                    Type: (ref [i32; 4], i32) -> i32
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 1
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: ref [i32; 4]
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; 4], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; 4], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 2
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            NameExpression: {
+                                                Type: ref [i32; 4]
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: i32
+                                                Function type: (ref [i32; 4], i32) -> i32
+                                                NameExpression: {
+                                                    Type: (ref [i32; 4], i32) -> i32
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 2
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: ref [i32; 4]
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; 4], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; 4], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 3
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            NameExpression: {
+                                                Type: ref [i32; 4]
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: i32
+                                                Function type: (ref [i32; 4], i32) -> i32
+                                                NameExpression: {
+                                                    Type: (ref [i32; 4], i32) -> i32
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 3
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}

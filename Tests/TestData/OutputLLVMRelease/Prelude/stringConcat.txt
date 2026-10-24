@@ -1,0 +1,360 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+@0 = private unnamed_addr constant [6 x i8] c"Hello\00", align 1
+@1 = private unnamed_addr constant [7 x i8] c" world\00", align 1
+@2 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+@3 = private unnamed_addr constant [2 x i8] c"x\00", align 1
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite)
+declare noalias noundef ptr @realloc(ptr allocptr captures(none) %0, i64 noundef %1) local_unnamed_addr #1
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @puts(ptr noundef readonly captures(none) %0) local_unnamed_addr #2
+
+; Function Attrs: nounwind
+define range(i32 2, 43) i32 @main() local_unnamed_addr #3 {
+entry:
+  %s = alloca %string, align 8
+  store ptr @0, ptr %s, align 8
+  %length = getelementptr inbounds nuw i8, ptr %s, i64 8
+  store i32 5, ptr %length, align 8
+  %capacity = getelementptr inbounds nuw i8, ptr %s, i64 12
+  store i32 5, ptr %capacity, align 4
+  %call = call %string @string.concat(ptr %s, %string { { ptr, i32, i32 } { ptr @1, i32 6, i32 6 } })
+  %call.fca.0.0.extract = extractvalue %string %call, 0, 0
+  %call.fca.0.1.extract = extractvalue %string %call, 0, 1
+  %call14 = tail call i32 @puts(ptr nonnull dereferenceable(1) %call.fca.0.0.extract)
+  %not_equal.not = icmp eq i32 %call.fca.0.1.extract, 11
+  %temp25 = alloca %string, align 8
+  br i1 %not_equal.not, label %while.body.i.i, label %common.ret
+
+common.ret:                                       ; preds = %while.body.i.i, %while.condition.i.i, %while.condition.i.i.1, %while.condition.i.i.2, %while.condition.i.i.3, %while.condition.i.i.4, %while.condition.i.i.5, %while.condition.i.i.6, %while.condition.i.i.7, %while.condition.i.i.8, %while.condition.i.i.9, %while.condition.preheader.i.i75, %while.condition.i.i.10, %entry
+  %common.ret.op = phi i32 [ 2, %entry ], [ 4, %while.condition.i.i.10 ], [ %spec.select, %while.condition.preheader.i.i75 ], [ 3, %while.condition.i.i.9 ], [ 3, %while.condition.i.i.8 ], [ 3, %while.condition.i.i.7 ], [ 3, %while.condition.i.i.6 ], [ 3, %while.condition.i.i.5 ], [ 3, %while.condition.i.i.4 ], [ 3, %while.condition.i.i.3 ], [ 3, %while.condition.i.i.2 ], [ 3, %while.condition.i.i.1 ], [ 3, %while.condition.i.i ], [ 3, %while.body.i.i ]
+  ret i32 %common.ret.op
+
+while.condition.i.i:                              ; preds = %while.body.i.i
+  %element.i.i.1 = getelementptr i8, ptr %call.fca.0.0.extract, i64 1
+  %load11.i.i.1 = load i8, ptr %element.i.i.1, align 1
+  %not_equal17.not.i.not.i.1 = icmp eq i8 %load11.i.i.1, 101
+  br i1 %not_equal17.not.i.not.i.1, label %while.condition.i.i.1, label %common.ret
+
+while.condition.i.i.1:                            ; preds = %while.condition.i.i
+  %element.i.i.2 = getelementptr i8, ptr %call.fca.0.0.extract, i64 2
+  %load11.i.i.2 = load i8, ptr %element.i.i.2, align 1
+  %not_equal17.not.i.not.i.2 = icmp eq i8 %load11.i.i.2, 108
+  br i1 %not_equal17.not.i.not.i.2, label %while.condition.i.i.2, label %common.ret
+
+while.condition.i.i.2:                            ; preds = %while.condition.i.i.1
+  %element.i.i.3 = getelementptr i8, ptr %call.fca.0.0.extract, i64 3
+  %load11.i.i.3 = load i8, ptr %element.i.i.3, align 1
+  %not_equal17.not.i.not.i.3 = icmp eq i8 %load11.i.i.3, 108
+  br i1 %not_equal17.not.i.not.i.3, label %while.condition.i.i.3, label %common.ret
+
+while.condition.i.i.3:                            ; preds = %while.condition.i.i.2
+  %element.i.i.4 = getelementptr i8, ptr %call.fca.0.0.extract, i64 4
+  %load11.i.i.4 = load i8, ptr %element.i.i.4, align 1
+  %not_equal17.not.i.not.i.4 = icmp eq i8 %load11.i.i.4, 111
+  br i1 %not_equal17.not.i.not.i.4, label %while.condition.i.i.4, label %common.ret
+
+while.condition.i.i.4:                            ; preds = %while.condition.i.i.3
+  %element.i.i.5 = getelementptr i8, ptr %call.fca.0.0.extract, i64 5
+  %load11.i.i.5 = load i8, ptr %element.i.i.5, align 1
+  %not_equal17.not.i.not.i.5 = icmp eq i8 %load11.i.i.5, 32
+  br i1 %not_equal17.not.i.not.i.5, label %while.condition.i.i.5, label %common.ret
+
+while.condition.i.i.5:                            ; preds = %while.condition.i.i.4
+  %element.i.i.6 = getelementptr i8, ptr %call.fca.0.0.extract, i64 6
+  %load11.i.i.6 = load i8, ptr %element.i.i.6, align 1
+  %not_equal17.not.i.not.i.6 = icmp eq i8 %load11.i.i.6, 119
+  br i1 %not_equal17.not.i.not.i.6, label %while.condition.i.i.6, label %common.ret
+
+while.condition.i.i.6:                            ; preds = %while.condition.i.i.5
+  %element.i.i.7 = getelementptr i8, ptr %call.fca.0.0.extract, i64 7
+  %load11.i.i.7 = load i8, ptr %element.i.i.7, align 1
+  %not_equal17.not.i.not.i.7 = icmp eq i8 %load11.i.i.7, 111
+  br i1 %not_equal17.not.i.not.i.7, label %while.condition.i.i.7, label %common.ret
+
+while.condition.i.i.7:                            ; preds = %while.condition.i.i.6
+  %element.i.i.8 = getelementptr i8, ptr %call.fca.0.0.extract, i64 8
+  %load11.i.i.8 = load i8, ptr %element.i.i.8, align 1
+  %not_equal17.not.i.not.i.8 = icmp eq i8 %load11.i.i.8, 114
+  br i1 %not_equal17.not.i.not.i.8, label %while.condition.i.i.8, label %common.ret
+
+while.condition.i.i.8:                            ; preds = %while.condition.i.i.7
+  %element.i.i.9 = getelementptr i8, ptr %call.fca.0.0.extract, i64 9
+  %load11.i.i.9 = load i8, ptr %element.i.i.9, align 1
+  %not_equal17.not.i.not.i.9 = icmp eq i8 %load11.i.i.9, 108
+  br i1 %not_equal17.not.i.not.i.9, label %while.condition.i.i.9, label %common.ret
+
+while.condition.i.i.9:                            ; preds = %while.condition.i.i.8
+  %element.i.i.10 = getelementptr i8, ptr %call.fca.0.0.extract, i64 10
+  %load11.i.i.10 = load i8, ptr %element.i.i.10, align 1
+  %not_equal17.not.i.not.i.10 = icmp eq i8 %load11.i.i.10, 100
+  br i1 %not_equal17.not.i.not.i.10, label %while.condition.i.i.10, label %common.ret
+
+while.condition.i.i.10:                           ; preds = %while.condition.i.i.9
+  store ptr @2, ptr %temp25, align 8
+  %load32.fca.0.1.gep = getelementptr inbounds nuw i8, ptr %temp25, i64 8
+  store i32 0, ptr %load32.fca.0.1.gep, align 8
+  %load32.fca.0.2.gep = getelementptr inbounds nuw i8, ptr %temp25, i64 12
+  store i32 0, ptr %load32.fca.0.2.gep, align 4
+  %call38 = call %string @string.concat(ptr %temp25, %string { { ptr, i32, i32 } { ptr @3, i32 1, i32 1 } })
+  %.fca.0.1.extract19.i.i = extractvalue %string %call38, 0, 1
+  %not_equal.not.i.i74 = icmp eq i32 %.fca.0.1.extract19.i.i, 1
+  br i1 %not_equal.not.i.i74, label %while.condition.preheader.i.i75, label %common.ret
+
+while.body.i.i:                                   ; preds = %entry
+  %load11.i.i = load i8, ptr %call.fca.0.0.extract, align 1
+  %not_equal17.not.i.not.i = icmp eq i8 %load11.i.i, 72
+  br i1 %not_equal17.not.i.not.i, label %while.condition.i.i, label %common.ret
+
+while.condition.preheader.i.i75:                  ; preds = %while.condition.i.i.10
+  %.fca.0.0.extract18.i.i = extractvalue %string %call38, 0, 0
+  %load11.i.i80 = load i8, ptr %.fca.0.0.extract18.i.i, align 1
+  %not_equal17.not.i.not.i83 = icmp eq i8 %load11.i.i80, 120
+  %spec.select = select i1 %not_equal17.not.i.not.i83, i32 42, i32 4
+  br label %common.ret
+
+; uselistorder directives
+  uselistorder ptr %s, { 3, 0, 1, 2 }
+  uselistorder ptr %temp25, { 3, 0, 1, 2 }
+  uselistorder label %common.ret, { 11, 0, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13 }
+  uselistorder %string %call38, { 1, 0 }
+}
+
+; Function Attrs: nounwind
+define %string @string.concat(ptr nonnull readonly captures(none) %0, %string %1) local_unnamed_addr #3 {
+entry:
+  %.fca.0.0.extract = extractvalue %string %1, 0, 0
+  %.fca.0.1.extract = extractvalue %string %1, 0, 1
+  %call = tail call dereferenceable_or_null(8) ptr @calloc(i64 8, i64 1)
+  %length4 = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length4, align 4
+  %less_than56 = icmp sgt i32 %load, 0
+  br i1 %less_than56, label %while.body.lr.ph, label %while.condition1.preheader
+
+while.body.lr.ph:                                 ; preds = %entry
+  %load7 = load ptr, ptr %0, align 8
+  %wide.trip.count = zext nneg i32 %load to i64
+  br label %while.body
+
+while.condition1.preheader:                       ; preds = %while.body, %entry
+  %joined.sroa.12.0.lcssa = phi i32 [ 8, %entry ], [ %new_capacity, %while.body ]
+  %joined.sroa.6.0.lcssa = phi i32 [ 0, %entry ], [ %load, %while.body ]
+  %joined.sroa.0.0.lcssa = phi ptr [ %call, %entry ], [ %grown, %while.body ]
+  %less_than2163 = icmp sgt i32 %.fca.0.1.extract, 0
+  br i1 %less_than2163, label %while.body2.preheader, label %while.condition1.preheader.while.continuation3_crit_edge
+
+while.condition1.preheader.while.continuation3_crit_edge: ; preds = %while.condition1.preheader
+  %.pre = sext i32 %joined.sroa.12.0.lcssa to i64
+  br label %while.continuation3
+
+while.body2.preheader:                            ; preds = %while.condition1.preheader
+  %wide.trip.count77 = zext nneg i32 %.fca.0.1.extract to i64
+  br label %while.body2
+
+while.body:                                       ; preds = %while.body.lr.ph, %while.body
+  %indvars.iv = phi i64 [ 0, %while.body.lr.ph ], [ %indvars.iv.next, %while.body ]
+  %joined.sroa.0.059 = phi ptr [ %call, %while.body.lr.ph ], [ %grown, %while.body ]
+  %joined.sroa.12.057 = phi i32 [ 8, %while.body.lr.ph ], [ %new_capacity, %while.body ]
+  %element = getelementptr i8, ptr %load7, i64 %indvars.iv
+  %load8 = load i8, ptr %element, align 1
+  %2 = zext i32 %joined.sroa.12.057 to i64
+  %is_full = icmp eq i64 %indvars.iv, %2
+  %doubled = zext i1 %is_full to i32
+  %new_capacity = shl i32 %joined.sroa.12.057, %doubled
+  %widened = sext i32 %new_capacity to i64
+  %grown = tail call ptr @realloc(ptr %joined.sroa.0.059, i64 %widened)
+  %element15 = getelementptr i8, ptr %grown, i64 %indvars.iv
+  store i8 %load8, ptr %element15, align 1
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+  br i1 %exitcond.not, label %while.condition1.preheader, label %while.body
+
+while.body2:                                      ; preds = %while.body2.preheader, %while.body2
+  %indvars.iv74 = phi i64 [ 0, %while.body2.preheader ], [ %indvars.iv.next75, %while.body2 ]
+  %joined.sroa.0.166 = phi ptr [ %joined.sroa.0.0.lcssa, %while.body2.preheader ], [ %grown38, %while.body2 ]
+  %joined.sroa.6.165 = phi i32 [ %joined.sroa.6.0.lcssa, %while.body2.preheader ], [ %new_length40, %while.body2 ]
+  %joined.sroa.12.164 = phi i32 [ %joined.sroa.12.0.lcssa, %while.body2.preheader ], [ %new_capacity35, %while.body2 ]
+  %element25 = getelementptr i8, ptr %.fca.0.0.extract, i64 %indvars.iv74
+  %load26 = load i8, ptr %element25, align 1
+  %is_full33 = icmp eq i32 %joined.sroa.6.165, %joined.sroa.12.164
+  %doubled34 = zext i1 %is_full33 to i32
+  %new_capacity35 = shl i32 %joined.sroa.12.164, %doubled34
+  %widened36 = sext i32 %new_capacity35 to i64
+  %grown38 = tail call ptr @realloc(ptr %joined.sroa.0.166, i64 %widened36)
+  %3 = sext i32 %joined.sroa.6.165 to i64
+  %element39 = getelementptr i8, ptr %grown38, i64 %3
+  store i8 %load26, ptr %element39, align 1
+  %new_length40 = add nuw i32 %joined.sroa.6.165, 1
+  %indvars.iv.next75 = add nuw nsw i64 %indvars.iv74, 1
+  %exitcond78.not = icmp eq i64 %indvars.iv.next75, %wide.trip.count77
+  br i1 %exitcond78.not, label %while.continuation3, label %while.body2
+
+while.continuation3:                              ; preds = %while.body2, %while.condition1.preheader.while.continuation3_crit_edge
+  %widened48.pre-phi = phi i64 [ %.pre, %while.condition1.preheader.while.continuation3_crit_edge ], [ %widened36, %while.body2 ]
+  %joined.sroa.6.1.lcssa = phi i32 [ %joined.sroa.6.0.lcssa, %while.condition1.preheader.while.continuation3_crit_edge ], [ %new_length40, %while.body2 ]
+  %joined.sroa.0.1.lcssa = phi ptr [ %joined.sroa.0.0.lcssa, %while.condition1.preheader.while.continuation3_crit_edge ], [ %grown38, %while.body2 ]
+  %copy = tail call ptr @calloc(i64 %widened48.pre-phi, i64 1)
+  %widened49 = sext i32 %joined.sroa.6.1.lcssa to i64
+  tail call void @llvm.memmove.p0.p0.i64(ptr align 1 %copy, ptr align 1 %joined.sroa.0.1.lcssa, i64 %widened49, i1 false)
+  %nul_reserved.i = add nsw i64 %widened49, 1
+  %copy.i = tail call ptr @calloc(i64 %nul_reserved.i, i64 1)
+  tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %copy.i, ptr align 1 %copy, i64 %widened49, i1 false)
+  %load51.fca.0.0.insert = insertvalue %string poison, ptr %copy.i, 0, 0
+  %load51.fca.0.1.insert = insertvalue %string %load51.fca.0.0.insert, i32 %joined.sroa.6.1.lcssa, 0, 1
+  %load51.fca.0.2.insert = insertvalue %string %load51.fca.0.1.insert, i32 %joined.sroa.6.1.lcssa, 0, 2
+  ret %string %load51.fca.0.2.insert
+
+; uselistorder directives
+  uselistorder ptr %0, { 1, 0 }
+  uselistorder ptr %call, { 1, 0 }
+  uselistorder i32 %joined.sroa.6.0.lcssa, { 1, 0 }
+  uselistorder ptr %joined.sroa.0.0.lcssa, { 1, 0 }
+  uselistorder label %while.body, { 1, 0 }
+  uselistorder i64 %indvars.iv, { 3, 1, 0, 2 }
+  uselistorder i32 %joined.sroa.12.057, { 1, 0 }
+  uselistorder i32 %new_capacity, { 2, 0, 1 }
+  uselistorder ptr %grown, { 2, 0, 1 }
+  uselistorder label %while.body2, { 1, 0 }
+  uselistorder i64 %indvars.iv74, { 1, 0 }
+  uselistorder i32 %joined.sroa.6.165, { 1, 2, 0 }
+  uselistorder i32 %joined.sroa.12.164, { 1, 0 }
+  uselistorder i32 %new_capacity35, { 1, 0 }
+  uselistorder ptr %grown38, { 0, 2, 1 }
+  uselistorder i32 %joined.sroa.6.1.lcssa, { 1, 2, 0 }
+  uselistorder i64 %widened49, { 1, 0, 2 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #4 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define noundef i1 @string.notEquals(%string %0, %string %1) local_unnamed_addr #5 {
+entry:
+  %.fca.0.0.extract18.i = extractvalue %string %0, 0, 0
+  %.fca.0.1.extract19.i = extractvalue %string %0, 0, 1
+  %.fca.0.0.extract.i = extractvalue %string %1, 0, 0
+  %.fca.0.1.extract.i = extractvalue %string %1, 0, 1
+  %not_equal.not.i = icmp eq i32 %.fca.0.1.extract19.i, %.fca.0.1.extract.i
+  br i1 %not_equal.not.i, label %while.condition.preheader.i, label %string.equals.exit
+
+while.condition.preheader.i:                      ; preds = %entry
+  %less_than22.i = icmp sgt i32 %.fca.0.1.extract19.i, 0
+  br i1 %less_than22.i, label %while.body.preheader.i, label %string.equals.exit
+
+while.body.preheader.i:                           ; preds = %while.condition.preheader.i
+  %wide.trip.count.i = zext nneg i32 %.fca.0.1.extract19.i to i64
+  br label %while.body.i
+
+while.body.i:                                     ; preds = %while.body.i, %while.body.preheader.i
+  %indvars.iv.i = phi i64 [ 0, %while.body.preheader.i ], [ %indvars.iv.next.i, %while.body.i ]
+  %element.i = getelementptr i8, ptr %.fca.0.0.extract18.i, i64 %indvars.iv.i
+  %load11.i = load i8, ptr %element.i, align 1
+  %element15.i = getelementptr i8, ptr %.fca.0.0.extract.i, i64 %indvars.iv.i
+  %load16.i = load i8, ptr %element15.i, align 1
+  %not_equal17.not.i.not = icmp ne i8 %load11.i, %load16.i
+  %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1
+  %exitcond.not.i = icmp eq i64 %indvars.iv.next.i, %wide.trip.count.i
+  %or.cond = select i1 %not_equal17.not.i.not, i1 true, i1 %exitcond.not.i
+  br i1 %or.cond, label %string.equals.exit, label %while.body.i
+
+string.equals.exit:                               ; preds = %while.body.i, %entry, %while.condition.preheader.i
+  %2 = phi i1 [ true, %entry ], [ false, %while.condition.preheader.i ], [ %not_equal17.not.i.not, %while.body.i ]
+  ret i1 %2
+
+; uselistorder directives
+  uselistorder i64 %indvars.iv.next.i, { 1, 0 }
+  uselistorder label %string.equals.exit, { 0, 2, 1 }
+}
+
+; Function Attrs: mustprogress nofree nounwind willreturn
+define void @string.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #6 {
+entry:
+  %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
+  %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1
+  %widened = sext i32 %.fca.1.extract to i64
+  %nul_reserved = add nsw i64 %widened, 1
+  %copy = tail call ptr @calloc(i64 %nul_reserved, i64 1)
+  tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %copy, ptr align 1 %.fca.0.extract, i64 %widened, i1 false)
+  store ptr %copy, ptr %0, align 8
+  %.repack3 = getelementptr inbounds nuw i8, ptr %0, i64 8
+  store i32 %.fca.1.extract, ptr %.repack3, align 8
+  %.repack5 = getelementptr inbounds nuw i8, ptr %0, i64 12
+  store i32 %.fca.1.extract, ptr %.repack5, align 4
+  ret void
+
+; uselistorder directives
+  uselistorder ptr %0, { 1, 2, 0 }
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define noundef i1 @string.equals(%string %0, %string %1) local_unnamed_addr #5 {
+entry:
+  %.fca.0.0.extract18 = extractvalue %string %0, 0, 0
+  %.fca.0.1.extract19 = extractvalue %string %0, 0, 1
+  %.fca.0.0.extract = extractvalue %string %1, 0, 0
+  %.fca.0.1.extract = extractvalue %string %1, 0, 1
+  %not_equal.not = icmp eq i32 %.fca.0.1.extract19, %.fca.0.1.extract
+  br i1 %not_equal.not, label %while.condition.preheader, label %common.ret
+
+while.condition.preheader:                        ; preds = %entry
+  %less_than22 = icmp sgt i32 %.fca.0.1.extract19, 0
+  br i1 %less_than22, label %while.body.preheader, label %common.ret
+
+while.body.preheader:                             ; preds = %while.condition.preheader
+  %wide.trip.count = zext nneg i32 %.fca.0.1.extract19 to i64
+  br label %while.body
+
+common.ret:                                       ; preds = %while.body, %while.condition.preheader, %entry
+  %common.ret.op = phi i1 [ false, %entry ], [ true, %while.condition.preheader ], [ %not_equal17.not, %while.body ]
+  ret i1 %common.ret.op
+
+while.body:                                       ; preds = %while.body, %while.body.preheader
+  %indvars.iv = phi i64 [ 0, %while.body.preheader ], [ %indvars.iv.next, %while.body ]
+  %element = getelementptr i8, ptr %.fca.0.0.extract18, i64 %indvars.iv
+  %load11 = load i8, ptr %element, align 1
+  %element15 = getelementptr i8, ptr %.fca.0.0.extract, i64 %indvars.iv
+  %load16 = load i8, ptr %element15, align 1
+  %not_equal17.not = icmp eq i8 %load11, %load16
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond.not = icmp ne i64 %indvars.iv.next, %wide.trip.count
+  %or.cond.not = select i1 %not_equal17.not, i1 %exitcond.not, i1 false
+  br i1 %or.cond.not, label %while.body, label %common.ret
+
+; uselistorder directives
+  uselistorder i1 %not_equal17.not, { 1, 0 }
+  uselistorder i64 %indvars.iv.next, { 1, 0 }
+}
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memmove.p0.p0.i64(ptr writeonly captures(none) %0, ptr readonly captures(none) %1, i64 %2, i1 immarg %3) #7
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #7
+
+; uselistorder directives
+uselistorder ptr @calloc, { 1, 0, 2, 3 }
+uselistorder ptr @string.concat, { 1, 0 }
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #2 = { nofree nounwind }
+attributes #3 = { nounwind }
+attributes #4 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #5 = { nofree norecurse nosync nounwind memory(read, inaccessiblemem: none) }
+attributes #6 = { mustprogress nofree nounwind willreturn }
+attributes #7 = { nocallback nofree nounwind willreturn memory(argmem: readwrite) }

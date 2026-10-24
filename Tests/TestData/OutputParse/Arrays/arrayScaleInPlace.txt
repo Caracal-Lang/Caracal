@@ -1,0 +1,283 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: scaleInPlace
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; 4]
+                Ref: true
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 4
+                }
+            }
+        }
+        ParameterNode: {
+            Name: factor
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 0
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: undefined
+                                                Function type: undefined
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 1
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: undefined
+                                                Function type: undefined
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 1
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 2
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: undefined
+                                                Function type: undefined
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 2
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 3
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: values
+                                            }
+                                        }
+                                        Operation: MemberAccess
+                                        Right: {
+                                            FunctionCallExpression: {
+                                                Type: undefined
+                                                Function type: undefined
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: at
+                                                }
+                                                ArgumentsNode(1): {
+                                                    NumberLiteral: 3
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: factor
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 0
+        }
+    }
+}

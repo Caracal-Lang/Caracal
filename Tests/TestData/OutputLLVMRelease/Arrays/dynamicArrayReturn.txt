@@ -1,0 +1,33 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nofree nounwind willreturn memory(write, argmem: none, inaccessiblemem: readwrite)
+define { ptr, i32, i32 } @make() local_unnamed_addr #1 {
+entry:
+  %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  store i32 1, ptr %call, align 4
+  %element1 = getelementptr i8, ptr %call, i64 4
+  store i32 2, ptr %element1, align 4
+  %load.fca.0.insert = insertvalue { ptr, i32, i32 } poison, ptr %call, 0
+  %load.fca.1.insert = insertvalue { ptr, i32, i32 } %load.fca.0.insert, i32 2, 1
+  %load.fca.2.insert = insertvalue { ptr, i32, i32 } %load.fca.1.insert, i32 8, 2
+  ret { ptr, i32, i32 } %load.fca.2.insert
+
+; uselistorder directives
+  uselistorder ptr %call, { 2, 0, 1 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i32 @main() local_unnamed_addr #2 {
+entry:
+  ret i32 2
+}
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nofree nounwind willreturn memory(write, argmem: none, inaccessiblemem: readwrite) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

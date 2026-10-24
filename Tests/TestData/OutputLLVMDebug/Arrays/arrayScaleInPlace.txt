@@ -1,0 +1,36 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @scaleInPlace(ptr nonnull %0, i32 %1) {
+entry:
+  %element = getelementptr [4 x i32], ptr %0, i32 0, i32 0
+  %load = load i32, ptr %element, align 4
+  %multiply = mul i32 %load, %1
+  %element1 = getelementptr [4 x i32], ptr %0, i32 0, i32 0
+  store i32 %multiply, ptr %element1, align 4
+  %element2 = getelementptr [4 x i32], ptr %0, i32 0, i32 1
+  %load3 = load i32, ptr %element2, align 4
+  %multiply4 = mul i32 %load3, %1
+  %element5 = getelementptr [4 x i32], ptr %0, i32 0, i32 1
+  store i32 %multiply4, ptr %element5, align 4
+  %element6 = getelementptr [4 x i32], ptr %0, i32 0, i32 2
+  %load7 = load i32, ptr %element6, align 4
+  %multiply8 = mul i32 %load7, %1
+  %element9 = getelementptr [4 x i32], ptr %0, i32 0, i32 2
+  store i32 %multiply8, ptr %element9, align 4
+  %element10 = getelementptr [4 x i32], ptr %0, i32 0, i32 3
+  %load11 = load i32, ptr %element10, align 4
+  %multiply12 = mul i32 %load11, %1
+  %element13 = getelementptr [4 x i32], ptr %0, i32 0, i32 3
+  store i32 %multiply12, ptr %element13, align 4
+  ret i32 0
+}

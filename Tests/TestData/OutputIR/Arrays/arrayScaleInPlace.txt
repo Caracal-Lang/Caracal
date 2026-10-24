@@ -1,0 +1,42 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define scaleInPlace(%0: ref [i32; 4] "values", %1: i32 "factor") i32
+block entry(0):
+    %0 = parameter 0 : ref [i32; 4] "values"
+    %1 = parameter 1 : i32 "factor"
+    %2 = const 0 : i32
+    %3 = element_address %0[%2] : i32
+    %4 = load_value %3 : i32
+    %5 = multiply %4, %1 : i32
+    %6 = const 0 : i32
+    %7 = element_address %0[%6] : i32
+    store_value %5, %7 : i32
+    %8 = const 1 : i32
+    %9 = element_address %0[%8] : i32
+    %10 = load_value %9 : i32
+    %11 = multiply %10, %1 : i32
+    %12 = const 1 : i32
+    %13 = element_address %0[%12] : i32
+    store_value %11, %13 : i32
+    %14 = const 2 : i32
+    %15 = element_address %0[%14] : i32
+    %16 = load_value %15 : i32
+    %17 = multiply %16, %1 : i32
+    %18 = const 2 : i32
+    %19 = element_address %0[%18] : i32
+    store_value %17, %19 : i32
+    %20 = const 3 : i32
+    %21 = element_address %0[%20] : i32
+    %22 = load_value %21 : i32
+    %23 = multiply %22, %1 : i32
+    %24 = const 3 : i32
+    %25 = element_address %0[%24] : i32
+    store_value %23, %25 : i32
+    %26 = const 0 : i32
+    return %26

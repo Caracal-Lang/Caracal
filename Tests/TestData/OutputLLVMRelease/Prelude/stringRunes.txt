@@ -1,0 +1,329 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+@0 = private unnamed_addr constant [6 x i8] c"Hello\00", align 1
+@1 = private unnamed_addr constant [13 x i8] c"gr\C3\BC\C3\9Fe \F0\9F\90\88\00", align 1
+@2 = private unnamed_addr constant [4 x i8] c"\E2\82\AC\00", align 1
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define range(i32 2, 43) i32 @main() local_unnamed_addr #0 {
+while.body.lr.ph.i:
+  br label %while.body.i
+
+while.body.i:                                     ; preds = %string.runeLengthAt.exit.i, %while.body.lr.ph.i
+  %phi15.i = phi i32 [ 0, %while.body.lr.ph.i ], [ %add.i, %string.runeLengthAt.exit.i ]
+  %phi4.i = phi i32 [ 0, %while.body.lr.ph.i ], [ %add2.i, %string.runeLengthAt.exit.i ]
+  %0 = zext nneg i32 %phi15.i to i64
+  %element.i.i = getelementptr i8, ptr @0, i64 %0
+  %load5.i.i = load i8, ptr %element.i.i, align 1
+  %less_than.i.i = icmp sgt i8 %load5.i.i, -1
+  br i1 %less_than.i.i, label %string.runeLengthAt.exit.i, label %if.continuation.i.i
+
+if.continuation.i.i:                              ; preds = %while.body.i
+  %less_than6.i.i = icmp samesign ult i8 %load5.i.i, -32
+  br i1 %less_than6.i.i, label %string.runeLengthAt.exit.i, label %if.continuation2.i.i
+
+if.continuation2.i.i:                             ; preds = %if.continuation.i.i
+  %less_than7.i.i = icmp samesign ult i8 %load5.i.i, -16
+  %..i.i = select i1 %less_than7.i.i, i32 3, i32 4
+  br label %string.runeLengthAt.exit.i
+
+string.runeLengthAt.exit.i:                       ; preds = %if.continuation2.i.i, %if.continuation.i.i, %while.body.i
+  %common.ret.op.i.i = phi i32 [ 1, %while.body.i ], [ 2, %if.continuation.i.i ], [ %..i.i, %if.continuation2.i.i ]
+  %add.i = add nuw nsw i32 %common.ret.op.i.i, %phi15.i
+  %add2.i = add i32 %phi4.i, 1
+  %less_than.i = icmp samesign ult i32 %add.i, 5
+  br i1 %less_than.i, label %while.body.i, label %string.runeCount.exit
+
+string.runeCount.exit:                            ; preds = %string.runeLengthAt.exit.i
+  %not_equal.not = icmp eq i32 %add2.i, 5
+  %mixed = alloca %string, align 8
+  %euro = alloca %string, align 8
+  br i1 %not_equal.not, label %while.body.lr.ph.i77, label %common.ret
+
+common.ret:                                       ; preds = %while.continuation, %if.continuation20, %if.continuation14, %if.continuation10, %string.runeCount.exit95, %string.runeCount.exit
+  %common.ret.op = phi i32 [ 2, %string.runeCount.exit ], [ 6, %string.runeCount.exit95 ], [ 8, %if.continuation10 ], [ 10, %if.continuation14 ], [ 13, %if.continuation20 ], [ %., %while.continuation ]
+  ret i32 %common.ret.op
+
+while.body.lr.ph.i77:                             ; preds = %string.runeCount.exit
+  store ptr @1, ptr %mixed, align 8
+  %length31 = getelementptr inbounds nuw i8, ptr %mixed, i64 8
+  store i32 12, ptr %length31, align 8
+  %capacity32 = getelementptr inbounds nuw i8, ptr %mixed, i64 12
+  store i32 12, ptr %capacity32, align 4
+  br label %while.body.i79
+
+while.body.i79:                                   ; preds = %string.runeLengthAt.exit.i90, %while.body.lr.ph.i77
+  %phi15.i80 = phi i32 [ 0, %while.body.lr.ph.i77 ], [ %add.i92, %string.runeLengthAt.exit.i90 ]
+  %phi4.i81 = phi i32 [ 0, %while.body.lr.ph.i77 ], [ %add2.i93, %string.runeLengthAt.exit.i90 ]
+  %1 = zext nneg i32 %phi15.i80 to i64
+  %element.i.i82 = getelementptr i8, ptr @1, i64 %1
+  %load5.i.i83 = load i8, ptr %element.i.i82, align 1
+  %less_than.i.i84 = icmp sgt i8 %load5.i.i83, -1
+  br i1 %less_than.i.i84, label %string.runeLengthAt.exit.i90, label %if.continuation.i.i85
+
+if.continuation.i.i85:                            ; preds = %while.body.i79
+  %less_than6.i.i86 = icmp samesign ult i8 %load5.i.i83, -32
+  br i1 %less_than6.i.i86, label %string.runeLengthAt.exit.i90, label %if.continuation2.i.i87
+
+if.continuation2.i.i87:                           ; preds = %if.continuation.i.i85
+  %less_than7.i.i88 = icmp samesign ult i8 %load5.i.i83, -16
+  %..i.i89 = select i1 %less_than7.i.i88, i32 3, i32 4
+  br label %string.runeLengthAt.exit.i90
+
+string.runeLengthAt.exit.i90:                     ; preds = %if.continuation2.i.i87, %if.continuation.i.i85, %while.body.i79
+  %common.ret.op.i.i91 = phi i32 [ 1, %while.body.i79 ], [ 2, %if.continuation.i.i85 ], [ %..i.i89, %if.continuation2.i.i87 ]
+  %add.i92 = add nuw nsw i32 %common.ret.op.i.i91, %phi15.i80
+  %add2.i93 = add i32 %phi4.i81, 1
+  %less_than.i94 = icmp samesign ult i32 %add.i92, 12
+  br i1 %less_than.i94, label %while.body.i79, label %string.runeCount.exit95
+
+string.runeCount.exit95:                          ; preds = %string.runeLengthAt.exit.i90
+  %not_equal36.not = icmp eq i32 %add2.i93, 7
+  br i1 %not_equal36.not, label %if.continuation10, label %common.ret
+
+if.continuation10:                                ; preds = %string.runeCount.exit95
+  %call39 = call i32 @string.runeAt(ptr %mixed, i32 2)
+  %not_equal40.not = icmp eq i32 %call39, 252
+  br i1 %not_equal40.not, label %if.continuation14, label %common.ret
+
+if.continuation14:                                ; preds = %if.continuation10
+  %call43 = call i32 @string.runeAt(ptr %mixed, i32 8)
+  %not_equal44.not = icmp eq i32 %call43, 128008
+  br i1 %not_equal44.not, label %if.continuation20, label %common.ret
+
+if.continuation20:                                ; preds = %if.continuation14
+  store ptr @2, ptr %euro, align 8
+  %length47 = getelementptr inbounds nuw i8, ptr %euro, i64 8
+  store i32 3, ptr %length47, align 8
+  %capacity48 = getelementptr inbounds nuw i8, ptr %euro, i64 12
+  store i32 3, ptr %capacity48, align 4
+  %call53 = call i32 @string.runeAt(ptr %euro, i32 0)
+  %not_equal54.not = icmp eq i32 %call53, 8364
+  br i1 %not_equal54.not, label %while.body, label %common.ret
+
+while.body:                                       ; preds = %if.continuation20, %string.runeLengthAt.exit154
+  %phi55156 = phi i32 [ %add58, %string.runeLengthAt.exit154 ], [ 0, %if.continuation20 ]
+  %phi155 = phi i32 [ %add, %string.runeLengthAt.exit154 ], [ 0, %if.continuation20 ]
+  %2 = zext nneg i32 %phi155 to i64
+  %element.i145 = getelementptr i8, ptr @1, i64 %2
+  %load5.i146 = load i8, ptr %element.i145, align 1
+  %less_than.i147 = icmp sgt i8 %load5.i146, -1
+  br i1 %less_than.i147, label %string.runeLengthAt.exit154, label %if.continuation.i148
+
+if.continuation.i148:                             ; preds = %while.body
+  %less_than6.i149 = icmp samesign ult i8 %load5.i146, -32
+  br i1 %less_than6.i149, label %string.runeLengthAt.exit154, label %if.continuation2.i150
+
+if.continuation2.i150:                            ; preds = %if.continuation.i148
+  %less_than7.i151 = icmp samesign ult i8 %load5.i146, -16
+  %..i152 = select i1 %less_than7.i151, i32 3, i32 4
+  br label %string.runeLengthAt.exit154
+
+string.runeLengthAt.exit154:                      ; preds = %while.body, %if.continuation.i148, %if.continuation2.i150
+  %common.ret.op.i153 = phi i32 [ 1, %while.body ], [ 2, %if.continuation.i148 ], [ %..i152, %if.continuation2.i150 ]
+  %add = add nuw nsw i32 %common.ret.op.i153, %phi155
+  %add58 = add i32 %phi55156, 1
+  %less_than = icmp samesign ult i32 %add, 12
+  br i1 %less_than, label %while.body, label %while.continuation
+
+while.continuation:                               ; preds = %string.runeLengthAt.exit154
+  %not_equal59.not = icmp eq i32 %add58, 7
+  %. = select i1 %not_equal59.not, i32 42, i32 14
+  br label %common.ret
+
+; uselistorder directives
+  uselistorder i32 %phi15.i, { 1, 0 }
+  uselistorder i32 %add.i, { 1, 0 }
+  uselistorder ptr %mixed, { 3, 4, 0, 1, 2 }
+  uselistorder ptr %euro, { 3, 0, 1, 2 }
+  uselistorder i32 %phi15.i80, { 1, 0 }
+  uselistorder i32 %add.i92, { 1, 0 }
+  uselistorder label %while.body, { 1, 0 }
+  uselistorder label %string.runeLengthAt.exit154, { 2, 1, 0 }
+  uselistorder i32 %add, { 1, 0 }
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define i32 @string.runeCount(ptr nonnull readonly captures(none) %0) local_unnamed_addr #0 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  %less_than3 = icmp sgt i32 %load, 0
+  br i1 %less_than3, label %while.body.lr.ph, label %while.continuation
+
+while.body.lr.ph:                                 ; preds = %entry
+  %load.i = load ptr, ptr %0, align 8
+  br label %while.body
+
+while.body:                                       ; preds = %while.body.lr.ph, %string.runeLengthAt.exit
+  %phi15 = phi i32 [ 0, %while.body.lr.ph ], [ %add, %string.runeLengthAt.exit ]
+  %phi4 = phi i32 [ 0, %while.body.lr.ph ], [ %add2, %string.runeLengthAt.exit ]
+  %1 = sext i32 %phi15 to i64
+  %element.i = getelementptr i8, ptr %load.i, i64 %1
+  %load5.i = load i8, ptr %element.i, align 1
+  %less_than.i = icmp sgt i8 %load5.i, -1
+  br i1 %less_than.i, label %string.runeLengthAt.exit, label %if.continuation.i
+
+if.continuation.i:                                ; preds = %while.body
+  %less_than6.i = icmp samesign ult i8 %load5.i, -32
+  br i1 %less_than6.i, label %string.runeLengthAt.exit, label %if.continuation2.i
+
+if.continuation2.i:                               ; preds = %if.continuation.i
+  %less_than7.i = icmp samesign ult i8 %load5.i, -16
+  %..i = select i1 %less_than7.i, i32 3, i32 4
+  br label %string.runeLengthAt.exit
+
+string.runeLengthAt.exit:                         ; preds = %while.body, %if.continuation.i, %if.continuation2.i
+  %common.ret.op.i = phi i32 [ 1, %while.body ], [ 2, %if.continuation.i ], [ %..i, %if.continuation2.i ]
+  %add = add i32 %common.ret.op.i, %phi15
+  %add2 = add i32 %phi4, 1
+  %less_than = icmp slt i32 %add, %load
+  br i1 %less_than, label %while.body, label %while.continuation
+
+while.continuation:                               ; preds = %string.runeLengthAt.exit, %entry
+  %phi.lcssa = phi i32 [ 0, %entry ], [ %add2, %string.runeLengthAt.exit ]
+  ret i32 %phi.lcssa
+
+; uselistorder directives
+  uselistorder i32 %load, { 1, 0 }
+  uselistorder label %while.body, { 1, 0 }
+  uselistorder label %string.runeLengthAt.exit, { 2, 1, 0 }
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define i32 @string.runeAt(ptr nonnull readonly captures(none) %0, i32 %1) local_unnamed_addr #0 {
+entry:
+  %load = load ptr, ptr %0, align 8
+  %2 = sext i32 %1 to i64
+  %element = getelementptr i8, ptr %load, i64 %2
+  %load5 = load i8, ptr %element, align 1
+  %int_widen = zext i8 %load5 to i32
+  %less_than.i = icmp sgt i8 %load5, -1
+  br i1 %less_than.i, label %common.ret, label %if.continuation.i
+
+if.continuation.i:                                ; preds = %entry
+  %less_than6.i = icmp samesign ult i8 %load5, -32
+  %less_than7.i = icmp samesign ult i8 %load5, -16
+  %spec.select35 = select i1 %less_than7.i, i32 15, i32 7
+  %3 = select i1 %less_than6.i, i32 31, i32 %spec.select35
+  %bit_and = and i32 %3, %int_widen
+  %4 = select i1 %less_than7.i, i64 2, i64 3
+  %5 = select i1 %less_than6.i, i64 1, i64 %4
+  %xtraiter = and i64 %5, 1
+  br i1 %less_than6.i, label %common.ret.loopexit.unr-lcssa, label %if.continuation.i.new
+
+if.continuation.i.new:                            ; preds = %if.continuation.i
+  %unroll_iter = and i64 %5, 2
+  %invariant.op = add i32 1, %1
+  br label %while.body
+
+common.ret.loopexit.unr-lcssa.loopexit:           ; preds = %while.body
+  %6 = trunc nuw nsw i64 %indvars.iv.next.1 to i32
+  br label %common.ret.loopexit.unr-lcssa
+
+common.ret.loopexit.unr-lcssa:                    ; preds = %common.ret.loopexit.unr-lcssa.loopexit, %if.continuation.i
+  %bit_or.lcssa.ph = phi i32 [ poison, %if.continuation.i ], [ %bit_or.1, %common.ret.loopexit.unr-lcssa.loopexit ]
+  %indvars.iv.unr = phi i32 [ 1, %if.continuation.i ], [ %6, %common.ret.loopexit.unr-lcssa.loopexit ]
+  %phi1437.unr = phi i32 [ %bit_and, %if.continuation.i ], [ %bit_or.1, %common.ret.loopexit.unr-lcssa.loopexit ]
+  %lcmp.mod.not = icmp eq i64 %xtraiter, 0
+  br i1 %lcmp.mod.not, label %common.ret, label %while.body.epil
+
+while.body.epil:                                  ; preds = %common.ret.loopexit.unr-lcssa
+  %add.epil = add i32 %1, %indvars.iv.unr
+  %7 = sext i32 %add.epil to i64
+  %element18.epil = getelementptr i8, ptr %load, i64 %7
+  %load19.epil = load i8, ptr %element18.epil, align 1
+  %shift_left.epil = shl i32 %phi1437.unr, 6
+  %8 = and i8 %load19.epil, 63
+  %bit_and21.epil = zext nneg i8 %8 to i32
+  %bit_or.epil = or disjoint i32 %shift_left.epil, %bit_and21.epil
+  br label %common.ret
+
+common.ret:                                       ; preds = %while.body.epil, %common.ret.loopexit.unr-lcssa, %entry
+  %common.ret.op = phi i32 [ %int_widen, %entry ], [ %bit_or.lcssa.ph, %common.ret.loopexit.unr-lcssa ], [ %bit_or.epil, %while.body.epil ]
+  ret i32 %common.ret.op
+
+while.body:                                       ; preds = %while.body, %if.continuation.i.new
+  %indvars.iv = phi i64 [ 1, %if.continuation.i.new ], [ %indvars.iv.next.1, %while.body ]
+  %phi1437 = phi i32 [ %bit_and, %if.continuation.i.new ], [ %bit_or.1, %while.body ]
+  %niter = phi i64 [ 0, %if.continuation.i.new ], [ %niter.next.1, %while.body ]
+  %9 = trunc nuw nsw i64 %indvars.iv to i32
+  %add = add i32 %1, %9
+  %10 = sext i32 %add to i64
+  %element18 = getelementptr i8, ptr %load, i64 %10
+  %load19 = load i8, ptr %element18, align 1
+  %11 = and i8 %load19, 63
+  %bit_and21 = zext nneg i8 %11 to i32
+  %12 = trunc i64 %indvars.iv to i32
+  %add.1.reass = add i32 %12, %invariant.op
+  %13 = sext i32 %add.1.reass to i64
+  %element18.1 = getelementptr i8, ptr %load, i64 %13
+  %load19.1 = load i8, ptr %element18.1, align 1
+  %14 = shl i32 %phi1437, 12
+  %15 = shl nuw nsw i32 %bit_and21, 6
+  %shift_left.1 = or disjoint i32 %14, %15
+  %16 = and i8 %load19.1, 63
+  %bit_and21.1 = zext nneg i8 %16 to i32
+  %bit_or.1 = or disjoint i32 %shift_left.1, %bit_and21.1
+  %indvars.iv.next.1 = add nuw nsw i64 %indvars.iv, 2
+  %niter.next.1 = add i64 %niter, 2
+  %niter.ncmp.1 = icmp eq i64 %niter.next.1, %unroll_iter
+  br i1 %niter.ncmp.1, label %common.ret.loopexit.unr-lcssa.loopexit, label %while.body
+
+; uselistorder directives
+  uselistorder i32 %1, { 3, 1, 0, 2 }
+  uselistorder ptr %load, { 0, 2, 1, 3 }
+  uselistorder i8 %load5, { 2, 1, 0, 3 }
+  uselistorder i1 %less_than6.i, { 1, 0, 2 }
+  uselistorder i32 %bit_and, { 1, 0 }
+  uselistorder i64 %indvars.iv, { 1, 0, 2 }
+  uselistorder i32 %bit_or.1, { 1, 0, 2 }
+  uselistorder i64 %niter.next.1, { 1, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define range(i32 1, 5) i32 @string.runeLengthAt(ptr nonnull readonly captures(none) %0, i32 %1) local_unnamed_addr #1 {
+entry:
+  %load = load ptr, ptr %0, align 8
+  %2 = sext i32 %1 to i64
+  %element = getelementptr i8, ptr %load, i64 %2
+  %load5 = load i8, ptr %element, align 1
+  %less_than = icmp sgt i8 %load5, -1
+  br i1 %less_than, label %common.ret, label %if.continuation
+
+common.ret:                                       ; preds = %if.continuation2, %if.continuation, %entry
+  %common.ret.op = phi i32 [ 1, %entry ], [ 2, %if.continuation ], [ %., %if.continuation2 ]
+  ret i32 %common.ret.op
+
+if.continuation:                                  ; preds = %entry
+  %less_than6 = icmp samesign ult i8 %load5, -32
+  br i1 %less_than6, label %common.ret, label %if.continuation2
+
+if.continuation2:                                 ; preds = %if.continuation
+  %less_than7 = icmp samesign ult i8 %load5, -16
+  %. = select i1 %less_than7, i32 3, i32 4
+  br label %common.ret
+
+; uselistorder directives
+  uselistorder i8 %load5, { 1, 2, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #2 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+; uselistorder directives
+uselistorder ptr @string.runeAt, { 2, 1, 0 }
+
+attributes #0 = { nofree norecurse nosync nounwind memory(read, inaccessiblemem: none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }

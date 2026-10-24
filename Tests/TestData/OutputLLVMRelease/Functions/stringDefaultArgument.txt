@@ -1,0 +1,56 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define %string @describe(%string returned %0) local_unnamed_addr #0 {
+entry:
+  ret %string %0
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i32 @use() local_unnamed_addr #0 {
+entry:
+  ret i32 7
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @Tagged.labelLength(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+entry:
+  %length.i = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load.i = load i32, ptr %length.i, align 4
+  ret i32 %load.i
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Tagged.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, %string %1) local_unnamed_addr #2 {
+entry:
+  %2 = extractvalue %string %1, 0
+  %.elt = extractvalue { ptr, i32, i32 } %2, 0
+  store ptr %.elt, ptr %0, align 8
+  %.repack1 = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %.elt2 = extractvalue { ptr, i32, i32 } %2, 1
+  store i32 %.elt2, ptr %.repack1, align 8
+  %.repack3 = getelementptr inbounds nuw i8, ptr %0, i64 12
+  %.elt4 = extractvalue { ptr, i32, i32 } %2, 2
+  store i32 %.elt4, ptr %.repack3, align 4
+  ret void
+
+; uselistorder directives
+  uselistorder ptr %0, { 1, 2, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }

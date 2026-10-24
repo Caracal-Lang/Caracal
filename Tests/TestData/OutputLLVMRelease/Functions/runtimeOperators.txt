@@ -1,0 +1,41 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i32 @negate(i32 %0) local_unnamed_addr #0 {
+entry:
+  %1 = sub i32 0, %0
+  ret i32 %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define float @negateFloat(float %0) local_unnamed_addr #0 {
+entry:
+  %1 = fneg float %0
+  ret float %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @invert(i1 %0) local_unnamed_addr #0 {
+entry:
+  %1 = xor i1 %0, true
+  ret i1 %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @bothTrue(i1 %0, i1 %1) local_unnamed_addr #0 {
+entry:
+  %spec.select = select i1 %0, i1 %1, i1 false
+  ret i1 %spec.select
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i1 @eitherTrue(i1 %0, i1 %1) local_unnamed_addr #0 {
+entry:
+  %spec.select = select i1 %0, i1 true, i1 %1
+  ret i1 %spec.select
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

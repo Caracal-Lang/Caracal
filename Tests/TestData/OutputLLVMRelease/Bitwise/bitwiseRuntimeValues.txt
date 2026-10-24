@@ -1,0 +1,29 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i32 @applyI32(i32 %0, i32 %1, i32 %2) local_unnamed_addr #0 {
+entry:
+  %3 = xor i32 %0, %1
+  %bit_not = xor i32 %3, -1
+  %bit_and1 = and i32 %2, 31
+  %shift_left = shl i32 %bit_not, %bit_and1
+  %shift_right = ashr exact i32 %shift_left, %bit_and1
+  ret i32 %shift_right
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define i8 @applyU8(i8 %0, i8 %1, i32 %2) local_unnamed_addr #0 {
+entry:
+  %3 = xor i8 %0, %1
+  %bit_not = xor i8 %3, -1
+  %4 = trunc i32 %2 to i8
+  %5 = and i8 %4, 7
+  %6 = lshr i8 -1, %5
+  %shift_right = and i8 %6, %bit_not
+  ret i8 %shift_right
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
