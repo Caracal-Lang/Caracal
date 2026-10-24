@@ -13,7 +13,7 @@ namespace Caracal
     {
         std::vector<std::filesystem::path> sourceFiles;
         std::filesystem::path preludeDirectory;
-        std::filesystem::path coreDirectory;
+        std::vector<std::filesystem::path> libraryDirectories;
         TypeCheckerOptions typeCheckerOptions;
         DiagnosticOptions diagnosticOptions;
         PrintOptions printOptions;

@@ -57,6 +57,19 @@ namespace Caracal
         projectFile["folders"]["libraries"] = project.folders.libraries.generic_string();
         projectFile["folders"]["temp"] = project.folders.temp.generic_string();
         projectFile["folders"]["output"] = project.folders.output.generic_string();
+
+        auto dependencies = nlohmann::ordered_json::array();
+        for (const auto& dependency : project.dependencies)
+        {
+            nlohmann::ordered_json entry;
+            entry["path"] = dependency.path.generic_string();
+            if (dependency.isPrelude)
+                entry["prelude"] = true;
+
+            dependencies.push_back(std::move(entry));
+        }
+
+        projectFile["dependencies"] = std::move(dependencies);
         return projectFile.dump(2, ' ', false, nlohmann::ordered_json::error_handler_t::replace) + "\n";
     }
 
@@ -71,7 +84,8 @@ namespace Caracal
     ProjectResult createProject(
         const std::filesystem::path& workingDirectory,
         const std::optional<std::string>& name,
-        std::chrono::year_month_day creationDay)
+        std::chrono::year_month_day creationDay,
+        const std::filesystem::path& compilerDirectory)
     {
         const auto projectName = name.value_or(workingDirectory.filename().string());
         if (const auto problem = checkProjectName(projectName))
@@ -85,21 +99,36 @@ namespace Caracal
         if (std::filesystem::exists(projectFilePath))
             return Failure(projectDirectory.string() + " already has a caracal.json");
 
+        const auto compilerCore = compilerDirectory / "Core";
+        if (!std::filesystem::is_directory(compilerCore))
+            return Failure("Couldn't create the project, the Core folder in " + compilerDirectory.string() + " is missing");
+
         std::error_code errorCode;
         std::filesystem::create_directories(projectDirectory, errorCode);
         if (errorCode)
-            return Failure("Could not create " + projectDirectory.string() + ", " + errorCode.message());
+            return Failure("Couldn't create " + projectDirectory.string() + ", " + errorCode.message());
 
         if (!WriteIfMissing(projectDirectory / "main.cara", MainSource))
-            return Failure("Could not write " + (projectDirectory / "main.cara").string());
+            return Failure("Couldn't write " + (projectDirectory / "main.cara").string());
 
         if (!WriteIfMissing(projectDirectory / ".gitignore", GitIgnore))
-            return Failure("Could not write " + (projectDirectory / ".gitignore").string());
+            return Failure("Couldn't write " + (projectDirectory / ".gitignore").string());
 
-        Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay) };
+        Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } } };
+
+        const auto librariesDirectory = projectDirectory / project.folders.libraries;
+        std::filesystem::create_directories(librariesDirectory, errorCode);
+        if (!errorCode)
+        {
+            const auto copyOptions = std::filesystem::copy_options::recursive | std::filesystem::copy_options::skip_existing;
+            std::filesystem::copy(compilerCore, librariesDirectory / "Core", copyOptions, errorCode);
+        }
+
+        if (errorCode)
+            return Failure("Couldn't copy Core into " + librariesDirectory.string() + ", " + errorCode.message());
 
         if (!File::writeText(projectFilePath, CreateProjectFileText(project)))
-            return Failure("Could not write " + projectFilePath.string());
+            return Failure("Couldn't write " + projectFilePath.string());
 
         return { std::move(project), {} };
     }

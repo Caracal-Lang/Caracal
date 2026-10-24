@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Caracal
 {
@@ -19,6 +20,12 @@ namespace Caracal
         std::filesystem::path output{ "Output" };
     };
 
+    struct CARACAL_API ProjectDependency
+    {
+        std::filesystem::path path;
+        bool isPrelude = false;
+    };
+
     struct CARACAL_API Project
     {
         std::string name;
@@ -26,6 +33,7 @@ namespace Caracal
         ProjectType type = ProjectType::Executable;
         std::string version;
         ProjectFolders folders;
+        std::vector<ProjectDependency> dependencies;
     };
 
     struct CARACAL_API ProjectResult

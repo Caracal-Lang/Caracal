@@ -67,19 +67,29 @@ namespace Caracal
             caraFilePaths.push_back(file.path());
         }
 
+        std::ranges::sort(caraFilePaths);
         return caraFilePaths;
+    }
+
+    std::filesystem::path compilerDirectory()
+    {
+        const auto executablePath = llvm::sys::fs::getMainExecutable(nullptr, nullptr);
+        if (executablePath.empty())
+            return {};
+
+        return std::filesystem::path(executablePath).parent_path();
     }
 
     static std::filesystem::path ResolveCoreDirectory()
     {
-        const auto executablePath = llvm::sys::fs::getMainExecutable(nullptr, nullptr);
-        if (executablePath.empty())
+        const auto directory = compilerDirectory();
+        if (directory.empty())
         {
             std::cout << "Warning: could not determine the compiler location, compiling without the Core directory\n";
             return {};
         }
 
-        auto coreDirectory = std::filesystem::path(executablePath).parent_path() / "Core";
+        auto coreDirectory = directory / "Core";
         if (!std::filesystem::exists(coreDirectory))
         {
             std::cout << "Warning: no Core directory found next to the compiler, compiling without it\n";
@@ -90,14 +100,14 @@ namespace Caracal
 
     static std::filesystem::path ResolvePreludeDirectory()
     {
-        const auto executablePath = llvm::sys::fs::getMainExecutable(nullptr, nullptr);
-        if (executablePath.empty())
+        const auto directory = compilerDirectory();
+        if (directory.empty())
         {
             std::cout << "Warning: could not determine the compiler location, compiling without the Prelude directory\n";
             return {};
         }
 
-        auto preludeDirectory = std::filesystem::path(executablePath).parent_path() / "Prelude";
+        auto preludeDirectory = directory / "Prelude";
         if (!std::filesystem::exists(preludeDirectory))
         {
             std::cout << "Warning: no Prelude directory found next to the compiler, compiling without it\n";
@@ -127,19 +137,20 @@ namespace Caracal
         CompilationContext& compilationContext,
         Module& irModule)
     {
-        auto caraFiles = CollectCaraFiles(buildCommand.coreDirectory);
-
         Caracal::DiagnosticsBag diagnostics;
-        for (const auto& caraFilePath : caraFiles)
+        for (const auto& libraryDirectory : buildCommand.libraryDirectories)
         {
-            auto content = Caracal::File::readText(caraFilePath);
-            if (!content.has_value())
+            for (const auto& caraFilePath : CollectCaraFiles(libraryDirectory))
             {
-                std::cout << "Failed to read file: " << caraFilePath << "\n";
-                continue;
-            }
+                auto content = Caracal::File::readText(caraFilePath);
+                if (!content.has_value())
+                {
+                    std::cout << "Failed to read file: " << caraFilePath << "\n";
+                    continue;
+                }
 
-            compilationContext.addSource(std::move(content.value()), caraFilePath, Caracal::UnitOrigin::Core);
+                compilationContext.addSource(std::move(content.value()), caraFilePath, Caracal::UnitOrigin::Core);
+            }
         }
 
         for (const auto& sourceFilePath : buildCommand.sourceFiles)
@@ -404,6 +415,8 @@ namespace Caracal
 
     static BuildCommand CreateBuildCommand(
         std::vector<std::filesystem::path> sourceFiles,
+        std::filesystem::path preludeDirectory,
+        std::vector<std::filesystem::path> libraryDirectories,
         std::filesystem::path objectFilePath,
         std::filesystem::path executablePath,
         const DiagnosticOptions& diagnosticOptions,
@@ -412,8 +425,8 @@ namespace Caracal
     {
         return BuildCommand{
             .sourceFiles = std::move(sourceFiles),
-            .preludeDirectory = ResolvePreludeDirectory(),
-            .coreDirectory = ResolveCoreDirectory(),
+            .preludeDirectory = std::move(preludeDirectory),
+            .libraryDirectories = std::move(libraryDirectories),
             .diagnosticOptions = diagnosticOptions,
             .printOptions = printOptions,
             .objectFilePath = std::move(objectFilePath),
@@ -446,6 +459,8 @@ namespace Caracal
         const auto inputFileName = filePath.stem().string();
         const auto buildCommand = CreateBuildCommand(
             { filePath },
+            ResolvePreludeDirectory(),
+            { ResolveCoreDirectory() },
             ResolveTemporaryDirectory(filePath) / (inputFileName + ".o"),
             inputFileName + ".exe",
             diagnosticOptions,
@@ -472,10 +487,43 @@ namespace Caracal
             return std::nullopt;
         }
 
+        const auto& folders = project.folders;
+        if (project.dependencies.empty())
+        {
+            return CreateBuildCommand(
+                std::move(sources.sourceFiles),
+                ResolvePreludeDirectory(),
+                { ResolveCoreDirectory() },
+                project.rootDirectory / folders.temp / "Debug" / (project.name + ".o"),
+                project.rootDirectory / folders.output / "Debug" / (project.name + ".exe"),
+                diagnosticOptions,
+                {},
+                shouldRunAfterBuild);
+        }
+
+        const auto librariesDirectory = project.rootDirectory / folders.libraries;
+        std::filesystem::path preludeDirectory{};
+        std::vector<std::filesystem::path> libraryDirectories{};
+        for (const auto& dependency : project.dependencies)
+        {
+            if (dependency.isPrelude)
+            {
+                preludeDirectory = librariesDirectory / dependency.path;
+                continue;
+            }
+
+            libraryDirectories.push_back(librariesDirectory / dependency.path);
+        }
+
+        if (preludeDirectory.empty())
+            preludeDirectory = ResolvePreludeDirectory();
+
         return CreateBuildCommand(
             std::move(sources.sourceFiles),
-            project.rootDirectory / project.folders.temp / "Debug" / (project.name + ".o"),
-            project.rootDirectory / project.folders.output / "Debug" / (project.name + ".exe"),
+            std::move(preludeDirectory),
+            std::move(libraryDirectories),
+            project.rootDirectory / folders.temp / "Debug" / (project.name + ".o"),
+            project.rootDirectory / folders.output / "Debug" / (project.name + ".exe"),
             diagnosticOptions,
             {},
             shouldRunAfterBuild);

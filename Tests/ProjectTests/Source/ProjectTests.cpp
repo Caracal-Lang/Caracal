@@ -17,7 +17,12 @@ static constexpr std::chrono::year_month_day CreationDay{ std::chrono::year(2026
 
 static std::filesystem::path ProjectsDataDirectory()
 {
-    return std::filesystem::absolute(std::filesystem::path(__FILE__).parent_path() / "../../TestData/Projects");
+    return std::filesystem::absolute(std::filesystem::path(__FILE__).parent_path() / "../../TestData/Projects").lexically_normal();
+}
+
+static std::filesystem::path RepositoryDirectory()
+{
+    return std::filesystem::absolute(std::filesystem::path(__FILE__).parent_path() / "../../..").lexically_normal();
 }
 
 static std::filesystem::path FixtureProjectFile(const std::string& fixtureName)
@@ -41,6 +46,8 @@ static std::string ReadText(const std::filesystem::path& filePath)
 static Caracal::ProjectResult LoadProjectText(const std::string& scratchName, const std::string& fields)
 {
     const auto workingDirectory = EmptyScratchDirectory(scratchName);
+    std::filesystem::create_directories(workingDirectory / "Libraries" / "Prelude");
+    std::filesystem::create_directories(workingDirectory / "Libraries" / "Core");
     Caracal::File::writeText(
         workingDirectory / "caracal.json",
         "{ \"name\": \"Hello\", \"type\": \"exe\", \"version\": \"2026.10.20\"" + fields + " }\n");
@@ -68,16 +75,40 @@ static std::string FileNamesIn(const std::filesystem::path& directory)
     return joinedNames;
 }
 
+// relative to directory, sorted and separated by spaces, "Core/Entrypoint.cara Prelude/Bool.cara"
+static std::string RelativeFilePathsIn(const std::filesystem::path& directory)
+{
+    std::vector<std::string> filePaths{};
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+    {
+        if (entry.is_regular_file())
+            filePaths.push_back(entry.path().lexically_relative(directory).generic_string());
+    }
+
+    std::ranges::sort(filePaths);
+
+    std::string joinedPaths{};
+    for (const auto& filePath : filePaths)
+    {
+        if (!joinedPaths.empty())
+            joinedPaths += " ";
+
+        joinedPaths += filePath;
+    }
+
+    return joinedPaths;
+}
+
 static void CreatingProjectWithNameUsesThatName()
 {
     const auto workingDirectory = EmptyScratchDirectory("NamedProject");
-    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay);
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay, RepositoryDirectory());
 
     CaraTest::isTrue(result.project.has_value());
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Hello"), project.name);
     CaraTest::areEqual(workingDirectory / "Hello", project.rootDirectory);
-    CaraTest::areEqual(std::string(".gitignore caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string(".gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
 
     for (const auto& fileName : { ".gitignore", "caracal.json", "main.cara" })
     {
@@ -88,10 +119,44 @@ static void CreatingProjectWithNameUsesThatName()
     }
 }
 
+static void CreatingProjectCopiesCompilerCoreIntoLibraries()
+{
+    const auto workingDirectory = EmptyScratchDirectory("CopiedLibraries");
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay, RepositoryDirectory());
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto librariesDirectory = workingDirectory / "Hello" / "Libraries";
+    CaraTest::isTrue(std::filesystem::is_directory(librariesDirectory));
+    CaraTest::areEqual(std::string("Core"), FileNamesIn(librariesDirectory));
+
+    const auto compilerCore = RepositoryDirectory() / "Core";
+    const auto projectCore = librariesDirectory / "Core";
+    CaraTest::areEqual(RelativeFilePathsIn(compilerCore), RelativeFilePathsIn(projectCore));
+
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(compilerCore))
+    {
+        if (entry.is_regular_file())
+            CaraTest::areEqual(ReadText(entry.path()), ReadText(projectCore / entry.path().lexically_relative(compilerCore)));
+    }
+}
+
+static void CreatingProjectWithoutCoreNextToCompilerCreatesNothing()
+{
+    const auto compilerDirectory = EmptyScratchDirectory("CompilerWithoutCore");
+    std::filesystem::create_directories(compilerDirectory / "Prelude");
+    const auto workingDirectory = EmptyScratchDirectory("NoCore");
+
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay, compilerDirectory);
+
+    CaraTest::isFalse(result.project.has_value());
+    CaraTest::areEqual("Couldn't create the project, the Core folder in " + compilerDirectory.string() + " is missing", result.error);
+    CaraTest::isTrue(std::filesystem::is_empty(workingDirectory));
+}
+
 static void CreatingProjectWithoutNameUsesNameOfCurrentFolder()
 {
     const auto workingDirectory = EmptyScratchDirectory("Greeter");
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay, RepositoryDirectory());
 
     CaraTest::isTrue(result.project.has_value());
     const auto& project = result.project.value();
@@ -106,7 +171,7 @@ static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
     Caracal::File::writeText(workingDirectory / "caracal.json", "{ \"name\": \"Old\" }\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "old main\n");
 
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay, RepositoryDirectory());
 
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(workingDirectory.string() + " already has a caracal.json", result.error);
@@ -122,7 +187,7 @@ static void CreatingProjectKeepsMainCaraAndGitIgnoreItFinds()
     Caracal::File::writeText(workingDirectory / ".gitignore", "*.log\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "existing main\n");
 
-    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay);
+    const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay, RepositoryDirectory());
 
     CaraTest::isTrue(result.project.has_value());
     CaraTest::areEqual(std::string("*.log\n"), ReadText(workingDirectory / ".gitignore"));
@@ -134,7 +199,7 @@ static void CreatingProjectKeepsMainCaraAndGitIgnoreItFinds()
 static void CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder()
 {
     const auto workingDirectory = EmptyScratchDirectory("BadName");
-    const auto result = Caracal::createProject(workingDirectory, std::string("Hello/World"), CreationDay);
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello/World"), CreationDay, RepositoryDirectory());
 
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(std::string("\"Hello/World\" cannot be a project name because it contains '/'"), result.error);
@@ -209,7 +274,7 @@ static void LoadingCaracalJsonFillsInFoldersItLeavesOut()
     CaraTest::areEqual(std::filesystem::path("Out"), project.folders.output);
 }
 
-static void LoadingCaracalJsonWithFoldersThatCannotWorkFails(const std::string& /*testName*/, const std::string& fields, const std::string& expectedError)
+static void LoadingCaracalJsonThatCannotWorkFails(const std::string& /*testName*/, const std::string& fields, const std::string& expectedError)
 {
     const auto result = LoadProjectText("BadFolders", fields);
 
@@ -254,6 +319,52 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
         std::make_tuple("folders not an object", R"(, "folders": "Out")", "\"folders\" in caracal.json has to be an object"),
         std::make_tuple("folder not a string", R"(, "folders": { "output": 1 })", "\"folders.output\" in caracal.json has to be a string"),
         std::make_tuple("unsupported folder", R"(, "folders": { "cache": "Out" })", "\"folders.cache\" in caracal.json is not supported"),
+    };
+}
+
+static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
+{
+    const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])");
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& dependencies = result.project.value().dependencies;
+    CaraTest::areEqual(size_t(2), dependencies.size());
+    CaraTest::areEqual(std::string("Prelude"), dependencies.at(0).path.generic_string());
+    CaraTest::isTrue(dependencies.at(0).isPrelude);
+    CaraTest::areEqual(std::string("Core"), dependencies.at(1).path.generic_string());
+    CaraTest::isFalse(dependencies.at(1).isPrelude);
+}
+
+static void LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds()
+{
+    const auto result = LoadProjectText("NoPreludeDependency", R"(, "dependencies": [ { "path": "Core" } ])");
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& dependencies = result.project.value().dependencies;
+    CaraTest::areEqual(size_t(1), dependencies.size());
+    CaraTest::isFalse(dependencies.at(0).isPrelude);
+}
+
+static void LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries()
+{
+    const auto result = LoadProjectText("NoDependencies", "");
+
+    CaraTest::areEqual(std::string(), result.error);
+    CaraTest::isTrue(result.project.value().dependencies.empty());
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithDependenciesThatCannotWorkFails_Data()
+{
+    return {
+        std::make_tuple("not a list", R"(, "dependencies": { "path": "Prelude" })", "\"dependencies\" in caracal.json has to be a list"),
+        std::make_tuple("entry not an object", R"(, "dependencies": [ "Prelude" ])", "\"dependencies[0]\" in caracal.json has to be an object"),
+        std::make_tuple("entry without a path", R"(, "dependencies": [ { "prelude": true } ])", "\"dependencies[0]\" in caracal.json has no \"path\""),
+        std::make_tuple("path not a string", R"(, "dependencies": [ { "path": 1, "prelude": true } ])", "\"dependencies[0].path\" in caracal.json has to be a string"),
+        std::make_tuple("prelude not true or false", R"(, "dependencies": [ { "path": "Prelude", "prelude": "yes" } ])", "\"dependencies[0].prelude\" in caracal.json has to be true or false"),
+        std::make_tuple("unsupported field", R"(, "dependencies": [ { "path": "Prelude", "prelude": true, "kind": "library" } ])", "\"dependencies[0].kind\" in caracal.json is not supported"),
+        std::make_tuple("path outside the libraries folder", R"(, "dependencies": [ { "path": "../Prelude", "prelude": true } ])", "\"dependencies[0].path\" in caracal.json has to be a folder inside \"folders.libraries\""),
+        std::make_tuple("path that does not exist", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Missing" } ])", "\"dependencies[1].path\" in caracal.json is \"Missing\", but Libraries/Missing does not exist"),
+        std::make_tuple("two preludes", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core", "prelude": true } ])", "\"dependencies[0]\" and \"dependencies[1]\" in caracal.json both have \"prelude\": true"),
     };
 }
 
@@ -362,6 +473,49 @@ static void CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson()
     CaraTest::areEqual(workingDirectory / "Out" / "Debug" / "Hello.exe", buildCommand->executablePath);
 }
 
+static void CreatingBuildCommandUsesProjectPreludeAndLibraries()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandLibraries");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+
+    Caracal::Project project{ "Hello", workingDirectory };
+    project.dependencies = { { "Prelude", true }, { "Core", false } };
+    const auto buildCommand = Caracal::createProjectBuildCommand(project);
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((workingDirectory / "Libraries" / "Prelude").string(), buildCommand->preludeDirectory.string());
+    CaraTest::areEqual(size_t(1), buildCommand->libraryDirectories.size());
+    CaraTest::areEqual((workingDirectory / "Libraries" / "Core").string(), buildCommand->libraryDirectories.at(0).string());
+}
+
+static void CreatingBuildCommandWithoutPreludeUsesCompilerPrelude()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandCompilerPrelude");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+
+    Caracal::Project project{ "Hello", workingDirectory };
+    project.dependencies = { { "Core", false } };
+    const auto buildCommand = Caracal::createProjectBuildCommand(project);
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((Caracal::compilerDirectory() / "Prelude").string(), buildCommand->preludeDirectory.string());
+    CaraTest::areEqual(size_t(1), buildCommand->libraryDirectories.size());
+    CaraTest::areEqual((workingDirectory / "Libraries" / "Core").string(), buildCommand->libraryDirectories.at(0).string());
+}
+
+static void CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandCompilerLibraries");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(Caracal::Project{ "Hello", workingDirectory });
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((Caracal::compilerDirectory() / "Prelude").string(), buildCommand->preludeDirectory.string());
+    CaraTest::areEqual(size_t(1), buildCommand->libraryDirectories.size());
+    CaraTest::areEqual((Caracal::compilerDirectory() / "Core").string(), buildCommand->libraryDirectories.at(0).string());
+}
+
 static void CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName(const std::string& /*testName*/, const std::string& name, const std::string& expectedProblem)
 {
     const auto problem = Caracal::checkProjectName(name);
@@ -405,6 +559,8 @@ static std::vector<std::tuple<std::string, std::string>> CheckingProjectNameAcce
 static auto tests =
 {
     CaraTest::addTest("creating a project with a name uses that name", CreatingProjectWithNameUsesThatName),
+    CaraTest::addTest("creating a project copies the compiler's core into libraries", CreatingProjectCopiesCompilerCoreIntoLibraries),
+    CaraTest::addTest("creating a project without core next to the compiler creates nothing", CreatingProjectWithoutCoreNextToCompilerCreatesNothing),
     CaraTest::addTest("creating a project without a name uses the name of the current folder", CreatingProjectWithoutNameUsesNameOfCurrentFolder),
     CaraTest::addTest("creating a project in a folder with a caracal.json changes nothing", CreatingProjectInFolderWithCaracalJsonChangesNothing),
     CaraTest::addTest("creating a project keeps the main.cara and .gitignore it finds", CreatingProjectKeepsMainCaraAndGitIgnoreItFinds),
@@ -415,16 +571,23 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json without a type or version fails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
     CaraTest::addTest("loading a caracal.json with a version that is not a string fails", LoadingCaracalJsonWithVersionThatIsNotStringFails),
     CaraTest::addTest("loading a caracal.json fills in the folders it leaves out", LoadingCaracalJsonFillsInFoldersItLeavesOut),
-    CaraTest::addTest("loading a caracal.json with a folder outside the project fails", LoadingCaracalJsonWithFoldersThatCannotWorkFails, LoadingCaracalJsonWithFolderOutsideProjectFails_Data),
-    CaraTest::addTest("loading a caracal.json with two folders that are the same fails", LoadingCaracalJsonWithFoldersThatCannotWorkFails, LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails_Data),
-    CaraTest::addTest("loading a caracal.json with a folder inside another fails", LoadingCaracalJsonWithFoldersThatCannotWorkFails, LoadingCaracalJsonWithFolderInsideAnotherFails_Data),
-    CaraTest::addTest("loading a caracal.json with folders of the wrong form fails", LoadingCaracalJsonWithFoldersThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
+    CaraTest::addTest("loading a caracal.json with a folder outside the project fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderOutsideProjectFails_Data),
+    CaraTest::addTest("loading a caracal.json with two folders that are the same fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails_Data),
+    CaraTest::addTest("loading a caracal.json with a folder inside another fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderInsideAnotherFails_Data),
+    CaraTest::addTest("loading a caracal.json with folders of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
+    CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
+    CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
+    CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
+    CaraTest::addTest("loading a caracal.json with dependencies that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDependenciesThatCannotWorkFails_Data),
     CaraTest::addTest("loading a caracal.json that is not valid JSON reports the line and column", LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn),
     CaraTest::addTest("collecting sources skips a nested project", CollectingSourcesSkipsNestedProject),
     CaraTest::addTest("collecting sources skips the project's Temp and Output folders", CollectingSourcesSkipsProjectTempAndOutputFolders),
     CaraTest::addTest("collecting sources sorts them by relative path", CollectingSourcesSortsThemByRelativePath),
     CaraTest::addTest("collecting sources skips the folders from caracal.json", CollectingSourcesSkipsFoldersFromCaracalJson),
     CaraTest::addTest("creating a build command uses the temp and output folders from caracal.json", CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson),
+    CaraTest::addTest("creating a build command uses the project's prelude and libraries", CreatingBuildCommandUsesProjectPreludeAndLibraries),
+    CaraTest::addTest("creating a build command without a prelude uses the compiler's prelude", CreatingBuildCommandWithoutPreludeUsesCompilerPrelude),
+    CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
 };

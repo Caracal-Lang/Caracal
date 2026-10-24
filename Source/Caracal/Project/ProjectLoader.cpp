@@ -183,6 +183,93 @@ namespace Caracal
         return std::nullopt;
     }
 
+    static std::string QuotedFieldName(const std::string& fieldPath)
+    {
+        return "\"" + fieldPath + "\"";
+    }
+
+    static std::optional<std::string> ReadDependency(
+        const nlohmann::json& entry,
+        const std::string& entryPath,
+        const std::string& fileName,
+        const std::filesystem::path& librariesFolder,
+        const std::filesystem::path& rootDirectory,
+        ProjectDependency& dependency)
+    {
+        if (!entry.is_object())
+            return QuotedFieldName(entryPath) + " in " + fileName + " has to be an object";
+
+        for (const auto& [key, value] : entry.items())
+        {
+            if (key != "path" && key != "prelude")
+                return QuotedFieldName(entryPath + "." + key) + " in " + fileName + " is not supported";
+        }
+
+        const auto pathFieldName = QuotedFieldName(entryPath + ".path");
+        const auto path = entry.find("path");
+        if (path == entry.end())
+            return QuotedFieldName(entryPath) + " in " + fileName + " has no \"path\"";
+
+        if (!path->is_string())
+            return pathFieldName + " in " + fileName + " has to be a string";
+
+        const auto prelude = entry.find("prelude");
+        if (prelude != entry.end())
+        {
+            if (!prelude->is_boolean())
+                return QuotedFieldName(entryPath + ".prelude") + " in " + fileName + " has to be true or false";
+
+            dependency.isPrelude = prelude->get<bool>();
+        }
+
+        const auto& pathText = path->get_ref<const std::string&>();
+        dependency.path = NormalizedFolder(pathText);
+        if (!IsInsideProjectFolder(dependency.path))
+            return pathFieldName + " in " + fileName + " has to be a folder inside \"folders.libraries\"";
+
+        if (!std::filesystem::is_directory(rootDirectory / librariesFolder / dependency.path))
+            return pathFieldName + " in " + fileName + " is \"" + pathText + "\", but " + (librariesFolder / dependency.path).generic_string() + " does not exist";
+
+        return std::nullopt;
+    }
+
+    static std::optional<std::string> ReadDependencies(
+        const nlohmann::json& document,
+        const std::string& fileName,
+        const std::filesystem::path& librariesFolder,
+        const std::filesystem::path& rootDirectory,
+        std::vector<ProjectDependency>& dependencies)
+    {
+        const auto dependenciesField = document.find("dependencies");
+        if (dependenciesField == document.end())
+            return std::nullopt;
+
+        if (!dependenciesField->is_array())
+            return "\"dependencies\" in " + fileName + " has to be a list";
+
+        std::optional<size_t> preludeIndex{};
+        for (size_t index = 0; index < dependenciesField->size(); ++index)
+        {
+            const auto entryPath = "dependencies[" + std::to_string(index) + "]";
+            ProjectDependency dependency{};
+            if (const auto problem = ReadDependency(dependenciesField->at(index), entryPath, fileName, librariesFolder, rootDirectory, dependency))
+                return problem;
+
+            if (dependency.isPrelude && preludeIndex.has_value())
+            {
+                const auto preludePath = "dependencies[" + std::to_string(preludeIndex.value()) + "]";
+                return QuotedFieldName(preludePath) + " and " + QuotedFieldName(entryPath) + " in " + fileName + " both have \"prelude\": true";
+            }
+
+            if (dependency.isPrelude)
+                preludeIndex = index;
+
+            dependencies.push_back(std::move(dependency));
+        }
+
+        return std::nullopt;
+    }
+
     ProjectResult loadProject(const std::filesystem::path& projectFilePath)
     {
         const auto fileName = projectFilePath.filename().string();
@@ -199,7 +286,7 @@ namespace Caracal
 
         for (const auto& [key, value] : document.items())
         {
-            if (key != "name" && key != "type" && key != "version" && key != "folders")
+            if (key != "name" && key != "type" && key != "version" && key != "folders" && key != "dependencies")
                 return Failure("\"" + key + "\" in " + fileName + " is not supported");
         }
 
@@ -238,7 +325,12 @@ namespace Caracal
         if (const auto problem = ReadFolders(document, fileName, folders))
             return Failure(problem.value());
 
-        return { Project{ nameText, projectFilePath.parent_path(), ProjectType::Executable, versionText, folders }, {} };
+        const auto rootDirectory = projectFilePath.parent_path();
+        std::vector<ProjectDependency> dependencies{};
+        if (const auto problem = ReadDependencies(document, fileName, folders.libraries, rootDirectory, dependencies))
+            return Failure(problem.value());
+
+        return { Project{ nameText, rootDirectory, ProjectType::Executable, versionText, folders, std::move(dependencies) }, {} };
     }
 
     ProjectResult findProject(
