@@ -38,6 +38,11 @@ namespace Caracal
             const SourceLocation& location,
             std::optional<std::string> fix = std::nullopt);
 
+        Diagnostic(
+            DiagnosticLevel level,
+            DiagnosticKind kind,
+            std::optional<std::string> fix);
+
         [[nodiscard]] DiagnosticLevel level() const noexcept { return m_level; }
         [[nodiscard]] DiagnosticKind kind() const noexcept { return m_kind; }
         [[nodiscard]] std::string_view code() const noexcept;

@@ -99,10 +99,17 @@ namespace Caracal
         const Diagnostic& diagnostic,
         const SourceTextSharedPtr& diagnosticSource)
     {
-        return CaraReport::Report(diagnostic.message())
+        auto report = CaraReport::Report(diagnostic.message())
             .withTitle(std::string(diagnostic.code()))
-            .withLevel(ToCaraReportLevel(diagnostic.level()))
-            .withSource(CreateSource(*diagnosticSource));
+            .withLevel(ToCaraReportLevel(diagnostic.level()));
+
+        // without a source CaraReport prints no source lines, only the title, message and fix
+        if (diagnosticSource)
+        {
+            static_cast<void>(report.withSource(CreateSource(*diagnosticSource)));
+        }
+
+        return report;
     }
 
     struct DiagnosticReport

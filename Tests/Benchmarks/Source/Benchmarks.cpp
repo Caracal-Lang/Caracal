@@ -144,10 +144,13 @@ static void BenchmarkTypeCheckFile(const std::filesystem::path& absolutePath, co
     for (int run = 0; run < RunCount; run++)
     {
         Caracal::CompilationContext context;
-        Caracal::loadPrelude(context, preludePath);
+        Caracal::DiagnosticsBag diagnostics;
+        if (!Caracal::loadPrelude(context, preludePath, diagnostics))
+        {
+            CaraTest::fail();// ("the prelude must load without diagnostics");
+        }
 
         context.addSource(data, absolutePath, Caracal::UnitOrigin::User);
-        Caracal::DiagnosticsBag diagnostics;
         Caracal::lexAndParse(context, diagnostics);
         if (!diagnostics.diagnostics().empty())
         {
@@ -225,7 +228,7 @@ static void OneMillionLinesPrintTime()
     CaraTest::isTrue(diagnostics.diagnostics().empty());
 
     Caracal::CompilationContext preludeContext;
-    Caracal::loadPrelude(preludeContext, PreludeDirectory());
+    CaraTest::isTrue(Caracal::loadPrelude(preludeContext, PreludeDirectory(), diagnostics));
     auto* module = &preludeContext.semanticContext();
 
     constexpr int RunCount = 3;

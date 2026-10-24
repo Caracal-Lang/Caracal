@@ -1,0 +1,12 @@
+ Error T0020 Return type mismatch
+     ,-[<prelude>:57:12]
+  54 | 
+  55 | def broken() i32
+  56 | {
+  57 |     return true;
+     .            ----
+     .              `-- Cannot return 'bool' from a function with return type 'i32'
+  58 | }
+  59 | 
+     `----
+  Fix: Return a value of type 'i32' or change the function's return type.

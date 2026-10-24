@@ -3,6 +3,7 @@
 #include <Caracal/Defines.h>
 #include <Caracal/API.h>
 #include <Caracal/Constants.h>
+#include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/Semantic/Type.h>
 #include <Caracal/Semantic/BuiltinTypeDescription.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
@@ -32,7 +33,7 @@ namespace Caracal
         CARACAL_DELETE_COPY_DEFAULT_MOVE(SemanticContext)
 
         [[nodiscard]] static SemanticContext WithBuiltins() noexcept;
-        void finalizePrelude(bool preludeWasLoaded) noexcept;
+        [[nodiscard]] bool finalizePrelude(bool preludeWasLoaded, DiagnosticsBag& diagnostics) noexcept;
         [[nodiscard]] PreludeFunctionPool& preludeFunctionPool() noexcept { return m_preludeFunctionPool; }
 
         [[nodiscard]] Type tryGetFunctionTypeByName(std::string_view typeName) const noexcept;

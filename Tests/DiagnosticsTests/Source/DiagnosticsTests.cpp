@@ -58,6 +58,16 @@ namespace
         return DiagnosticsDataDirectory() / "OutputBuiltin";
     }
 
+    std::filesystem::path DiagnosticsPreludeInputDirectory()
+    {
+        return DiagnosticsDataDirectory() / "InputPrelude";
+    }
+
+    std::filesystem::path DiagnosticsPreludeOutputDirectory()
+    {
+        return DiagnosticsDataDirectory() / "OutputPrelude";
+    }
+
     std::filesystem::path RepositoryRootDirectory()
     {
         return std::filesystem::absolute(CurrentDirectory() / "../../..");
@@ -78,6 +88,12 @@ namespace
         return relativePath;
     }
 
+    constexpr Caracal::DiagnosticOptions TestDiagnosticOptions{
+        .contextLines = 3,
+        .enableColors = false,
+        .enableUnicode = false
+    };
+
     std::string RenderDiagnosticsForSource(const std::string& input, const std::filesystem::path& filePath, bool withPrelude)
     {
         Caracal::DiagnosticsBag diagnostics;
@@ -85,26 +101,21 @@ namespace
         compilationContext.addSource(input, MakeRepositoryRelativePath(filePath), Caracal::UnitOrigin::User);
         Caracal::lexAndParse(compilationContext, diagnostics);
 
-        const Caracal::DiagnosticOptions diagnosticOptions{
-            .contextLines = 3,
-            .enableColors = false,
-            .enableUnicode = false
-        };
-
         if (!diagnostics.diagnostics().empty())
-            return Caracal::formatDiagnostics(diagnostics, diagnosticOptions);
+            return Caracal::formatDiagnostics(diagnostics, TestDiagnosticOptions);
 
         auto preludeSources = std::vector<std::string>{};
         if (withPrelude)
         {
             preludeSources = Caracal::collectPreludeSources(RepositoryRootDirectory() / "Prelude");
         }
-        Caracal::loadPrelude(compilationContext, preludeSources);
+        if (!Caracal::loadPrelude(compilationContext, preludeSources, diagnostics))
+            return Caracal::formatDiagnostics(diagnostics, TestDiagnosticOptions);
 
         Caracal::Module irModule{};
         const auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful || !diagnostics.diagnostics().empty())
-            return Caracal::formatDiagnostics(diagnostics, diagnosticOptions);
+            return Caracal::formatDiagnostics(diagnostics, TestDiagnosticOptions);
 
         return {};
     }
@@ -116,6 +127,21 @@ namespace
             throw std::runtime_error("Could not read input file: " + inputFilePath.string());
 
         return RenderDiagnosticsForSource(input.value(), inputFilePath, withPrelude);
+    }
+
+    std::string RenderDiagnosticsForPrelude(const std::filesystem::path& inputFilePath)
+    {
+        const auto input = Caracal::File::readText(inputFilePath);
+        if (!input.has_value())
+            throw std::runtime_error("Could not read input file: " + inputFilePath.string());
+
+        Caracal::DiagnosticsBag diagnostics;
+        Caracal::CompilationContext compilationContext;
+        const std::vector<std::string> preludeSources{ input.value() };
+        if (Caracal::loadPrelude(compilationContext, preludeSources, diagnostics))
+            return {};
+
+        return Caracal::formatDiagnostics(diagnostics, TestDiagnosticOptions);
     }
 
     void WriteTextFile(const std::filesystem::path& filePath, const std::string& content)
@@ -167,6 +193,25 @@ namespace
         CaraTest::equalsFile(outputFilePath, output);
     }
 
+    static void PreludeFileTests(
+        const std::string& fileName,
+        const std::filesystem::path& inputFilePath,
+        const std::filesystem::path& outputFilePath)
+    {
+        static_cast<void>(fileName);
+
+        if (!std::filesystem::exists(inputFilePath))
+            CaraTest::fail();
+        if (!std::filesystem::exists(outputFilePath))
+            CaraTest::skip();
+
+        const auto output = RenderDiagnosticsForPrelude(inputFilePath);
+        if (output.empty())
+            CaraTest::fail();
+
+        CaraTest::equalsFile(outputFilePath, output);
+    }
+
     static std::vector<DiagnosticsTestData> CollectFileTestData(
         const std::filesystem::path& inputDirectory,
         const std::filesystem::path& outputDirectory)
@@ -206,10 +251,16 @@ namespace
     {
         return CollectFileTestData(DiagnosticsBuiltinInputDirectory(), DiagnosticsBuiltinOutputDirectory());
     }
+
+    static std::vector<DiagnosticsTestData> PreludeFileTests_Data()
+    {
+        return CollectFileTestData(DiagnosticsPreludeInputDirectory(), DiagnosticsPreludeOutputDirectory());
+    }
 }
 
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
     CaraTest::addTest("BuiltinFileTests", BuiltinFileTests, BuiltinFileTests_Data),
+    CaraTest::addTest("PreludeFileTests", PreludeFileTests, PreludeFileTests_Data),
 };

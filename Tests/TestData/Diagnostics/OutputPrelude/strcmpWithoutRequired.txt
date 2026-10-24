@@ -1,0 +1,2 @@
+ Error T0099 Prelude declares a C function differently than the compiler needs
+  Fix: Add required = true to the #extern annotation of C.strcmp.

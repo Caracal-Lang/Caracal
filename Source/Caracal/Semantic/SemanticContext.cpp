@@ -2,8 +2,8 @@
 
 
 #include <algorithm>
-#include <cstdlib>
-#include <iostream>
+#include <array>
+#include <utility>
 
 namespace Caracal
 {
@@ -25,52 +25,74 @@ namespace Caracal
         }
     }
 
-    static void ValidateCompilerEmittedCall(
-        SemanticContext& module,
-        const char* methodName,
+    // C.strcmp(cstring, cstring) i32
+    [[nodiscard]] static std::string CFunctionSignature(
+        const SemanticContext& module,
+        const std::string& functionName,
         const std::vector<Type>& parameterTypes,
         Type returnType)
     {
-        const auto methodType = module.tryGetExternFunctionByFullName(std::string("C.") + methodName);
-        auto matches = methodType != Type::Undefined();
-        if (matches)
+        auto signature = functionName + "(";
+        for (size_t index = 0; index < parameterTypes.size(); ++index)
         {
-            // the compiler emits calls to it, so the binding must carry required = true
-            auto isMarkedRequired = false;
-            for (const auto requiredType : module.requiredExternFunctions())
+            if (index > 0)
             {
-                if (requiredType == methodType)
-                {
-                    isMarkedRequired = true;
-                }
+                signature += ", ";
             }
-            matches = isMarkedRequired;
+
+            signature += module.getNameByType(parameterTypes[index]);
         }
-        if (matches)
+
+        return signature + ") " + std::string(module.getNameByType(returnType));
+    }
+
+    [[nodiscard]] static bool CheckCompilerCalledCFunction(
+        SemanticContext& module,
+        DiagnosticsBag& diagnostics,
+        const std::string& symbolName,
+        const std::vector<Type>& parameterTypes,
+        Type returnType)
+    {
+        const auto functionName = "C." + symbolName;
+        const auto functionType = module.tryGetExternFunctionByFullName(functionName);
+        if (functionType == Type::Undefined())
         {
-            const auto& definition = module.getFunctionDefinition(methodType);
-            const auto& parameters = definition.parameters();
-            matches = definition.symbolName().has_value()
-                && parameters.size() == parameterTypes.size()
-                && definition.returnTypes().size() == 1
-                && definition.returnTypes().front() == returnType;
-            if (matches)
+            const auto signature = CFunctionSignature(module, functionName, parameterTypes, returnType);
+            diagnostics.addPreludeCFunctionMissingError(symbolName, signature);
+            return false;
+        }
+
+        const auto& definition = module.getFunctionDefinition(functionType);
+        const auto& parameters = definition.parameters();
+        auto matches = parameters.size() == parameterTypes.size()
+            && definition.returnTypes().size() == 1
+            && definition.returnTypes().front() == returnType;
+        for (size_t index = 0; matches && index < parameterTypes.size(); ++index)
+        {
+            if (parameters[index].type() != parameterTypes[index])
             {
-                for (size_t index = 0; index < parameterTypes.size(); ++index)
-                {
-                    if (parameters[index].type() != parameterTypes[index])
-                    {
-                        matches = false;
-                    }
-                }
+                matches = false;
             }
         }
 
         if (!matches)
         {
-            std::cerr << "error: the prelude did not define 'C." << methodName << "' with the signature the compiler emits\n";
-            std::abort();
+            const auto signature = CFunctionSignature(module, functionName, parameterTypes, returnType);
+            diagnostics.addPreludeCFunctionMismatchError(functionName, signature);
+            return false;
         }
+
+        // the compiler emits calls to it, so the binding must carry required = true
+        for (const auto requiredType : module.requiredExternFunctions())
+        {
+            if (requiredType == functionType)
+            {
+                return true;
+            }
+        }
+
+        diagnostics.addPreludeCFunctionWithoutRequiredError(functionName);
+        return false;
     }
 
     SemanticContext SemanticContext::WithBuiltins() noexcept
@@ -85,28 +107,45 @@ namespace Caracal
         return module;
     }
 
-    void SemanticContext::finalizePrelude(bool preludeWasLoaded) noexcept
+    bool SemanticContext::finalizePrelude(bool preludeWasLoaded, DiagnosticsBag& diagnostics) noexcept
     {
         if (preludeWasLoaded)
         {
             const auto& wellKnownTypes = wellKnown();
-            if (wellKnownTypes.boolean == Type::Undefined()
-                || wellKnownTypes.u8 == Type::Undefined()
-                || wellKnownTypes.i32 == Type::Undefined()
-                || wellKnownTypes.f32 == Type::Undefined()
-                || wellKnownTypes.cstring == Type::Undefined()
-                || wellKnownTypes.rawptr == Type::Undefined()
-                || wellKnownTypes.string == Type::Undefined())
+            const std::array<std::pair<Type, std::string_view>, 8> neededTypes{ {
+                { wellKnownTypes.boolean, "bool" },
+                { wellKnownTypes.u8, "u8" },
+                { wellKnownTypes.i32, "i32" },
+                { wellKnownTypes.i64, "i64" },
+                { wellKnownTypes.f32, "f32" },
+                { wellKnownTypes.cstring, "cstring" },
+                { wellKnownTypes.rawptr, "rawptr" },
+                { wellKnownTypes.string, "string" } } };
+
+            auto hasNeededTypes = true;
+            for (const auto& [type, typeName] : neededTypes)
             {
-                std::cerr << "error: the prelude did not define all builtin types\n";
-                std::abort();
+                if (type == Type::Undefined())
+                {
+                    diagnostics.addPreludeTypeMissingError(std::string(typeName));
+                    hasNeededTypes = false;
+                }
             }
 
-            // the compiler emits calls to these bindings itself, so their absence or a signature drift must fail fast
-            ValidateCompilerEmittedCall(*this, "calloc", { wellKnownTypes.i64, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
-            ValidateCompilerEmittedCall(*this, "realloc", { wellKnownTypes.rawptr, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
-            ValidateCompilerEmittedCall(*this, "memmove", { wellKnownTypes.rawptr, wellKnownTypes.rawptr, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
-            ValidateCompilerEmittedCall(*this, "strcmp", { wellKnownTypes.cstring, wellKnownTypes.cstring }, wellKnownTypes.i32);
+            if (!hasNeededTypes)
+            {
+                return false;
+            }
+
+            // the compiler emits calls to these bindings itself
+            auto hasCalledCFunctions = CheckCompilerCalledCFunction(*this, diagnostics, "calloc", { wellKnownTypes.i64, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
+            hasCalledCFunctions &= CheckCompilerCalledCFunction(*this, diagnostics, "realloc", { wellKnownTypes.rawptr, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
+            hasCalledCFunctions &= CheckCompilerCalledCFunction(*this, diagnostics, "memmove", { wellKnownTypes.rawptr, wellKnownTypes.rawptr, wellKnownTypes.i64 }, wellKnownTypes.rawptr);
+            hasCalledCFunctions &= CheckCompilerCalledCFunction(*this, diagnostics, "strcmp", { wellKnownTypes.cstring, wellKnownTypes.cstring }, wellKnownTypes.i32);
+            if (!hasCalledCFunctions)
+            {
+                return false;
+            }
 
             // slice() returns a read-only view of the string's bytes
             auto& stringDefinition = getTypeDefinition(wellKnownTypes.string);
@@ -130,6 +169,7 @@ namespace Caracal
         m_preludeTypeDefinitionCount = m_typeDefinitions.size();
 
         m_nextId = std::max(m_nextId, 2000);
+        return true;
     }
 
     Type SemanticContext::tryGetFunctionTypeByName(std::string_view typeName) const noexcept
