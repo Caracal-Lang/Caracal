@@ -41,7 +41,11 @@ static void FileTests(
         CaraTest::fail();
     }
     const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
-    Caracal::loadPrelude(compilationContext, preludePath);
+    if (!Caracal::loadPrelude(compilationContext, preludePath, diagnostics))
+    {
+        Caracal::writeDiagnostics(std::cout, diagnostics);
+        CaraTest::fail();
+    }
 
     const auto startTime = std::chrono::high_resolution_clock::now();
     Caracal::Module module{};

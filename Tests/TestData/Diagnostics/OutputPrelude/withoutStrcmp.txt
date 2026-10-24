@@ -1,0 +1,2 @@
+ Error T0098 Prelude does not declare a C function the compiler needs
+  Fix: Declare C.strcmp(cstring, cstring) i32 in the prelude with #extern(symbol = "strcmp", required = true).

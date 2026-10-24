@@ -1,0 +1,2 @@
+ Error T0097 Prelude does not declare a type the compiler needs
+  Fix: Declare the type 'string' in the prelude.

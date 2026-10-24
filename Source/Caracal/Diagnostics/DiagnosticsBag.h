@@ -160,6 +160,12 @@ namespace Caracal
         void addUnusedParameterWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
         void addUnusedLocalConstantWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
 
+        // Prelude diagnostics
+        void addPreludeTypeMissingError(const std::string& typeName);
+        void addPreludeCFunctionMissingError(const std::string& symbolName, const std::string& signature);
+        void addPreludeCFunctionMismatchError(const std::string& functionName, const std::string& signature);
+        void addPreludeCFunctionWithoutRequiredError(const std::string& functionName);
+
         const std::vector<Diagnostic>& diagnostics() const;
         [[nodiscard]] bool hasErrors() const noexcept;
         [[nodiscard]] bool hasWarnings() const noexcept;

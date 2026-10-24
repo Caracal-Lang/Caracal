@@ -39,7 +39,11 @@ static void FileTests(
     }
 
     const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
-    Caracal::loadPrelude(compilationContext, preludePath);
+    if (!Caracal::loadPrelude(compilationContext, preludePath, diagnostics))
+    {
+        Caracal::writeDiagnostics(std::cout, diagnostics);
+        CaraTest::fail();
+    }
 
     Caracal::Module module{};
     const auto wasSuccessful = Caracal::typeCheck(compilationContext, diagnostics, module);

@@ -255,6 +255,12 @@ namespace Caracal
                 return "T0095";
             case DiagnosticKind::T0096_FieldAccessMissingDot:
                 return "T0096";
+            case DiagnosticKind::T0097_PreludeTypeMissing:
+                return "T0097";
+            case DiagnosticKind::T0098_PreludeCFunctionMissing:
+                return "T0098";
+            case DiagnosticKind::T0099_PreludeCFunctionMismatch:
+                return "T0099";
             case DiagnosticKind::Unknown:
             default:
                 return "?????";
@@ -514,6 +520,12 @@ namespace Caracal
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
                 return "Private methods cannot be called from outside their type";
+            case DiagnosticKind::T0097_PreludeTypeMissing:
+                return "Prelude does not declare a type the compiler needs";
+            case DiagnosticKind::T0098_PreludeCFunctionMissing:
+                return "Prelude does not declare a C function the compiler needs";
+            case DiagnosticKind::T0099_PreludeCFunctionMismatch:
+                return "Prelude declares a C function differently than the compiler needs";
             case DiagnosticKind::Unknown:
             default:
                 return "Unknown diagnostic";
@@ -531,6 +543,17 @@ namespace Caracal
         , m_message(DiagnosticMessage(kind))
         , m_source(source)
         , m_location(location)
+        , m_fix(std::move(fix))
+    {
+    }
+
+    Diagnostic::Diagnostic(
+        DiagnosticLevel level,
+        DiagnosticKind kind,
+        std::optional<std::string> fix)
+        : m_level(level)
+        , m_kind(kind)
+        , m_message(DiagnosticMessage(kind))
         , m_fix(std::move(fix))
     {
     }

@@ -2147,6 +2147,38 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addPreludeTypeMissingError(const std::string& typeName)
+    {
+        m_diagnostics.emplace_back(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0097_PreludeTypeMissing,
+            "Declare the type '" + typeName + "' in the prelude.");
+    }
+
+    void DiagnosticsBag::addPreludeCFunctionMissingError(const std::string& symbolName, const std::string& signature)
+    {
+        m_diagnostics.emplace_back(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0098_PreludeCFunctionMissing,
+            "Declare " + signature + " in the prelude with #extern(symbol = \"" + symbolName + "\", required = true).");
+    }
+
+    void DiagnosticsBag::addPreludeCFunctionMismatchError(const std::string& functionName, const std::string& signature)
+    {
+        m_diagnostics.emplace_back(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0099_PreludeCFunctionMismatch,
+            "Change the declaration of " + functionName + " to " + signature + ".");
+    }
+
+    void DiagnosticsBag::addPreludeCFunctionWithoutRequiredError(const std::string& functionName)
+    {
+        m_diagnostics.emplace_back(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0099_PreludeCFunctionMismatch,
+            "Add required = true to the #extern annotation of " + functionName + ".");
+    }
+
     const std::vector<Diagnostic>& DiagnosticsBag::diagnostics() const
     {
         return m_diagnostics;

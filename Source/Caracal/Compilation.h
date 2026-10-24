@@ -16,8 +16,8 @@ namespace Caracal
 {
     [[nodiscard]] CARACAL_API std::vector<std::string> collectPreludeSources(const std::filesystem::path& preludeDirectory) noexcept;
     
-    CARACAL_API void loadPrelude(CompilationContext& compilationContext, const std::vector<std::string>& preludeSources);
-    CARACAL_API void loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory);
+    [[nodiscard]] CARACAL_API bool loadPrelude(CompilationContext& compilationContext, const std::vector<std::string>& preludeSources, DiagnosticsBag& diagnostics);
+    [[nodiscard]] CARACAL_API bool loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory, DiagnosticsBag& diagnostics);
 
     CARACAL_API TokenBuffer lex(const SourceTextSharedPtr& source, DiagnosticsBag& diagnostics, u16 fileId = 0) noexcept;
     CARACAL_API NodeBuffer parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept;

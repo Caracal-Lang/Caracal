@@ -177,7 +177,11 @@ namespace Caracal
         if (preludeSources.empty())
             std::cout << "Warning: no prelude found!! operators will not type check!!\n";
 
-        Caracal::loadPrelude(compilationContext, preludeSources);
+        if (!Caracal::loadPrelude(compilationContext, preludeSources, diagnostics))
+        {
+            Caracal::writeDiagnostics(std::cout, diagnostics, buildCommand.diagnosticOptions);
+            return false;
+        }
 
         auto wasSuccessful = typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful)

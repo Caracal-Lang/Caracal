@@ -1,5 +1,4 @@
 #include <Caracal/Compilation.h>
-#include <Caracal/Diagnostics/DiagnosticPrinter.h>
 #include <Caracal/Optimization/DeadCodeElimination.h>
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeChecker.h>
@@ -58,7 +57,7 @@ namespace Caracal
         return sources;
     }
 
-    void loadPrelude(CompilationContext& compilationContext, const std::vector<std::string>& preludeSources)
+    bool loadPrelude(CompilationContext& compilationContext, const std::vector<std::string>& preludeSources, DiagnosticsBag& diagnostics)
     {
         if (compilationContext.preludeWasLoaded())
         {
@@ -67,7 +66,8 @@ namespace Caracal
         }
         compilationContext.markPreludeLoaded();
 
-        DiagnosticsBag preludeDiagnostics{};
+        const auto diagnosticCount = diagnostics.diagnostics().size();
+        const auto errorCount = diagnostics.errorCount();
         const auto firstPreludeUnit = compilationContext.units().size();
         const std::filesystem::path preludePath{ "<prelude>" };
         for (const auto& preludeSource : preludeSources)
@@ -78,15 +78,15 @@ namespace Caracal
         auto& units = compilationContext.units();
         for (auto index = firstPreludeUnit; index < units.size(); index++)
         {
-            LexAndParseUnit(compilationContext, units[index], preludeDiagnostics);
+            LexAndParseUnit(compilationContext, units[index], diagnostics);
         }
 
-        if (!preludeDiagnostics.hasErrors() && units.size() > firstPreludeUnit)
+        if (diagnostics.errorCount() == errorCount && units.size() > firstPreludeUnit)
         {
             Module preludeModule{};
             constexpr bool isPreludePass = true;
-            TypeChecker preludeChecker{ compilationContext, isPreludePass, preludeDiagnostics, preludeModule };
-            if (!preludeChecker.typeCheck() && preludeDiagnostics.diagnostics().empty())
+            TypeChecker preludeChecker{ compilationContext, isPreludePass, diagnostics, preludeModule };
+            if (!preludeChecker.typeCheck() && diagnostics.diagnostics().size() == diagnosticCount)
             {
                 std::cerr << "error: the prelude type checks but the compiler could not lower it\n";
                 std::abort();
@@ -94,20 +94,18 @@ namespace Caracal
             compilationContext.semanticContext().preludeFunctionPool().setPools(preludeModule.constants(), preludeModule.names());
         }
 
-        // prelude is core library code, we will abort if there are errors
-        if (!preludeDiagnostics.diagnostics().empty())
+        // warnings or errors in the prelude stop the compilation
+        if (diagnostics.diagnostics().size() != diagnosticCount)
         {
-            std::cerr << "error: the prelude failed to compile\n";
-            writeDiagnostics(std::cerr, preludeDiagnostics);
-            std::abort();
+            return false;
         }
 
-        compilationContext.semanticContext().finalizePrelude(!preludeSources.empty());
+        return compilationContext.semanticContext().finalizePrelude(!preludeSources.empty(), diagnostics);
     }
 
-    void loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory)
+    bool loadPrelude(CompilationContext& compilationContext, const std::filesystem::path& preludeDirectory, DiagnosticsBag& diagnostics)
     {
-        loadPrelude(compilationContext, collectPreludeSources(preludeDirectory));
+        return loadPrelude(compilationContext, collectPreludeSources(preludeDirectory), diagnostics);
     }
 
     NodeBuffer parse(const TokenBuffer& tokens, DiagnosticsBag& diagnostics) noexcept

@@ -161,5 +161,10 @@ namespace Caracal
         T0072_InvalidOperatorMethodSignature,
         T0083_BitwiseMethodOnNonIntegerType,
         T0089_UnsupportedFloatBits,
+
+        // Prelude diagnostics
+        T0097_PreludeTypeMissing,
+        T0098_PreludeCFunctionMissing,
+        T0099_PreludeCFunctionMismatch,
     };
 }

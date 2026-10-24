@@ -34,7 +34,11 @@ static void FileTests(
 
     const auto preludePath = std::filesystem::path(__FILE__).parent_path() / "../../../Prelude";
     Caracal::CompilationContext preludeContext;
-    Caracal::loadPrelude(preludeContext, preludePath);
+    if (!Caracal::loadPrelude(preludeContext, preludePath, diagnostics))
+    {
+        Caracal::writeDiagnostics(std::cout, diagnostics);
+        CaraTest::fail();
+    }
 
     // next free fileId after the prelude
     const auto fileId = static_cast<u16>(preludeContext.units().size());

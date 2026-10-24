@@ -1,0 +1,50 @@
+#builtin(kind = bool)
+type bool
+{
+}
+
+#builtin(kind = int, bits = 8, signed = false)
+type u8
+{
+}
+
+#builtin(kind = int, bits = 32, signed = true)
+type i32
+{
+}
+
+#builtin(kind = int, bits = 64, signed = true)
+type i64
+{
+}
+
+#builtin(kind = float, bits = 32)
+type f32
+{
+}
+
+#builtin(kind = pointer)
+type cstring
+{
+}
+
+#builtin(kind = pointer)
+type rawptr
+{
+}
+
+type string
+{
+}
+
+type C
+{
+    #extern(symbol = "calloc", required = true)
+    def C.calloc(count: i64, size: i64) rawptr {}
+
+    #extern(symbol = "realloc", required = true)
+    def C.realloc(pointer: rawptr, size: i64) rawptr {}
+
+    #extern(symbol = "memmove", required = true)
+    def C.memmove(destination: rawptr, source: rawptr, size: i64) rawptr {}
+}

@@ -1,0 +1,2 @@
+ Error T0099 Prelude declares a C function differently than the compiler needs
+  Fix: Change the declaration of C.strcmp to C.strcmp(cstring, cstring) i32.
