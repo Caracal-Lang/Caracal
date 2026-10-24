@@ -12,5 +12,6 @@ namespace Caracal
     [[nodiscard]] CARACAL_API ProjectResult createProject(
         const std::filesystem::path& workingDirectory,
         const std::optional<std::string>& name,
-        std::chrono::year_month_day creationDay);
+        std::chrono::year_month_day creationDay,
+        const std::filesystem::path& compilerDirectory);
 }

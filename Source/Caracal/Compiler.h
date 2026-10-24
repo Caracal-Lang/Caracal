@@ -13,6 +13,8 @@
 
 namespace Caracal
 {
+    [[nodiscard]] CARACAL_API std::filesystem::path compilerDirectory();
+
     CARACAL_API int compileFile(
         const std::filesystem::path& filePath,
         const DiagnosticOptions& diagnosticOptions = {},

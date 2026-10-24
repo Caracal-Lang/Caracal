@@ -47,7 +47,7 @@ int createNewProject(int argc, char* argv[])
         name = argv[2];
     }
 
-    const auto result = Caracal::createProject(std::filesystem::current_path(), name, today());
+    const auto result = Caracal::createProject(std::filesystem::current_path(), name, today(), Caracal::compilerDirectory());
     if (!result.project.has_value())
     {
         std::cout << result.error << "\n";

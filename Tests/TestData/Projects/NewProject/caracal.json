@@ -6,5 +6,10 @@
     "libraries": "Libraries",
     "temp": "Temp",
     "output": "Output"
-  }
+  },
+  "dependencies": [
+    {
+      "path": "Core"
+    }
+  ]
 }
