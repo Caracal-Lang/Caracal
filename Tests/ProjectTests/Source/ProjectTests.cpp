@@ -4,6 +4,7 @@
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Project/ProjectSources.h>
+#include <Caracal/Project/ProjectUpdater.h>
 #include <Caracal/Text/File.h>
 
 #include <algorithm>
@@ -516,6 +517,151 @@ static void CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries()
     CaraTest::areEqual((Caracal::compilerDirectory() / "Core").string(), buildCommand->libraryDirectories.at(0).string());
 }
 
+// sorted and separated by spaces, "Libraries/Core/A.cara Libraries/Core/B.cara"
+static std::string JoinedPaths(std::vector<std::filesystem::path> paths)
+{
+    std::ranges::sort(paths);
+
+    std::string joinedPaths{};
+    for (const auto& path : paths)
+    {
+        if (!joinedPaths.empty())
+            joinedPaths += " ";
+
+        joinedPaths += path.generic_string();
+    }
+
+    return joinedPaths;
+}
+
+static std::filesystem::path ScratchCompilerDirectory(const std::string& name)
+{
+    const auto compilerDirectory = EmptyScratchDirectory(name);
+    std::filesystem::create_directories(compilerDirectory / "Core" / "Sub");
+    Caracal::File::writeText(compilerDirectory / "Core" / "A.cara", "def a() i32\n{\n    return 1;\n}\n");
+    Caracal::File::writeText(compilerDirectory / "Core" / "B.cara", "def b() i32\n{\n    return 2;\n}\n");
+    Caracal::File::writeText(compilerDirectory / "Core" / "Sub" / "C.cara", "def c() i32\n{\n    return 3;\n}\n");
+    return compilerDirectory;
+}
+
+static Caracal::Project ProjectWithCoreCopy(const std::filesystem::path& projectDirectory, const std::filesystem::path& compilerDirectory)
+{
+    std::filesystem::create_directories(projectDirectory / "Libraries");
+    std::filesystem::copy(compilerDirectory / "Core", projectDirectory / "Libraries" / "Core", std::filesystem::copy_options::recursive);
+
+    Caracal::Project project{ "Hello", projectDirectory };
+    project.dependencies = { { "Core", false } };
+    return project;
+}
+
+static void UpdatingProjectRestoresRemovesAndAddsCoreFiles()
+{
+    const auto compilerDirectory = ScratchCompilerDirectory("UpdateCompiler");
+    const auto projectDirectory = EmptyScratchDirectory("UpdateProject");
+    const auto project = ProjectWithCoreCopy(projectDirectory, compilerDirectory);
+    const auto projectCore = projectDirectory / "Libraries" / "Core";
+    Caracal::File::writeText(projectCore / "A.cara", "changed\n");
+    std::filesystem::remove(projectCore / "B.cara");
+    std::filesystem::create_directories(projectCore / "Extra");
+    Caracal::File::writeText(projectCore / "Extra" / "Old.cara", "old\n");
+
+    const auto update = Caracal::updateProject(project, compilerDirectory, false);
+
+    CaraTest::areEqual(std::string(), update.error);
+    CaraTest::areEqual(std::string("Libraries/Core"), update.coreCopy.generic_string());
+    CaraTest::areEqual(std::string("Libraries/Core/B.cara"), JoinedPaths(update.addedFiles));
+    CaraTest::areEqual(std::string("Libraries/Core/A.cara"), JoinedPaths(update.changedFiles));
+    CaraTest::areEqual(std::string("Libraries/Core/Extra/Old.cara"), JoinedPaths(update.removedFiles));
+    CaraTest::areEqual(RelativeFilePathsIn(compilerDirectory / "Core"), RelativeFilePathsIn(projectCore));
+    CaraTest::areEqual(ReadText(compilerDirectory / "Core" / "A.cara"), ReadText(projectCore / "A.cara"));
+    CaraTest::isFalse(std::filesystem::exists(projectCore / "Extra"));
+}
+
+static void UpdatingCurrentProjectChangesNothing()
+{
+    const auto compilerDirectory = ScratchCompilerDirectory("UpdateCurrentCompiler");
+    const auto projectDirectory = EmptyScratchDirectory("UpdateCurrentProject");
+    const auto project = ProjectWithCoreCopy(projectDirectory, compilerDirectory);
+
+    const auto update = Caracal::updateProject(project, compilerDirectory, false);
+
+    CaraTest::areEqual(std::string(), update.error);
+    CaraTest::areEqual(std::string(), JoinedPaths(update.addedFiles));
+    CaraTest::areEqual(std::string(), JoinedPaths(update.changedFiles));
+    CaraTest::areEqual(std::string(), JoinedPaths(update.removedFiles));
+}
+
+static void UpdatingProjectWithDryListsChangesAndMakesNone()
+{
+    const auto compilerDirectory = ScratchCompilerDirectory("DryUpdateCompiler");
+    const auto projectDirectory = EmptyScratchDirectory("DryUpdateProject");
+    const auto project = ProjectWithCoreCopy(projectDirectory, compilerDirectory);
+    const auto projectCore = projectDirectory / "Libraries" / "Core";
+    Caracal::File::writeText(projectCore / "A.cara", "changed\n");
+    std::filesystem::remove(projectCore / "B.cara");
+    Caracal::File::writeText(projectCore / "Old.cara", "old\n");
+
+    const auto update = Caracal::updateProject(project, compilerDirectory, true);
+
+    CaraTest::areEqual(std::string(), update.error);
+    CaraTest::areEqual(std::string("Libraries/Core/B.cara"), JoinedPaths(update.addedFiles));
+    CaraTest::areEqual(std::string("Libraries/Core/A.cara"), JoinedPaths(update.changedFiles));
+    CaraTest::areEqual(std::string("Libraries/Core/Old.cara"), JoinedPaths(update.removedFiles));
+    CaraTest::areEqual(std::string("A.cara Old.cara Sub/C.cara"), RelativeFilePathsIn(projectCore));
+    CaraTest::areEqual(std::string("changed\n"), ReadText(projectCore / "A.cara"));
+}
+
+static void UpdatingProjectLeavesItsOwnFilesAlone()
+{
+    const auto compilerDirectory = ScratchCompilerDirectory("UpdateOwnFilesCompiler");
+    const auto projectDirectory = EmptyScratchDirectory("UpdateOwnFilesProject");
+    auto project = ProjectWithCoreCopy(projectDirectory, compilerDirectory);
+    project.dependencies.push_back({ "Prelude", true });
+    std::filesystem::create_directories(projectDirectory / "Libraries" / "Prelude");
+    std::filesystem::create_directories(projectDirectory / "Temp");
+    std::filesystem::create_directories(projectDirectory / "Output");
+    Caracal::File::writeText(projectDirectory / "caracal.json", "{ \"name\": \"Hello\" }\n");
+    Caracal::File::writeText(projectDirectory / "main.cara", "own main\n");
+    Caracal::File::writeText(projectDirectory / "Libraries" / "Prelude" / "C.cara", "own prelude\n");
+    Caracal::File::writeText(projectDirectory / "Temp" / "Hello.o", "object\n");
+    Caracal::File::writeText(projectDirectory / "Output" / "Hello.exe", "program\n");
+    Caracal::File::writeText(projectDirectory / "Libraries" / "Core" / "A.cara", "changed\n");
+
+    const auto update = Caracal::updateProject(project, compilerDirectory, false);
+
+    CaraTest::areEqual(std::string("Libraries/Core/A.cara"), JoinedPaths(update.changedFiles));
+    CaraTest::areEqual(std::string("{ \"name\": \"Hello\" }\n"), ReadText(projectDirectory / "caracal.json"));
+    CaraTest::areEqual(std::string("own main\n"), ReadText(projectDirectory / "main.cara"));
+    CaraTest::areEqual(std::string("own prelude\n"), ReadText(projectDirectory / "Libraries" / "Prelude" / "C.cara"));
+    CaraTest::areEqual(std::string("object\n"), ReadText(projectDirectory / "Temp" / "Hello.o"));
+    CaraTest::areEqual(std::string("program\n"), ReadText(projectDirectory / "Output" / "Hello.exe"));
+}
+
+static void UpdatingProjectWithoutCoreCopyChangesNothing()
+{
+    const auto compilerDirectory = ScratchCompilerDirectory("UpdateNoCopyCompiler");
+    const auto projectDirectory = EmptyScratchDirectory("UpdateNoCopyProject");
+
+    const auto update = Caracal::updateProject(Caracal::Project{ "Hello", projectDirectory }, compilerDirectory, false);
+
+    CaraTest::areEqual(std::string(), update.error);
+    CaraTest::areEqual(std::string(), update.coreCopy.generic_string());
+    CaraTest::isTrue(std::filesystem::is_empty(projectDirectory));
+}
+
+static void UpdatingProjectWithoutCoreNextToCompilerFails()
+{
+    const auto compilerDirectory = EmptyScratchDirectory("UpdateCompilerWithoutCore");
+    const auto projectDirectory = EmptyScratchDirectory("UpdateWithoutCoreProject");
+    Caracal::Project project{ "Hello", projectDirectory };
+    project.dependencies = { { "Core", false } };
+
+    const auto update = Caracal::updateProject(project, compilerDirectory, false);
+
+    CaraTest::areEqual("Couldn't update the project, there is no Core folder in " + compilerDirectory.string(), update.error);
+    CaraTest::isTrue(std::filesystem::is_empty(projectDirectory));
+}
+
 static void CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName(const std::string& /*testName*/, const std::string& name, const std::string& expectedProblem)
 {
     const auto problem = Caracal::checkProjectName(name);
@@ -587,6 +733,12 @@ static auto tests =
     CaraTest::addTest("creating a build command uses the temp and output folders from caracal.json", CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson),
     CaraTest::addTest("creating a build command uses the project's prelude and libraries", CreatingBuildCommandUsesProjectPreludeAndLibraries),
     CaraTest::addTest("creating a build command without a prelude uses the compiler's prelude", CreatingBuildCommandWithoutPreludeUsesCompilerPrelude),
+    CaraTest::addTest("updating a project restores, removes and adds core files", UpdatingProjectRestoresRemovesAndAddsCoreFiles),
+    CaraTest::addTest("updating a current project changes nothing", UpdatingCurrentProjectChangesNothing),
+    CaraTest::addTest("updating a project with -dry lists the changes and makes none", UpdatingProjectWithDryListsChangesAndMakesNone),
+    CaraTest::addTest("updating a project leaves its own files alone", UpdatingProjectLeavesItsOwnFilesAlone),
+    CaraTest::addTest("updating a project without a core copy changes nothing", UpdatingProjectWithoutCoreCopyChangesNothing),
+    CaraTest::addTest("updating a project without core next to the compiler fails", UpdatingProjectWithoutCoreNextToCompilerFails),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),

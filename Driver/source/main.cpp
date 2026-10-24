@@ -1,13 +1,16 @@
 ﻿#include <Caracal/Compiler.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
+#include <Caracal/Project/ProjectUpdater.h>
 #include <Caracal/Version.h>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 void printHelp()
 {
@@ -18,6 +21,7 @@ void printHelp()
     std::cout << "  caracal new [name]                             creates a project in the current folder or in [name] \n";
     std::cout << "  caracal build [path]                           builds the project in the current folder, or in [path]\n";
     std::cout << "  caracal run [path]                             builds and runs the project in the current folder, or in [path]\n";
+    std::cout << "  caracal update [path] [-dry]                   updates the libraries of the project in the current folder, or in [path]\n";
     std::cout << "  caracal help\n";
 }
 
@@ -105,6 +109,92 @@ int runProject(int argc, char* argv[])
     return Caracal::runProject(project.value());
 }
 
+void printUpdatedFiles(std::string_view label, const std::vector<std::filesystem::path>& filePaths)
+{
+    for (const auto& filePath : filePaths)
+    {
+        std::cout << "  " << label << " " << filePath.generic_string() << "\n";
+    }
+}
+
+int updateProject(int argc, char* argv[])
+{
+    auto isDryRun = false;
+    std::optional<std::filesystem::path> path{};
+    for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
+    {
+        const auto argument = std::string_view(argv[argumentIndex]);
+        if (argument == "-dry")
+        {
+            isDryRun = true;
+        }
+        else if (argument.starts_with("-"))
+        {
+            std::cout << "Unknown option " << argument << ". Use \"caracal help\" to see the available options.\n";
+            return 1;
+        }
+        else if (path.has_value())
+        {
+            std::cout << "\"caracal update\" takes one path but got " << path->string() << " and " << argument << ".\n";
+            return 1;
+        }
+        else
+        {
+            path = argument;
+        }
+    }
+
+    const auto result = Caracal::findProject(std::filesystem::current_path(), path);
+    if (!result.project.has_value())
+    {
+        std::cout << result.error << "\n";
+        return 1;
+    }
+
+    const auto& project = result.project.value();
+    const auto update = Caracal::updateProject(project, Caracal::compilerDirectory(), isDryRun);
+    if (!update.error.empty())
+    {
+        std::cout << update.error << "\n";
+        return 1;
+    }
+
+    for (const auto& dependency : project.dependencies)
+    {
+        if (dependency.isPrelude)
+        {
+            std::cout << "Skipped " << (project.folders.libraries / dependency.path).generic_string() << ".\n";
+        }
+    }
+
+    if (update.coreCopy.empty())
+    {
+        std::cout << "Nothing to update, \"dependencies\" in caracal.json has no Core.\n";
+        return 0;
+    }
+
+    const auto coreCopy = update.coreCopy.generic_string();
+    if (update.addedFiles.empty() && update.changedFiles.empty() && update.removedFiles.empty())
+    {
+        std::cout << coreCopy << " is up to date.\n";
+        return 0;
+    }
+
+    if (isDryRun)
+    {
+        std::cout << "Would update " << coreCopy << ":\n";
+    }
+    else
+    {
+        std::cout << "Updated " << coreCopy << ":\n";
+    }
+
+    printUpdatedFiles("added  ", update.addedFiles);
+    printUpdatedFiles("changed", update.changedFiles);
+    printUpdatedFiles("removed", update.removedFiles);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2)
@@ -133,6 +223,11 @@ int main(int argc, char* argv[])
     if (std::string_view(argv[1]) == "run")
     {
         return runProject(argc, argv);
+    }
+
+    if (std::string_view(argv[1]) == "update")
+    {
+        return updateProject(argc, argv);
     }
 
     std::filesystem::path parameterFilePath{};
