@@ -5,6 +5,7 @@
 #include <Caracal/Debug/IRPrinter.h>
 #include <Caracal/Debug/ParseTreePrinter.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Project/ProjectModes.h>
 #include <Caracal/Project/ProjectSources.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Text/File.h>
@@ -16,6 +17,8 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/Passes/OptimizationLevel.h>
+#include <llvm/Passes/PassBuilder.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Program.h>
 #include <llvm/Support/TargetSelect.h>
@@ -204,7 +207,24 @@ namespace Caracal
         return true;
     }
 
-    static std::unique_ptr<llvm::TargetMachine> CreateTargetMachine()
+    static llvm::CodeGenOptLevel CodeGenOptLevelFor(OptimizationLevel optimizationLevel)
+    {
+        switch (optimizationLevel)
+        {
+            case OptimizationLevel::None:
+            {
+                return llvm::CodeGenOptLevel::None;
+            }
+            case OptimizationLevel::Speed:
+            {
+                return llvm::CodeGenOptLevel::Aggressive;
+            }
+        }
+
+        return llvm::CodeGenOptLevel::None;
+    }
+
+    static std::unique_ptr<llvm::TargetMachine> CreateTargetMachine(OptimizationLevel optimizationLevel)
     {
         auto defaultTargetTriple = llvm::sys::getDefaultTargetTriple();
         std::string targetError;
@@ -221,7 +241,33 @@ namespace Caracal
         llvm::TargetOptions targetOptions{};
         auto relocModel = std::optional<llvm::Reloc::Model>();
         return std::unique_ptr<llvm::TargetMachine>(
-            target->createTargetMachine(triple, CPU, features, targetOptions, relocModel, std::nullopt, llvm::CodeGenOptLevel::None));
+            target->createTargetMachine(triple, CPU, features, targetOptions, relocModel, std::nullopt, CodeGenOptLevelFor(optimizationLevel)));
+    }
+
+    static void OptimizeLLVMModule(llvm::TargetMachine& targetMachine, llvm::Module& llvmModule, OptimizationLevel optimizationLevel)
+    {
+        if (optimizationLevel == OptimizationLevel::None)
+        {
+            return;
+        }
+
+        CARACAL_ZONE_NAMED("optimizeLLVM");
+        llvm::LoopAnalysisManager loopAnalyses;
+        llvm::FunctionAnalysisManager functionAnalyses;
+        llvm::CGSCCAnalysisManager callGraphAnalyses;
+        llvm::ModuleAnalysisManager moduleAnalyses;
+
+        llvm::PipelineTuningOptions tuningOptions;
+        tuningOptions.SLPVectorization = true;
+        llvm::PassBuilder passBuilder{ &targetMachine, tuningOptions };
+        passBuilder.registerModuleAnalyses(moduleAnalyses);
+        passBuilder.registerCGSCCAnalyses(callGraphAnalyses);
+        passBuilder.registerFunctionAnalyses(functionAnalyses);
+        passBuilder.registerLoopAnalyses(loopAnalyses);
+        passBuilder.crossRegisterProxies(loopAnalyses, functionAnalyses, callGraphAnalyses, moduleAnalyses);
+
+        auto modulePasses = passBuilder.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O3);
+        modulePasses.run(llvmModule, moduleAnalyses);
     }
 
     static bool GenerateLLVMModule(Module& irModule, const llvm::TargetMachine& targetMachine, llvm::Module& llvmModule)
@@ -389,12 +435,14 @@ namespace Caracal
         if (!isPrintOnly)
             llvm::outs() << "TargetTriple: " << llvm::sys::getDefaultTargetTriple() << '\n';
 
-        const auto targetMachine = CreateTargetMachine();
+        const auto targetMachine = CreateTargetMachine(buildCommand.optimizationLevel);
         if (!targetMachine)
             return 1;
 
         if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule))
             return 1;
+
+        OptimizeLLVMModule(*targetMachine, *llvmModule, buildCommand.optimizationLevel);
 
         if (printOptions.printLLVMIR)
         {
@@ -423,6 +471,7 @@ namespace Caracal
         std::vector<std::filesystem::path> libraryDirectories,
         std::filesystem::path objectFilePath,
         std::filesystem::path executablePath,
+        OptimizationLevel optimizationLevel,
         const DiagnosticOptions& diagnosticOptions,
         const PrintOptions& printOptions,
         bool shouldRunAfterBuild)
@@ -431,6 +480,7 @@ namespace Caracal
             .sourceFiles = std::move(sourceFiles),
             .preludeDirectory = std::move(preludeDirectory),
             .libraryDirectories = std::move(libraryDirectories),
+            .optimizationLevel = optimizationLevel,
             .diagnosticOptions = diagnosticOptions,
             .printOptions = printOptions,
             .objectFilePath = std::move(objectFilePath),
@@ -467,6 +517,7 @@ namespace Caracal
             { ResolveCoreDirectory() },
             ResolveTemporaryDirectory(filePath) / (inputFileName + ".o"),
             inputFileName + ".exe",
+            OptimizationLevel::None,
             diagnosticOptions,
             printOptions,
             true);
@@ -475,9 +526,17 @@ namespace Caracal
 
     std::optional<BuildCommand> createProjectBuildCommand(
         const Project& project,
+        std::string_view modeName,
         const DiagnosticOptions& diagnosticOptions,
         bool shouldRunAfterBuild)
     {
+        const auto modeResult = findProjectMode(project, modeName);
+        if (!modeResult.mode.has_value())
+        {
+            std::cout << modeResult.error << "\n";
+            return std::nullopt;
+        }
+
         auto sources = collectProjectSources(project);
         if (!sources.error.empty())
         {
@@ -491,15 +550,19 @@ namespace Caracal
             return std::nullopt;
         }
 
+        const auto& mode = modeResult.mode.value();
         const auto& folders = project.folders;
+        auto objectFilePath = project.rootDirectory / folders.temp / mode.name / (project.name + ".o");
+        auto executablePath = project.rootDirectory / folders.output / mode.outputFolder / (project.name + ".exe");
         if (project.dependencies.empty())
         {
             return CreateBuildCommand(
                 std::move(sources.sourceFiles),
                 ResolvePreludeDirectory(),
                 { ResolveCoreDirectory() },
-                project.rootDirectory / folders.temp / "Debug" / (project.name + ".o"),
-                project.rootDirectory / folders.output / "Debug" / (project.name + ".exe"),
+                std::move(objectFilePath),
+                std::move(executablePath),
+                mode.optimizationLevel,
                 diagnosticOptions,
                 {},
                 shouldRunAfterBuild);
@@ -526,8 +589,9 @@ namespace Caracal
             std::move(sources.sourceFiles),
             std::move(preludeDirectory),
             std::move(libraryDirectories),
-            project.rootDirectory / folders.temp / "Debug" / (project.name + ".o"),
-            project.rootDirectory / folders.output / "Debug" / (project.name + ".exe"),
+            std::move(objectFilePath),
+            std::move(executablePath),
+            mode.optimizationLevel,
             diagnosticOptions,
             {},
             shouldRunAfterBuild);
@@ -535,10 +599,11 @@ namespace Caracal
 
     int buildProject(
         const Project& project,
+        std::string_view modeName,
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("buildProject");
-        const auto buildCommand = createProjectBuildCommand(project, diagnosticOptions);
+        const auto buildCommand = createProjectBuildCommand(project, modeName, diagnosticOptions);
         if (!buildCommand.has_value())
             return 1;
 
@@ -547,10 +612,11 @@ namespace Caracal
 
     int runProject(
         const Project& project,
+        std::string_view modeName,
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("runProject");
-        const auto buildCommand = createProjectBuildCommand(project, diagnosticOptions, true);
+        const auto buildCommand = createProjectBuildCommand(project, modeName, diagnosticOptions, true);
         if (!buildCommand.has_value())
             return 1;
 

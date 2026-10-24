@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/Compilation/OptimizationLevel.h>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -26,6 +27,13 @@ namespace Caracal
         bool isPrelude = false;
     };
 
+    struct CARACAL_API ProjectMode
+    {
+        std::string name;
+        OptimizationLevel optimizationLevel = OptimizationLevel::None;
+        std::string outputFolder;
+    };
+
     struct CARACAL_API Project
     {
         std::string name;
@@ -34,6 +42,7 @@ namespace Caracal
         std::string version;
         ProjectFolders folders;
         std::vector<ProjectDependency> dependencies;
+        std::vector<ProjectMode> modes;
     };
 
     struct CARACAL_API ProjectResult

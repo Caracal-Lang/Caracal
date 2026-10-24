@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace Caracal
 {
@@ -22,15 +23,18 @@ namespace Caracal
 
     [[nodiscard]] CARACAL_API std::optional<BuildCommand> createProjectBuildCommand(
         const Project& project,
+        std::string_view modeName = "Debug",
         const DiagnosticOptions& diagnosticOptions = {},
         bool shouldRunAfterBuild = false);
 
     CARACAL_API int buildProject(
         const Project& project,
+        std::string_view modeName = "Debug",
         const DiagnosticOptions& diagnosticOptions = {});
 
     CARACAL_API int runProject(
         const Project& project,
+        std::string_view modeName = "Debug",
         const DiagnosticOptions& diagnosticOptions = {});
 
     CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple);

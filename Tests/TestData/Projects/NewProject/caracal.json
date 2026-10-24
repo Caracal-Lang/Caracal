@@ -11,5 +11,15 @@
     {
       "path": "Core"
     }
-  ]
+  ],
+  "modes": {
+    "Debug": {
+      "optimize": "none",
+      "output": "Debug"
+    },
+    "Release": {
+      "optimize": "speed",
+      "output": "Release"
+    }
+  }
 }

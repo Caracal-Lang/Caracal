@@ -3,6 +3,7 @@
 #include <Caracal/Project/Project.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
+#include <Caracal/Project/ProjectModes.h>
 #include <Caracal/Project/ProjectSources.h>
 #include <Caracal/Project/ProjectUpdater.h>
 #include <Caracal/Text/File.h>
@@ -43,6 +44,15 @@ static std::string ReadText(const std::filesystem::path& filePath)
 {
     return Caracal::File::readText(filePath).value_or("<missing>");
 }
+
+static Caracal::Project ProjectWithDefaultModes(const std::string& name, const std::filesystem::path& rootDirectory)
+{
+    Caracal::Project project{ name, rootDirectory };
+    project.modes = Caracal::defaultProjectModes();
+    return project;
+}
+
+static const std::string DebugModeField = R"(, "modes": { "Debug": {} })";
 
 static Caracal::ProjectResult LoadProjectText(const std::string& scratchName, const std::string& fields)
 {
@@ -222,7 +232,7 @@ static void FindingProjectDoesNotLookInParentFolder()
 static void FindingProjectFromPathToJsonFileLoadsThatFile()
 {
     const auto workingDirectory = EmptyScratchDirectory("JsonFileGiven");
-    Caracal::File::writeText(workingDirectory / "other.json", "{ \"name\": \"Other\", \"type\": \"exe\", \"version\": \"2026.10.20\" }\n");
+    Caracal::File::writeText(workingDirectory / "other.json", "{ \"name\": \"Other\", \"type\": \"exe\", \"version\": \"2026.10.20\"" + DebugModeField + " }\n");
 
     const auto result = Caracal::findProject(workingDirectory, std::filesystem::path("other.json"));
 
@@ -253,6 +263,7 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     return {
         std::make_tuple("only a name", "NameOnly", "caracal.json has no \"type\""),
         std::make_tuple("no version", "NoVersion", "caracal.json has no \"version\""),
+        std::make_tuple("no modes", "NoModes", "caracal.json has no \"modes\""),
     };
 }
 
@@ -266,7 +277,7 @@ static void LoadingCaracalJsonWithVersionThatIsNotStringFails()
 
 static void LoadingCaracalJsonFillsInFoldersItLeavesOut()
 {
-    const auto result = LoadProjectText("PartialFolders", R"(, "folders": { "output": "Out" })");
+    const auto result = LoadProjectText("PartialFolders", R"(, "folders": { "output": "Out" })" + DebugModeField);
 
     CaraTest::areEqual(std::string(), result.error);
     const auto& project = result.project.value();
@@ -323,9 +334,57 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static void LoadingCaracalJsonReadsItsModes()
+{
+    const auto result = LoadProjectText("Modes", R"(, "modes": { "debug": { "optimize": "none", "output": "Debug" }, "profile": { "optimize": "speed" } })");
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& modes = result.project.value().modes;
+    CaraTest::areEqual(size_t(2), modes.size());
+    CaraTest::areEqual(std::string("debug"), modes.at(0).name);
+    CaraTest::isTrue(modes.at(0).optimizationLevel == Caracal::OptimizationLevel::None);
+    CaraTest::areEqual(std::string("Debug"), modes.at(0).outputFolder);
+    CaraTest::areEqual(std::string("profile"), modes.at(1).name);
+    CaraTest::isTrue(modes.at(1).optimizationLevel == Caracal::OptimizationLevel::Speed);
+    CaraTest::areEqual(std::string("profile"), modes.at(1).outputFolder);
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithModesOfWrongFormFails_Data()
+{
+    return {
+        std::make_tuple("modes not an object", R"(, "modes": [])", "\"modes\" in caracal.json has to be an object"),
+        std::make_tuple("no modes", R"(, "modes": {})", "\"modes\" in caracal.json has to name at least one mode"),
+        std::make_tuple("mode not an object", R"(, "modes": { "debug": "none" })", "\"modes.debug\" in caracal.json has to be an object"),
+        std::make_tuple("debug information", R"(, "modes": { "debug": { "debugInfo": false } })", "\"modes.debug.debugInfo\" in caracal.json is not supported"),
+        std::make_tuple("unknown optimization", R"(, "modes": { "debug": { "optimize": "fast" } })", "\"modes.debug.optimize\" in caracal.json has to be \"none\" or \"speed\""),
+        std::make_tuple("size optimization", R"(, "modes": { "debug": { "optimize": "size" } })", "\"modes.debug.optimize\" in caracal.json has to be \"none\" or \"speed\""),
+        std::make_tuple("output not a string", R"(, "modes": { "debug": { "output": 1 } })", "\"modes.debug.output\" in caracal.json has to be a string"),
+        std::make_tuple("mode name not a folder name", R"(, "modes": { "de/bug": {} })", "\"modes.de/bug\" in caracal.json has to be a valid folder name, it contains '/'"),
+    };
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data()
+{
+    const std::string field = "\"modes.debug.output\" in caracal.json has to be a valid folder name, ";
+    return {
+        std::make_tuple("slash", R"(, "modes": { "debug": { "output": "Out/Debug" } })", field + "it contains '/'"),
+        std::make_tuple("backslash", R"(, "modes": { "debug": { "output": "Out\\Debug" } })", field + "it contains '\\'"),
+        std::make_tuple("parent folder", R"(, "modes": { "debug": { "output": ".." } })", field + "it ends with a space or a dot"),
+        std::make_tuple("empty", R"(, "modes": { "debug": { "output": "" } })", field + "it is empty"),
+    };
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithTwoModesInOneFolderFails_Data()
+{
+    return {
+        std::make_tuple("same output", R"(, "modes": { "debug": { "output": "Same" }, "release": { "output": "same" } })", "\"modes.debug\" and \"modes.release\" in caracal.json both build into Output/Same"),
+        std::make_tuple("names that differ in case", R"(, "modes": { "Debug": { "output": "A" }, "debug": { "output": "B" } })", "\"modes.Debug\" and \"modes.debug\" in caracal.json both build into Temp/Debug"),
+    };
+}
+
 static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
 {
-    const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])");
+    const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])" + DebugModeField);
 
     CaraTest::areEqual(std::string(), result.error);
     const auto& dependencies = result.project.value().dependencies;
@@ -338,7 +397,7 @@ static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
 
 static void LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds()
 {
-    const auto result = LoadProjectText("NoPreludeDependency", R"(, "dependencies": [ { "path": "Core" } ])");
+    const auto result = LoadProjectText("NoPreludeDependency", R"(, "dependencies": [ { "path": "Core" } ])" + DebugModeField);
 
     CaraTest::areEqual(std::string(), result.error);
     const auto& dependencies = result.project.value().dependencies;
@@ -348,7 +407,7 @@ static void LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds()
 
 static void LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries()
 {
-    const auto result = LoadProjectText("NoDependencies", "");
+    const auto result = LoadProjectText("NoDependencies", DebugModeField);
 
     CaraTest::areEqual(std::string(), result.error);
     CaraTest::isTrue(result.project.value().dependencies.empty());
@@ -465,7 +524,7 @@ static void CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson()
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandFolders");
     Caracal::File::writeText(workingDirectory / "main.cara", "");
 
-    Caracal::Project project{ "Hello", workingDirectory };
+    auto project = ProjectWithDefaultModes("Hello", workingDirectory);
     project.folders = { "Libraries", "Obj", "Out" };
     const auto buildCommand = Caracal::createProjectBuildCommand(project);
 
@@ -479,7 +538,7 @@ static void CreatingBuildCommandUsesProjectPreludeAndLibraries()
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandLibraries");
     Caracal::File::writeText(workingDirectory / "main.cara", "");
 
-    Caracal::Project project{ "Hello", workingDirectory };
+    auto project = ProjectWithDefaultModes("Hello", workingDirectory);
     project.dependencies = { { "Prelude", true }, { "Core", false } };
     const auto buildCommand = Caracal::createProjectBuildCommand(project);
 
@@ -494,7 +553,7 @@ static void CreatingBuildCommandWithoutPreludeUsesCompilerPrelude()
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandCompilerPrelude");
     Caracal::File::writeText(workingDirectory / "main.cara", "");
 
-    Caracal::Project project{ "Hello", workingDirectory };
+    auto project = ProjectWithDefaultModes("Hello", workingDirectory);
     project.dependencies = { { "Core", false } };
     const auto buildCommand = Caracal::createProjectBuildCommand(project);
 
@@ -509,7 +568,7 @@ static void CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries()
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandCompilerLibraries");
     Caracal::File::writeText(workingDirectory / "main.cara", "");
 
-    const auto buildCommand = Caracal::createProjectBuildCommand(Caracal::Project{ "Hello", workingDirectory });
+    const auto buildCommand = Caracal::createProjectBuildCommand(ProjectWithDefaultModes("Hello", workingDirectory));
 
     CaraTest::isTrue(buildCommand.has_value());
     CaraTest::areEqual((Caracal::compilerDirectory() / "Prelude").string(), buildCommand->preludeDirectory.string());
@@ -662,6 +721,53 @@ static void UpdatingProjectWithoutCoreNextToCompilerFails()
     CaraTest::isTrue(std::filesystem::is_empty(projectDirectory));
 }
 
+static void FindingModeTheProjectDoesNotHaveListsItsModes()
+{
+    auto project = ProjectWithDefaultModes("Hello", "C:/Hello");
+    project.modes.push_back({ "Profile", Caracal::OptimizationLevel::Speed, "Profile" });
+
+    const auto result = Caracal::findProjectMode(project, "fast");
+
+    CaraTest::isFalse(result.mode.has_value());
+    CaraTest::areEqual(std::string("There is no mode \"fast\" in caracal.json, the project has Debug, Release and Profile"), result.error);
+}
+
+static void CreatingBuildCommandForDebugBuildsIntoTheModesFolders()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandDebug");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(ProjectWithDefaultModes("Hello", workingDirectory));
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((workingDirectory / "Temp" / "Debug" / "Hello.o").string(), buildCommand->objectFilePath.string());
+    CaraTest::areEqual((workingDirectory / "Output" / "Debug" / "Hello.exe").string(), buildCommand->executablePath.string());
+    CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::None);
+}
+
+static void CreatingBuildCommandForModeWithoutOutputUsesModesName()
+{
+    const auto result = LoadProjectText("BuildCommandRelease", R"(, "modes": { "release": { "optimize": "speed" } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "release");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((project.rootDirectory / "Temp" / "release" / "Hello.o").string(), buildCommand->objectFilePath.string());
+    CaraTest::areEqual((project.rootDirectory / "Output" / "release" / "Hello.exe").string(), buildCommand->executablePath.string());
+    CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::Speed);
+}
+
+static void CreatingBuildCommandForUnknownModeFails()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandUnknownMode");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+
+    CaraTest::isFalse(Caracal::createProjectBuildCommand(Caracal::Project{ "Hello", workingDirectory }, "fast").has_value());
+}
+
 static void CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName(const std::string& /*testName*/, const std::string& name, const std::string& expectedProblem)
 {
     const auto problem = Caracal::checkProjectName(name);
@@ -714,13 +820,17 @@ static auto tests =
     CaraTest::addTest("finding a project does not look in the parent folder", FindingProjectDoesNotLookInParentFolder),
     CaraTest::addTest("finding a project from a path to a .json file loads that file", FindingProjectFromPathToJsonFileLoadsThatFile),
     CaraTest::addTest("loading a caracal.json with a name that cannot be a file name fails", LoadingCaracalJsonWithNameThatCannotBeFileNameFails),
-    CaraTest::addTest("loading a caracal.json without a type or version fails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
+    CaraTest::addTest("loading a caracal.json without a type, version or modes fails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
     CaraTest::addTest("loading a caracal.json with a version that is not a string fails", LoadingCaracalJsonWithVersionThatIsNotStringFails),
     CaraTest::addTest("loading a caracal.json fills in the folders it leaves out", LoadingCaracalJsonFillsInFoldersItLeavesOut),
     CaraTest::addTest("loading a caracal.json with a folder outside the project fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderOutsideProjectFails_Data),
     CaraTest::addTest("loading a caracal.json with two folders that are the same fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails_Data),
     CaraTest::addTest("loading a caracal.json with a folder inside another fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderInsideAnotherFails_Data),
     CaraTest::addTest("loading a caracal.json with folders of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
+    CaraTest::addTest("loading a caracal.json reads its modes", LoadingCaracalJsonReadsItsModes),
+    CaraTest::addTest("loading a caracal.json with modes of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
+    CaraTest::addTest("loading a caracal.json with an output that is not one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
+    CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
     CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
     CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
@@ -739,6 +849,10 @@ static auto tests =
     CaraTest::addTest("updating a project leaves its own files alone", UpdatingProjectLeavesItsOwnFilesAlone),
     CaraTest::addTest("updating a project without a core copy changes nothing", UpdatingProjectWithoutCoreCopyChangesNothing),
     CaraTest::addTest("updating a project without core next to the compiler fails", UpdatingProjectWithoutCoreNextToCompilerFails),
+    CaraTest::addTest("finding a mode the project does not have lists its modes", FindingModeTheProjectDoesNotHaveListsItsModes),
+    CaraTest::addTest("creating a build command for debug builds into the mode's folders", CreatingBuildCommandForDebugBuildsIntoTheModesFolders),
+    CaraTest::addTest("creating a build command for a mode without output uses its name", CreatingBuildCommandForModeWithoutOutputUsesModesName),
+    CaraTest::addTest("creating a build command for an unknown mode fails", CreatingBuildCommandForUnknownModeFails),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
