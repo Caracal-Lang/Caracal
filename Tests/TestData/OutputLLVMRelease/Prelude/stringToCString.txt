@@ -1,0 +1,69 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@0 = private unnamed_addr constant [6 x i8] c"Hello\00", align 1
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @puts(ptr noundef readonly captures(none) %0) local_unnamed_addr #1
+
+; Function Attrs: nofree nounwind
+define noundef range(i32 2, 43) i32 @main() local_unnamed_addr #1 {
+common.ret:
+  %call = tail call i32 @puts(ptr nonnull dereferenceable(1) @0)
+  %copy.i = tail call dereferenceable_or_null(9) ptr @calloc(i64 9, i64 1)
+  store i64 5714589967255750984, ptr %copy.i, align 1
+  %call19 = tail call i32 @puts(ptr nonnull dereferenceable(1) %copy.i)
+  %putchar = tail call i32 @putchar(i32 10)
+  ret i32 42
+
+; uselistorder directives
+  uselistorder ptr %copy.i, { 1, 0 }
+}
+
+; Function Attrs: mustprogress nofree nounwind willreturn
+define void @string.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
+entry:
+  %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
+  %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1
+  %widened = sext i32 %.fca.1.extract to i64
+  %nul_reserved = add nsw i64 %widened, 1
+  %copy = tail call ptr @calloc(i64 %nul_reserved, i64 1)
+  tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %copy, ptr align 1 %.fca.0.extract, i64 %widened, i1 false)
+  store ptr %copy, ptr %0, align 8
+  %.repack3 = getelementptr inbounds nuw i8, ptr %0, i64 8
+  store i32 %.fca.1.extract, ptr %.repack3, align 8
+  %.repack5 = getelementptr inbounds nuw i8, ptr %0, i64 12
+  store i32 %.fca.1.extract, ptr %.repack5, align 4
+  ret void
+
+; uselistorder directives
+  uselistorder ptr %0, { 1, 2, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @putchar(i32 noundef %0) local_unnamed_addr #1
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #4
+
+; uselistorder directives
+uselistorder ptr @calloc, { 1, 0 }
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { nofree nounwind }
+attributes #2 = { mustprogress nofree nounwind willreturn }
+attributes #3 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #4 = { nocallback nofree nounwind willreturn memory(argmem: readwrite) }

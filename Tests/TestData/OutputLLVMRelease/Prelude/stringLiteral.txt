@@ -1,0 +1,128 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+@0 = private unnamed_addr constant [5 x i8] c"done\00", align 1
+
+; Function Attrs: nofree nounwind
+declare noundef i32 @puts(ptr noundef readonly captures(none) %0) local_unnamed_addr #0
+
+; Function Attrs: nofree nounwind
+define noundef range(i32 6, 43) i32 @main() local_unnamed_addr #0 {
+common.ret:
+  %call38 = tail call i32 @puts(ptr nonnull dereferenceable(1) @0)
+  ret i32 42
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define i8 @string.byteAt(ptr nonnull readonly captures(none) %0, i32 %1) local_unnamed_addr #2 {
+entry:
+  %load = load ptr, ptr %0, align 8
+  %2 = sext i32 %1 to i64
+  %element = getelementptr i8, ptr %load, i64 %2
+  %load1 = load i8, ptr %element, align 1
+  ret i8 %load1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i1 @string.isEmpty(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %load = load i32, ptr %length, align 4
+  %equal = icmp eq i32 %load, 0
+  ret i1 %equal
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define noundef i1 @string.notEquals(%string %0, %string %1) local_unnamed_addr #3 {
+entry:
+  %.fca.0.0.extract18.i = extractvalue %string %0, 0, 0
+  %.fca.0.1.extract19.i = extractvalue %string %0, 0, 1
+  %.fca.0.0.extract.i = extractvalue %string %1, 0, 0
+  %.fca.0.1.extract.i = extractvalue %string %1, 0, 1
+  %not_equal.not.i = icmp eq i32 %.fca.0.1.extract19.i, %.fca.0.1.extract.i
+  br i1 %not_equal.not.i, label %while.condition.preheader.i, label %string.equals.exit
+
+while.condition.preheader.i:                      ; preds = %entry
+  %less_than22.i = icmp sgt i32 %.fca.0.1.extract19.i, 0
+  br i1 %less_than22.i, label %while.body.preheader.i, label %string.equals.exit
+
+while.body.preheader.i:                           ; preds = %while.condition.preheader.i
+  %wide.trip.count.i = zext nneg i32 %.fca.0.1.extract19.i to i64
+  br label %while.body.i
+
+while.body.i:                                     ; preds = %while.body.i, %while.body.preheader.i
+  %indvars.iv.i = phi i64 [ 0, %while.body.preheader.i ], [ %indvars.iv.next.i, %while.body.i ]
+  %element.i = getelementptr i8, ptr %.fca.0.0.extract18.i, i64 %indvars.iv.i
+  %load11.i = load i8, ptr %element.i, align 1
+  %element15.i = getelementptr i8, ptr %.fca.0.0.extract.i, i64 %indvars.iv.i
+  %load16.i = load i8, ptr %element15.i, align 1
+  %not_equal17.not.i.not = icmp ne i8 %load11.i, %load16.i
+  %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1
+  %exitcond.not.i = icmp eq i64 %indvars.iv.next.i, %wide.trip.count.i
+  %or.cond = select i1 %not_equal17.not.i.not, i1 true, i1 %exitcond.not.i
+  br i1 %or.cond, label %string.equals.exit, label %while.body.i
+
+string.equals.exit:                               ; preds = %while.body.i, %entry, %while.condition.preheader.i
+  %2 = phi i1 [ true, %entry ], [ false, %while.condition.preheader.i ], [ %not_equal17.not.i.not, %while.body.i ]
+  ret i1 %2
+
+; uselistorder directives
+  uselistorder i64 %indvars.iv.next.i, { 1, 0 }
+  uselistorder label %string.equals.exit, { 0, 2, 1 }
+}
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define noundef i1 @string.equals(%string %0, %string %1) local_unnamed_addr #3 {
+entry:
+  %.fca.0.0.extract18 = extractvalue %string %0, 0, 0
+  %.fca.0.1.extract19 = extractvalue %string %0, 0, 1
+  %.fca.0.0.extract = extractvalue %string %1, 0, 0
+  %.fca.0.1.extract = extractvalue %string %1, 0, 1
+  %not_equal.not = icmp eq i32 %.fca.0.1.extract19, %.fca.0.1.extract
+  br i1 %not_equal.not, label %while.condition.preheader, label %common.ret
+
+while.condition.preheader:                        ; preds = %entry
+  %less_than22 = icmp sgt i32 %.fca.0.1.extract19, 0
+  br i1 %less_than22, label %while.body.preheader, label %common.ret
+
+while.body.preheader:                             ; preds = %while.condition.preheader
+  %wide.trip.count = zext nneg i32 %.fca.0.1.extract19 to i64
+  br label %while.body
+
+common.ret:                                       ; preds = %while.body, %while.condition.preheader, %entry
+  %common.ret.op = phi i1 [ false, %entry ], [ true, %while.condition.preheader ], [ %not_equal17.not, %while.body ]
+  ret i1 %common.ret.op
+
+while.body:                                       ; preds = %while.body, %while.body.preheader
+  %indvars.iv = phi i64 [ 0, %while.body.preheader ], [ %indvars.iv.next, %while.body ]
+  %element = getelementptr i8, ptr %.fca.0.0.extract18, i64 %indvars.iv
+  %load11 = load i8, ptr %element, align 1
+  %element15 = getelementptr i8, ptr %.fca.0.0.extract, i64 %indvars.iv
+  %load16 = load i8, ptr %element15, align 1
+  %not_equal17.not = icmp eq i8 %load11, %load16
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond.not = icmp ne i64 %indvars.iv.next, %wide.trip.count
+  %or.cond.not = select i1 %not_equal17.not, i1 %exitcond.not, i1 false
+  br i1 %or.cond.not, label %while.body, label %common.ret
+
+; uselistorder directives
+  uselistorder i1 %not_equal17.not, { 1, 0 }
+  uselistorder i64 %indvars.iv.next, { 1, 0 }
+}
+
+attributes #0 = { nofree nounwind }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #3 = { nofree norecurse nosync nounwind memory(read, inaccessiblemem: none) }

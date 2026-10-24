@@ -2,6 +2,7 @@
 
 #include <Caracal/API.h>
 #include <Caracal/Compilation/BuildCommand.h>
+#include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Compilation/PrintOptions.h>
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
 #include <Caracal/IR/Module.h>
@@ -37,5 +38,8 @@ namespace Caracal
         std::string_view modeName = "Debug",
         const DiagnosticOptions& diagnosticOptions = {});
 
-    CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple);
+    CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(
+        Module& irModule,
+        std::string targetTriple,
+        OptimizationLevel optimizationLevel = OptimizationLevel::None);
 };

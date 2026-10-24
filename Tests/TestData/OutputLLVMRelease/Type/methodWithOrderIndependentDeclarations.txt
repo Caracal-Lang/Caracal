@@ -1,0 +1,29 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define range(i32 0, -1) i32 @Two.value(ptr nonnull readonly captures(none) %0) local_unnamed_addr #0 {
+entry:
+  %load.i = load i32, ptr %0, align 4
+  %add = shl i32 %load.i, 1
+  ret i32 %add
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @Two.one(ptr nonnull readonly captures(none) %0) local_unnamed_addr #0 {
+entry:
+  %load = load i32, ptr %0, align 4
+  ret i32 %load
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Two.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0) local_unnamed_addr #1 {
+entry:
+  store i32 1, ptr %0, align 4
+  ret void
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }

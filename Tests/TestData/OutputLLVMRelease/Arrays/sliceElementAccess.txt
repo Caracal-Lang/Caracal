@@ -1,0 +1,84 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
+define i32 @sum({ ptr, i32 } %0) local_unnamed_addr #0 {
+entry:
+  %phi2.fca.1.extract8 = extractvalue { ptr, i32 } %0, 1
+  %less_than9 = icmp sgt i32 %phi2.fca.1.extract8, 0
+  br i1 %less_than9, label %while.body.lr.ph, label %while.continuation
+
+while.body.lr.ph:                                 ; preds = %entry
+  %phi2.fca.0.extract = extractvalue { ptr, i32 } %0, 0
+  %wide.trip.count = zext nneg i32 %phi2.fca.1.extract8 to i64
+  %min.iters.check = icmp ult i32 %phi2.fca.1.extract8, 8
+  br i1 %min.iters.check, label %while.body.preheader, label %vector.ph
+
+vector.ph:                                        ; preds = %while.body.lr.ph
+  %n.vec = and i64 %wide.trip.count, 2147483640
+  br label %vector.body
+
+vector.body:                                      ; preds = %vector.body, %vector.ph
+  %index = phi i64 [ 0, %vector.ph ], [ %index.next, %vector.body ]
+  %vec.phi = phi <4 x i32> [ zeroinitializer, %vector.ph ], [ %3, %vector.body ]
+  %vec.phi13 = phi <4 x i32> [ zeroinitializer, %vector.ph ], [ %4, %vector.body ]
+  %1 = getelementptr i32, ptr %phi2.fca.0.extract, i64 %index
+  %2 = getelementptr i8, ptr %1, i64 16
+  %wide.load = load <4 x i32>, ptr %1, align 4
+  %wide.load14 = load <4 x i32>, ptr %2, align 4
+  %3 = add <4 x i32> %wide.load, %vec.phi
+  %4 = add <4 x i32> %wide.load14, %vec.phi13
+  %index.next = add nuw i64 %index, 8
+  %5 = icmp eq i64 %index.next, %n.vec
+  br i1 %5, label %middle.block, label %vector.body, !llvm.loop !0
+
+middle.block:                                     ; preds = %vector.body
+  %bin.rdx = add <4 x i32> %4, %3
+  %6 = tail call i32 @llvm.vector.reduce.add.v4i32(<4 x i32> %bin.rdx)
+  %cmp.n = icmp eq i64 %n.vec, %wide.trip.count
+  br i1 %cmp.n, label %while.continuation, label %while.body.preheader
+
+while.body.preheader:                             ; preds = %while.body.lr.ph, %middle.block
+  %indvars.iv.ph = phi i64 [ 0, %while.body.lr.ph ], [ %n.vec, %middle.block ]
+  %phi111.ph = phi i32 [ 0, %while.body.lr.ph ], [ %6, %middle.block ]
+  br label %while.body
+
+while.body:                                       ; preds = %while.body.preheader, %while.body
+  %indvars.iv = phi i64 [ %indvars.iv.next, %while.body ], [ %indvars.iv.ph, %while.body.preheader ]
+  %phi111 = phi i32 [ %add, %while.body ], [ %phi111.ph, %while.body.preheader ]
+  %element = getelementptr i32, ptr %phi2.fca.0.extract, i64 %indvars.iv
+  %load5 = load i32, ptr %element, align 4
+  %add = add i32 %load5, %phi111
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %exitcond.not = icmp eq i64 %indvars.iv.next, %wide.trip.count
+  br i1 %exitcond.not, label %while.continuation, label %while.body, !llvm.loop !3
+
+while.continuation:                               ; preds = %while.body, %middle.block, %entry
+  %phi1.lcssa = phi i32 [ 0, %entry ], [ %6, %middle.block ], [ %add, %while.body ]
+  ret i32 %phi1.lcssa
+
+; uselistorder directives
+  uselistorder ptr %phi2.fca.0.extract, { 1, 0 }
+  uselistorder i64 %wide.trip.count, { 2, 1, 0 }
+  uselistorder i64 %n.vec, { 0, 2, 1 }
+  uselistorder ptr %1, { 1, 0 }
+  uselistorder i64 %index.next, { 1, 0 }
+  uselistorder i32 %6, { 1, 0 }
+  uselistorder label %while.body.preheader, { 1, 0 }
+  uselistorder label %while.body, { 1, 0 }
+  uselistorder i64 %indvars.iv, { 1, 0 }
+  uselistorder i64 %indvars.iv.next, { 1, 0 }
+}
+
+; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)
+declare i32 @llvm.vector.reduce.add.v4i32(<4 x i32> %0) #1
+
+attributes #0 = { nofree norecurse nosync nounwind memory(read, inaccessiblemem: none) }
+attributes #1 = { nocallback nofree nosync nounwind speculatable willreturn memory(none) }
+
+!0 = distinct !{!0, !1, !2}
+!1 = !{!"llvm.loop.isvectorized", i32 1}
+!2 = !{!"llvm.loop.unroll.runtime.disable"}
+!3 = distinct !{!3, !2, !1}

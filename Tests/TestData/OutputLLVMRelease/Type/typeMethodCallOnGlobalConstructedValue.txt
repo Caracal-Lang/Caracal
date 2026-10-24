@@ -1,0 +1,46 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Number = type { i32 }
+
+@number = local_unnamed_addr global %Number { i32 4 }
+@llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none)
+define range(i32 0, -1) i32 @func() local_unnamed_addr #0 {
+entry:
+  %load.i = load i32, ptr @number, align 8
+  %multiply.i = shl i32 %load.i, 1
+  store i32 %multiply.i, ptr @number, align 8
+  ret i32 %multiply.i
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: readwrite)
+define void @Number.double(ptr nonnull captures(none) %0) local_unnamed_addr #1 {
+entry:
+  %load = load i32, ptr %0, align 4
+  %multiply = shl i32 %load, 1
+  store i32 %multiply, ptr %0, align 4
+  ret void
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Number.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #2 {
+entry:
+  store i32 %1, ptr %0, align 4
+  ret void
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none)
+define void @.global_init() local_unnamed_addr #3 {
+entry:
+  store i32 4, ptr @number, align 8
+  ret void
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(readwrite, argmem: none, inaccessiblemem: none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: readwrite) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }
+attributes #3 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }
