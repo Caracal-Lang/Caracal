@@ -1,5 +1,7 @@
+#include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
+#include <Caracal/Project/ProjectModes.h>
 #include <Caracal/Text/File.h>
 
 #include <nlohmann/json.hpp>
@@ -68,8 +70,14 @@ namespace Caracal
 
             dependencies.push_back(std::move(entry));
         }
-
         projectFile["dependencies"] = std::move(dependencies);
+
+        for (const auto& mode : project.modes)
+        {
+            projectFile["modes"][mode.name]["optimize"] = optimizationLevelToString(mode.optimizationLevel);
+            projectFile["modes"][mode.name]["output"] = mode.outputFolder;
+        }
+
         return projectFile.dump(2, ' ', false, nlohmann::ordered_json::error_handler_t::replace) + "\n";
     }
 
@@ -114,7 +122,7 @@ namespace Caracal
         if (!WriteIfMissing(projectDirectory / ".gitignore", GitIgnore))
             return Failure("Couldn't write " + (projectDirectory / ".gitignore").string());
 
-        Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } } };
+        Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } }, defaultProjectModes() };
 
         const auto librariesDirectory = projectDirectory / project.folders.libraries;
         std::filesystem::create_directories(librariesDirectory, errorCode);

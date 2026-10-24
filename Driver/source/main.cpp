@@ -19,8 +19,8 @@ void printHelp()
     std::cout << "Usage:\n";
     std::cout << "  caracal <file.cara> [-ast] [-ir] [-llvm]       builds and runs the resulting <file>.exe\n";
     std::cout << "  caracal new [name]                             creates a project in the current folder or in [name] \n";
-    std::cout << "  caracal build [path]                           builds the project in the current folder, or in [path]\n";
-    std::cout << "  caracal run [path]                             builds and runs the project in the current folder, or in [path]\n";
+    std::cout << "  caracal build [path] [-mode <name>]            builds the project in the current folder, or in [path]\n";
+    std::cout << "  caracal run [path] [-mode <name>]              builds and runs the project in the current folder, or in [path]\n";
     std::cout << "  caracal update [path] [-dry]                   updates the libraries of the project in the current folder, or in [path]\n";
     std::cout << "  caracal help\n";
 }
@@ -64,49 +64,75 @@ int createNewProject(int argc, char* argv[])
     return 0;
 }
 
-std::optional<Caracal::Project> findProjectFromArguments(int argc, char* argv[])
+struct ProjectArguments
 {
-    if (argc > 3)
-    {
-        std::cout << "\"caracal " << argv[1] << "\" takes a path but got " << argc - 2 << ".\n";
-        return std::nullopt;
-    }
+    Caracal::Project project;
+    std::string modeName;
+};
 
+std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
+{
+    std::string modeName{ "Debug" };
     std::optional<std::filesystem::path> path{};
-    if (argc == 3)
+    for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
     {
-        path = argv[2];
+        const auto argument = std::string_view(argv[argumentIndex]);
+        if (argument == "-mode")
+        {
+            if (argumentIndex + 1 == argc)
+            {
+                std::cout << "-mode has to be followed by a mode from caracal.json, for example -mode Release.\n";
+                return std::nullopt;
+            }
+
+            modeName = argv[++argumentIndex];
+        }
+        else if (argument.starts_with("-"))
+        {
+            std::cout << "Unknown option " << argument << ". Use \"caracal help\" to see the available options.\n";
+            return std::nullopt;
+        }
+        else if (path.has_value())
+        {
+            std::cout << "\"caracal " << argv[1] << "\" takes one path but got " << path->string() << " and " << argument << ".\n";
+            return std::nullopt;
+        }
+        else
+        {
+            path = argument;
+        }
     }
 
     const auto result = Caracal::findProject(std::filesystem::current_path(), path);
     if (!result.project.has_value())
     {
         std::cout << result.error << "\n";
+        return std::nullopt;
     }
 
-    return result.project;
+    return ProjectArguments{ result.project.value(), modeName };
 }
 
 int buildProject(int argc, char* argv[])
 {
-    const auto project = findProjectFromArguments(argc, argv);
-    if (!project.has_value())
+    const auto projectArguments = findProjectFromArguments(argc, argv);
+    if (!projectArguments.has_value())
     {
         return 1;
     }
 
-    return Caracal::buildProject(project.value());
+    return Caracal::buildProject(projectArguments->project, projectArguments->modeName);
 }
 
 int runProject(int argc, char* argv[])
 {
-    const auto project = findProjectFromArguments(argc, argv);
-    if (!project.has_value())
+    const auto projectArguments = findProjectFromArguments(argc, argv);
+    if (!projectArguments.has_value())
     {
         return 1;
     }
 
-    return Caracal::runProject(project.value());
+    return Caracal::runProject(projectArguments->project, projectArguments->modeName);
 }
 
 void printUpdatedFiles(std::string_view label, const std::vector<std::filesystem::path>& filePaths)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Compilation/PrintOptions.h>
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
@@ -15,6 +16,7 @@ namespace Caracal
         std::filesystem::path preludeDirectory;
         std::vector<std::filesystem::path> libraryDirectories;
         TypeCheckerOptions typeCheckerOptions;
+        OptimizationLevel optimizationLevel = OptimizationLevel::None;
         DiagnosticOptions diagnosticOptions;
         PrintOptions printOptions;
         std::filesystem::path objectFilePath;

@@ -1,3 +1,4 @@
+#include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Text/File.h>
 
@@ -270,6 +271,90 @@ namespace Caracal
         return std::nullopt;
     }
 
+    static std::optional<std::string> ReadMode(const std::string& modeName, const nlohmann::json& value, const std::string& fileName, ProjectMode& mode)
+    {
+        const auto fieldName = QuotedFieldName("modes." + modeName);
+        if (const auto problem = checkProjectName(modeName))
+            return fieldName + " in " + fileName + " has to be a valid folder name, " + problem.value();
+
+        if (!value.is_object())
+            return fieldName + " in " + fileName + " has to be an object";
+
+        mode = { modeName, OptimizationLevel::None, modeName };
+        for (const auto& [key, setting] : value.items())
+        {
+            const auto settingName = QuotedFieldName("modes." + modeName + "." + key);
+            if (key == "optimize")
+            {
+                std::optional<OptimizationLevel> optimizationLevel{};
+                if (setting.is_string())
+                    optimizationLevel = optimizationLevelFromString(setting.get_ref<const std::string&>());
+
+                if (!optimizationLevel.has_value())
+                    return settingName + " in " + fileName + " has to be \"none\" or \"speed\"";
+
+                mode.optimizationLevel = optimizationLevel.value();
+            }
+            else if (key == "output")
+            {
+                if (!setting.is_string())
+                    return settingName + " in " + fileName + " has to be a string";
+
+                const auto& outputFolder = setting.get_ref<const std::string&>();
+                if (const auto problem = checkProjectName(outputFolder))
+                    return settingName + " in " + fileName + " has to be a valid folder name, " + problem.value();
+
+                mode.outputFolder = outputFolder;
+            }
+            else
+            {
+                return settingName + " in " + fileName + " is not supported";
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    static std::optional<std::string> ReadModes(const nlohmann::json& document, const std::string& fileName, const ProjectFolders& folders, std::vector<ProjectMode>& modes)
+    {
+        const auto modesField = document.find("modes");
+        if (modesField == document.end())
+            return fileName + " has no \"modes\"";
+
+        if (!modesField->is_object())
+            return "\"modes\" in " + fileName + " has to be an object";
+
+        if (modesField->empty())
+            return "\"modes\" in " + fileName + " has to name at least one mode";
+
+        for (const auto& [modeName, value] : modesField->items())
+        {
+            ProjectMode mode{};
+            if (const auto problem = ReadMode(modeName, value, fileName, mode))
+                return problem;
+
+            modes.push_back(std::move(mode));
+        }
+
+        for (size_t first = 0; first < modes.size(); ++first)
+        {
+            for (size_t second = first + 1; second < modes.size(); ++second)
+            {
+                const auto& firstMode = modes[first];
+                const auto& secondMode = modes[second];
+                const auto bothModes = QuotedFieldName("modes." + firstMode.name) + " and " + QuotedFieldName("modes." + secondMode.name) + " in " + fileName;
+
+                if (FolderComparisonText(firstMode.name) == FolderComparisonText(secondMode.name))
+                    return bothModes + " both build into " + (folders.temp / firstMode.name).generic_string();
+
+                if (FolderComparisonText(firstMode.outputFolder) == FolderComparisonText(secondMode.outputFolder))
+                    return bothModes + " both build into " + (folders.output / firstMode.outputFolder).generic_string();
+            }
+        }
+
+        return std::nullopt;
+    }
+
     ProjectResult loadProject(const std::filesystem::path& projectFilePath)
     {
         const auto fileName = projectFilePath.filename().string();
@@ -286,7 +371,7 @@ namespace Caracal
 
         for (const auto& [key, value] : document.items())
         {
-            if (key != "name" && key != "type" && key != "version" && key != "folders" && key != "dependencies")
+            if (key != "name" && key != "type" && key != "version" && key != "folders" && key != "dependencies" && key != "modes")
                 return Failure("\"" + key + "\" in " + fileName + " is not supported");
         }
 
@@ -330,7 +415,11 @@ namespace Caracal
         if (const auto problem = ReadDependencies(document, fileName, folders.libraries, rootDirectory, dependencies))
             return Failure(problem.value());
 
-        return { Project{ nameText, rootDirectory, ProjectType::Executable, versionText, folders, std::move(dependencies) }, {} };
+        Project project{ nameText, rootDirectory, ProjectType::Executable, versionText, folders, std::move(dependencies) };
+        if (const auto problem = ReadModes(document, fileName, folders, project.modes))
+            return Failure(problem.value());
+
+        return { std::move(project), {} };
     }
 
     ProjectResult findProject(
