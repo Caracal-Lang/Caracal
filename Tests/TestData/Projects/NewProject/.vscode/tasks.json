@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "caracal build",
+      "type": "shell",
+      "command": "caracal",
+      "args": [
+        "build"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": {
+        "owner": "caracal",
+        "fileLocation": "absolute",
+        "pattern": [
+          {
+            "regexp": "^\\s*(Error|Warning)\\s+(\\S+)\\s+(.+?)\\s*$",
+            "severity": 1,
+            "code": 2,
+            "message": 3
+          },
+          {
+            "regexp": "^\\s*\\S+\\[(.+):(\\d+):(\\d+)\\]",
+            "file": 1,
+            "line": 2,
+            "column": 3
+          }
+        ]
+      }
+    }
+  ]
+}
