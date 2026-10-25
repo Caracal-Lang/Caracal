@@ -1,6 +1,7 @@
 ﻿#include <Caracal/Compiler.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
+#include <Caracal/Project/ProjectRepository.h>
 #include <Caracal/Project/ProjectUpdater.h>
 #include <Caracal/Version.h>
 #include <chrono>
@@ -18,7 +19,7 @@ void printHelp()
     std::cout << "\n";
     std::cout << "Usage:\n";
     std::cout << "  caracal <file.cara> [-ast] [-ir] [-llvm]       builds and runs the resulting <file>.exe\n";
-    std::cout << "  caracal new [name]                             creates a project in the current folder or in [name] \n";
+    std::cout << "  caracal new [name] [-no-git]                   creates a project in the current folder or in [name]\n";
     std::cout << "  caracal build [path] [-mode <name>]            builds the project in the current folder, or in [path]\n";
     std::cout << "  caracal run [path] [-mode <name>]              builds and runs the project in the current folder, or in [path]\n";
     std::cout << "  caracal update [path] [-dry]                   updates the libraries of the project in the current folder, or in [path]\n";
@@ -39,16 +40,29 @@ std::chrono::year_month_day today()
 
 int createNewProject(int argc, char* argv[])
 {
-    if (argc > 3)
-    {
-        std::cout << "\"caracal new\" expects a project name but got " << argc - 2 << ".\n";
-        return 1;
-    }
-
+    auto shouldInitializeRepository = true;
     std::optional<std::string> name{};
-    if (argc == 3)
+    for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
     {
-        name = argv[2];
+        const auto argument = std::string_view(argv[argumentIndex]);
+        if (argument == "-no-git")
+        {
+            shouldInitializeRepository = false;
+        }
+        else if (argument.starts_with("-"))
+        {
+            std::cout << "Unknown option " << argument << ". Use \"caracal help\" to see the available options.\n";
+            return 1;
+        }
+        else if (name.has_value())
+        {
+            std::cout << "\"caracal new\" takes one name but got " << name.value() << " and " << argument << ".\n";
+            return 1;
+        }
+        else
+        {
+            name = std::string(argument);
+        }
     }
 
     const auto result = Caracal::createProject(std::filesystem::current_path(), name, today(), Caracal::compilerDirectory());
@@ -56,6 +70,11 @@ int createNewProject(int argc, char* argv[])
     {
         std::cout << result.error << "\n";
         return 1;
+    }
+
+    if (shouldInitializeRepository)
+    {
+        Caracal::initializeRepository(result.project->rootDirectory);
     }
 
     const auto& projectName = result.project->name;
