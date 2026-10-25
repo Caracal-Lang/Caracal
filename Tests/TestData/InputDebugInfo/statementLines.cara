@@ -1,0 +1,14 @@
+def add(left: i32, right: i32) i32
+{
+    sum := left %+ right;
+    return sum;
+}
+
+def main() i32
+{
+    first := 1;
+    second := add(first,
+        2);
+    second = second %* 2;
+    return second %- 6;
+}

@@ -519,6 +519,10 @@ namespace Caracal
         m_emitter.setNameLexemes(m_nameLexemes);
         m_thisNameId = internName(ImplicitThisName);
         m_emitter.setPreludeMode(isPreludePass);
+        if (m_options.recordsSourceLocations)
+        {
+            m_emitter.recordSourceLines();
+        }
     }
 
     bool TypeChecker::typeCheck()
@@ -1021,14 +1025,27 @@ namespace Caracal
         return m_compilationContext.sourceLocation(unit.fileId, unit.nodeBuffer.mainToken(index));
     }
 
-    SourceLine TypeChecker::nameLine(const CompilationUnit& unit, u32 index) const
+    SourceLine TypeChecker::tokenLine(const CompilationUnit& unit, u32 tokenIndex) const
     {
         if (!m_options.recordsSourceLocations || unit.origin != UnitOrigin::User)
         {
             return {};
         }
 
-        return { unit.fileId, unit.source->lineColumnAt(nameLocation(unit, index).startIndex).line };
+        const auto& location = m_compilationContext.sourceLocation(unit.fileId, tokenIndex);
+        return { unit.fileId, unit.source->lineColumnAt(location.startIndex).line };
+    }
+
+    SourceLine TypeChecker::nameLine(const CompilationUnit& unit, u32 index) const
+    {
+        return tokenLine(unit, unit.nodeBuffer.mainToken(index));
+    }
+
+    SourceLine TypeChecker::statementLine(const CompilationUnit& unit, u32 index) const
+    {
+        // the main token of an expression statement is its semicolon, the first node has the first token
+        const auto firstNodeToken = unit.nodeBuffer.mainToken(NodeLayout::subtreeBegin(unit.nodeBuffer, index));
+        return tokenLine(unit, std::min(unit.nodeBuffer.mainToken(index), firstNodeToken));
     }
 
     SourceLocation TypeChecker::annotationLocation(const CompilationUnit& unit, u32 index) const noexcept
@@ -2177,7 +2194,15 @@ namespace Caracal
                     continue;
                 }
 
-                typeCheckTypeFieldDeclaration(unit, bodyStatement, typeDefinition, fieldIndex);
+                if (m_options.recordsSourceLocations)
+                {
+                    const ScopedValue<SourceLine> sourceLineScope{ m_emitter.currentSourceLine(), statementLine(unit, bodyStatement) };
+                    typeCheckTypeFieldDeclaration(unit, bodyStatement, typeDefinition, fieldIndex);
+                }
+                else
+                {
+                    typeCheckTypeFieldDeclaration(unit, bodyStatement, typeDefinition, fieldIndex);
+                }
                 ++fieldIndex;
             }
 
@@ -2290,6 +2315,18 @@ namespace Caracal
     }
 
     void TypeChecker::typeCheckStatement(const CompilationUnit& unit, u32 index)
+    {
+        if (!m_options.recordsSourceLocations || unit.nodeBuffer.kind(index) == NodeKind::BlockNode)
+        {
+            typeCheckStatementNode(unit, index);
+            return;
+        }
+
+        const ScopedValue<SourceLine> sourceLineScope{ m_emitter.currentSourceLine(), statementLine(unit, index) };
+        typeCheckStatementNode(unit, index);
+    }
+
+    void TypeChecker::typeCheckStatementNode(const CompilationUnit& unit, u32 index)
     {
         switch (unit.nodeBuffer.kind(index))
         {

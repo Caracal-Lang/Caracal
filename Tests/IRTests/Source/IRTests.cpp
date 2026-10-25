@@ -9,6 +9,7 @@
 #include <Caracal/Semantic/SemanticContext.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <Caracal/Text/File.h>
+#include <Caracal/IR/FunctionBuilder.h>
 #include <Caracal/IR/Module.h>
 #include <Caracal/Optimization/DeadCodeElimination.h>
 
@@ -116,7 +117,26 @@ static std::vector<std::tuple<std::string, std::filesystem::path, std::filesyste
     return data;
 }
 
+static void LocalAllocationMovedToStartOfItsBlockKeepsItsLine()
+{
+    Caracal::SourceLine currentSourceLine{ 0, 3 };
+    Caracal::FunctionBuilder builder;
+    builder.recordSourceLinesFrom(&currentSourceLine);
+    const auto blockIndex = builder.addBlock(0, Caracal::BlockLabel::Entry);
+    static_cast<void>(builder.appendInstruction(blockIndex, Caracal::Instruction{ Caracal::InstructionKind::Unreachable, -1, Caracal::Type::Void() }));
+    currentSourceLine.line = 5;
+    static_cast<void>(builder.appendPrologueInstruction(blockIndex, Caracal::Instruction::CreateAllocateLocal(Caracal::Type::Void(), 0, 0)));
+    Caracal::Function function{ 0, "function", {}, Caracal::Type::Void() };
+
+    builder.finish(function);
+
+    CaraTest::isTrue(function.kindAt(0) == Caracal::InstructionKind::AllocateLocal);
+    CaraTest::areEqual(5, function.sourceLineAt(0).line);
+    CaraTest::areEqual(3, function.sourceLineAt(1).line);
+}
+
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
+    CaraTest::addTest("a local allocation moved to the start of its block keeps its line", LocalAllocationMovedToStartOfItsBlockKeepsItsLine),
 };

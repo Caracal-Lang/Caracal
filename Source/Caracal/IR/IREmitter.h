@@ -71,6 +71,8 @@ namespace Caracal
         void recordEmissionFailure() noexcept;
         void beginFunction(const FunctionDefinition& definition, SourceLine sourceLine);
         void endFunction();
+        [[nodiscard]] SourceLine& currentSourceLine() noexcept { return m_currentSourceLine; }
+        void recordSourceLines() noexcept { m_functionBuilder.recordSourceLinesFrom(&m_currentSourceLine); }
         [[nodiscard]] ValueRef emitConstant(ConstantValue value, Type type);
         [[nodiscard]] ValueRef emitFoldedConstant(const FoldValue& value, Type type);
         void emitReturn();
@@ -230,6 +232,7 @@ namespace Caracal
         BlockId m_nextBlockId = 0;
         std::optional<Function> m_pendingFunction{};
         std::vector<Function> m_completedFunctions;
+        SourceLine m_currentSourceLine;
         FunctionBuilder m_functionBuilder;
         FunctionBuilder* m_currentBuilder = nullptr;
         u32 m_currentBlockIndex = NoBlockIndex;

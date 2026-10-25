@@ -20,8 +20,8 @@ entry:
 define i32 @main() !dbg !8 {
 entry:
   %call = call i32 @square(i32 7), !dbg !9
-  %subtract = sub i32 %call, 49, !dbg !9
-  ret i32 %subtract, !dbg !9
+  %subtract = sub i32 %call, 49, !dbg !10
+  ret i32 %subtract, !dbg !10
 }
 
 !llvm.dbg.cu = !{!0}
@@ -34,6 +34,7 @@ entry:
 !4 = distinct !DISubprogram(name: "square", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
 !5 = !DISubroutineType(types: !6)
 !6 = !{}
-!7 = !DILocation(line: 1, scope: !4)
+!7 = !DILocation(line: 3, scope: !4)
 !8 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 6, type: !5, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
-!9 = !DILocation(line: 6, scope: !8)
+!9 = !DILocation(line: 8, scope: !8)
+!10 = !DILocation(line: 9, scope: !8)

@@ -142,6 +142,7 @@ namespace Caracal
         void typeCheckFunctionDefinitions();
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
+        void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
         void typeCheckConstantDeclaration(const CompilationUnit& unit, u32 index);
         void typeCheckInitConstantDeclaration(const CompilationUnit& unit, u32 index);
         void typeCheckVariableDeclaration(const CompilationUnit& unit, u32 index);
@@ -199,7 +200,9 @@ namespace Caracal
         [[nodiscard]] Token tokenAt(u16 fileId, u32 tokenIndex) const noexcept;
         [[nodiscard]] std::string_view nameOf(const CompilationUnit& unit, u32 index) const noexcept;
         [[nodiscard]] const SourceLocation& nameLocation(const CompilationUnit& unit, u32 index) const noexcept;
+        [[nodiscard]] SourceLine tokenLine(const CompilationUnit& unit, u32 tokenIndex) const;
         [[nodiscard]] SourceLine nameLine(const CompilationUnit& unit, u32 index) const;
+        [[nodiscard]] SourceLine statementLine(const CompilationUnit& unit, u32 index) const;
         [[nodiscard]] SourceLocation annotationLocation(const CompilationUnit& unit, u32 index) const noexcept;
         void locateDefinitionName(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
         [[nodiscard]] bool pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept;

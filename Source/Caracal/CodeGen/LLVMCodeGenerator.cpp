@@ -285,6 +285,9 @@ namespace Caracal
 
             for (auto instructionIndex = block.instructionStart; instructionIndex < block.instructionStart + block.instructionCount; ++instructionIndex)
             {
+                if (m_debugInfo != nullptr)
+                    m_debugInfo->setInstructionLine(function.sourceLineAt(instructionIndex), *m_irBuilder);
+
                 if (!lowerInstruction(function, instructionIndex))
                     return false;
             }
