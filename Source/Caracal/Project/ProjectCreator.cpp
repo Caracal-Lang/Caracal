@@ -2,6 +2,7 @@
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Project/ProjectModes.h>
+#include <Caracal/Project/ProjectRepository.h>
 #include <Caracal/Text/File.h>
 
 #include <nlohmann/json.hpp>
@@ -22,6 +23,22 @@ namespace Caracal
     static constexpr std::string_view GitIgnore =
         "Temp/\n"
         "Output/\n";
+
+    static constexpr std::string_view EditorConfigSettings =
+        "[*.cara]\n"
+        "charset = utf-8\n"
+        "end_of_line = lf\n"
+        "insert_final_newline = true\n"
+        "indent_style = space\n"
+        "indent_size = 4\n";
+
+    static std::string EditorConfigText(const std::filesystem::path& projectDirectory)
+    {
+        if (findParentGitRepository(projectDirectory).has_value())
+            return std::string(EditorConfigSettings);
+
+        return "root = true\n\n" + std::string(EditorConfigSettings);
+    }
 
     static ProjectResult Failure(std::string error)
     {
@@ -121,6 +138,9 @@ namespace Caracal
 
         if (!WriteIfMissing(projectDirectory / ".gitignore", GitIgnore))
             return Failure("Couldn't write " + (projectDirectory / ".gitignore").string());
+
+        if (!WriteIfMissing(projectDirectory / ".editorconfig", EditorConfigText(projectDirectory)))
+            return Failure("Couldn't write " + (projectDirectory / ".editorconfig").string());
 
         Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } }, defaultProjectModes() };
 
