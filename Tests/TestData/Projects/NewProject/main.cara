@@ -1,5 +1,5 @@
 def main() i32
 {
-    C.puts("Hello, Caracal!");
+    printLine("Hello, Caracal!");
     return 0;
 }
