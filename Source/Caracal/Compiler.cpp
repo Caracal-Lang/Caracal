@@ -625,27 +625,17 @@ namespace Caracal
 
     std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple, OptimizationLevel optimizationLevel)
     {
-        llvm::LLVMContext context;
-        auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
-        llvmModule->setTargetTriple(llvm::Triple(targetTriple));
-
-        std::unique_ptr<llvm::TargetMachine> targetMachine{};
-        if (optimizationLevel != OptimizationLevel::None)
-        {
-            llvm::InitializeNativeTarget();
-            targetMachine = CreateTargetMachine(targetTriple, optimizationLevel);
-            if (!targetMachine)
-                return std::make_pair(false, std::string{});
-
-            // without optimization the module has no data layout
-            llvmModule->setDataLayout(targetMachine->createDataLayout());
-        }
-
-        if (!GenerateModule(irModule, *llvmModule))
+        llvm::InitializeNativeTarget();
+        const auto targetMachine = CreateTargetMachine(targetTriple, optimizationLevel);
+        if (!targetMachine)
             return std::make_pair(false, std::string{});
 
-        if (targetMachine)
-            OptimizeLLVMModule(*targetMachine, *llvmModule, optimizationLevel);
+        llvm::LLVMContext context;
+        auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
+        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule))
+            return std::make_pair(false, std::string{});
+
+        OptimizeLLVMModule(*targetMachine, *llvmModule, optimizationLevel);
 
         std::string irOutput;
         llvm::raw_string_ostream irStream(irOutput);
