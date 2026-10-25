@@ -122,9 +122,9 @@ static void CreatingProjectWithNameUsesThatName()
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Hello"), project.name);
     CaraTest::areEqual(workingDirectory / "Hello", project.rootDirectory);
-    CaraTest::areEqual(std::string(".editorconfig .gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string(".editorconfig .gitattributes .gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
 
-    for (const auto& fileName : { ".editorconfig", ".gitignore", "caracal.json", "main.cara" })
+    for (const auto& fileName : { ".editorconfig", ".gitattributes", ".gitignore", "caracal.json", "main.cara" })
     {
         const auto text = ReadText(workingDirectory / "Hello" / fileName);
 
@@ -206,6 +206,7 @@ static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
     CaraTest::areEqual(std::string("old main\n"), ReadText(workingDirectory / "main.cara"));
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".gitignore"));
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".editorconfig"));
+    CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".gitattributes"));
 }
 
 static void CreatingProjectKeepsTheFilesItFinds()
@@ -213,6 +214,7 @@ static void CreatingProjectKeepsTheFilesItFinds()
     const auto workingDirectory = EmptyScratchDirectory("Cloned");
     Caracal::File::writeText(workingDirectory / "README.md", "# Cloned\n");
     Caracal::File::writeText(workingDirectory / ".gitignore", "*.log\n");
+    Caracal::File::writeText(workingDirectory / ".gitattributes", "*.png binary\n");
     Caracal::File::writeText(workingDirectory / ".editorconfig", "[*.md]\nindent_size = 2\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "existing main\n");
 
@@ -220,6 +222,7 @@ static void CreatingProjectKeepsTheFilesItFinds()
 
     CaraTest::isTrue(result.project.has_value());
     CaraTest::areEqual(std::string("*.log\n"), ReadText(workingDirectory / ".gitignore"));
+    CaraTest::areEqual(std::string("*.png binary\n"), ReadText(workingDirectory / ".gitattributes"));
     CaraTest::areEqual(std::string("[*.md]\nindent_size = 2\n"), ReadText(workingDirectory / ".editorconfig"));
     CaraTest::areEqual(std::string("existing main\n"), ReadText(workingDirectory / "main.cara"));
     CaraTest::areEqual(std::string("# Cloned\n"), ReadText(workingDirectory / "README.md"));
