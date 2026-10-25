@@ -46,6 +46,25 @@ namespace Caracal
         return "*.cara text eol=lf\n" + project.folders.libraries.generic_string() + "/** linguist-vendored\n";
     }
 
+    static std::string ReadmeText(const Project& project)
+    {
+        return std::format(
+            "# {0}\n"
+            "\n"
+            "## Build\n"
+            "\n"
+            "```\n"
+            "caracal help                   # lists the commands\n"
+            "caracal build                  # builds into {1}/Debug\n"
+            "caracal run                    # builds and runs\n"
+            "caracal build -mode Release    # builds into {1}/Release\n"
+            "caracal update                 # updates {2}/Core from the compiler\n"
+            "```\n",
+            project.name,
+            project.folders.output.generic_string(),
+            project.folders.libraries.generic_string());
+    }
+
     static ProjectResult Failure(std::string error)
     {
         return { std::nullopt, std::move(error) };
@@ -152,6 +171,9 @@ namespace Caracal
 
         if (!WriteIfMissing(projectDirectory / ".gitattributes", GitAttributesText(project)))
             return Failure("Couldn't write " + (projectDirectory / ".gitattributes").string());
+
+        if (!WriteIfMissing(projectDirectory / "README.md", ReadmeText(project)))
+            return Failure("Couldn't write " + (projectDirectory / "README.md").string());
 
         const auto librariesDirectory = projectDirectory / project.folders.libraries;
         std::filesystem::create_directories(librariesDirectory, errorCode);

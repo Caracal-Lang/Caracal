@@ -122,9 +122,9 @@ static void CreatingProjectWithNameUsesThatName()
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Hello"), project.name);
     CaraTest::areEqual(workingDirectory / "Hello", project.rootDirectory);
-    CaraTest::areEqual(std::string(".editorconfig .gitattributes .gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string(".editorconfig .gitattributes .gitignore Libraries README.md caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
 
-    for (const auto& fileName : { ".editorconfig", ".gitattributes", ".gitignore", "caracal.json", "main.cara" })
+    for (const auto& fileName : { ".editorconfig", ".gitattributes", ".gitignore", "README.md", "caracal.json", "main.cara" })
     {
         const auto text = ReadText(workingDirectory / "Hello" / fileName);
 
