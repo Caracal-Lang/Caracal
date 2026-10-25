@@ -16,7 +16,7 @@ namespace Caracal
     static constexpr std::string_view MainSource =
         "def main() i32\n"
         "{\n"
-        "    C.puts(\"Hello, Caracal!\");\n"
+        "    printLine(\"Hello, Caracal!\");\n"
         "    return 0;\n"
         "}\n";
 

@@ -1,0 +1,9 @@
+def print(message: string)
+{
+    C.printf("%.*s", message.length(), message.toCString());
+}
+
+def printLine(message: string)
+{
+    C.puts(message.toCString());
+}
