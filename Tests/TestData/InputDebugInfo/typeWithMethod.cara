@@ -1,0 +1,15 @@
+type Counter(start: i32)
+{
+    count := start
+
+    def next() i32
+    {
+        return .count %+ 1;
+    }
+}
+
+def main() i32
+{
+    counter := Counter.new(41);
+    return counter.next() %- 42;
+}

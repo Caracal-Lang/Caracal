@@ -126,9 +126,9 @@ namespace Caracal
         return !llvm::verifyModule(llvmModule, &llvm::errs());
     }
 
-    static bool GenerateModule(Module& irModule, llvm::Module& llvmModule)
+    static bool GenerateModule(Module& irModule, llvm::Module& llvmModule, bool debugInfo)
     {
-        LLVMCodeGenerator codeGenerator{ irModule, llvmModule };
+        LLVMCodeGenerator codeGenerator{ irModule, llvmModule, debugInfo };
         if (!codeGenerator.generate())
             return false;
 
@@ -269,12 +269,12 @@ namespace Caracal
         modulePasses.run(llvmModule, moduleAnalyses);
     }
 
-    static bool GenerateLLVMModule(Module& irModule, const llvm::TargetMachine& targetMachine, llvm::Module& llvmModule)
+    static bool GenerateLLVMModule(Module& irModule, const llvm::TargetMachine& targetMachine, llvm::Module& llvmModule, bool debugInfo)
     {
         llvmModule.setDataLayout(targetMachine.createDataLayout());
         llvmModule.setTargetTriple(targetMachine.getTargetTriple());
 
-        if (!GenerateModule(irModule, llvmModule))
+        if (!GenerateModule(irModule, llvmModule, debugInfo))
         {
             std::cout << "Module not generated!";
             return false;
@@ -359,10 +359,20 @@ namespace Caracal
         std::string linkError;
         const auto exeFileName = buildCommand.executablePath.string();
         const auto objectFileName = buildCommand.objectFilePath.string();
+        std::vector<std::string> linkerArguments{ "lld-link", "/out:" + exeFileName, objectFileName, "/defaultlib:msvcrt.lib", "/defaultlib:legacy_stdio_definitions.lib", "/defaultlib:ucrt.lib" };
+        if (buildCommand.debugInfo)
+        {
+            auto pdbPath = buildCommand.executablePath;
+            pdbPath.replace_extension(".pdb");
+            linkerArguments.push_back("/debug");
+            linkerArguments.push_back("/pdb:" + pdbPath.string());
+        }
+
+        const std::vector<llvm::StringRef> linkerArgumentReferences{ linkerArguments.begin(), linkerArguments.end() };
         CARACAL_ZONE_NAMED_VAR(linkZone, "link");
         const auto linkingResult = llvm::sys::ExecuteAndWait(
             lldPath,
-            { "lld-link", "/out:" + exeFileName, objectFileName, "/defaultlib:msvcrt.lib", "/defaultlib:legacy_stdio_definitions.lib", "/defaultlib:ucrt.lib" },
+            linkerArgumentReferences,
             std::nullopt,
             {},
             0,
@@ -439,7 +449,7 @@ namespace Caracal
         if (!targetMachine)
             return 1;
 
-        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule))
+        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule, buildCommand.debugInfo))
             return 1;
 
         OptimizeLLVMModule(*targetMachine, *llvmModule, buildCommand.optimizationLevel);
@@ -472,6 +482,7 @@ namespace Caracal
         std::filesystem::path objectFilePath,
         std::filesystem::path executablePath,
         OptimizationLevel optimizationLevel,
+        bool debugInfo,
         const DiagnosticOptions& diagnosticOptions,
         const PrintOptions& printOptions,
         bool shouldRunAfterBuild)
@@ -480,7 +491,9 @@ namespace Caracal
             .sourceFiles = std::move(sourceFiles),
             .preludeDirectory = std::move(preludeDirectory),
             .libraryDirectories = std::move(libraryDirectories),
+            .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo },
             .optimizationLevel = optimizationLevel,
+            .debugInfo = debugInfo,
             .diagnosticOptions = diagnosticOptions,
             .printOptions = printOptions,
             .objectFilePath = std::move(objectFilePath),
@@ -518,6 +531,7 @@ namespace Caracal
             ResolveTemporaryDirectory(filePath) / (inputFileName + ".o"),
             inputFileName + ".exe",
             OptimizationLevel::None,
+            false,
             diagnosticOptions,
             printOptions,
             true);
@@ -563,6 +577,7 @@ namespace Caracal
                 std::move(objectFilePath),
                 std::move(executablePath),
                 mode.optimizationLevel,
+                mode.debugInfo,
                 diagnosticOptions,
                 {},
                 shouldRunAfterBuild);
@@ -592,6 +607,7 @@ namespace Caracal
             std::move(objectFilePath),
             std::move(executablePath),
             mode.optimizationLevel,
+            mode.debugInfo,
             diagnosticOptions,
             {},
             shouldRunAfterBuild);
@@ -623,7 +639,7 @@ namespace Caracal
         return Build(buildCommand.value());
     }
 
-    std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple, OptimizationLevel optimizationLevel)
+    std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple, OptimizationLevel optimizationLevel, bool debugInfo)
     {
         llvm::InitializeNativeTarget();
         const auto targetMachine = CreateTargetMachine(targetTriple, optimizationLevel);
@@ -632,7 +648,7 @@ namespace Caracal
 
         llvm::LLVMContext context;
         auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
-        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule))
+        if (!GenerateLLVMModule(irModule, *targetMachine, *llvmModule, debugInfo))
             return std::make_pair(false, std::string{});
 
         OptimizeLLVMModule(*targetMachine, *llvmModule, optimizationLevel);

@@ -295,6 +295,13 @@ namespace Caracal
 
                 mode.optimizationLevel = optimizationLevel.value();
             }
+            else if (key == "debugInfo")
+            {
+                if (!setting.is_boolean())
+                    return settingName + " in " + fileName + " has to be true or false";
+
+                mode.debugInfo = setting.get<bool>();
+            }
             else if (key == "output")
             {
                 if (!setting.is_string())

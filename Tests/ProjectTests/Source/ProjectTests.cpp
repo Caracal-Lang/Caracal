@@ -464,11 +464,32 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
         std::make_tuple("modes not an object", R"(, "modes": [])", "\"modes\" in caracal.json has to be an object"),
         std::make_tuple("no modes", R"(, "modes": {})", "\"modes\" in caracal.json has to name at least one mode"),
         std::make_tuple("mode not an object", R"(, "modes": { "debug": "none" })", "\"modes.debug\" in caracal.json has to be an object"),
-        std::make_tuple("debug information", R"(, "modes": { "debug": { "debugInfo": false } })", "\"modes.debug.debugInfo\" in caracal.json is not supported"),
         std::make_tuple("unknown optimization", R"(, "modes": { "debug": { "optimize": "fast" } })", "\"modes.debug.optimize\" in caracal.json has to be \"none\" or \"speed\""),
         std::make_tuple("size optimization", R"(, "modes": { "debug": { "optimize": "size" } })", "\"modes.debug.optimize\" in caracal.json has to be \"none\" or \"speed\""),
         std::make_tuple("output not a string", R"(, "modes": { "debug": { "output": 1 } })", "\"modes.debug.output\" in caracal.json has to be a string"),
         std::make_tuple("mode name not a folder name", R"(, "modes": { "de/bug": {} })", "\"modes.de/bug\" in caracal.json has to be a valid folder name, it contains '/'"),
+    };
+}
+
+static void LoadingCaracalJsonReadsModesDebugInformation()
+{
+    const auto result = LoadProjectText("ModesDebugInformation", R"(, "modes": { "debug": { "debugInfo": true }, "release": { "debugInfo": false }, "profile": {} })");
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& modes = result.project.value().modes;
+    CaraTest::areEqual(size_t(3), modes.size());
+    CaraTest::isTrue(modes.at(0).debugInfo);
+    CaraTest::isFalse(modes.at(1).debugInfo);
+    CaraTest::isFalse(modes.at(2).debugInfo);
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data()
+{
+    const std::string field = "\"modes.debug.debugInfo\" in caracal.json has to be true or false";
+    return {
+        std::make_tuple("string", R"(, "modes": { "debug": { "debugInfo": "true" } })", field),
+        std::make_tuple("number", R"(, "modes": { "debug": { "debugInfo": 1 } })", field),
+        std::make_tuple("null", R"(, "modes": { "debug": { "debugInfo": null } })", field),
     };
 }
 
@@ -917,6 +938,46 @@ static std::vector<std::tuple<std::string, std::string>> CheckingProjectNameAcce
     };
 }
 
+static void ModeWithDebugInformationBuildsWithDebugInformation()
+{
+    const auto result = LoadProjectText("BuildCommandDebugInformation", R"(, "modes": { "debug": { "debugInfo": true } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::isTrue(buildCommand->debugInfo);
+}
+
+static void ModeWithDebugInformationRecordsSourceLocations()
+{
+    const auto result = LoadProjectText("BuildCommandSourceLocations", R"(, "modes": { "debug": { "debugInfo": true } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::isTrue(buildCommand->typeCheckerOptions.recordsSourceLocations);
+}
+
+static void ModeWithoutDebugInformationRecordsNoSourceLocations()
+{
+    const auto result = LoadProjectText("BuildCommandNoDebugInformation", R"(, "modes": { "debug": {} })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::isFalse(buildCommand->debugInfo);
+    CaraTest::isFalse(buildCommand->typeCheckerOptions.recordsSourceLocations);
+}
+
 static auto tests =
 {
     CaraTest::addTest("creating a project with a name uses that name", CreatingProjectWithNameUsesThatName),
@@ -944,7 +1005,9 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with folders of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
     CaraTest::addTest("loading a caracal.json reads its modes", LoadingCaracalJsonReadsItsModes),
     CaraTest::addTest("loading a caracal.json with modes of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
-    CaraTest::addTest("loading a caracal.json with an output that is not one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
+    CaraTest::addTest("loading a caracal.json reads a mode's debug information", LoadingCaracalJsonReadsModesDebugInformation),
+    CaraTest::addTest("loading a caracal.json with debug information that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
     CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
@@ -971,4 +1034,7 @@ static auto tests =
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
+    CaraTest::addTest("a mode with debug information builds with debug information", ModeWithDebugInformationBuildsWithDebugInformation),
+    CaraTest::addTest("a mode with debug information records source locations", ModeWithDebugInformationRecordsSourceLocations),
+    CaraTest::addTest("a mode without debug information records no source locations", ModeWithoutDebugInformationRecordsNoSourceLocations),
 };

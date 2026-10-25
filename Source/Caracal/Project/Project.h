@@ -32,6 +32,7 @@ namespace Caracal
         std::string name;
         OptimizationLevel optimizationLevel = OptimizationLevel::None;
         std::string outputFolder;
+        bool debugInfo = false;
     };
 
     struct CARACAL_API Project

@@ -10,5 +10,6 @@ namespace Caracal
         std::string defaultIntegerType{ "i32" };
         std::string defaultFloatingType{ "f32" };
         std::string defaultEnumBaseType{ "u8" };
+        bool recordsSourceLocations = false;
     };
 }

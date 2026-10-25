@@ -1,0 +1,54 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Counter = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @main() !dbg !4 {
+entry:
+  %counter = alloca %Counter, align 8, !dbg !7
+  call void @Counter.new(ptr %counter, i32 41), !dbg !7
+  %call = call i32 @Counter.next(ptr %counter), !dbg !7
+  %subtract = sub i32 %call, 42, !dbg !7
+  ret i32 %subtract, !dbg !7
+}
+
+define i32 @Counter.next(ptr nonnull %0) !dbg !8 {
+entry:
+  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !9
+  %load = load i32, ptr %count, align 4, !dbg !9
+  %add = add i32 %load, 1, !dbg !9
+  ret i32 %add, !dbg !9
+}
+
+define void @Counter.new(ptr nonnull %0, i32 %1) !dbg !10 {
+entry:
+  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !11
+  store i32 %1, ptr %count, align 4, !dbg !11
+  ret void, !dbg !11
+}
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!2, !3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "Caracal", isOptimized: false, runtimeVersion: 0, emissionKind: LineTablesOnly)
+!1 = !DIFile(filename: "typeWithMethod.cara", directory: "InputDebugInfo")
+!2 = !{i32 2, !"Debug Info Version", i32 3}
+!3 = !{i32 2, !"CodeView", i32 1}
+!4 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !5, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!5 = !DISubroutineType(types: !6)
+!6 = !{}
+!7 = !DILocation(line: 11, scope: !4)
+!8 = distinct !DISubprogram(name: "Counter.next", scope: !1, file: !1, line: 5, type: !5, scopeLine: 5, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!9 = !DILocation(line: 5, scope: !8)
+!10 = distinct !DISubprogram(name: "Counter.new", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!11 = !DILocation(line: 1, scope: !10)

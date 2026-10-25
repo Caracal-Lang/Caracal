@@ -199,7 +199,7 @@ namespace Caracal
         m_emitEntryPoint = hasUserMain && hasEntryPoint;
     }
 
-    void IREmitter::beginFunction(const FunctionDefinition& definition)
+    void IREmitter::beginFunction(const FunctionDefinition& definition, SourceLine sourceLine)
     {
         CARACAL_ZONE_NAMED("emit.beginFunction");
         computeEntryPointFlags();
@@ -225,6 +225,7 @@ namespace Caracal
 
         m_pendingFunction.emplace(Function{ definition.type().id(), definition.fullName(), std::move(parameters), returnType });
         auto* function = &m_pendingFunction.value();
+        function->setSourceLine(sourceLine);
         if (m_emitEntryPoint)
         {
             // caracalMain is emitted as the C symbol main, the user's main as caracal.userMain

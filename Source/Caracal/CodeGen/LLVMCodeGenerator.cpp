@@ -27,12 +27,16 @@
 
 namespace Caracal
 {
-    LLVMCodeGenerator::LLVMCodeGenerator(const Module& irModule, llvm::Module& llvmModule)
+    LLVMCodeGenerator::LLVMCodeGenerator(const Module& irModule, llvm::Module& llvmModule, bool debugInfo)
         : m_irModule{ irModule }
         , m_llvmModule{ llvmModule }
         , m_irBuilder{ std::make_unique<llvm::IRBuilder<>>(llvmModule.getContext()) }
         , m_currentFunction{ nullptr }
     {
+        if (debugInfo)
+        {
+            m_debugInfo = std::make_unique<DebugInfoBuilder>(irModule, llvmModule);
+        }
     }
 
     // defaulted here so the unique_ptr<llvm::IRBuilderBase> member is
@@ -56,6 +60,9 @@ namespace Caracal
 
         if (!lowerGlobalInit())
             return false;
+
+        if (m_debugInfo != nullptr)
+            m_debugInfo->finalize();
 
         return true;
     }
@@ -261,6 +268,9 @@ namespace Caracal
 
         if (!function.hasBlocks())
             return false;
+
+        if (m_debugInfo != nullptr)
+            m_debugInfo->beginFunction(function, *m_currentFunction, *m_irBuilder);
 
         // pre-create every block (the first is the entry) so jumps, branches and phis can reference them
         auto& context = m_llvmModule.getContext();

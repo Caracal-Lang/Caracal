@@ -6,6 +6,7 @@
 #include <Caracal/IR/IRParameter.h>
 #include <Caracal/IR/Instruction.h>
 #include <Caracal/IR/PhiInput.h>
+#include <Caracal/IR/SourceLine.h>
 
 #include <optional>
 #include <span>
@@ -29,8 +30,10 @@ namespace Caracal
         [[nodiscard]] const std::vector<IRParameter>& parameters() const noexcept { return m_parameters; }
         [[nodiscard]] Type returnType() const noexcept { return m_returnType; }
         [[nodiscard]] i32 temporaryCount() const noexcept { return m_temporaryCount; }
+        [[nodiscard]] SourceLine sourceLine() const noexcept { return m_sourceLine; }
         void setSymbolName(std::string symbolName) { m_symbolName = std::move(symbolName); }
         void setTemporaryCount(i32 temporaryCount) noexcept { m_temporaryCount = temporaryCount; }
+        void setSourceLine(SourceLine sourceLine) noexcept { m_sourceLine = sourceLine; }
         void setBody(std::vector<Instruction> instructions, std::vector<BasicBlock> blocks, std::span<const TemporaryId> operands, std::span<const PhiInput> phiInputs);
         
         // dead instructions turn into Nop without a result
@@ -60,6 +63,7 @@ namespace Caracal
         Type m_returnType{ Type::Void() };
         std::optional<std::string> m_symbolName;
         i32 m_temporaryCount = 0;
+        SourceLine m_sourceLine;
         std::vector<Instruction> m_instructions;
         std::vector<BasicBlock> m_blocks;
         std::vector<TemporaryId> m_operands;

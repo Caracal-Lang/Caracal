@@ -4,6 +4,7 @@
 
 #include <iterator>
 #include <string>
+#include <utility>
 
 namespace Caracal
 {
@@ -225,5 +226,15 @@ namespace Caracal
         m_names.emplace_back(name);
         m_nameIds.emplace(m_names.back(), id);
         return id;
+    }
+
+    void Module::setSourceFileName(u16 fileId, std::string fileName)
+    {
+        if (m_sourceFileNames.size() <= fileId)
+        {
+            m_sourceFileNames.resize(static_cast<size_t>(fileId) + 1);
+        }
+
+        m_sourceFileNames[fileId] = std::move(fileName);
     }
 }
