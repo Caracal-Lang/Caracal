@@ -122,9 +122,10 @@ static void CreatingProjectWithNameUsesThatName()
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Hello"), project.name);
     CaraTest::areEqual(workingDirectory / "Hello", project.rootDirectory);
-    CaraTest::areEqual(std::string(".editorconfig .gitattributes .gitignore Libraries README.md caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string(".editorconfig .gitattributes .gitignore .vscode Libraries README.md caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string("extensions.json tasks.json"), FileNamesIn(workingDirectory / "Hello" / ".vscode"));
 
-    for (const auto& fileName : { ".editorconfig", ".gitattributes", ".gitignore", "README.md", "caracal.json", "main.cara" })
+    for (const auto& fileName : { ".editorconfig", ".gitattributes", ".gitignore", ".vscode/extensions.json", ".vscode/tasks.json", "README.md", "caracal.json", "main.cara" })
     {
         const auto text = ReadText(workingDirectory / "Hello" / fileName);
 
@@ -207,6 +208,7 @@ static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".gitignore"));
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".editorconfig"));
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".gitattributes"));
+    CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".vscode"));
 }
 
 static void CreatingProjectKeepsTheFilesItFinds()
@@ -217,10 +219,14 @@ static void CreatingProjectKeepsTheFilesItFinds()
     Caracal::File::writeText(workingDirectory / ".gitattributes", "*.png binary\n");
     Caracal::File::writeText(workingDirectory / ".editorconfig", "[*.md]\nindent_size = 2\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "existing main\n");
+    std::filesystem::create_directories(workingDirectory / ".vscode");
+    Caracal::File::writeText(workingDirectory / ".vscode" / "tasks.json", "{}\n");
 
     const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay, RepositoryDirectory());
 
     CaraTest::isTrue(result.project.has_value());
+    CaraTest::areEqual(std::string("{}\n"), ReadText(workingDirectory / ".vscode" / "tasks.json"));
+    CaraTest::isTrue(std::filesystem::exists(workingDirectory / ".vscode" / "extensions.json"));
     CaraTest::areEqual(std::string("*.log\n"), ReadText(workingDirectory / ".gitignore"));
     CaraTest::areEqual(std::string("*.png binary\n"), ReadText(workingDirectory / ".gitattributes"));
     CaraTest::areEqual(std::string("[*.md]\nindent_size = 2\n"), ReadText(workingDirectory / ".editorconfig"));

@@ -65,6 +65,47 @@ namespace Caracal
             project.folders.libraries.generic_string());
     }
 
+    static std::string VisualStudioCodeTasksText()
+    {
+        nlohmann::ordered_json errorLine;
+        errorLine["regexp"] = R"(^\s*(Error|Warning)\s+(\S+)\s+(.+?)\s*$)";
+        errorLine["severity"] = 1;
+        errorLine["code"] = 2;
+        errorLine["message"] = 3;
+
+        // the line after the error ends in "[C:/Hello/main.cara:3:12]"
+        nlohmann::ordered_json locationLine;
+        locationLine["regexp"] = R"(^\s*\S+\[(.+):(\d+):(\d+)\])";
+        locationLine["file"] = 1;
+        locationLine["line"] = 2;
+        locationLine["column"] = 3;
+
+        nlohmann::ordered_json buildTask;
+        buildTask["label"] = "caracal build";
+        buildTask["type"] = "shell";
+        buildTask["command"] = "caracal";
+        buildTask["args"] = nlohmann::ordered_json::array({ "build" });
+        buildTask["group"]["kind"] = "build";
+        buildTask["group"]["isDefault"] = true;
+        buildTask["problemMatcher"]["owner"] = "caracal";
+        buildTask["problemMatcher"]["fileLocation"] = "absolute";
+        buildTask["problemMatcher"]["pattern"] = nlohmann::ordered_json::array({ errorLine, locationLine });
+
+        nlohmann::ordered_json tasksFile;
+        tasksFile["version"] = "2.0.0";
+        tasksFile["tasks"] = nlohmann::ordered_json::array({ buildTask });
+
+        return tasksFile.dump(2) + "\n";
+    }
+
+    static std::string VisualStudioCodeExtensionsText()
+    {
+        nlohmann::ordered_json extensionsFile;
+        extensionsFile["recommendations"] = nlohmann::ordered_json::array({ "EditorConfig.EditorConfig" });
+
+        return extensionsFile.dump(2) + "\n";
+    }
+
     static ProjectResult Failure(std::string error)
     {
         return { std::nullopt, std::move(error) };
@@ -174,6 +215,17 @@ namespace Caracal
 
         if (!WriteIfMissing(projectDirectory / "README.md", ReadmeText(project)))
             return Failure("Couldn't write " + (projectDirectory / "README.md").string());
+
+        const auto visualStudioCodeDirectory = projectDirectory / ".vscode";
+        std::filesystem::create_directories(visualStudioCodeDirectory, errorCode);
+        if (errorCode)
+            return Failure("Couldn't create " + visualStudioCodeDirectory.string() + ", " + errorCode.message());
+
+        if (!WriteIfMissing(visualStudioCodeDirectory / "tasks.json", VisualStudioCodeTasksText()))
+            return Failure("Couldn't write " + (visualStudioCodeDirectory / "tasks.json").string());
+
+        if (!WriteIfMissing(visualStudioCodeDirectory / "extensions.json", VisualStudioCodeExtensionsText()))
+            return Failure("Couldn't write " + (visualStudioCodeDirectory / "extensions.json").string());
 
         const auto librariesDirectory = projectDirectory / project.folders.libraries;
         std::filesystem::create_directories(librariesDirectory, errorCode);
