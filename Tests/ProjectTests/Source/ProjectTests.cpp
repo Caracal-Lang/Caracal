@@ -122,9 +122,9 @@ static void CreatingProjectWithNameUsesThatName()
     const auto& project = result.project.value();
     CaraTest::areEqual(std::string("Hello"), project.name);
     CaraTest::areEqual(workingDirectory / "Hello", project.rootDirectory);
-    CaraTest::areEqual(std::string(".gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
+    CaraTest::areEqual(std::string(".editorconfig .gitignore Libraries caracal.json main.cara"), FileNamesIn(workingDirectory / "Hello"));
 
-    for (const auto& fileName : { ".gitignore", "caracal.json", "main.cara" })
+    for (const auto& fileName : { ".editorconfig", ".gitignore", "caracal.json", "main.cara" })
     {
         const auto text = ReadText(workingDirectory / "Hello" / fileName);
 
@@ -152,6 +152,19 @@ static void CreatingProjectCopiesCompilerCoreIntoLibraries()
         if (entry.is_regular_file())
             CaraTest::areEqual(ReadText(entry.path()), ReadText(projectCore / entry.path().lexically_relative(compilerCore)));
     }
+}
+
+static void CreatingProjectInsideRepositoryOmitsEditorConfigRoot()
+{
+    const auto workingDirectory = EmptyScratchDirectory("EditorConfigInRepository");
+    std::filesystem::create_directories(workingDirectory / ".git");
+
+    const auto result = Caracal::createProject(workingDirectory, std::string("Hello"), CreationDay, RepositoryDirectory());
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto text = ReadText(workingDirectory / "Hello" / ".editorconfig");
+    CaraTest::isTrue(text.find("root") == std::string::npos);
+    CaraTest::isTrue(text.starts_with("[*.cara]\ncharset = utf-8\n"));
 }
 
 static void CreatingProjectWithoutCoreNextToCompilerCreatesNothing()
@@ -192,19 +205,22 @@ static void CreatingProjectInFolderWithCaracalJsonChangesNothing()
     CaraTest::areEqual(std::string("{ \"name\": \"Old\" }\n"), ReadText(workingDirectory / "caracal.json"));
     CaraTest::areEqual(std::string("old main\n"), ReadText(workingDirectory / "main.cara"));
     CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".gitignore"));
+    CaraTest::isFalse(std::filesystem::exists(workingDirectory / ".editorconfig"));
 }
 
-static void CreatingProjectKeepsMainCaraAndGitIgnoreItFinds()
+static void CreatingProjectKeepsTheFilesItFinds()
 {
     const auto workingDirectory = EmptyScratchDirectory("Cloned");
     Caracal::File::writeText(workingDirectory / "README.md", "# Cloned\n");
     Caracal::File::writeText(workingDirectory / ".gitignore", "*.log\n");
+    Caracal::File::writeText(workingDirectory / ".editorconfig", "[*.md]\nindent_size = 2\n");
     Caracal::File::writeText(workingDirectory / "main.cara", "existing main\n");
 
     const auto result = Caracal::createProject(workingDirectory, std::nullopt, CreationDay, RepositoryDirectory());
 
     CaraTest::isTrue(result.project.has_value());
     CaraTest::areEqual(std::string("*.log\n"), ReadText(workingDirectory / ".gitignore"));
+    CaraTest::areEqual(std::string("[*.md]\nindent_size = 2\n"), ReadText(workingDirectory / ".editorconfig"));
     CaraTest::areEqual(std::string("existing main\n"), ReadText(workingDirectory / "main.cara"));
     CaraTest::areEqual(std::string("# Cloned\n"), ReadText(workingDirectory / "README.md"));
     CaraTest::isTrue(ReadText(workingDirectory / "caracal.json").starts_with("{\n  \"name\": \"Cloned\",\n"));
@@ -899,7 +915,8 @@ static auto tests =
     CaraTest::addTest("creating a project without core next to the compiler creates nothing", CreatingProjectWithoutCoreNextToCompilerCreatesNothing),
     CaraTest::addTest("creating a project without a name uses the name of the current folder", CreatingProjectWithoutNameUsesNameOfCurrentFolder),
     CaraTest::addTest("creating a project in a folder with a caracal.json changes nothing", CreatingProjectInFolderWithCaracalJsonChangesNothing),
-    CaraTest::addTest("creating a project keeps the main.cara and .gitignore it finds", CreatingProjectKeepsMainCaraAndGitIgnoreItFinds),
+    CaraTest::addTest("creating a project keeps the files it finds", CreatingProjectKeepsTheFilesItFinds),
+    CaraTest::addTest("creating a project inside a repository omits the .editorconfig root", CreatingProjectInsideRepositoryOmitsEditorConfigRoot),
     CaraTest::addTest("creating a project with a name that cannot be a file name creates no folder", CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder),
     CaraTest::addTest("finding a repository finds a .git folder in a parent folder", FindingRepositoryFindsGitFolderInParentFolder),
     CaraTest::addTest("finding a repository finds a .git file", FindingRepositoryFindsGitFile),
