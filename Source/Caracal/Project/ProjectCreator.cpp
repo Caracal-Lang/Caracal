@@ -40,6 +40,12 @@ namespace Caracal
         return "root = true\n\n" + std::string(EditorConfigSettings);
     }
 
+    static std::string GitAttributesText(const Project& project)
+    {
+        // linguist-vendored leaves the dependencies out of the GitHub language statistics
+        return "*.cara text eol=lf\n" + project.folders.libraries.generic_string() + "/** linguist-vendored\n";
+    }
+
     static ProjectResult Failure(std::string error)
     {
         return { std::nullopt, std::move(error) };
@@ -143,6 +149,9 @@ namespace Caracal
             return Failure("Couldn't write " + (projectDirectory / ".editorconfig").string());
 
         Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } }, defaultProjectModes() };
+
+        if (!WriteIfMissing(projectDirectory / ".gitattributes", GitAttributesText(project)))
+            return Failure("Couldn't write " + (projectDirectory / ".gitattributes").string());
 
         const auto librariesDirectory = projectDirectory / project.folders.libraries;
         std::filesystem::create_directories(librariesDirectory, errorCode);
