@@ -31,9 +31,19 @@ namespace Caracal
         [[nodiscard]] Type returnType() const noexcept { return m_returnType; }
         [[nodiscard]] i32 temporaryCount() const noexcept { return m_temporaryCount; }
         [[nodiscard]] SourceLine sourceLine() const noexcept { return m_sourceLine; }
+        [[nodiscard]] SourceLine sourceLineAt(u32 instructionIndex) const noexcept
+        {
+            if (m_sourceLines.empty())
+            {
+                return {};
+            }
+
+            return m_sourceLines[instructionIndex];
+        }
         void setSymbolName(std::string symbolName) { m_symbolName = std::move(symbolName); }
         void setTemporaryCount(i32 temporaryCount) noexcept { m_temporaryCount = temporaryCount; }
         void setSourceLine(SourceLine sourceLine) noexcept { m_sourceLine = sourceLine; }
+        void setSourceLines(std::vector<SourceLine> sourceLines) noexcept { m_sourceLines = std::move(sourceLines); }
         void setBody(std::vector<Instruction> instructions, std::vector<BasicBlock> blocks, std::span<const TemporaryId> operands, std::span<const PhiInput> phiInputs);
         
         // dead instructions turn into Nop without a result
@@ -65,6 +75,7 @@ namespace Caracal
         i32 m_temporaryCount = 0;
         SourceLine m_sourceLine;
         std::vector<Instruction> m_instructions;
+        std::vector<SourceLine> m_sourceLines;
         std::vector<BasicBlock> m_blocks;
         std::vector<TemporaryId> m_operands;
         std::vector<PhiInput> m_phiInputs;

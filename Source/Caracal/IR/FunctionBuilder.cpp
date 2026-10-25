@@ -54,6 +54,10 @@ namespace Caracal
 
         m_instructions.push_back(instruction);
         m_instructionPlacements.push_back(InstructionPlacement{ blockIndex, inPrologue });
+        if (m_currentSourceLine != nullptr)
+        {
+            m_sourceLines.push_back(*m_currentSourceLine);
+        }
         return static_cast<u32>(m_instructions.size() - 1);
     }
 
@@ -61,12 +65,21 @@ namespace Caracal
     {
         m_instructions.push_back(instruction);
         m_instructionPlacements.push_back(InstructionPlacement{ blockIndex, true });
+        if (m_currentSourceLine != nullptr)
+        {
+            m_sourceLines.push_back(*m_currentSourceLine);
+        }
         return static_cast<u32>(m_instructions.size() - 1);
     }
 
     void FunctionBuilder::setTerminator(u32 blockIndex, const Instruction& terminator)
     {
-        m_blockStates[blockIndex].terminator = terminator;
+        auto& state = m_blockStates[blockIndex];
+        state.terminator = terminator;
+        if (m_currentSourceLine != nullptr)
+        {
+            state.terminatorLine = *m_currentSourceLine;
+        }
     }
 
     bool FunctionBuilder::hasTerminator(u32 blockIndex) const noexcept
@@ -133,6 +146,13 @@ namespace Caracal
             keptBlocks.push_back(block);
         }
 
+        const auto recordsSourceLines = m_currentSourceLine != nullptr;
+        std::vector<SourceLine> sortedSourceLines;
+        if (recordsSourceLines)
+        {
+            sortedSourceLines.resize(instructionCount);
+        }
+
         std::vector<Instruction> sortedInstructions(instructionCount, Instruction{ InstructionKind::Unreachable, -1, Type::Undefined() });
         for (size_t instructionIndex = 0; instructionIndex < m_instructions.size(); ++instructionIndex)
         {
@@ -142,13 +162,20 @@ namespace Caracal
                 continue;
             }
 
+            u32 sortedIndex = 0;
             if (placement.inPrologue)
             {
-                sortedInstructions[m_prologueCursors[placement.blockIndex]++] = m_instructions[instructionIndex];
+                sortedIndex = m_prologueCursors[placement.blockIndex]++;
             }
             else
             {
-                sortedInstructions[m_bodyCursors[placement.blockIndex]++] = m_instructions[instructionIndex];
+                sortedIndex = m_bodyCursors[placement.blockIndex]++;
+            }
+
+            sortedInstructions[sortedIndex] = m_instructions[instructionIndex];
+            if (recordsSourceLines)
+            {
+                sortedSourceLines[sortedIndex] = m_sourceLines[instructionIndex];
             }
         }
 
@@ -158,10 +185,15 @@ namespace Caracal
             if (!state.isDropped && state.terminator.has_value())
             {
                 sortedInstructions[m_bodyCursors[blockIndex]] = state.terminator.value();
+                if (recordsSourceLines)
+                {
+                    sortedSourceLines[m_bodyCursors[blockIndex]] = state.terminatorLine;
+                }
             }
         }
 
         function.setBody(std::move(sortedInstructions), std::move(keptBlocks), m_operands, m_phiInputs);
+        function.setSourceLines(std::move(sortedSourceLines));
         clear();
     }
 
@@ -169,6 +201,7 @@ namespace Caracal
     {
         m_instructions.clear();
         m_instructionPlacements.clear();
+        m_sourceLines.clear();
         m_blocks.clear();
         m_blockStates.clear();
         m_blockIndexById.clear();

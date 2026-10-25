@@ -30,6 +30,7 @@ namespace Caracal
         [[nodiscard]] u32 appendOperands(std::span<const TemporaryId> operands);
         void setPhiInputs(u32 instructionIndex, std::span<const PhiInput> inputs);
 
+        void recordSourceLinesFrom(const SourceLine* currentSourceLine) noexcept { m_currentSourceLine = currentSourceLine; }
         void finish(Function& function);
 
     private:
@@ -44,12 +45,15 @@ namespace Caracal
             bool isDropped = false;
             bool prologueOpen = true;
             std::optional<Instruction> terminator;
+            SourceLine terminatorLine;
         };
 
         void clear() noexcept;
 
+        const SourceLine* m_currentSourceLine = nullptr;
         std::vector<Instruction> m_instructions;
         std::vector<InstructionPlacement> m_instructionPlacements;
+        std::vector<SourceLine> m_sourceLines;
         std::vector<BasicBlock> m_blocks;
         std::vector<BlockState> m_blockStates;
         std::vector<u32> m_blockIndexById;

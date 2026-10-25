@@ -1,0 +1,17 @@
+def main() i32
+{
+    count := 0;
+    total := 0;
+    while count < 3
+    {
+        total = total %+ count;
+        count = count %+ 1;
+    }
+
+    if total == 3
+    {
+        return 0;
+    }
+
+    return 1;
+}

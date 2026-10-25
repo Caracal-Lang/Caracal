@@ -17,24 +17,24 @@ define i32 @main() !dbg !4 {
 entry:
   %counter = alloca %Counter, align 8, !dbg !7
   call void @Counter.new(ptr %counter, i32 41), !dbg !7
-  %call = call i32 @Counter.next(ptr %counter), !dbg !7
-  %subtract = sub i32 %call, 42, !dbg !7
-  ret i32 %subtract, !dbg !7
+  %call = call i32 @Counter.next(ptr %counter), !dbg !8
+  %subtract = sub i32 %call, 42, !dbg !8
+  ret i32 %subtract, !dbg !8
 }
 
-define i32 @Counter.next(ptr nonnull %0) !dbg !8 {
+define i32 @Counter.next(ptr nonnull %0) !dbg !9 {
 entry:
-  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !9
-  %load = load i32, ptr %count, align 4, !dbg !9
-  %add = add i32 %load, 1, !dbg !9
-  ret i32 %add, !dbg !9
+  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !10
+  %load = load i32, ptr %count, align 4, !dbg !10
+  %add = add i32 %load, 1, !dbg !10
+  ret i32 %add, !dbg !10
 }
 
-define void @Counter.new(ptr nonnull %0, i32 %1) !dbg !10 {
+define void @Counter.new(ptr nonnull %0, i32 %1) !dbg !11 {
 entry:
-  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !11
-  store i32 %1, ptr %count, align 4, !dbg !11
-  ret void, !dbg !11
+  %count = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0, !dbg !12
+  store i32 %1, ptr %count, align 4, !dbg !12
+  ret void, !dbg !13
 }
 
 !llvm.dbg.cu = !{!0}
@@ -47,8 +47,10 @@ entry:
 !4 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !5, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
 !5 = !DISubroutineType(types: !6)
 !6 = !{}
-!7 = !DILocation(line: 11, scope: !4)
-!8 = distinct !DISubprogram(name: "Counter.next", scope: !1, file: !1, line: 5, type: !5, scopeLine: 5, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
-!9 = !DILocation(line: 5, scope: !8)
-!10 = distinct !DISubprogram(name: "Counter.new", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
-!11 = !DILocation(line: 1, scope: !10)
+!7 = !DILocation(line: 13, scope: !4)
+!8 = !DILocation(line: 14, scope: !4)
+!9 = distinct !DISubprogram(name: "Counter.next", scope: !1, file: !1, line: 5, type: !5, scopeLine: 5, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!10 = !DILocation(line: 7, scope: !9)
+!11 = distinct !DISubprogram(name: "Counter.new", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!12 = !DILocation(line: 3, scope: !11)
+!13 = !DILocation(line: 1, scope: !11)

@@ -49,6 +49,9 @@ namespace Caracal
     void DebugInfoBuilder::beginFunction(const Function& function, llvm::Function& llvmFunction, llvm::IRBuilderBase& irBuilder)
     {
         const auto sourceLine = function.sourceLine();
+        m_subprogram = nullptr;
+        m_functionLine = sourceLine.line;
+        m_currentLine = sourceLine.line;
         if (m_compileUnit == nullptr || sourceLine.line == -1)
         {
             irBuilder.SetCurrentDebugLocation(llvm::DebugLoc{});
@@ -75,7 +78,30 @@ namespace Caracal
             llvm::DINode::FlagPrototyped,
             llvm::DISubprogram::SPFlagDefinition);
         llvmFunction.setSubprogram(subprogram);
+        m_subprogram = subprogram;
         irBuilder.SetCurrentDebugLocation(llvm::DILocation::get(m_llvmModule.getContext(), line, 0, subprogram));
+    }
+
+    void DebugInfoBuilder::setInstructionLine(SourceLine sourceLine, llvm::IRBuilderBase& irBuilder)
+    {
+        if (m_subprogram == nullptr)
+        {
+            return;
+        }
+
+        auto line = sourceLine.line;
+        if (line == -1)
+        {
+            line = m_functionLine;
+        }
+
+        if (line == m_currentLine)
+        {
+            return;
+        }
+
+        m_currentLine = line;
+        irBuilder.SetCurrentDebugLocation(llvm::DILocation::get(m_llvmModule.getContext(), static_cast<unsigned>(line), 0, m_subprogram));
     }
 
     void DebugInfoBuilder::finalize()
