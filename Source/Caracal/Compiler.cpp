@@ -432,7 +432,7 @@ namespace Caracal
         auto llvmModule = std::make_unique<llvm::Module>("CaracalModule", context);
 
         const auto targetTriple = llvm::sys::getDefaultTargetTriple();
-        if (!isPrintOnly)
+        if (isPrintOnly)
             llvm::outs() << "TargetTriple: " << targetTriple << '\n';
 
         const auto targetMachine = CreateTargetMachine(targetTriple, buildCommand.optimizationLevel);
