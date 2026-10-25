@@ -4,14 +4,17 @@
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Project/ProjectModes.h>
+#include <Caracal/Project/ProjectRepository.h>
 #include <Caracal/Project/ProjectSources.h>
 #include <Caracal/Project/ProjectUpdater.h>
 #include <Caracal/Text/File.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <vector>
 
@@ -215,6 +218,87 @@ static void CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder()
     CaraTest::isFalse(result.project.has_value());
     CaraTest::areEqual(std::string("\"Hello/World\" cannot be a project name because it contains '/'"), result.error);
     CaraTest::isTrue(std::filesystem::is_empty(workingDirectory));
+}
+
+#ifdef _WIN32
+static constexpr char PathListSeparator = ';';
+#else
+static constexpr char PathListSeparator = ':';
+#endif
+
+static bool IsGitOnPath()
+{
+    const auto* path = std::getenv("PATH");
+    if (path == nullptr)
+        return false;
+
+    std::string_view remaining{ path };
+    while (!remaining.empty())
+    {
+        const auto separator = remaining.find(PathListSeparator);
+        const auto folder = std::filesystem::path(remaining.substr(0, separator));
+        if (std::filesystem::exists(folder / "git.exe") || std::filesystem::exists(folder / "git"))
+            return true;
+
+        if (separator == std::string_view::npos)
+            break;
+
+        remaining.remove_prefix(separator + 1);
+    }
+
+    return false;
+}
+
+static void FindingRepositoryFindsGitFolderInParentFolder()
+{
+    const auto workingDirectory = EmptyScratchDirectory("RepositoryParent");
+    std::filesystem::create_directories(workingDirectory / "Outer" / ".git");
+    std::filesystem::create_directories(workingDirectory / "Outer" / "Inner" / "Project");
+
+    const auto repository = Caracal::findParentGitRepository(workingDirectory / "Outer" / "Inner" / "Project");
+
+    CaraTest::isTrue(repository.has_value());
+    CaraTest::areEqual((workingDirectory / "Outer").string(), repository.value().string());
+}
+
+static void FindingRepositoryFindsGitFile()
+{
+    const auto workingDirectory = EmptyScratchDirectory("RepositoryWorktree");
+    Caracal::File::writeText(workingDirectory / ".git", "gitdir: C:/Elsewhere/.git/worktrees/Worktree\n");
+
+    const auto repository = Caracal::findParentGitRepository(workingDirectory);
+
+    CaraTest::isTrue(repository.has_value());
+    CaraTest::areEqual(workingDirectory.string(), repository.value().string());
+}
+
+static void FindingRepositoryWithoutOneFindsNothing()
+{
+    const auto workingDirectory = EmptyScratchDirectory("RepositoryNone");
+
+    CaraTest::isFalse(Caracal::findParentGitRepository(workingDirectory).has_value());
+}
+
+static void InitializingRepositoryInsideAnotherCreatesNoGit()
+{
+    const auto workingDirectory = EmptyScratchDirectory("RepositoryNested");
+    std::filesystem::create_directories(workingDirectory / ".git");
+    std::filesystem::create_directories(workingDirectory / "Project");
+
+    CaraTest::isFalse(Caracal::initializeRepository(workingDirectory / "Project"));
+    CaraTest::isFalse(std::filesystem::exists(workingDirectory / "Project" / ".git"));
+}
+
+static void InitializingRepositoryCreatesGitFolder()
+{
+    if (!IsGitOnPath())
+        CaraTest::skip();
+
+    const auto workingDirectory = EmptyScratchDirectory("RepositoryCreated");
+    CaraTest::isFalse(Caracal::findParentGitRepository(workingDirectory).has_value());
+
+    CaraTest::isTrue(Caracal::initializeRepository(workingDirectory));
+    CaraTest::isTrue(std::filesystem::is_directory(workingDirectory / ".git"));
 }
 
 static void FindingProjectDoesNotLookInParentFolder()
@@ -817,6 +901,11 @@ static auto tests =
     CaraTest::addTest("creating a project in a folder with a caracal.json changes nothing", CreatingProjectInFolderWithCaracalJsonChangesNothing),
     CaraTest::addTest("creating a project keeps the main.cara and .gitignore it finds", CreatingProjectKeepsMainCaraAndGitIgnoreItFinds),
     CaraTest::addTest("creating a project with a name that cannot be a file name creates no folder", CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder),
+    CaraTest::addTest("finding a repository finds a .git folder in a parent folder", FindingRepositoryFindsGitFolderInParentFolder),
+    CaraTest::addTest("finding a repository finds a .git file", FindingRepositoryFindsGitFile),
+    CaraTest::addTest("finding a repository without one finds nothing", FindingRepositoryWithoutOneFindsNothing),
+    CaraTest::addTest("initializing a repository inside another creates no .git", InitializingRepositoryInsideAnotherCreatesNoGit),
+    CaraTest::addTest("initializing a repository creates a .git folder", InitializingRepositoryCreatesGitFolder),
     CaraTest::addTest("finding a project does not look in the parent folder", FindingProjectDoesNotLookInParentFolder),
     CaraTest::addTest("finding a project from a path to a .json file loads that file", FindingProjectFromPathToJsonFileLoadsThatFile),
     CaraTest::addTest("loading a caracal.json with a name that cannot be a file name fails", LoadingCaracalJsonWithNameThatCannotBeFileNameFails),
