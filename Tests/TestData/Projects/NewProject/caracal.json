@@ -15,10 +15,12 @@
   "modes": {
     "Debug": {
       "optimize": "none",
+      "debugInfo": true,
       "output": "Debug"
     },
     "Release": {
       "optimize": "speed",
+      "debugInfo": false,
       "output": "Release"
     }
   }

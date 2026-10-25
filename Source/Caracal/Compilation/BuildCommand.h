@@ -17,6 +17,7 @@ namespace Caracal
         std::vector<std::filesystem::path> libraryDirectories;
         TypeCheckerOptions typeCheckerOptions;
         OptimizationLevel optimizationLevel = OptimizationLevel::None;
+        bool debugInfo = false;
         DiagnosticOptions diagnosticOptions;
         PrintOptions printOptions;
         std::filesystem::path objectFilePath;

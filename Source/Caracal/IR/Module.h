@@ -45,6 +45,7 @@ namespace Caracal
         [[nodiscard]] const std::vector<std::string>& names() const noexcept { return m_names; }
         [[nodiscard]] ConstantValue constantValue(const Instruction& constantInstruction) const;
         [[nodiscard]] std::string_view fieldName(Type objectType, i32 fieldIndex) const noexcept;
+        [[nodiscard]] const std::vector<std::string>& sourceFileNames() const noexcept { return m_sourceFileNames; }
 
         void addEnum(EnumDeclaration enumDeclaration);
         void addExternFunction(ExternFunction function);
@@ -63,6 +64,7 @@ namespace Caracal
         void registerBuiltinTypeDescription(Type type, const BuiltinTypeDescription& description);
         [[nodiscard]] const BuiltinTypeDescription* tryGetBuiltinTypeDescription(Type type) const noexcept;
         [[nodiscard]] u32 internName(std::string_view name);
+        void setSourceFileName(u16 fileId, std::string fileName);
 
     private:
         std::vector<EnumDeclaration> m_enums;
@@ -84,5 +86,6 @@ namespace Caracal
         ConstantPool m_constants;
         std::vector<std::string> m_names;
         std::unordered_map<std::string, u32, TransparentStringHash, std::equal_to<>> m_nameIds;
+        std::vector<std::string> m_sourceFileNames;
     };
 }

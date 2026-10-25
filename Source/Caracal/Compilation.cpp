@@ -128,9 +128,25 @@ namespace Caracal
         }
     }
 
+    static void RecordSourceFileNames(const CompilationContext& compilationContext, Module& irModule)
+    {
+        for (const auto& unit : compilationContext.units())
+        {
+            if (unit.origin == UnitOrigin::User)
+            {
+                irModule.setSourceFileName(unit.fileId, unit.source->filePath.generic_string());
+            }
+        }
+    }
+
     bool typeCheck(CompilationContext& compilationContext, DiagnosticsBag& diagnostics, Module& irModule) noexcept
     {
         CARACAL_ZONE_NAMED("typeCheck");
+        if (compilationContext.options().recordsSourceLocations)
+        {
+            RecordSourceFileNames(compilationContext, irModule);
+        }
+
         TypeChecker typeChecker{ compilationContext, false, diagnostics, irModule };
         return typeChecker.typeCheck();
     }

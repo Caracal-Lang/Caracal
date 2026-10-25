@@ -69,7 +69,7 @@ namespace Caracal
         [[nodiscard]] static ConstantValue constantFromFold(const FoldValue& value) noexcept;
         [[nodiscard]] bool emissionFailed() const noexcept { return m_emissionFailed; }
         void recordEmissionFailure() noexcept;
-        void beginFunction(const FunctionDefinition& definition);
+        void beginFunction(const FunctionDefinition& definition, SourceLine sourceLine);
         void endFunction();
         [[nodiscard]] ValueRef emitConstant(ConstantValue value, Type type);
         [[nodiscard]] ValueRef emitFoldedConstant(const FoldValue& value, Type type);

@@ -1021,6 +1021,16 @@ namespace Caracal
         return m_compilationContext.sourceLocation(unit.fileId, unit.nodeBuffer.mainToken(index));
     }
 
+    SourceLine TypeChecker::nameLine(const CompilationUnit& unit, u32 index) const
+    {
+        if (!m_options.recordsSourceLocations || unit.origin != UnitOrigin::User)
+        {
+            return {};
+        }
+
+        return { unit.fileId, unit.source->lineColumnAt(nameLocation(unit, index).startIndex).line };
+    }
+
     SourceLocation TypeChecker::annotationLocation(const CompilationUnit& unit, u32 index) const noexcept
     {
         const auto nameToken = unit.nodeBuffer.mainToken(index);
@@ -2149,7 +2159,7 @@ namespace Caracal
             {
                 auto& constructorDefinition = m_module.getFunctionDefinition(constructorType);
                 m_emitter.setAddressTakenLocals({});
-                m_emitter.beginFunction(constructorDefinition);
+                m_emitter.beginFunction(constructorDefinition, nameLine(unit, index));
                 const auto& constructorParameters = constructorDefinition.parameters();
                 for (size_t i = 0; i < constructorParameters.size(); ++i)
                 {
@@ -3360,7 +3370,7 @@ namespace Caracal
         if (emitBody)
         {
             m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, functionLayout.body));
-            m_emitter.beginFunction(functionDefinition);
+            m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
         }
 
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, m_childrenScratch);
@@ -3720,7 +3730,7 @@ namespace Caracal
         if (emitBody)
         {
             m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, methodLayout.body));
-            m_emitter.beginFunction(methodDefinition);
+            m_emitter.beginFunction(methodDefinition, nameLine(unit, index));
         }
 
         const auto& parameters = methodDefinition.parameters();

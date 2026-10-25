@@ -1,0 +1,10 @@
+def square(value: i32) i32
+{
+    return value %* value;
+}
+
+def main() i32
+{
+    result := square(7);
+    return result %- 49;
+}

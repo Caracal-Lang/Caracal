@@ -158,6 +158,7 @@ namespace Caracal
         for (const auto& mode : project.modes)
         {
             projectFile["modes"][mode.name]["optimize"] = optimizationLevelToString(mode.optimizationLevel);
+            projectFile["modes"][mode.name]["debugInfo"] = mode.debugInfo;
             projectFile["modes"][mode.name]["output"] = mode.outputFolder;
         }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Caracal/API.h>
+#include <Caracal/CodeGen/DebugInfoBuilder.h>
 #include <Caracal/IR/Function.h>
 #include <Caracal/IR/Instruction.h>
 #include <Caracal/IR/Module.h>
@@ -32,7 +33,7 @@ namespace Caracal
     class LLVMCodeGenerator
     {
     public:
-        LLVMCodeGenerator(const Module& irModule, llvm::Module& llvmModule);
+        LLVMCodeGenerator(const Module& irModule, llvm::Module& llvmModule, bool debugInfo);
         ~LLVMCodeGenerator();
 
         CARACAL_DELETE_COPY_DELETE_MOVE(LLVMCodeGenerator)
@@ -67,6 +68,7 @@ namespace Caracal
         const Module& m_irModule;
         llvm::Module& m_llvmModule;
         std::unique_ptr<llvm::IRBuilderBase> m_irBuilder;
+        std::unique_ptr<DebugInfoBuilder> m_debugInfo;
         llvm::Function* m_currentFunction;
         std::unordered_map<TemporaryId, llvm::Value*> m_values;
         std::unordered_map<LocalSlotId, llvm::Value*> m_slots;

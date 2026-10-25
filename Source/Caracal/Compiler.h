@@ -41,5 +41,6 @@ namespace Caracal
     CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(
         Module& irModule,
         std::string targetTriple,
-        OptimizationLevel optimizationLevel = OptimizationLevel::None);
+        OptimizationLevel optimizationLevel = OptimizationLevel::None,
+        bool debugInfo = false);
 };
