@@ -23,23 +23,19 @@ namespace Caracal
         , m_builder{ std::make_unique<llvm::DIBuilder>(llvmModule) }
         , m_compileUnit{ nullptr }
     {
-        const auto& fileNames = m_irModule.sourceFileNames();
-        for (size_t fileId = 0; fileId < fileNames.size(); ++fileId)
-        {
-            if (fileNames[fileId].empty())
-                continue;
+        const auto compileUnitFileId = m_irModule.firstUserSourceFileId();
+        if (!compileUnitFileId.has_value())
+            return;
 
-            m_compileUnit = m_builder->createCompileUnit(
-                SourceLanguage,
-                fileFor(static_cast<u16>(fileId)),
-                Producer,
-                false,
-                "",
-                0,
-                "",
-                llvm::DICompileUnit::LineTablesOnly);
-            break;
-        }
+        m_compileUnit = m_builder->createCompileUnit(
+            SourceLanguage,
+            fileFor(compileUnitFileId.value()),
+            Producer,
+            false,
+            "",
+            0,
+            "",
+            llvm::DICompileUnit::LineTablesOnly);
     }
 
     // defaulted here so the unique_ptr<llvm::DIBuilder> member is

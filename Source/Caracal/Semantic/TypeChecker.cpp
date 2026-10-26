@@ -1027,7 +1027,7 @@ namespace Caracal
 
     SourceLine TypeChecker::tokenLine(const CompilationUnit& unit, u32 tokenIndex) const
     {
-        if (!m_options.recordsSourceLocations || unit.origin != UnitOrigin::User)
+        if (!m_options.recordsSourceLocations || unit.origin == UnitOrigin::Prelude)
         {
             return {};
         }
