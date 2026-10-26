@@ -46,6 +46,7 @@ namespace Caracal
         [[nodiscard]] ConstantValue constantValue(const Instruction& constantInstruction) const;
         [[nodiscard]] std::string_view fieldName(Type objectType, i32 fieldIndex) const noexcept;
         [[nodiscard]] const std::vector<std::string>& sourceFileNames() const noexcept { return m_sourceFileNames; }
+        [[nodiscard]] std::optional<u16> firstUserSourceFileId() const noexcept { return m_firstUserSourceFileId; }
 
         void addEnum(EnumDeclaration enumDeclaration);
         void addExternFunction(ExternFunction function);
@@ -65,6 +66,7 @@ namespace Caracal
         [[nodiscard]] const BuiltinTypeDescription* tryGetBuiltinTypeDescription(Type type) const noexcept;
         [[nodiscard]] u32 internName(std::string_view name);
         void setSourceFileName(u16 fileId, std::string fileName);
+        void setFirstUserSourceFileId(u16 fileId) noexcept { m_firstUserSourceFileId = fileId; }
 
     private:
         std::vector<EnumDeclaration> m_enums;
@@ -87,5 +89,6 @@ namespace Caracal
         std::vector<std::string> m_names;
         std::unordered_map<std::string, u32, TransparentStringHash, std::equal_to<>> m_nameIds;
         std::vector<std::string> m_sourceFileNames;
+        std::optional<u16> m_firstUserSourceFileId;
     };
 }

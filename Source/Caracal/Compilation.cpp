@@ -132,9 +132,15 @@ namespace Caracal
     {
         for (const auto& unit : compilationContext.units())
         {
-            if (unit.origin == UnitOrigin::User)
+            if (unit.origin == UnitOrigin::Prelude)
             {
-                irModule.setSourceFileName(unit.fileId, unit.source->filePath.generic_string());
+                continue;
+            }
+
+            irModule.setSourceFileName(unit.fileId, unit.source->filePath.generic_string());
+            if (unit.origin == UnitOrigin::User && !irModule.firstUserSourceFileId().has_value())
+            {
+                irModule.setFirstUserSourceFileId(unit.fileId);
             }
         }
     }

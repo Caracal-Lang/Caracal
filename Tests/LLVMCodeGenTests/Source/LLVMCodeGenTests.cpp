@@ -202,10 +202,28 @@ static void FunctionWithoutSourceLineGetsNoDebugInformation()
     CaraTest::isTrue(output.find("name: \"main\"") != std::string::npos);
 }
 
+static void CoreEntryPointAndUserMainGetDebugInformation()
+{
+    const auto coreFilePath = TestDataDirectory() / "../../Core/Entrypoint.cara";
+    auto coreSource = Caracal::File::readText(coreFilePath);
+    if (!coreSource.has_value())
+        CaraTest::fail();
+
+    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
+    compilationContext.addSource(std::move(coreSource.value()), "Core/Entrypoint.cara", Caracal::UnitOrigin::Core);
+    Caracal::Module module{};
+    CompileFixtureToModule(TestDataDirectory() / "InputDebugInfoCore" / "entryPoint.cara", compilationContext, module, "InputDebugInfoCore/entryPoint.cara");
+
+    const auto [irGenerated, output] = Caracal::generateLLVMIRFromModule(module, TestTargetTriple, Caracal::OptimizationLevel::None, true);
+
+    CheckGeneratedLLVMIR(TestDataDirectory() / "OutputLLVMDebugInfo" / "entryPoint.txt", irGenerated, output);
+}
+
 static auto tests =
 {
     CaraTest::addTest("DebugFileTests", DebugFileTests, FileTests_Data),
     CaraTest::addTest("ReleaseFileTests", ReleaseFileTests, FileTests_Data),
     CaraTest::addTest("DebugInfoFileTests", DebugInfoFileTests, DebugInfoFileTests_Data),
     CaraTest::addTest("a function without a source line gets no debug information", FunctionWithoutSourceLineGetsNoDebugInformation),
+    CaraTest::addTest("the Core entry point and the user's main get debug information", CoreEntryPointAndUserMainGetDebugInformation),
 };
