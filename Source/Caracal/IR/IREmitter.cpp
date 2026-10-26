@@ -364,11 +364,11 @@ namespace Caracal
         return moduleNameId;
     }
 
-    ValueRef IREmitter::allocateLocalSlot(u32 moduleNameId, Type valueType, ValueRef initialValue)
+    ValueRef IREmitter::allocateLocalSlot(u32 moduleNameId, Type valueType, ValueRef initialValue, i32 variable)
     {
         CARACAL_ZONE_NAMED("emit.allocateLocalSlot");
         const auto localId = m_nextLocalSlotId++;
-        m_currentBuilder->appendPrologueInstruction(m_currentBlockIndex, Instruction::CreateAllocateLocal(valueType, localId, moduleNameId));
+        m_currentBuilder->appendPrologueInstruction(m_currentBlockIndex, Instruction::CreateAllocateLocal(valueType, localId, moduleNameId, variable));
         const auto address = appendValueInstruction(Instruction::CreateAddressOf(nextTemporaryId(), valueType.toReference(), localId));
 
         if (initialValue.id() >= 0)
@@ -393,6 +393,7 @@ namespace Caracal
         const auto needsAddressStorage = parameterType.isReference()
             || parameterType.kind() == TypeKind::Type
             || parameterType.kind() == TypeKind::FixedArray
+            || m_storesLocalsInSlots
             || std::binary_search(m_addressTakenLocals.begin(), m_addressTakenLocals.end(), nameId);
         if (!needsAddressStorage)
         {
@@ -406,7 +407,7 @@ namespace Caracal
             return;
         }
 
-        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, parameter.name()), parameterType, parameterId);
+        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, parameter.name()), parameterType, parameterId, position + 1);
         m_locals.set(nameId, LocalState{ address, parameterType, LocalStorageKind::Address });
     }
 
@@ -427,14 +428,14 @@ namespace Caracal
 
         if (localType.kind() == TypeKind::Type)
         {
-            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value);
+            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value, LocalVariableSlot);
             m_locals.set(nameId, LocalState{ address, localType, LocalStorageKind::Address });
             return;
         }
 
-        if (std::binary_search(m_addressTakenLocals.begin(), m_addressTakenLocals.end(), nameId))
+        if (m_storesLocalsInSlots || std::binary_search(m_addressTakenLocals.begin(), m_addressTakenLocals.end(), nameId))
         {
-            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value);
+            const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), localType, value, LocalVariableSlot);
             m_locals.set(nameId, LocalState{ address, localType, LocalStorageKind::Address });
             return;
         }
@@ -500,7 +501,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), type, ValueRef{});
+        const auto address = allocateLocalSlot(moduleNameIdOf(nameId, name), type, ValueRef{}, LocalVariableSlot);
         m_locals.set(nameId, LocalState{ address, type, LocalStorageKind::Address });
         return address;
     }
@@ -512,7 +513,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        return allocateLocalSlot(m_module.internName(name), type, ValueRef{});
+        return allocateLocalSlot(m_module.internName(name), type, ValueRef{}, TemporarySlot);
     }
 
     ValueRef IREmitter::spillToTempSlot(ValueRef value, Type valueType)
@@ -522,7 +523,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        return allocateLocalSlot(m_module.internName("temp"), valueType, value);
+        return allocateLocalSlot(m_module.internName("temp"), valueType, value, TemporarySlot);
     }
 
     ValueRef IREmitter::emitFieldAddress(ValueRef objectAddress, Type objectType, i32 fieldIndex, Type fieldType)
@@ -788,7 +789,7 @@ namespace Caracal
         }
 
         const auto value = emitLoad(address, valueType);
-        return allocateLocalSlot(m_module.internName("refConstTemp"), valueType, value);
+        return allocateLocalSlot(m_module.internName("refConstTemp"), valueType, value, TemporarySlot);
     }
 
     ValueRef IREmitter::peekLocal(u32 nameId)

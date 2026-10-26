@@ -12,6 +12,9 @@ namespace Caracal
     using FunctionId = i32;
     using EnumId = i32;
 
+    inline constexpr i32 TemporarySlot = 0;
+    inline constexpr i32 LocalVariableSlot = -1;
+
     enum class InstructionKind
     {
         Parameter,
@@ -93,7 +96,7 @@ namespace Caracal
     // Parameter          a parameter index
     // Constant           a ConstantForm, Scalar: b literal alternative, c d bits
     //                    String: c d offset and length in ConstantPool, Pooled: b index
-    // AllocateLocal      a slot id, b name id, no result
+    // AllocateLocal      a slot id, b name id, c the variable it holds, no result
     // AddressOf          a slot id
     // AddressOfGlobal    a name id
     // FieldAddress       a object address, b field index, c d object type
@@ -157,11 +160,12 @@ namespace Caracal
             return instruction;
         }
 
-        [[nodiscard]] static Instruction CreateAllocateLocal(Type valueType, LocalSlotId slot, u32 nameId) noexcept
+        [[nodiscard]] static Instruction CreateAllocateLocal(Type valueType, LocalSlotId slot, u32 nameId, i32 variable) noexcept
         {
             auto instruction = Instruction{ InstructionKind::AllocateLocal, -1, valueType };
             instruction.a = slot;
             instruction.b = static_cast<i32>(nameId);
+            instruction.c = variable;
             return instruction;
         }
 

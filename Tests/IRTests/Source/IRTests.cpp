@@ -125,7 +125,7 @@ static void LocalAllocationMovedToStartOfItsBlockKeepsItsLine()
     const auto blockIndex = builder.addBlock(0, Caracal::BlockLabel::Entry);
     static_cast<void>(builder.appendInstruction(blockIndex, Caracal::Instruction{ Caracal::InstructionKind::Unreachable, -1, Caracal::Type::Void() }));
     currentSourceLine.line = 5;
-    static_cast<void>(builder.appendPrologueInstruction(blockIndex, Caracal::Instruction::CreateAllocateLocal(Caracal::Type::Void(), 0, 0)));
+    static_cast<void>(builder.appendPrologueInstruction(blockIndex, Caracal::Instruction::CreateAllocateLocal(Caracal::Type::Void(), 0, 0, Caracal::TemporarySlot)));
     Caracal::Function function{ 0, "function", {}, Caracal::Type::Void() };
 
     builder.finish(function);

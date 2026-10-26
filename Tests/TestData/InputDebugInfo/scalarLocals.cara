@@ -1,0 +1,17 @@
+def main() i32
+{
+    count : i32 = 0;
+    total : i64 = 0;
+    ratio : f32 = 0.5;
+    small : u8 = 7;
+    done : bool = false;
+    while !done
+    {
+        count = count %+ 1;
+        total = total %+ 10;
+        ratio = ratio %* 2.0;
+        done = count == 3;
+    }
+
+    return count %- 3;
+}

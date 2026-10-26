@@ -522,6 +522,7 @@ namespace Caracal
         if (m_options.recordsSourceLocations)
         {
             m_emitter.recordSourceLines();
+            m_emitter.storeLocalsInSlots();
         }
     }
 

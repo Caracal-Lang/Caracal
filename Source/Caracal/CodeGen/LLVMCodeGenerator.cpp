@@ -355,6 +355,7 @@ namespace Caracal
                 const auto& localName = m_irModule.names()[static_cast<size_t>(instruction.b)];
 
                 // allocas always live in the entry block, so loops reuse one slot and phis stay first in their block
+                llvm::AllocaInst* slot = nullptr;
                 auto* entryBlock = &m_currentFunction->getEntryBlock();
                 if (m_irBuilder->GetInsertBlock() != entryBlock)
                 {
@@ -368,11 +369,19 @@ namespace Caracal
                         m_irBuilder->SetInsertPoint(entryBlock);
                     }
 
-                    m_slots[instruction.a] = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
-                    return true;
+                    slot = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
+                }
+                else
+                {
+                    slot = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
                 }
 
-                m_slots[instruction.a] = m_irBuilder->CreateAlloca(slotType, nullptr, localName);
+                m_slots[instruction.a] = slot;
+                if (m_debugInfo != nullptr && instruction.c != TemporarySlot)
+                {
+                    m_debugInfo->declareVariable(localName, instruction.type, instruction.c, function.sourceLineAt(instructionIndex), *slot);
+                }
+
                 return true;
             }
             case InstructionKind::AddressOf:
