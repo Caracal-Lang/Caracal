@@ -1,0 +1,12 @@
+type Math()
+{
+    def Math.twice(value: i32) i32
+    {
+        return value %* 2;
+    }
+}
+
+def main() i32
+{
+    return Math.twice(21) %- 42;
+}

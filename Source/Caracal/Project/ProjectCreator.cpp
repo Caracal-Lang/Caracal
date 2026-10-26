@@ -1,4 +1,5 @@
 #include <Caracal/Compilation/OptimizationLevel.h>
+#include <Caracal/Defines.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Project/ProjectModes.h>
@@ -128,9 +129,9 @@ namespace Caracal
     {
         return std::format(
             "{}.{}.{}",
-            static_cast<int>(day.year()),
-            static_cast<unsigned>(day.month()),
-            static_cast<unsigned>(day.day()));
+            static_cast<i32>(day.year()),
+            static_cast<u32>(day.month()),
+            static_cast<u32>(day.day()));
     }
 
     static std::string CreateProjectFileText(const Project& project)

@@ -1,0 +1,86 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @main() !dbg !16 {
+entry:
+  %color = alloca i32, align 4, !dbg !20
+    #dbg_declare(ptr %color, !21, !DIExpression(), !20)
+  %level = alloca i8, align 1, !dbg !22
+    #dbg_declare(ptr %level, !23, !DIExpression(), !22)
+  %answer = alloca i1, align 1, !dbg !24
+    #dbg_declare(ptr %answer, !25, !DIExpression(), !24)
+  store i32 5, ptr %color, align 4, !dbg !20
+  store i8 1, ptr %level, align 1, !dbg !22
+  store i1 true, ptr %answer, align 1, !dbg !24
+  %load = load i32, ptr %color, align 4, !dbg !27
+  %equal = icmp eq i32 %load, 5, !dbg !27
+  br i1 %equal, label %and.rhs, label %and.merge, !dbg !27
+
+and.rhs:                                          ; preds = %entry
+  %load3 = load i8, ptr %level, align 1, !dbg !27
+  %equal4 = icmp eq i8 %load3, 1, !dbg !27
+  br label %and.merge, !dbg !27
+
+and.merge:                                        ; preds = %and.rhs, %entry
+  %phi = phi i1 [ %equal, %entry ], [ %equal4, %and.rhs ], !dbg !27
+  br i1 %phi, label %and.rhs1, label %and.merge2, !dbg !27
+
+and.rhs1:                                         ; preds = %and.merge
+  %load5 = load i1, ptr %answer, align 1, !dbg !27
+  %equal6 = icmp eq i1 %load5, true, !dbg !27
+  br label %and.merge2, !dbg !27
+
+and.merge2:                                       ; preds = %and.rhs1, %and.merge
+  %phi7 = phi i1 [ %phi, %and.merge ], [ %equal6, %and.rhs1 ], !dbg !27
+  br i1 %phi7, label %if.true, label %if.continuation, !dbg !27
+
+if.true:                                          ; preds = %and.merge2
+  ret i32 0, !dbg !28
+
+if.continuation:                                  ; preds = %and.merge2
+  ret i32 1, !dbg !29
+}
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!14, !15}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "Caracal", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug, enums: !2)
+!1 = !DIFile(filename: "enumLocal.cara", directory: "InputDebugInfo")
+!2 = !{!3, !9}
+!3 = !DICompositeType(tag: DW_TAG_enumeration_type, name: "Color", baseType: !4, size: 32, elements: !5)
+!4 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)
+!5 = !{!6, !7, !8}
+!6 = !DIEnumerator(name: "Color.Red", value: 0)
+!7 = !DIEnumerator(name: "Color.Green", value: 5)
+!8 = !DIEnumerator(name: "Color.Blue", value: 6)
+!9 = !DICompositeType(tag: DW_TAG_enumeration_type, name: "Level", baseType: !10, size: 8, elements: !11)
+!10 = !DIBasicType(name: "u8", size: 8, encoding: DW_ATE_unsigned_char)
+!11 = !{!12, !13}
+!12 = !DIEnumerator(name: "Level.Low", value: 0, isUnsigned: true)
+!13 = !DIEnumerator(name: "Level.High", value: 1, isUnsigned: true)
+!14 = !{i32 2, !"Debug Info Version", i32 3}
+!15 = !{i32 2, !"CodeView", i32 1}
+!16 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 20, type: !17, scopeLine: 20, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !19)
+!17 = !DISubroutineType(types: !18)
+!18 = !{!4}
+!19 = !{}
+!20 = !DILocation(line: 22, scope: !16)
+!21 = !DILocalVariable(name: "color", scope: !16, file: !1, line: 22, type: !3)
+!22 = !DILocation(line: 23, scope: !16)
+!23 = !DILocalVariable(name: "level", scope: !16, file: !1, line: 23, type: !9)
+!24 = !DILocation(line: 24, scope: !16)
+!25 = !DILocalVariable(name: "answer", scope: !16, file: !1, line: 24, type: !26)
+!26 = !DIBasicType(name: "bool", size: 8, encoding: DW_ATE_boolean)
+!27 = !DILocation(line: 25, scope: !16)
+!28 = !DILocation(line: 27, scope: !16)
+!29 = !DILocation(line: 29, scope: !16)

@@ -28,6 +28,8 @@ namespace Caracal
     class TypeDefinition
     {
     public:
+        using MethodsByName = std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>>;
+
         TypeDefinition(
             Type type,
             const std::string& name);
@@ -42,6 +44,7 @@ namespace Caracal
         [[nodiscard]] const FieldDefinition& tryGetFieldByName(std::string_view fieldName) const noexcept;
         [[nodiscard]] const std::vector<FieldDefinition>& fields() const noexcept { return m_fields; }
         void addMethod(Type methodType, const std::string& methodName) noexcept;
+        [[nodiscard]] const MethodsByName& methods() const noexcept { return m_methods; }
         [[nodiscard]] Type tryGetMethodTypeByName(std::string_view methodName) const noexcept;
         void addOperatorSignature(BinaryOperatorKind binaryOperator, const OperatorSignature& signature) noexcept;
         void addOperatorSignature(UnaryOperatorKind unaryOperator, const OperatorSignature& signature) noexcept;
@@ -54,7 +57,7 @@ namespace Caracal
         Type m_type;
         std::string m_name;
         std::vector<FieldDefinition> m_fields;
-        std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_methods;
+        MethodsByName m_methods;
         std::unordered_map<BinaryOperatorKind, OperatorSignature> m_binaryOperators;
         std::unordered_map<UnaryOperatorKind, OperatorSignature> m_unaryOperators;
         NodeIndex m_definitionNode{};

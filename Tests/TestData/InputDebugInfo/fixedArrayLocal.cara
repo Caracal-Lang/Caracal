@@ -1,0 +1,16 @@
+type Grid
+{
+    cells : [i32; 4] = [1, 2, 3, 4]
+}
+
+def sum(values: [i32; 4]) i32
+{
+    return values.at(0) %+ values.at(3);
+}
+
+def main() i32
+{
+    numbers : [i32; 4] = [1, 2, 3, 4];
+    grid := Grid.new();
+    return sum(numbers) %- grid.cells.at(1) %- 3;
+}

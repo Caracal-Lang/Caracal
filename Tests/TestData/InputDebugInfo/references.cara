@@ -1,0 +1,25 @@
+type Counter(start: i32)
+{
+    count := start
+
+    def add(amount: i32)
+    {
+        .count = .count %+ amount;
+    }
+}
+
+def increment(value: ref i32)
+{
+    value = value %+ 1;
+}
+
+def main() i32
+{
+    number := 40;
+    alias := ref number;
+    increment(ref number);
+    counter := Counter.new(1);
+    alias = alias %+ 1;
+    counter.add(number);
+    return counter.count %- 43;
+}

@@ -1,0 +1,107 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Grid = type { [4 x i32] }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @sum([4 x i32] %0) !dbg !4 {
+entry:
+  %values = alloca [4 x i32], align 4, !dbg !12
+    #dbg_declare(ptr %values, !13, !DIExpression(), !12)
+  store [4 x i32] %0, ptr %values, align 4, !dbg !12
+  %element = getelementptr [4 x i32], ptr %values, i32 0, i32 0, !dbg !14
+  %load = load i32, ptr %element, align 4, !dbg !14
+  %element1 = getelementptr [4 x i32], ptr %values, i32 0, i32 3, !dbg !14
+  %load2 = load i32, ptr %element1, align 4, !dbg !14
+  %add = add i32 %load, %load2, !dbg !14
+  ret i32 %add, !dbg !14
+}
+
+define i32 @main() !dbg !15 {
+entry:
+  %numbers = alloca [4 x i32], align 4, !dbg !18
+    #dbg_declare(ptr %numbers, !19, !DIExpression(), !18)
+  %grid = alloca %Grid, align 8, !dbg !20
+    #dbg_declare(ptr %grid, !21, !DIExpression(), !20)
+  %element = getelementptr [4 x i32], ptr %numbers, i32 0, i32 0, !dbg !18
+  store i32 1, ptr %element, align 4, !dbg !18
+  %element1 = getelementptr [4 x i32], ptr %numbers, i32 0, i32 1, !dbg !18
+  store i32 2, ptr %element1, align 4, !dbg !18
+  %element2 = getelementptr [4 x i32], ptr %numbers, i32 0, i32 2, !dbg !18
+  store i32 3, ptr %element2, align 4, !dbg !18
+  %element3 = getelementptr [4 x i32], ptr %numbers, i32 0, i32 3, !dbg !18
+  store i32 4, ptr %element3, align 4, !dbg !18
+  call void @Grid.new(ptr %grid), !dbg !20
+  %load = load [4 x i32], ptr %numbers, align 4, !dbg !29
+  %call = call i32 @sum([4 x i32] %load), !dbg !29
+  %cells = getelementptr inbounds nuw %Grid, ptr %grid, i32 0, i32 0, !dbg !29
+  %element4 = getelementptr [4 x i32], ptr %cells, i32 0, i32 1, !dbg !29
+  %load5 = load i32, ptr %element4, align 4, !dbg !29
+  %subtract = sub i32 %call, %load5, !dbg !29
+  %subtract6 = sub i32 %subtract, 3, !dbg !29
+  ret i32 %subtract6, !dbg !29
+}
+
+define void @Grid.new(ptr nonnull %0) !dbg !30 {
+entry:
+  %.this = alloca ptr, align 8, !dbg !31
+    #dbg_declare(ptr %.this, !32, !DIExpression(), !31)
+  store ptr %0, ptr %.this, align 8, !dbg !31
+  %cells = getelementptr inbounds nuw %Grid, ptr %0, i32 0, i32 0, !dbg !33
+  %element = getelementptr [4 x i32], ptr %cells, i32 0, i32 0, !dbg !33
+  store i32 1, ptr %element, align 4, !dbg !33
+  %element1 = getelementptr [4 x i32], ptr %cells, i32 0, i32 1, !dbg !33
+  store i32 2, ptr %element1, align 4, !dbg !33
+  %element2 = getelementptr [4 x i32], ptr %cells, i32 0, i32 2, !dbg !33
+  store i32 3, ptr %element2, align 4, !dbg !33
+  %element3 = getelementptr [4 x i32], ptr %cells, i32 0, i32 3, !dbg !33
+  store i32 4, ptr %element3, align 4, !dbg !33
+  ret void, !dbg !31
+}
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!2, !3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "Caracal", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug)
+!1 = !DIFile(filename: "fixedArrayLocal.cara", directory: "InputDebugInfo")
+!2 = !{i32 2, !"Debug Info Version", i32 3}
+!3 = !{i32 2, !"CodeView", i32 1}
+!4 = distinct !DISubprogram(name: "sum", scope: !1, file: !1, line: 6, type: !5, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
+!5 = !DISubroutineType(types: !6)
+!6 = !{!7, !8}
+!7 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)
+!8 = !DICompositeType(tag: DW_TAG_array_type, baseType: !7, size: 128, elements: !9)
+!9 = !{!10}
+!10 = !DISubrange(count: 4, lowerBound: 0)
+!11 = !{}
+!12 = !DILocation(line: 6, scope: !4)
+!13 = !DILocalVariable(name: "values", arg: 1, scope: !4, file: !1, line: 6, type: !8)
+!14 = !DILocation(line: 8, scope: !4)
+!15 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !16, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
+!16 = !DISubroutineType(types: !17)
+!17 = !{!7}
+!18 = !DILocation(line: 13, scope: !15)
+!19 = !DILocalVariable(name: "numbers", scope: !15, file: !1, line: 13, type: !8)
+!20 = !DILocation(line: 14, scope: !15)
+!21 = !DILocalVariable(name: "grid", scope: !15, file: !1, line: 14, type: !22)
+!22 = !DICompositeType(tag: DW_TAG_structure_type, name: "Grid", size: 128, elements: !23)
+!23 = !{!24, !25}
+!24 = !DIDerivedType(tag: DW_TAG_member, name: "cells", scope: !22, baseType: !8, size: 128)
+!25 = !DISubprogram(name: "new", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
+!26 = !DISubroutineType(types: !27)
+!27 = !{null, !28}
+!28 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !22, size: 64, flags: DIFlagArtificial | DIFlagObjectPointer)
+!29 = !DILocation(line: 15, scope: !15)
+!30 = distinct !DISubprogram(name: "new", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, declaration: !25, retainedNodes: !11)
+!31 = !DILocation(line: 1, scope: !30)
+!32 = !DILocalVariable(name: "this", arg: 1, scope: !30, file: !1, line: 1, type: !28, flags: DIFlagArtificial | DIFlagObjectPointer)
+!33 = !DILocation(line: 3, scope: !30)

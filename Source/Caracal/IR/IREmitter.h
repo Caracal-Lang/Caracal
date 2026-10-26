@@ -86,7 +86,7 @@ namespace Caracal
         void setAddressTakenLocals(const std::vector<u32>& sortedNameIds);
         void setPreludeMode(bool isPreludePass) noexcept;
         void setNameLexemes(const std::vector<std::string_view>& lexemes) noexcept;
-        void emitRefLocalDeclaration(u32 nameId, Type refType, ValueRef address);
+        void emitRefLocalDeclaration(u32 nameId, std::string_view name, Type refType, ValueRef address);
         [[nodiscard]] ValueRef addressOfLocal(u32 nameId);
         [[nodiscard]] ValueRef emitRefValue(u32 nameId, Type valueType);
         [[nodiscard]] ValueRef emitLoad(ValueRef address, Type valueType);

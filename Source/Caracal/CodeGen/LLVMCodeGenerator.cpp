@@ -35,7 +35,7 @@ namespace Caracal
     {
         if (debugInfo)
         {
-            m_debugInfo = std::make_unique<DebugInfoBuilder>(irModule, llvmModule);
+            m_debugInfo = std::make_unique<DebugInfoBuilder>(irModule, llvmModule, [this](Type type) { return lowerType(type); });
         }
     }
 
@@ -46,6 +46,9 @@ namespace Caracal
     bool LLVMCodeGenerator::generate()
     {
         CARACAL_ZONE_NAMED("codegen");
+        if (m_debugInfo != nullptr)
+            m_debugInfo->initialize();
+
         if (!lowerTypes())
             return false;
 
@@ -242,7 +245,7 @@ namespace Caracal
 
         auto* function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, name, m_llvmModule);
 
-        unsigned argumentIndex = 0;
+        u32 argumentIndex = 0;
         for (const auto& parameter : parameters)
         {
             if (parameter.type().isReference())
@@ -325,7 +328,7 @@ namespace Caracal
             }
             case InstructionKind::Parameter:
             {
-                defineValue(instruction.resultId, m_currentFunction->getArg(static_cast<unsigned>(instruction.a)));
+                defineValue(instruction.resultId, m_currentFunction->getArg(static_cast<u32>(instruction.a)));
                 return true;
             }
             case InstructionKind::Constant:
@@ -402,7 +405,7 @@ namespace Caracal
                     return false;
 
                 const auto fieldName = m_irModule.fieldName(instruction.secondType(), instruction.b);
-                auto* fieldPointer = m_irBuilder->CreateStructGEP(structType, objectAddress, static_cast<unsigned>(instruction.b), llvm::StringRef{ fieldName });
+                auto* fieldPointer = m_irBuilder->CreateStructGEP(structType, objectAddress, static_cast<u32>(instruction.b), llvm::StringRef{ fieldName });
                 defineValue(instruction.resultId, fieldPointer);
                 return true;
             }
@@ -606,7 +609,7 @@ namespace Caracal
                 if (phiType == nullptr)
                     return false;
 
-                auto* node = m_irBuilder->CreatePHI(phiType, static_cast<unsigned>(instruction.b), "phi");
+                auto* node = m_irBuilder->CreatePHI(phiType, static_cast<u32>(instruction.b), "phi");
                 defineValue(instruction.resultId, node);
                 m_pendingPhis.emplace_back(instructionIndex, node);
                 return true;
@@ -1034,7 +1037,7 @@ namespace Caracal
             {
                 case BuiltinTypeKind::Int:
                 {
-                    return llvm::Type::getIntNTy(context, static_cast<unsigned>(description->bits));
+                    return llvm::Type::getIntNTy(context, static_cast<u32>(description->bits));
                 }
                 case BuiltinTypeKind::Float:
                 {
@@ -1146,7 +1149,7 @@ namespace Caracal
                 else if constexpr (std::is_integral_v<Payload> && !std::is_same_v<Payload, bool>)
                 {
                     constexpr auto isSignedPayload = std::is_signed_v<Payload>;
-                    auto* integerType = llvm::Type::getIntNTy(context, static_cast<unsigned>(sizeof(Payload) * 8));
+                    auto* integerType = llvm::Type::getIntNTy(context, static_cast<u32>(sizeof(Payload) * 8));
                     return llvm::ConstantInt::get(integerType, static_cast<std::uint64_t>(payload), isSignedPayload);
                 }
                 else if constexpr (std::is_same_v<Payload, f32> || std::is_same_v<Payload, f64>)

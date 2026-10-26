@@ -39,6 +39,7 @@ namespace Caracal
         [[nodiscard]] const ExternFunction* tryGetExternFunction(FunctionId id) const noexcept;
         [[nodiscard]] const Function* tryGetFunction(FunctionId id) const noexcept;
         [[nodiscard]] const std::string* tryGetFunctionName(FunctionId id) const noexcept;
+        [[nodiscard]] const TypeDeclaration* tryGetType(Type type) const noexcept;
         [[nodiscard]] const std::string* tryGetTypeName(Type type) const noexcept;
         [[nodiscard]] const ConstantPool& constants() const noexcept { return m_constants; }
         [[nodiscard]] ConstantPool& constants() noexcept { return m_constants; }

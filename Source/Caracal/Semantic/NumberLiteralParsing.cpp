@@ -44,7 +44,7 @@ namespace Caracal
 
     std::optional<u8> tryParseU8Literal(std::string_view lexeme)
     {
-        unsigned int value = 0;
+        u32 value = 0;
         const auto* begin = lexeme.data();
         const auto* end = begin + lexeme.size();
         const auto result = std::from_chars(begin, end, value);
