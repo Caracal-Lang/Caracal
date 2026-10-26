@@ -113,6 +113,23 @@ static void ReleaseFileTests(
     CheckGeneratedLLVMIR(outputFilePath, irGenerated, output);
 }
 
+static void EveryProgramBuildsWithDebugInformation(
+    const std::string& /*fileName*/,
+    const std::filesystem::path& inputFilePath,
+    const std::filesystem::path& relativeOutputPath)
+{
+    if (!std::filesystem::exists(TestDataDirectory() / "OutputLLVMDebug" / relativeOutputPath))
+        CaraTest::skip();
+
+    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
+    Caracal::Module module{};
+    CompileFixtureToModule(inputFilePath, compilationContext, module, inputFilePath.lexically_relative(TestDataDirectory()));
+
+    const auto [irGenerated, output] = Caracal::generateLLVMIRFromModule(module, TestTargetTriple, Caracal::OptimizationLevel::None, true);
+
+    CaraTest::isTrue(irGenerated);
+}
+
 static std::vector<std::tuple<std::string, std::filesystem::path, std::filesystem::path>> FileTests_Data()
 {
     const auto inputDirectory = TestDataDirectory() / "Input";
@@ -224,6 +241,7 @@ static auto tests =
     CaraTest::addTest("DebugFileTests", DebugFileTests, FileTests_Data),
     CaraTest::addTest("ReleaseFileTests", ReleaseFileTests, FileTests_Data),
     CaraTest::addTest("DebugInfoFileTests", DebugInfoFileTests, DebugInfoFileTests_Data),
+    CaraTest::addTest("every program builds with debug information", EveryProgramBuildsWithDebugInformation, FileTests_Data),
     CaraTest::addTest("a function without a source line gets no debug information", FunctionWithoutSourceLineGetsNoDebugInformation),
     CaraTest::addTest("the Core entry point and the user's main get debug information", CoreEntryPointAndUserMainGetDebugInformation),
 };

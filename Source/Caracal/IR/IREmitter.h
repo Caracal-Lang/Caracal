@@ -73,6 +73,7 @@ namespace Caracal
         void endFunction();
         [[nodiscard]] SourceLine& currentSourceLine() noexcept { return m_currentSourceLine; }
         void recordSourceLines() noexcept { m_functionBuilder.recordSourceLinesFrom(&m_currentSourceLine); }
+        void storeLocalsInSlots() noexcept { m_storesLocalsInSlots = true; }
         [[nodiscard]] ValueRef emitConstant(ConstantValue value, Type type);
         [[nodiscard]] ValueRef emitFoldedConstant(const FoldValue& value, Type type);
         void emitReturn();
@@ -167,7 +168,7 @@ namespace Caracal
         void registerExternDefinition(const FunctionDefinition& definition);
         [[nodiscard]] bool canEmitWith(std::initializer_list<ValueRef> operands);
         [[nodiscard]] ValueRef elementBaseAddress(ValueRef receiverAddress, Type receiverType, Type elementType);
-        [[nodiscard]] ValueRef allocateLocalSlot(u32 moduleNameId, Type valueType, ValueRef initialValue);
+        [[nodiscard]] ValueRef allocateLocalSlot(u32 moduleNameId, Type valueType, ValueRef initialValue, i32 variable);
         [[nodiscard]] u32 moduleNameIdOf(u32 checkerNameId, std::string_view name);
         [[nodiscard]] std::vector<u32> sortedDefinedLocalIds(const LocalsMap& locals) const;
         [[nodiscard]] bool installPreludeFunction(Type functionType);
@@ -206,6 +207,7 @@ namespace Caracal
         const std::vector<std::string_view>* m_nameLexemes = nullptr;
         std::vector<u32> m_moduleNameIdByCheckerNameId;
         std::vector<u32> m_addressTakenLocals;
+        bool m_storesLocalsInSlots = false;
         std::vector<LoopContext> m_loopContexts;
         std::map<std::pair<i32, std::string>, EnumFieldConstant> m_enumFieldConstants;
         std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_globalTypes;
