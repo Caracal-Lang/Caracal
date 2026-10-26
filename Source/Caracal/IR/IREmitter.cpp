@@ -22,6 +22,20 @@ namespace Caracal
         {
             typeDeclaration.addField(fieldDefinition.name(), fieldDefinition.type(), fieldDefinition.isConstant());
         }
+
+        std::vector<TypeDeclaration::Method> methods;
+        methods.reserve(definition.methods().size());
+        for (const auto& [methodName, methodType] : definition.methods())
+        {
+            methods.push_back(TypeDeclaration::Method{ methodName, methodType.id() });
+        }
+
+        std::ranges::sort(methods, {}, &TypeDeclaration::Method::functionId);
+        for (auto& method : methods)
+        {
+            typeDeclaration.addMethod(std::move(method.name), method.functionId);
+        }
+
         return typeDeclaration;
     }
 
@@ -403,6 +417,12 @@ namespace Caracal
 
         if (parameterType.isReference())
         {
+            if (m_storesLocalsInSlots)
+            {
+                // only the debugger reads this slot
+                static_cast<void>(allocateLocalSlot(moduleNameIdOf(nameId, parameter.name()), parameterType, parameterId, position + 1));
+            }
+
             m_locals.set(nameId, LocalState{ parameterId, parameterType, LocalStorageKind::Address });
             return;
         }
@@ -468,11 +488,17 @@ namespace Caracal
         return (*m_nameLexemes)[nameId];
     }
 
-    void IREmitter::emitRefLocalDeclaration(u32 nameId, Type refType, ValueRef address)
+    void IREmitter::emitRefLocalDeclaration(u32 nameId, std::string_view name, Type refType, ValueRef address)
     {
         if (!canEmitWith({ address }))
         {
             return;
+        }
+
+        if (m_storesLocalsInSlots)
+        {
+            // only the debugger reads this slot
+            static_cast<void>(allocateLocalSlot(moduleNameIdOf(nameId, name), refType, address, LocalVariableSlot));
         }
 
         m_locals.set(nameId, LocalState{ address, refType, LocalStorageKind::Address });

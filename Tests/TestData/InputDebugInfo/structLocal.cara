@@ -1,0 +1,28 @@
+type Point(startX: i32, startY: i32)
+{
+    x := startX
+    y := startY
+}
+
+type Line(from: Point, to: Point)
+{
+    start := from
+    end := to
+}
+
+type Tree
+{
+    children : [Tree; _] = [...]
+}
+
+def width(line: Line) i32
+{
+    return line.end.x %- line.start.x;
+}
+
+def main() i32
+{
+    line := Line.new(Point.new(1, 2), Point.new(4, 6));
+    tree := Tree.new();
+    return width(line) %- 3 %+ tree.children.length;
+}

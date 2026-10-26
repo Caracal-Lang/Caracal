@@ -1,0 +1,18 @@
+def total(values: [i32]) i32
+{
+    return values.length;
+}
+
+def count(items: [i32; _]) i32
+{
+    return items.length;
+}
+
+def main() i32
+{
+    numbers := [1, 2, 3];
+    view : [i32] = numbers.slice();
+    items : [i32; _] = [4, 5, 6, ...];
+    items.add(7);
+    return total(view) %+ count(items) %- 7;
+}

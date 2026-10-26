@@ -1,0 +1,152 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @total({ ptr, i32 } %0) !dbg !4 {
+entry:
+  %values = alloca { ptr, i32 }, align 8, !dbg !14
+    #dbg_declare(ptr %values, !15, !DIExpression(), !14)
+  store { ptr, i32 } %0, ptr %values, align 8, !dbg !14
+  %length = getelementptr inbounds nuw { ptr, i32 }, ptr %values, i32 0, i32 1, !dbg !16
+  %load = load i32, ptr %length, align 4, !dbg !16
+  ret i32 %load, !dbg !16
+}
+
+define i32 @count({ ptr, i32, i32 } %0) !dbg !17 {
+entry:
+  %items = alloca { ptr, i32, i32 }, align 8, !dbg !25
+    #dbg_declare(ptr %items, !26, !DIExpression(), !25)
+  store { ptr, i32, i32 } %0, ptr %items, align 8, !dbg !25
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !27
+  %load = load i32, ptr %length, align 4, !dbg !27
+  ret i32 %load, !dbg !27
+}
+
+define i32 @main() !dbg !28 {
+entry:
+  %numbers = alloca [3 x i32], align 4, !dbg !31
+    #dbg_declare(ptr %numbers, !32, !DIExpression(), !31)
+  %view = alloca { ptr, i32 }, align 8, !dbg !36
+    #dbg_declare(ptr %view, !37, !DIExpression(), !36)
+  %items = alloca { ptr, i32, i32 }, align 8, !dbg !42
+    #dbg_declare(ptr %items, !43, !DIExpression(), !42)
+  %element = getelementptr [3 x i32], ptr %numbers, i32 0, i32 0, !dbg !31
+  store i32 1, ptr %element, align 4, !dbg !31
+  %element1 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 1, !dbg !31
+  store i32 2, ptr %element1, align 4, !dbg !31
+  %element2 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 2, !dbg !31
+  store i32 3, ptr %element2, align 4, !dbg !31
+  %0 = insertvalue { ptr, i32 } poison, ptr %numbers, 0, !dbg !36
+  %slice = insertvalue { ptr, i32 } %0, i32 3, 1, !dbg !36
+  store { ptr, i32 } %slice, ptr %view, align 8, !dbg !36
+  %call = call ptr @calloc(i64 8, i64 4), !dbg !42
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0, !dbg !42
+  store ptr %call, ptr %data, align 8, !dbg !42
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !42
+  store i32 3, ptr %length, align 4, !dbg !42
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2, !dbg !42
+  store i32 8, ptr %capacity, align 4, !dbg !42
+  %element3 = getelementptr i32, ptr %call, i32 0, !dbg !42
+  store i32 4, ptr %element3, align 4, !dbg !42
+  %element4 = getelementptr i32, ptr %call, i32 1, !dbg !42
+  store i32 5, ptr %element4, align 4, !dbg !42
+  %element5 = getelementptr i32, ptr %call, i32 2, !dbg !42
+  store i32 6, ptr %element5, align 4, !dbg !42
+  %data6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0, !dbg !44
+  %length7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !44
+  %capacity8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2, !dbg !44
+  %load = load ptr, ptr %data6, align 8, !dbg !44
+  %load9 = load i32, ptr %length7, align 4, !dbg !44
+  %load10 = load i32, ptr %capacity8, align 4, !dbg !44
+  %is_full = icmp eq i32 %load9, %load10, !dbg !44
+  %doubled = mul i32 %load10, 2, !dbg !44
+  %new_capacity = select i1 %is_full, i32 %doubled, i32 %load10, !dbg !44
+  %widened = sext i32 %new_capacity to i64, !dbg !44
+  %bytes = mul i64 %widened, 4, !dbg !44
+  %grown = call ptr @realloc(ptr %load, i64 %bytes), !dbg !44
+  store ptr %grown, ptr %data6, align 8, !dbg !44
+  store i32 %new_capacity, ptr %capacity8, align 4, !dbg !44
+  %element11 = getelementptr i32, ptr %grown, i32 %load9, !dbg !44
+  store i32 7, ptr %element11, align 4, !dbg !44
+  %new_length = add i32 %load9, 1, !dbg !44
+  store i32 %new_length, ptr %length7, align 4, !dbg !44
+  %load12 = load { ptr, i32 }, ptr %view, align 8, !dbg !45
+  %call13 = call i32 @total({ ptr, i32 } %load12), !dbg !45
+  %data14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0, !dbg !45
+  %length15 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !45
+  %capacity16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2, !dbg !45
+  %load17 = load ptr, ptr %data14, align 8, !dbg !45
+  %load18 = load i32, ptr %length15, align 4, !dbg !45
+  %load19 = load i32, ptr %capacity16, align 4, !dbg !45
+  %widened20 = sext i32 %load19 to i64, !dbg !45
+  %copy = call ptr @calloc(i64 %widened20, i64 4), !dbg !45
+  %widened21 = sext i32 %load18 to i64, !dbg !45
+  %bytes22 = mul i64 %widened21, 4, !dbg !45
+  %copied = call ptr @memmove(ptr %copy, ptr %load17, i64 %bytes22), !dbg !45
+  %1 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0, !dbg !45
+  %2 = insertvalue { ptr, i32, i32 } %1, i32 %load18, 1, !dbg !45
+  %array_copy = insertvalue { ptr, i32, i32 } %2, i32 %load19, 2, !dbg !45
+  %call23 = call i32 @count({ ptr, i32, i32 } %array_copy), !dbg !45
+  %add = add i32 %call13, %call23, !dbg !45
+  %subtract = sub i32 %add, 7, !dbg !45
+  ret i32 %subtract, !dbg !45
+}
+
+!llvm.dbg.cu = !{!0}
+!llvm.module.flags = !{!2, !3}
+
+!0 = distinct !DICompileUnit(language: DW_LANG_C, file: !1, producer: "Caracal", isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug)
+!1 = !DIFile(filename: "sliceAndDynamicArray.cara", directory: "InputDebugInfo")
+!2 = !{i32 2, !"Debug Info Version", i32 3}
+!3 = !{i32 2, !"CodeView", i32 1}
+!4 = distinct !DISubprogram(name: "total", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!5 = !DISubroutineType(types: !6)
+!6 = !{!7, !8}
+!7 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)
+!8 = !DICompositeType(tag: DW_TAG_structure_type, name: "const [i32]", size: 128, elements: !9)
+!9 = !{!10, !12}
+!10 = !DIDerivedType(tag: DW_TAG_member, name: "data", scope: !8, baseType: !11, size: 64)
+!11 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !7, size: 64)
+!12 = !DIDerivedType(tag: DW_TAG_member, name: "length", scope: !8, baseType: !7, size: 32, offset: 64)
+!13 = !{}
+!14 = !DILocation(line: 1, scope: !4)
+!15 = !DILocalVariable(name: "values", arg: 1, scope: !4, file: !1, line: 1, type: !8)
+!16 = !DILocation(line: 3, scope: !4)
+!17 = distinct !DISubprogram(name: "count", scope: !1, file: !1, line: 6, type: !18, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!18 = !DISubroutineType(types: !19)
+!19 = !{!7, !20}
+!20 = !DICompositeType(tag: DW_TAG_structure_type, name: "[i32; _]", size: 128, elements: !21)
+!21 = !{!22, !23, !24}
+!22 = !DIDerivedType(tag: DW_TAG_member, name: "data", scope: !20, baseType: !11, size: 64)
+!23 = !DIDerivedType(tag: DW_TAG_member, name: "length", scope: !20, baseType: !7, size: 32, offset: 64)
+!24 = !DIDerivedType(tag: DW_TAG_member, name: "capacity", scope: !20, baseType: !7, size: 32, offset: 96)
+!25 = !DILocation(line: 6, scope: !17)
+!26 = !DILocalVariable(name: "items", arg: 1, scope: !17, file: !1, line: 6, type: !20)
+!27 = !DILocation(line: 8, scope: !17)
+!28 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !29, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!29 = !DISubroutineType(types: !30)
+!30 = !{!7}
+!31 = !DILocation(line: 13, scope: !28)
+!32 = !DILocalVariable(name: "numbers", scope: !28, file: !1, line: 13, type: !33)
+!33 = !DICompositeType(tag: DW_TAG_array_type, baseType: !7, size: 96, elements: !34)
+!34 = !{!35}
+!35 = !DISubrange(count: 3, lowerBound: 0)
+!36 = !DILocation(line: 14, scope: !28)
+!37 = !DILocalVariable(name: "view", scope: !28, file: !1, line: 14, type: !38)
+!38 = !DICompositeType(tag: DW_TAG_structure_type, name: "[i32]", size: 128, elements: !39)
+!39 = !{!40, !41}
+!40 = !DIDerivedType(tag: DW_TAG_member, name: "data", scope: !38, baseType: !11, size: 64)
+!41 = !DIDerivedType(tag: DW_TAG_member, name: "length", scope: !38, baseType: !7, size: 32, offset: 64)
+!42 = !DILocation(line: 15, scope: !28)
+!43 = !DILocalVariable(name: "items", scope: !28, file: !1, line: 15, type: !20)
+!44 = !DILocation(line: 16, scope: !28)
+!45 = !DILocation(line: 17, scope: !28)

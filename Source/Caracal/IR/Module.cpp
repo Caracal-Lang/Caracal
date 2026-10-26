@@ -47,6 +47,15 @@ namespace Caracal
         return nullptr;
     }
 
+    const TypeDeclaration* Module::tryGetType(Type type) const noexcept
+    {
+        const auto result = m_typeIndices.find(type.toBaseType().id());
+        if (result == m_typeIndices.end())
+            return nullptr;
+
+        return &m_types[result->second];
+    }
+
     const std::string* Module::tryGetTypeName(Type type) const noexcept
     {
         const auto baseType = type.toBaseType();

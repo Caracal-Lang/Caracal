@@ -1,0 +1,30 @@
+enum Color : i32
+{
+    Red
+    Green :: 5
+    Blue
+}
+
+enum Level : u8
+{
+    Low
+    High
+}
+
+enum Answer
+{
+    Yes :: true
+    No :: false
+}
+
+def main() i32
+{
+    color := Color.Green;
+    level := Level.High;
+    answer := Answer.Yes;
+    if color == Color.Green and level == Level.High and answer == Answer.Yes
+    {
+        return 0;
+    }
+    return 1;
+}

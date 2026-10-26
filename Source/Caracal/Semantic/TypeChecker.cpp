@@ -2482,7 +2482,7 @@ namespace Caracal
                     return;
                 }
 
-                m_emitter.emitRefLocalDeclaration(nameId, bindingType, referentAddress);
+                m_emitter.emitRefLocalDeclaration(nameId, name, bindingType, referentAddress);
             }
             else
             {

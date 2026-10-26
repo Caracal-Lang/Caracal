@@ -1,4 +1,5 @@
 #include <Caracal/Compilation/OptimizationLevel.h>
+#include <Caracal/Defines.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Text/File.h>
 
@@ -64,7 +65,7 @@ namespace Caracal
 
         for (const char character : name)
         {
-            if (static_cast<unsigned char>(character) < 32)
+            if (static_cast<u8>(character) < 32)
                 return "it contains a control character";
 
             if (std::string_view("<>:\"/\\|?*").find(character) != std::string_view::npos)
@@ -88,7 +89,7 @@ namespace Caracal
             bool isReserved = true;
             for (size_t index = 0; index < reservedName.size(); ++index)
             {
-                if (std::toupper(static_cast<unsigned char>(nameBeforeExtension[index])) != reservedName[index])
+                if (std::toupper(static_cast<u8>(nameBeforeExtension[index])) != reservedName[index])
                     isReserved = false;
             }
 
@@ -120,7 +121,7 @@ namespace Caracal
     {
         auto text = folder.generic_string();
         for (auto& character : text)
-            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+            character = static_cast<char>(std::tolower(static_cast<u8>(character)));
 
         return text;
     }

@@ -12,4 +12,9 @@ namespace Caracal
     {
         m_fields.push_back(Field{ std::move(name), type, isConstant });
     }
+
+    void TypeDeclaration::addMethod(std::string name, FunctionId functionId)
+    {
+        m_methods.push_back(Method{ std::move(name), functionId });
+    }
 }
