@@ -175,6 +175,8 @@ namespace Caracal
                 return "T0055";
             case DiagnosticKind::T0056_NonGlobalInitConstant:
                 return "T0056";
+            case DiagnosticKind::T0100_InitReferenceWithoutRef:
+                return "T0100";
             case DiagnosticKind::T0057_AssignmentToConstant:
                 return "T0057";
             case DiagnosticKind::T0087_MutatingMethodOnConstant:
@@ -446,6 +448,8 @@ namespace Caracal
                 return "Uninitialized init constant";
             case DiagnosticKind::T0056_NonGlobalInitConstant:
                 return "Non-global init constant";
+            case DiagnosticKind::T0100_InitReferenceWithoutRef:
+                return "Reference init constant without 'ref'";
             case DiagnosticKind::T0057_AssignmentToConstant:
                 return "Assignment to constant";
             case DiagnosticKind::T0087_MutatingMethodOnConstant:

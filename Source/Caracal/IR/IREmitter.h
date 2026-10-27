@@ -141,6 +141,7 @@ namespace Caracal
         [[nodiscard]] ValueRef emitGlobalAddress(std::string_view name);
         [[nodiscard]] ValueRef readGlobal(std::string_view name);
         void emitGlobalAssignment(std::string_view name, ValueRef value);
+        void emitGlobalReferenceInitialization(std::string_view name, ValueRef targetAddress);
         [[nodiscard]] ValueRef beginGlobalInitConstruction(std::string_view name, Type type);
         void resumeGlobalInitEffects();
         void suspendGlobalInit();
@@ -184,6 +185,7 @@ namespace Caracal
         void addEnumDeclarations();
         [[nodiscard]] std::string_view nameLexeme(u32 nameId) const noexcept;
         void mergeLocals(u32 blockIndex, const std::vector<IncomingLocals>& incomingValues);
+        [[nodiscard]] ValueRef emitGlobalStorageAddress(std::string_view name, Type type);
 
         [[nodiscard]] TemporaryId nextTemporaryId() noexcept;
         ValueRef appendValueInstruction(const Instruction& instruction);

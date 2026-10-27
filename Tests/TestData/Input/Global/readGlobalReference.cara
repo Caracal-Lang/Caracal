@@ -1,0 +1,20 @@
+type Point(x: i32, y: i32)
+{
+    x := x
+    y := y
+}
+
+limit :: 40;
+alias :: ref limit;
+origin :: Point.new(1, 2);
+place :: ref origin;
+
+def readThrough(value: ref i32) i32
+{
+    return value;
+}
+
+def main() i32
+{
+    return alias %+ readThrough(alias) %+ place.y %- 82;
+}

@@ -1,0 +1,56 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32, i32 }
+
+@limit = constant i32 40
+@origin = global %Point zeroinitializer
+@alias = constant ptr @limit
+@place = constant ptr @origin
+@llvm.global_ctors = appending global [1 x { i32, ptr, ptr }] [{ i32, ptr, ptr } { i32 65535, ptr @.global_init, ptr null }]
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @readThrough(ptr nonnull %0) {
+entry:
+  %load = load i32, ptr %0, align 4
+  ret i32 %load
+}
+
+define i32 @main() {
+entry:
+  %load = load ptr, ptr @alias, align 8
+  %load1 = load i32, ptr %load, align 4
+  %load2 = load ptr, ptr @alias, align 8
+  %call = call i32 @readThrough(ptr %load2)
+  %add = add i32 %load1, %call
+  %load3 = load ptr, ptr @place, align 8
+  %y = getelementptr inbounds nuw %Point, ptr %load3, i32 0, i32 1
+  %load4 = load i32, ptr %y, align 4
+  %add5 = add i32 %add, %load4
+  %subtract = sub i32 %add5, 82
+  ret i32 %subtract
+}
+
+define void @Point.new(ptr nonnull %0, i32 %1, i32 %2) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %x, align 4
+  %y = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 1
+  store i32 %2, ptr %y, align 4
+  ret void
+}
+
+define void @.global_init() {
+entry:
+  call void @Point.new(ptr @origin, i32 1, i32 2)
+  ret void
+}

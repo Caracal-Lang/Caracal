@@ -1,0 +1,13 @@
+ Error T0100 Reference init constant without 'ref'
+    ,-[Diagnostics/Input/initReferenceWithoutRef.cara:5:14]
+  2 | 
+  3 | def main() i32
+  4 | {
+  5 |     shared = 5;
+    .              -
+    .              `-- 'shared' is a reference and needs the address of a variable.
+  6 |     return shared;
+  7 | }
+  8 | 
+    `----
+  Fix: Initialize 'shared' with 'ref' and a variable, like 'shared = ref value;'.

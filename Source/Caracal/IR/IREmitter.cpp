@@ -1550,8 +1550,37 @@ namespace Caracal
             return ValueRef{};
         }
 
+        const auto storage = emitGlobalStorageAddress(name, global->second);
+        if (!global->second.isReference())
+        {
+            return storage;
+        }
+
+        return emitLoad(storage, global->second);
+    }
+
+    ValueRef IREmitter::emitGlobalStorageAddress(std::string_view name, Type type)
+    {
         const auto nameId = m_module.internName(name);
-        return appendValueInstruction(Instruction::CreateAddressOfGlobal(nextTemporaryId(), global->second.toReference(), nameId));
+        return appendValueInstruction(Instruction::CreateAddressOfGlobal(nextTemporaryId(), type.toReference(), nameId));
+    }
+
+    void IREmitter::emitGlobalReferenceInitialization(std::string_view name, ValueRef targetAddress)
+    {
+        if (!canEmitWith({ targetAddress }))
+        {
+            return;
+        }
+
+        const auto global = m_globalTypes.find(name);
+        if (global == m_globalTypes.end())
+        {
+            recordEmissionFailure();
+            return;
+        }
+
+        const auto storage = emitGlobalStorageAddress(name, global->second);
+        appendStoreInstruction(targetAddress, storage, global->second);
     }
 
     ValueRef IREmitter::readGlobal(std::string_view name)

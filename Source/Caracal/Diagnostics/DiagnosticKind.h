@@ -133,6 +133,7 @@ namespace Caracal
         T0054_InitConstantAlreadyInitialized,
         T0055_UninitializedInitConstant,
         T0056_NonGlobalInitConstant,
+        T0100_InitReferenceWithoutRef,
 
         // Constness diagnostics
         T0057_AssignmentToConstant,

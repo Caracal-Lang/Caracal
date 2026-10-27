@@ -1,0 +1,96 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: limit
+        }
+    }
+    Right: {
+        NumberLiteral: 40
+    }
+}
+ConstantDeclaration: {
+    Type: ref i32
+    Left: {
+        NameExpression: {
+            Type: ref i32
+            Name: shared
+        }
+    }
+    InitType: {
+        TypeNameNode: {
+            Type: ref i32
+            Lexeme: i32
+            Ref: true
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: readShared
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: ref i32
+                Name: shared
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: shared
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: ref i32
+                    Operation: ReferenceOf
+                    Expression: {
+                        NameExpression: {
+                            Type: i32
+                            Name: limit
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: () -> i32
+                NameExpression: {
+                    Type: () -> i32
+                    Name: readShared
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

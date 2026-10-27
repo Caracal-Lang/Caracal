@@ -1,0 +1,49 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32, i32 }
+
+@limit = constant i32 40
+@origin = global %Point { i32 1, i32 2 }
+@alias = local_unnamed_addr constant ptr @limit
+@place = local_unnamed_addr constant ptr @origin
+@llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define i32 @readThrough(ptr nonnull readonly captures(none) %0) local_unnamed_addr #0 {
+entry:
+  %load = load i32, ptr %0, align 4
+  ret i32 %load
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none)
+define i32 @main() local_unnamed_addr #1 {
+entry:
+  %load4 = load i32, ptr getelementptr inbounds nuw (i8, ptr @origin, i64 4), align 4
+  %subtract = add i32 %load4, -2
+  ret i32 %subtract
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Point.new(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, i32 %1, i32 %2) local_unnamed_addr #2 {
+entry:
+  store i32 %1, ptr %0, align 4
+  %y = getelementptr inbounds nuw i8, ptr %0, i64 4
+  store i32 %2, ptr %y, align 4
+  ret void
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none)
+define void @.global_init() local_unnamed_addr #3 {
+entry:
+  store i32 1, ptr @origin, align 8
+  store i32 2, ptr getelementptr inbounds nuw (i8, ptr @origin, i64 4), align 4
+  ret void
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }
+attributes #3 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }

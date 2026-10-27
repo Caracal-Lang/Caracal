@@ -3181,6 +3181,7 @@ namespace Caracal
         auto targetContext = ExpressionContext{};
         targetContext.wantsAddress = true;
         auto leftType = typeCheckExpression(unit, assignmentLayout.target, targetContext).type;
+        const auto targetIsReference = leftType.isReference();
         if (leftType.isReference())
         {
             leftType = leftType.toValue();
@@ -3188,6 +3189,9 @@ namespace Caracal
 
         // global init constants are only allowed to be assigned once in caracalMain/main
         const auto leftKind = unit.nodeBuffer.kind(assignmentLayout.target);
+        const auto initializesReferenceGlobal = targetIsReference
+            && leftKind == NodeKind::NameExpression
+            && m_initConstants.contains(std::string(nameOf(unit, assignmentLayout.target)));
         if (leftKind == NodeKind::NameExpression)
         {
             const auto targetName = std::string(nameOf(unit, assignmentLayout.target));
@@ -3284,7 +3288,7 @@ namespace Caracal
         // a constructor call on the right side writes straight into the target
         // the target's address is taken before the arguments are checked
         auto pushedAssignmentConstruction = false;
-        if (leftKind == NodeKind::NameExpression && !currentScopeIsGlobal())
+        if (leftKind == NodeKind::NameExpression && !currentScopeIsGlobal() && !initializesReferenceGlobal)
         {
             const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(unit.nodeBuffer, assignmentLayout.value));
             if (constructedType != Type::Undefined())
@@ -3338,6 +3342,32 @@ namespace Caracal
                     formatTypeName(m_module, leftType),
                     formatTypeName(m_module, rightType));
             }
+            return;
+        }
+
+        if (initializesReferenceGlobal)
+        {
+            const auto targetName = std::string(nameOf(unit, assignmentLayout.target));
+            const auto isExplicitRef = unit.nodeBuffer.kind(strippedAssignedValue) == NodeKind::UnaryExpression
+                && TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedAssignedValue)) == TokenKind::RefKeyword;
+            if (!isExplicitRef)
+            {
+                m_diagnostics.addInitReferenceWithoutRefError(
+                    unit.source,
+                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.value),
+                    targetName);
+                return;
+            }
+
+            const auto refOperand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedAssignedValue));
+            const auto targetAddress = addressOfExpression(unit, refOperand);
+            if (targetAddress.id() < 0)
+            {
+                m_emitter.recordEmissionFailure();
+                return;
+            }
+
+            m_emitter.emitGlobalReferenceInitialization(targetName, targetAddress);
             return;
         }
 

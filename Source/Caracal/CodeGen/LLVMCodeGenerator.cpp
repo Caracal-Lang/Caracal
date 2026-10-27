@@ -128,16 +128,16 @@ namespace Caracal
                 return false;
         }
 
-        // emitted after the constants so a reference can resolve its target global by name
-        for (const auto& globalReference : m_irModule.globalReferences())
-        {
-            if (!lowerGlobalReference(globalReference))
-                return false;
-        }
-
         for (const auto& constructedGlobal : m_irModule.constructedGlobals())
         {
             if (!lowerConstructedGlobal(constructedGlobal))
+                return false;
+        }
+
+        // emitted after the other globals so a reference can resolve its target global by name
+        for (const auto& globalReference : m_irModule.globalReferences())
+        {
+            if (!lowerGlobalReference(globalReference))
                 return false;
         }
 

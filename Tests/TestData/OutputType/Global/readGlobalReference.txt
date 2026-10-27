@@ -1,0 +1,246 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: y
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: y
+                }
+            }
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: limit
+        }
+    }
+    Right: {
+        NumberLiteral: 40
+    }
+}
+ConstantDeclaration: {
+    Type: ref i32
+    Left: {
+        NameExpression: {
+            Type: ref i32
+            Name: alias
+        }
+    }
+    Right: {
+        UnaryExpression: {
+            Type: ref i32
+            Operation: ReferenceOf
+            Expression: {
+                NameExpression: {
+                    Type: i32
+                    Name: limit
+                }
+            }
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: Point
+    Left: {
+        NameExpression: {
+            Type: Point
+            Name: origin
+        }
+    }
+    Right: {
+        BinaryExpression: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: Point
+                }
+            }
+            Operation: ConstructorCall
+            Right: {
+                FunctionCallExpression: {
+                    Type: Point
+                    Function type: (ref Point, i32, i32) -> void
+                    NameExpression: {
+                        Type: (ref Point, i32, i32) -> void
+                        Name: new
+                    }
+                    ArgumentsNode(2): {
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: ref Point
+    Left: {
+        NameExpression: {
+            Type: ref Point
+            Name: place
+        }
+    }
+    Right: {
+        UnaryExpression: {
+            Type: ref Point
+            Operation: ReferenceOf
+            Expression: {
+                NameExpression: {
+                    Type: Point
+                    Name: origin
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> i32
+    Name: readThrough
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: ref i32
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: ref i32
+                                        Name: alias
+                                    }
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (ref i32) -> i32
+                                        NameExpression: {
+                                            Type: (ref i32) -> i32
+                                            Name: readThrough
+                                        }
+                                        ArgumentsNode(1): {
+                                            NameExpression: {
+                                                Type: ref i32
+                                                Name: alias
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: ref Point
+                                        Name: place
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: y
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: SubtractionWrapping
+                Right: {
+                    NumberLiteral: 82
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+global limit : i32 = 40
+global shared : ref i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define readShared() i32
+block entry(0):
+    %0 = address_of_global @shared : ref i32
+    %1 = load_value %0 : ref i32
+    %2 = load_value %1 : i32
+    return %2
+
+define main() i32
+block entry(0):
+    %2 = address_of_global @limit : ref i32
+    %3 = address_of_global @shared : ref i32
+    store_value %2, %3 : ref i32
+    %4 = call readShared() : i32
+    return %4

@@ -1,0 +1,13 @@
+limit :: 40;
+shared :: init ref i32;
+
+def readShared() i32
+{
+    return shared;
+}
+
+def main() i32
+{
+    shared = ref limit;
+    return readShared();
+}

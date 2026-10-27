@@ -745,6 +745,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addInitReferenceWithoutRefError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& constantName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0100_InitReferenceWithoutRef,
+            source,
+            location,
+            "Initialize '" + constantName + "' with 'ref' and a variable, like '" + constantName + " = ref value;'.");
+        diagnostic.addPrimaryLabel(location, "'" + constantName + "' is a reference and needs the address of a variable.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addAssignmentToConstantError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& constantName)
     {
         auto diagnostic = Diagnostic(

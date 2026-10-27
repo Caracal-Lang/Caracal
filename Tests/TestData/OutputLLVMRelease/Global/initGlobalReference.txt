@@ -1,0 +1,25 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@limit = constant i32 40
+@shared = local_unnamed_addr global ptr null
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define i32 @readShared() local_unnamed_addr #0 {
+entry:
+  %load = load ptr, ptr @shared, align 8
+  %load1 = load i32, ptr %load, align 4
+  ret i32 %load1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none)
+define noundef i32 @main() local_unnamed_addr #1 {
+entry:
+  store ptr @limit, ptr @shared, align 8
+  ret i32 40
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }
