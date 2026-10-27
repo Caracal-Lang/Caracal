@@ -9,6 +9,7 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/DIBuilder.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 
@@ -251,6 +252,23 @@ namespace Caracal
         }
 
         m_builder->insertDeclare(&slot, debugVariable, m_builder->createExpression(), location, slot.getParent());
+    }
+
+    void DebugInfoBuilder::declareGlobal(std::string_view name, Type type, llvm::GlobalVariable& global)
+    {
+        if (m_compileUnit == nullptr)
+        {
+            return;
+        }
+
+        auto* globalType = debugType(type);
+        if (globalType == nullptr)
+        {
+            return;
+        }
+
+        // CodeView keeps no file or line for a global
+        global.addDebugInfo(m_builder->createGlobalVariableExpression(m_compileUnit, name, "", nullptr, 0, globalType, false));
     }
 
     void DebugInfoBuilder::finalize()

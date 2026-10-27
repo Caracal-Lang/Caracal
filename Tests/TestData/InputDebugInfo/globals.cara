@@ -1,0 +1,31 @@
+type Point(startX: i32, startY: i32)
+{
+    x := startX
+    y := startY
+}
+
+enum Color : i32
+{
+    Red
+    Green :: 5
+}
+
+limit :: 40;
+ratio :: 0.5'f32;
+ready :: true;
+greeting :: "hello";
+primes :: [2, 3, 5, 7];
+favorite :: Color.Green;
+alias :: ref limit;
+origin :: Point.new(1, 2);
+counter :: init i32;
+
+def main() i32
+{
+    counter = 2;
+    if ready and favorite == Color.Green and ratio < 1.0'f32
+    {
+        return limit %+ origin.x %+ counter %+ primes.at(0) %- 45;
+    }
+    return 1;
+}

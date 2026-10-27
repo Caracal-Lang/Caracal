@@ -194,13 +194,26 @@ namespace Caracal
         if (initializer == nullptr)
             return false;
 
-        new llvm::GlobalVariable(
+        auto* global = new llvm::GlobalVariable(
             m_llvmModule,
             initializer->getType(),
             true, // is constant
             llvm::GlobalValue::ExternalLinkage,
             initializer,
             globalConstant.name());
+
+        if (m_debugInfo != nullptr)
+        {
+            // FIXME string constants are stored as a cstring
+            auto storedType = globalConstant.type();
+            if (const auto* literal = globalConstant.value().tryGetLiteralData(); literal != nullptr && std::holds_alternative<std::string>(*literal))
+            {
+                storedType = m_irModule.wellKnown().cstring;
+            }
+
+            m_debugInfo->declareGlobal(globalConstant.name(), storedType, *global);
+        }
+
         return true;
     }
 
@@ -211,13 +224,17 @@ namespace Caracal
             return false;
 
         // a global reference is the constant address of another global
-        new llvm::GlobalVariable(
+        auto* global = new llvm::GlobalVariable(
             m_llvmModule,
             target->getType(),
             true, // is constant
             llvm::GlobalValue::ExternalLinkage,
             target,
             globalReference.name());
+
+        if (m_debugInfo != nullptr)
+            m_debugInfo->declareGlobal(globalReference.name(), globalReference.type(), *global);
+
         return true;
     }
 
@@ -227,13 +244,17 @@ namespace Caracal
         if (type == nullptr)
             return false;
 
-        new llvm::GlobalVariable(
+        auto* global = new llvm::GlobalVariable(
             m_llvmModule,
             type,
             false, // not constant
             llvm::GlobalValue::ExternalLinkage,
             llvm::Constant::getNullValue(type),
             constructedGlobal.name());
+
+        if (m_debugInfo != nullptr)
+            m_debugInfo->declareGlobal(constructedGlobal.name(), constructedGlobal.type(), *global);
+
         return true;
     }
 
