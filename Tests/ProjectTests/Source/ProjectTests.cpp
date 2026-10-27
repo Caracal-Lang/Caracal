@@ -523,6 +523,29 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data()
+{
+    const std::string range = "\"constants.answer.value\" in caracal.json has to be a number between -2147483648 and 2147483647";
+    const std::string type = "\"constants.answer.type\" in caracal.json has to be \"bool\", \"i32\" or \"string\"";
+    return {
+        std::make_tuple("constants that are not an object", R"(, "constants": [])" + DebugModeField, "\"constants\" in caracal.json has to be an object"),
+        std::make_tuple("a constant that is not an object", R"(, "constants": { "answer": 42 })" + DebugModeField, "\"constants.answer\" in caracal.json has to be an object"),
+        std::make_tuple("an unknown key", R"(, "constants": { "answer": { "type": "i32", "value": 1, "default": 2 } })" + DebugModeField, "\"constants.answer.default\" in caracal.json is not supported"),
+        std::make_tuple("no type", R"(, "constants": { "answer": { "value": 1 } })" + DebugModeField, "\"constants.answer\" in caracal.json has no \"type\""),
+        std::make_tuple("no value", R"(, "constants": { "answer": { "type": "i32" } })" + DebugModeField, "\"constants.answer\" in caracal.json has no \"value\""),
+        std::make_tuple("an unknown type", R"(, "constants": { "answer": { "type": "u8", "value": 1 } })" + DebugModeField, type),
+        std::make_tuple("a bool that is not true or false", R"(, "constants": { "answer": { "type": "bool", "value": 1 } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be true or false"),
+        std::make_tuple("an i32 that is not a whole number", R"(, "constants": { "answer": { "type": "i32", "value": 1.5 } })" + DebugModeField, range),
+        std::make_tuple("an i32 above the range", R"(, "constants": { "answer": { "type": "i32", "value": 2147483648 } })" + DebugModeField, range),
+        std::make_tuple("an i32 below the range", R"(, "constants": { "answer": { "type": "i32", "value": -2147483649 } })" + DebugModeField, range),
+        std::make_tuple("a string that is not a string", R"(, "constants": { "answer": { "type": "string", "value": 1 } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a string"),
+        std::make_tuple("a string with a NUL", R"(, "constants": { "answer": { "type": "string", "value": "a\u0000b" } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a string without a NUL"),
+        std::make_tuple("a name that is a keyword", R"(, "constants": { "return": { "type": "i32", "value": 1 } })" + DebugModeField, "\"constants.return\" in caracal.json has to be a valid constant name"),
+        std::make_tuple("a name with a leading digit", R"(, "constants": { "1answer": { "type": "i32", "value": 1 } })" + DebugModeField, "\"constants.1answer\" in caracal.json has to be a valid constant name"),
+        std::make_tuple("a name that is only an underscore", R"(, "constants": { "_": { "type": "i32", "value": 1 } })" + DebugModeField, "\"constants._\" in caracal.json has to be a valid constant name"),
+    };
+}
+
 static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
 {
     const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])" + DebugModeField);
@@ -925,7 +948,8 @@ static bool ProjectBuildDeclaresConstant(const std::string& scratchName, std::st
     const auto buildCommand = Caracal::createProjectBuildCommand(project, "Debug");
 
     CaraTest::isTrue(buildCommand.has_value());
-    return buildCommand->projectConstants.text.find(constantName) != std::string::npos;
+    const auto& constants = buildCommand->projectConstants;
+    return std::ranges::find(constants, constantName, &Caracal::ProjectConstant::name) != constants.end();
 }
 
 static void BuildCommandForProjectAddsItsNameAsConstant()
@@ -933,19 +957,25 @@ static void BuildCommandForProjectAddsItsNameAsConstant()
     CaraTest::isTrue(ProjectBuildDeclaresConstant("BuildCommandProjectName", "__caracal_project_name"));
 }
 
+static void BuildCommandForProjectAddsItsConstants()
+{
+    const auto result = LoadProjectText("BuildCommandConstants", R"(, "constants": { "answer": { "type": "i32", "value": -42 }, "enabled": { "type": "bool", "value": true }, "greeting": { "type": "string", "value": "say \"hi\"" } })" + DebugModeField);
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "Debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    const auto text = Caracal::createProjectConstantsSource(buildCommand->projectConstants);
+    CaraTest::isTrue(text.find("answer : i32 : -42;\n") != std::string::npos);
+    CaraTest::isTrue(text.find("enabled : bool : true;\n") != std::string::npos);
+    CaraTest::isTrue(text.find(R"(greeting : string : "say \"hi\"";)") != std::string::npos);
+}
+
 static void BuildCommandForProjectAddsItsVersionAsConstant()
 {
     CaraTest::isTrue(ProjectBuildDeclaresConstant("BuildCommandProjectVersion", "__caracal_project_version"));
-}
-
-static void VersionWithQuotesAndBackslashesKeepsThemInTheConstants()
-{
-    Caracal::Project project{ "Hello", "C:/Hello" };
-    project.version = R"(a"b\c)";
-
-    const auto text = Caracal::createProjectConstantsSource(project);
-
-    CaraTest::isTrue(text.find(R"("a\"b\\c")") != std::string::npos);
 }
 
 static void FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes()
@@ -1079,6 +1109,7 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("loading a caracal.json with constants that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data),
     CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
     CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
     CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
@@ -1105,7 +1136,7 @@ static auto tests =
     CaraTest::addTest("creating a build command for an unknown mode fails", CreatingBuildCommandForUnknownModeFails),
     CaraTest::addTest("a build command for a project adds its name as a constant", BuildCommandForProjectAddsItsNameAsConstant),
     CaraTest::addTest("a build command for a project adds its version as a constant", BuildCommandForProjectAddsItsVersionAsConstant),
-    CaraTest::addTest("a version with quotes and backslashes keeps them in the constants", VersionWithQuotesAndBackslashesKeepsThemInTheConstants),
+    CaraTest::addTest("a build command for a project adds its constants", BuildCommandForProjectAddsItsConstants),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),

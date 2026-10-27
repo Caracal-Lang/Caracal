@@ -1,13 +1,19 @@
+#include <Caracal/Compilation.h>
 #include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Defines.h>
+#include <Caracal/Diagnostics/DiagnosticsBag.h>
 #include <Caracal/Project/ProjectLoader.h>
+#include <Caracal/Semantic/NumberLiteralParsing.h>
+#include <Caracal/Syntax/TokenKind.h>
 #include <Caracal/Text/File.h>
+#include <Caracal/Text/SourceText.h>
 
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <memory>
 #include <utility>
 
 namespace Caracal
@@ -373,6 +379,109 @@ namespace Caracal
         return std::nullopt;
     }
 
+    static bool IsAllowedName(const std::string& name)
+    {
+        DiagnosticsBag diagnostics;
+        const auto tokens = lex(std::make_shared<SourceText>(name), diagnostics);
+        if (diagnostics.hasErrors() || tokens.size() != 2)
+            return false;
+
+        const auto& token = tokens.getToken(0);
+        if (token.kind != TokenKind::Identifier && token.kind != TokenKind::PrivateIdentifier)
+            return false;
+
+        return tokens.getLexeme(token) == name;
+    }
+
+    static std::optional<std::string> ReadConstant(const std::string& name, const nlohmann::json& entry, const std::string& fileName, ProjectConstant& constant)
+    {
+        const auto entryPath = "constants." + name;
+        if (!IsAllowedName(name))
+            return QuotedFieldName(entryPath) + " in " + fileName + " has to be a valid constant name";
+
+        if (!entry.is_object())
+            return QuotedFieldName(entryPath) + " in " + fileName + " has to be an object";
+
+        for (const auto& [key, value] : entry.items())
+        {
+            if (key != "type" && key != "value")
+                return QuotedFieldName(entryPath + "." + key) + " in " + fileName + " is not supported";
+        }
+
+        const auto type = entry.find("type");
+        if (type == entry.end())
+            return QuotedFieldName(entryPath) + " in " + fileName + " has no \"type\"";
+
+        const auto value = entry.find("value");
+        if (value == entry.end())
+            return QuotedFieldName(entryPath) + " in " + fileName + " has no \"value\"";
+
+        std::string typeName{};
+        if (type->is_string())
+            typeName = type->get<std::string>();
+
+        constant.name = name;
+        const auto valueFieldName = QuotedFieldName(entryPath + ".value") + " in " + fileName;
+        if (typeName == "bool")
+        {
+            if (!value->is_boolean())
+                return valueFieldName + " has to be true or false";
+
+            constant.value = value->get<bool>();
+            return std::nullopt;
+        }
+
+        if (typeName == "i32")
+        {
+            std::optional<i32> number{};
+            if (value->is_number_integer())
+                number = tryParseI32Literal(value->dump());
+
+            if (!number.has_value())
+                return valueFieldName + " has to be a number between -2147483648 and 2147483647";
+
+            constant.value = number.value();
+            return std::nullopt;
+        }
+
+        if (typeName == "string")
+        {
+            if (!value->is_string())
+                return valueFieldName + " has to be a string";
+
+            const auto& text = value->get_ref<const std::string&>();
+            // the lexer ends a string literal at a NUL
+            if (text.find('\0') != std::string::npos)
+                return valueFieldName + " has to be a string without a NUL";
+
+            constant.value = text;
+            return std::nullopt;
+        }
+
+        return QuotedFieldName(entryPath + ".type") + " in " + fileName + " has to be \"bool\", \"i32\" or \"string\"";
+    }
+
+    static std::optional<std::string> ReadConstants(const nlohmann::json& document, const std::string& fileName, std::vector<ProjectConstant>& constants)
+    {
+        const auto constantsField = document.find("constants");
+        if (constantsField == document.end())
+            return std::nullopt;
+
+        if (!constantsField->is_object())
+            return "\"constants\" in " + fileName + " has to be an object";
+
+        for (const auto& [name, entry] : constantsField->items())
+        {
+            ProjectConstant constant{};
+            if (const auto problem = ReadConstant(name, entry, fileName, constant))
+                return problem;
+
+            constants.push_back(std::move(constant));
+        }
+
+        return std::nullopt;
+    }
+
     ProjectResult loadProject(const std::filesystem::path& projectFilePath)
     {
         const auto fileName = projectFilePath.filename().string();
@@ -389,7 +498,7 @@ namespace Caracal
 
         for (const auto& [key, value] : document.items())
         {
-            if (key != "name" && key != "type" && key != "version" && key != "folders" && key != "dependencies" && key != "modes")
+            if (key != "name" && key != "type" && key != "version" && key != "folders" && key != "dependencies" && key != "modes" && key != "constants")
                 return Failure("\"" + key + "\" in " + fileName + " is not supported");
         }
 
@@ -435,6 +544,9 @@ namespace Caracal
 
         Project project{ nameText, rootDirectory, ProjectType::Executable, versionText, folders, std::move(dependencies) };
         if (const auto problem = ReadModes(document, fileName, folders, project.modes))
+            return Failure(problem.value());
+
+        if (const auto problem = ReadConstants(document, fileName, project.constants))
             return Failure(problem.value());
 
         return { std::move(project), {} };

@@ -2,9 +2,11 @@
 
 #include <Caracal/API.h>
 #include <Caracal/Compilation/OptimizationLevel.h>
+#include <Caracal/Defines.h>
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace Caracal
@@ -36,6 +38,12 @@ namespace Caracal
         bool isDefault = false;
     };
 
+    struct CARACAL_API ProjectConstant
+    {
+        std::string name;
+        std::variant<bool, i32, std::string> value;
+    };
+
     struct CARACAL_API Project
     {
         std::string name;
@@ -45,6 +53,7 @@ namespace Caracal
         ProjectFolders folders;
         std::vector<ProjectDependency> dependencies;
         std::vector<ProjectMode> modes;
+        std::vector<ProjectConstant> constants;
     };
 
     struct CARACAL_API ProjectResult

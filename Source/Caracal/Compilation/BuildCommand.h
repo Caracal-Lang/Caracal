@@ -4,23 +4,18 @@
 #include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Compilation/PrintOptions.h>
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
+#include <Caracal/Project/Project.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <filesystem>
-#include <string>
 #include <vector>
 
 namespace Caracal
 {
-    struct CARACAL_API GeneratedSource
-    {
-        std::filesystem::path path;
-        std::string text;
-    };
-
     struct CARACAL_API BuildCommand
     {
         std::vector<std::filesystem::path> sourceFiles;
-        GeneratedSource projectConstants;
+        std::vector<ProjectConstant> projectConstants;
+        std::filesystem::path projectConstantsPath;
         std::filesystem::path preludeDirectory;
         std::vector<std::filesystem::path> libraryDirectories;
         TypeCheckerOptions typeCheckerOptions;

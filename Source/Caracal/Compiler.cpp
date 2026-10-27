@@ -137,29 +137,22 @@ namespace Caracal
         return VerifyModule(llvmModule);
     }
 
-    static bool WriteGeneratedSource(const GeneratedSource& generatedSource)
-    {
-        if (!Caracal::File::writeText(generatedSource.path, generatedSource.text))
-        {
-            std::cout << "Could not write " << generatedSource.path.string() << "\n";
-            return false;
-        }
-
-        return true;
-    }
-
     static bool RunFrontEnd(
         const BuildCommand& buildCommand,
         CompilationContext& compilationContext,
         Module& irModule)
     {
-        Caracal::DiagnosticsBag diagnostics;
-        const auto& projectConstants = buildCommand.projectConstants;
-        if (!WriteGeneratedSource(projectConstants))
+        const auto& projectConstantsPath = buildCommand.projectConstantsPath;
+        auto projectConstantsSource = createProjectConstantsSource(buildCommand.projectConstants);
+        if (!Caracal::File::writeText(projectConstantsPath, projectConstantsSource))
+        {
+            std::cout << "Could not write " << projectConstantsPath.string() << "\n";
             return false;
+        }
 
-        compilationContext.addSource(projectConstants.text, projectConstants.path, Caracal::UnitOrigin::Project);
+        compilationContext.addSource(std::move(projectConstantsSource), projectConstantsPath, Caracal::UnitOrigin::Project);
 
+        Caracal::DiagnosticsBag diagnostics;
         for (const auto& libraryDirectory : buildCommand.libraryDirectories)
         {
             for (const auto& caraFilePath : CollectCaraFiles(libraryDirectory))
@@ -415,7 +408,7 @@ namespace Caracal
 
     static bool CreateBuildDirectories(const BuildCommand& buildCommand)
     {
-        for (const auto& filePath : { buildCommand.objectFilePath, buildCommand.executablePath, buildCommand.projectConstants.path })
+        for (const auto& filePath : { buildCommand.objectFilePath, buildCommand.executablePath, buildCommand.projectConstantsPath })
         {
             const auto directory = filePath.parent_path();
             if (directory.empty())
@@ -496,7 +489,8 @@ namespace Caracal
 
     static BuildCommand CreateBuildCommand(
         std::vector<std::filesystem::path> sourceFiles,
-        GeneratedSource projectConstants,
+        std::vector<ProjectConstant> projectConstants,
+        std::filesystem::path projectConstantsPath,
         std::filesystem::path preludeDirectory,
         std::vector<std::filesystem::path> libraryDirectories,
         std::filesystem::path objectFilePath,
@@ -510,6 +504,7 @@ namespace Caracal
         return BuildCommand{
             .sourceFiles = std::move(sourceFiles),
             .projectConstants = std::move(projectConstants),
+            .projectConstantsPath = std::move(projectConstantsPath),
             .preludeDirectory = std::move(preludeDirectory),
             .libraryDirectories = std::move(libraryDirectories),
             .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo },
@@ -538,6 +533,13 @@ namespace Caracal
         return temporaryDirectory / "Caracal" / std::format("{}-{:016x}", filePath.stem().string(), pathHash);
     }
 
+    static std::vector<ProjectConstant> CompilerConstants(std::string name, std::string version)
+    {
+        return {
+            { "__caracal_project_name", std::move(name) },
+            { "__caracal_project_version", std::move(version) } };
+    }
+
     BuildCommand createFileBuildCommand(
         const std::filesystem::path& filePath,
         std::chrono::year_month_day buildDay,
@@ -546,12 +548,10 @@ namespace Caracal
     {
         const auto inputFileName = filePath.stem().string();
         const auto temporaryDirectory = ResolveTemporaryDirectory(filePath);
-        Project fileProject{ inputFileName };
-        fileProject.version = projectVersion(buildDay);
-        GeneratedSource projectConstants{ temporaryDirectory / "ProjectConstants.cara", createProjectConstantsSource(fileProject) };
         return CreateBuildCommand(
             { filePath },
-            std::move(projectConstants),
+            CompilerConstants(inputFileName, projectVersion(buildDay)),
+            temporaryDirectory / "ProjectConstants.cara",
             ResolvePreludeDirectory(),
             { ResolveCoreDirectory() },
             temporaryDirectory / (inputFileName + ".o"),
@@ -603,12 +603,15 @@ namespace Caracal
         const auto& folders = project.folders;
         auto objectFilePath = project.rootDirectory / folders.temp / mode.name / (project.name + ".o");
         auto executablePath = project.rootDirectory / folders.output / mode.outputFolder / (project.name + ".exe");
-        GeneratedSource projectConstants{ project.rootDirectory / folders.temp / mode.name / "ProjectConstants.cara", createProjectConstantsSource(project) };
+        auto projectConstantsPath = project.rootDirectory / folders.temp / mode.name / "ProjectConstants.cara";
+        auto projectConstants = CompilerConstants(project.name, project.version);
+        projectConstants.insert(projectConstants.end(), project.constants.begin(), project.constants.end());
         if (project.dependencies.empty())
         {
             return CreateBuildCommand(
                 std::move(sources.sourceFiles),
                 std::move(projectConstants),
+                std::move(projectConstantsPath),
                 ResolvePreludeDirectory(),
                 { ResolveCoreDirectory() },
                 std::move(objectFilePath),
@@ -640,6 +643,7 @@ namespace Caracal
         return CreateBuildCommand(
             std::move(sources.sourceFiles),
             std::move(projectConstants),
+            std::move(projectConstantsPath),
             std::move(preludeDirectory),
             std::move(libraryDirectories),
             std::move(objectFilePath),
