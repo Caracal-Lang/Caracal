@@ -1,0 +1,41 @@
+type string
+    const _bytes: [u8; _]
+
+global greeting : string = "hello"
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define lengthOf(%0: string "text") i32
+block entry(0):
+    %0 = parameter 0 : string "text"
+    %slot0 = allocate_local : string "text"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = call string.length(%1) : i32
+    return %2
+
+define main() i32
+block entry(0):
+    %0 = address_of_global @greeting : ref string
+    %1 = call string.length(%0) : i32
+    %2 = address_of_global @greeting : ref string
+    %3 = load_value %2 : string
+    %4 = call lengthOf(%3) : i32
+    %5 = add %1, %4 : i32
+    %6 = const 10 : i32
+    %7 = sub %5, %6 : i32
+    return %7
+
+define string.length(%0: ref string ".this") i32
+block entry(0):
+    %0 = parameter 0 : ref string ".this"
+    %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
+    %2 = address_of_field %1.1 : ref i32 "length"
+    %3 = load_value %2 : i32
+    return %3

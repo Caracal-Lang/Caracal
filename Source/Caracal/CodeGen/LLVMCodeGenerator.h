@@ -59,6 +59,7 @@ namespace Caracal
         [[nodiscard]] llvm::Type* lowerType(Type type) const noexcept;
         [[nodiscard]] llvm::Value* lowerConstant(const ConstantValue& value) noexcept;
         [[nodiscard]] llvm::Constant* lowerAggregateConstant(const ConstantValue& value, llvm::Type* type) noexcept;
+        [[nodiscard]] llvm::Constant* lowerStringConstant(const std::string& text, llvm::Type* stringType) noexcept;
         [[nodiscard]] llvm::Value* promoteVariadicArgument(llvm::Value* value) noexcept;
         [[nodiscard]] llvm::Value* tryResolve(TemporaryId id) const noexcept;
         [[nodiscard]] llvm::Function* tryResolveCallee(FunctionId functionId) const noexcept;

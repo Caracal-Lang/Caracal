@@ -186,6 +186,11 @@ namespace Caracal
 
             initializer = lowerAggregateConstant(globalConstant.value(), globalType);
         }
+        else if (const auto* literal = globalConstant.value().tryGetLiteralData();
+            literal != nullptr && std::holds_alternative<std::string>(*literal) && globalConstant.type() == m_irModule.wellKnown().string)
+        {
+            initializer = lowerStringConstant(std::get<std::string>(*literal), lowerType(globalConstant.type()));
+        }
         else
         {
             initializer = llvm::dyn_cast_or_null<llvm::Constant>(lowerConstant(globalConstant.value()));
@@ -204,14 +209,7 @@ namespace Caracal
 
         if (m_debugInfo != nullptr)
         {
-            // FIXME string constants are stored as a cstring
-            auto storedType = globalConstant.type();
-            if (const auto* literal = globalConstant.value().tryGetLiteralData(); literal != nullptr && std::holds_alternative<std::string>(*literal))
-            {
-                storedType = m_irModule.wellKnown().cstring;
-            }
-
-            m_debugInfo->declareGlobal(globalConstant.name(), storedType, *global);
+            m_debugInfo->declareGlobal(globalConstant.name(), globalConstant.type(), *global);
         }
 
         return true;
@@ -1134,6 +1132,23 @@ namespace Caracal
         }
 
         return llvm::ConstantArray::get(arrayType, elements);
+    }
+
+    llvm::Constant* LLVMCodeGenerator::lowerStringConstant(const std::string& text, llvm::Type* stringType) noexcept
+    {
+        // String is type { data, length, capacity }
+        auto* stringStructType = llvm::dyn_cast_or_null<llvm::StructType>(stringType);
+        if (stringStructType == nullptr || stringStructType->getNumElements() != 1)
+            return nullptr;
+
+        auto* bytesType = llvm::dyn_cast<llvm::StructType>(stringStructType->getElementType(0));
+        if (bytesType == nullptr)
+            return nullptr;
+
+        auto* data = m_irBuilder->CreateGlobalString(text, "", 0, &m_llvmModule);
+        auto* length = llvm::ConstantInt::get(llvm::Type::getInt32Ty(m_llvmModule.getContext()), text.size());
+        auto* bytes = llvm::ConstantStruct::get(bytesType, { data, length, length });
+        return llvm::ConstantStruct::get(stringStructType, { bytes });
     }
 
     llvm::Value* LLVMCodeGenerator::lowerConstant(const ConstantValue& value) noexcept

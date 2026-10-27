@@ -3,18 +3,19 @@ source_filename = "CaracalModule"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-unknown-none"
 
+%string = type { { ptr, i32, i32 } }
 %Point = type { i32, i32 }
 
 @limit = constant i32 40, !dbg !0
 @ratio = constant float 5.000000e-01, !dbg !11
 @ready = constant i1 true, !dbg !14
 @0 = private unnamed_addr constant [6 x i8] c"hello\00", align 1
-@greeting = constant ptr @0, !dbg !17
-@primes = constant [4 x i32] [i32 2, i32 3, i32 5, i32 7], !dbg !21
-@favorite = constant i32 5, !dbg !26
-@origin = global %Point zeroinitializer, !dbg !28
-@counter = global i32 0, !dbg !38
-@alias = constant ptr @limit, !dbg !40
+@greeting = constant %string { { ptr, i32, i32 } { ptr @0, i32 5, i32 5 } }, !dbg !17
+@primes = constant [4 x i32] [i32 2, i32 3, i32 5, i32 7], !dbg !29
+@favorite = constant i32 5, !dbg !34
+@origin = global %Point zeroinitializer, !dbg !36
+@counter = global i32 0, !dbg !46
+@alias = constant ptr @limit, !dbg !48
 @llvm.global_ctors = appending global [1 x { i32, ptr, ptr }] [{ i32, ptr, ptr } { i32 65535, ptr @.global_init, ptr null }]
 
 declare i32 @strcmp(ptr %0, ptr %1)
@@ -25,61 +26,61 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @main() !dbg !45 {
+define i32 @main() !dbg !53 {
 entry:
-  store i32 2, ptr @counter, align 4, !dbg !48
-  %load = load i1, ptr @ready, align 1, !dbg !49
-  br i1 %load, label %and.rhs, label %and.merge, !dbg !49
+  store i32 2, ptr @counter, align 4, !dbg !56
+  %load = load i1, ptr @ready, align 1, !dbg !57
+  br i1 %load, label %and.rhs, label %and.merge, !dbg !57
 
 and.rhs:                                          ; preds = %entry
-  %load3 = load i32, ptr @favorite, align 4, !dbg !49
-  %equal = icmp eq i32 %load3, 5, !dbg !49
-  br label %and.merge, !dbg !49
+  %load3 = load i32, ptr @favorite, align 4, !dbg !57
+  %equal = icmp eq i32 %load3, 5, !dbg !57
+  br label %and.merge, !dbg !57
 
 and.merge:                                        ; preds = %and.rhs, %entry
-  %phi = phi i1 [ %load, %entry ], [ %equal, %and.rhs ], !dbg !49
-  br i1 %phi, label %and.rhs1, label %and.merge2, !dbg !49
+  %phi = phi i1 [ %load, %entry ], [ %equal, %and.rhs ], !dbg !57
+  br i1 %phi, label %and.rhs1, label %and.merge2, !dbg !57
 
 and.rhs1:                                         ; preds = %and.merge
-  br label %and.merge2, !dbg !49
+  br label %and.merge2, !dbg !57
 
 and.merge2:                                       ; preds = %and.rhs1, %and.merge
-  %phi4 = phi i1 [ %phi, %and.merge ], [ true, %and.rhs1 ], !dbg !49
-  br i1 %phi4, label %if.true, label %if.continuation, !dbg !49
+  %phi4 = phi i1 [ %phi, %and.merge ], [ true, %and.rhs1 ], !dbg !57
+  br i1 %phi4, label %if.true, label %if.continuation, !dbg !57
 
 if.true:                                          ; preds = %and.merge2
-  %load5 = load i32, ptr @limit, align 4, !dbg !50
-  %load6 = load i32, ptr @origin, align 4, !dbg !50
-  %add = add i32 %load5, %load6, !dbg !50
-  %load7 = load i32, ptr @counter, align 4, !dbg !50
-  %add8 = add i32 %add, %load7, !dbg !50
-  %load9 = load i32, ptr @primes, align 4, !dbg !50
-  %add10 = add i32 %add8, %load9, !dbg !50
-  %subtract = sub i32 %add10, 45, !dbg !50
-  ret i32 %subtract, !dbg !50
+  %load5 = load i32, ptr @limit, align 4, !dbg !58
+  %load6 = load i32, ptr @origin, align 4, !dbg !58
+  %add = add i32 %load5, %load6, !dbg !58
+  %load7 = load i32, ptr @counter, align 4, !dbg !58
+  %add8 = add i32 %add, %load7, !dbg !58
+  %load9 = load i32, ptr @primes, align 4, !dbg !58
+  %add10 = add i32 %add8, %load9, !dbg !58
+  %subtract = sub i32 %add10, 45, !dbg !58
+  ret i32 %subtract, !dbg !58
 
 if.continuation:                                  ; preds = %and.merge2
-  ret i32 1, !dbg !51
+  ret i32 1, !dbg !59
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1, i32 %2) !dbg !52 {
+define void @Point.new(ptr nonnull %0, i32 %1, i32 %2) !dbg !60 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !54
-    #dbg_declare(ptr %.this, !55, !DIExpression(), !54)
-  %startX = alloca i32, align 4, !dbg !54
-    #dbg_declare(ptr %startX, !56, !DIExpression(), !54)
-  %startY = alloca i32, align 4, !dbg !54
-    #dbg_declare(ptr %startY, !57, !DIExpression(), !54)
-  store ptr %0, ptr %.this, align 8, !dbg !54
-  store i32 %1, ptr %startX, align 4, !dbg !54
-  store i32 %2, ptr %startY, align 4, !dbg !54
-  %load = load i32, ptr %startX, align 4, !dbg !58
-  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0, !dbg !58
-  store i32 %load, ptr %x, align 4, !dbg !58
-  %load1 = load i32, ptr %startY, align 4, !dbg !59
-  %y = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 1, !dbg !59
-  store i32 %load1, ptr %y, align 4, !dbg !59
-  ret void, !dbg !54
+  %.this = alloca ptr, align 8, !dbg !62
+    #dbg_declare(ptr %.this, !63, !DIExpression(), !62)
+  %startX = alloca i32, align 4, !dbg !62
+    #dbg_declare(ptr %startX, !64, !DIExpression(), !62)
+  %startY = alloca i32, align 4, !dbg !62
+    #dbg_declare(ptr %startY, !65, !DIExpression(), !62)
+  store ptr %0, ptr %.this, align 8, !dbg !62
+  store i32 %1, ptr %startX, align 4, !dbg !62
+  store i32 %2, ptr %startY, align 4, !dbg !62
+  %load = load i32, ptr %startX, align 4, !dbg !66
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0, !dbg !66
+  store i32 %load, ptr %x, align 4, !dbg !66
+  %load1 = load i32, ptr %startY, align 4, !dbg !67
+  %y = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 1, !dbg !67
+  store i32 %load1, ptr %y, align 4, !dbg !67
+  ret void, !dbg !62
 }
 
 define void @.global_init() {
@@ -89,7 +90,7 @@ entry:
 }
 
 !llvm.dbg.cu = !{!2}
-!llvm.module.flags = !{!43, !44}
+!llvm.module.flags = !{!51, !52}
 
 !0 = !DIGlobalVariableExpression(var: !1, expr: !DIExpression())
 !1 = distinct !DIGlobalVariable(name: "limit", scope: !2, type: !6, isLocal: false, isDefinition: true)
@@ -101,7 +102,7 @@ entry:
 !7 = !{!8, !9}
 !8 = !DIEnumerator(name: "Color.Red", value: 0)
 !9 = !DIEnumerator(name: "Color.Green", value: 5)
-!10 = !{!0, !11, !14, !17, !21, !26, !28, !38, !40}
+!10 = !{!0, !11, !14, !17, !29, !34, !36, !46, !48}
 !11 = !DIGlobalVariableExpression(var: !12, expr: !DIExpression())
 !12 = distinct !DIGlobalVariable(name: "ratio", scope: !2, type: !13, isLocal: false, isDefinition: true)
 !13 = !DIBasicType(name: "f32", size: 32, encoding: DW_ATE_float)
@@ -110,44 +111,52 @@ entry:
 !16 = !DIBasicType(name: "bool", size: 8, encoding: DW_ATE_boolean)
 !17 = !DIGlobalVariableExpression(var: !18, expr: !DIExpression())
 !18 = distinct !DIGlobalVariable(name: "greeting", scope: !2, type: !19, isLocal: false, isDefinition: true)
-!19 = !DIDerivedType(tag: DW_TAG_pointer_type, name: "cstring", baseType: !20, size: 64)
-!20 = !DIBasicType(name: "u8", size: 8, encoding: DW_ATE_unsigned_char)
-!21 = !DIGlobalVariableExpression(var: !22, expr: !DIExpression())
-!22 = distinct !DIGlobalVariable(name: "primes", scope: !2, type: !23, isLocal: false, isDefinition: true)
-!23 = !DICompositeType(tag: DW_TAG_array_type, baseType: !6, size: 128, elements: !24)
-!24 = !{!25}
-!25 = !DISubrange(count: 4, lowerBound: 0)
-!26 = !DIGlobalVariableExpression(var: !27, expr: !DIExpression())
-!27 = distinct !DIGlobalVariable(name: "favorite", scope: !2, type: !5, isLocal: false, isDefinition: true)
-!28 = !DIGlobalVariableExpression(var: !29, expr: !DIExpression())
-!29 = distinct !DIGlobalVariable(name: "origin", scope: !2, type: !30, isLocal: false, isDefinition: true)
-!30 = !DICompositeType(tag: DW_TAG_structure_type, name: "Point", size: 64, elements: !31)
-!31 = !{!32, !33, !34}
-!32 = !DIDerivedType(tag: DW_TAG_member, name: "x", scope: !30, baseType: !6, size: 32)
-!33 = !DIDerivedType(tag: DW_TAG_member, name: "y", scope: !30, baseType: !6, size: 32, offset: 32)
-!34 = !DISubprogram(name: "new", scope: !30, file: !3, line: 1, type: !35, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
-!35 = !DISubroutineType(types: !36)
-!36 = !{null, !37, !6, !6}
-!37 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !30, size: 64, flags: DIFlagArtificial | DIFlagObjectPointer)
-!38 = !DIGlobalVariableExpression(var: !39, expr: !DIExpression())
-!39 = distinct !DIGlobalVariable(name: "counter", scope: !2, type: !6, isLocal: false, isDefinition: true)
-!40 = !DIGlobalVariableExpression(var: !41, expr: !DIExpression())
-!41 = distinct !DIGlobalVariable(name: "alias", scope: !2, type: !42, isLocal: false, isDefinition: true)
-!42 = !DIDerivedType(tag: DW_TAG_reference_type, baseType: !6, size: 64)
-!43 = !{i32 2, !"Debug Info Version", i32 3}
-!44 = !{i32 2, !"CodeView", i32 1}
-!45 = distinct !DISubprogram(name: "main", scope: !3, file: !3, line: 23, type: !46, scopeLine: 23, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
-!46 = !DISubroutineType(types: !47)
-!47 = !{!6}
-!48 = !DILocation(line: 25, scope: !45)
-!49 = !DILocation(line: 26, scope: !45)
-!50 = !DILocation(line: 28, scope: !45)
-!51 = !DILocation(line: 30, scope: !45)
-!52 = distinct !DISubprogram(name: "new", scope: !30, file: !3, line: 1, type: !35, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !34, retainedNodes: !53)
-!53 = !{}
-!54 = !DILocation(line: 1, scope: !52)
-!55 = !DILocalVariable(name: "this", arg: 1, scope: !52, file: !3, line: 1, type: !37, flags: DIFlagArtificial | DIFlagObjectPointer)
-!56 = !DILocalVariable(name: "startX", arg: 2, scope: !52, file: !3, line: 1, type: !6)
-!57 = !DILocalVariable(name: "startY", arg: 3, scope: !52, file: !3, line: 1, type: !6)
-!58 = !DILocation(line: 3, scope: !52)
-!59 = !DILocation(line: 4, scope: !52)
+!19 = !DICompositeType(tag: DW_TAG_structure_type, name: "string", size: 128, elements: !20)
+!20 = !{!21}
+!21 = !DIDerivedType(tag: DW_TAG_member, name: "_bytes", scope: !19, baseType: !22, size: 128)
+!22 = !DICompositeType(tag: DW_TAG_structure_type, name: "[u8; _]", size: 128, elements: !23)
+!23 = !{!24, !27, !28}
+!24 = !DIDerivedType(tag: DW_TAG_member, name: "data", scope: !22, baseType: !25, size: 64)
+!25 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !26, size: 64)
+!26 = !DIBasicType(name: "u8", size: 8, encoding: DW_ATE_unsigned_char)
+!27 = !DIDerivedType(tag: DW_TAG_member, name: "length", scope: !22, baseType: !6, size: 32, offset: 64)
+!28 = !DIDerivedType(tag: DW_TAG_member, name: "capacity", scope: !22, baseType: !6, size: 32, offset: 96)
+!29 = !DIGlobalVariableExpression(var: !30, expr: !DIExpression())
+!30 = distinct !DIGlobalVariable(name: "primes", scope: !2, type: !31, isLocal: false, isDefinition: true)
+!31 = !DICompositeType(tag: DW_TAG_array_type, baseType: !6, size: 128, elements: !32)
+!32 = !{!33}
+!33 = !DISubrange(count: 4, lowerBound: 0)
+!34 = !DIGlobalVariableExpression(var: !35, expr: !DIExpression())
+!35 = distinct !DIGlobalVariable(name: "favorite", scope: !2, type: !5, isLocal: false, isDefinition: true)
+!36 = !DIGlobalVariableExpression(var: !37, expr: !DIExpression())
+!37 = distinct !DIGlobalVariable(name: "origin", scope: !2, type: !38, isLocal: false, isDefinition: true)
+!38 = !DICompositeType(tag: DW_TAG_structure_type, name: "Point", size: 64, elements: !39)
+!39 = !{!40, !41, !42}
+!40 = !DIDerivedType(tag: DW_TAG_member, name: "x", scope: !38, baseType: !6, size: 32)
+!41 = !DIDerivedType(tag: DW_TAG_member, name: "y", scope: !38, baseType: !6, size: 32, offset: 32)
+!42 = !DISubprogram(name: "new", scope: !38, file: !3, line: 1, type: !43, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
+!43 = !DISubroutineType(types: !44)
+!44 = !{null, !45, !6, !6}
+!45 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !38, size: 64, flags: DIFlagArtificial | DIFlagObjectPointer)
+!46 = !DIGlobalVariableExpression(var: !47, expr: !DIExpression())
+!47 = distinct !DIGlobalVariable(name: "counter", scope: !2, type: !6, isLocal: false, isDefinition: true)
+!48 = !DIGlobalVariableExpression(var: !49, expr: !DIExpression())
+!49 = distinct !DIGlobalVariable(name: "alias", scope: !2, type: !50, isLocal: false, isDefinition: true)
+!50 = !DIDerivedType(tag: DW_TAG_reference_type, baseType: !6, size: 64)
+!51 = !{i32 2, !"Debug Info Version", i32 3}
+!52 = !{i32 2, !"CodeView", i32 1}
+!53 = distinct !DISubprogram(name: "main", scope: !3, file: !3, line: 23, type: !54, scopeLine: 23, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
+!54 = !DISubroutineType(types: !55)
+!55 = !{!6}
+!56 = !DILocation(line: 25, scope: !53)
+!57 = !DILocation(line: 26, scope: !53)
+!58 = !DILocation(line: 28, scope: !53)
+!59 = !DILocation(line: 30, scope: !53)
+!60 = distinct !DISubprogram(name: "new", scope: !38, file: !3, line: 1, type: !43, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !42, retainedNodes: !61)
+!61 = !{}
+!62 = !DILocation(line: 1, scope: !60)
+!63 = !DILocalVariable(name: "this", arg: 1, scope: !60, file: !3, line: 1, type: !45, flags: DIFlagArtificial | DIFlagObjectPointer)
+!64 = !DILocalVariable(name: "startX", arg: 2, scope: !60, file: !3, line: 1, type: !6)
+!65 = !DILocalVariable(name: "startY", arg: 3, scope: !60, file: !3, line: 1, type: !6)
+!66 = !DILocation(line: 3, scope: !60)
+!67 = !DILocation(line: 4, scope: !60)

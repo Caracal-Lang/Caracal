@@ -1,0 +1,128 @@
+ConstantDeclaration: {
+    Type: string
+    Left: {
+        NameExpression: {
+            Type: string
+            Name: greeting
+        }
+    }
+    Right: {
+        StringLiteral: "hello"
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (string) -> i32
+    Name: lengthOf
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: string
+                        Name: text
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref string) -> i32
+                        NameExpression: {
+                            Type: (ref string) -> i32
+                            Name: length
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: string
+                                        Name: greeting
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (ref string) -> i32
+                                        NameExpression: {
+                                            Type: (ref string) -> i32
+                                            Name: length
+                                        }
+                                        ArgumentsNode(0): {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (string) -> i32
+                                NameExpression: {
+                                    Type: (string) -> i32
+                                    Name: lengthOf
+                                }
+                                ArgumentsNode(1): {
+                                    NameExpression: {
+                                        Type: string
+                                        Name: greeting
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: SubtractionWrapping
+                Right: {
+                    NumberLiteral: 10
+                }
+            }
+        }
+    }
+}

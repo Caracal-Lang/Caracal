@@ -1,0 +1,128 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: greeting
+        }
+    }
+    Right: {
+        StringLiteral: "hello"
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: lengthOf
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: text
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: length
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: greeting
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: length
+                                        }
+                                        ArgumentsNode(0): {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: lengthOf
+                                }
+                                ArgumentsNode(1): {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: greeting
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: SubtractionWrapping
+                Right: {
+                    NumberLiteral: 10
+                }
+            }
+        }
+    }
+}

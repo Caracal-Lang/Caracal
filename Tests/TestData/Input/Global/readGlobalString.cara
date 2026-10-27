@@ -1,0 +1,11 @@
+greeting :: "hello";
+
+def lengthOf(text: string) i32
+{
+    return text.length();
+}
+
+def main() i32
+{
+    return greeting.length() %+ lengthOf(greeting) %- 10;
+}
