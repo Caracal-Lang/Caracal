@@ -1,0 +1,59 @@
+type Holder
+    wide: f64
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define widen(%0: f32 "narrow") f64
+block entry(0):
+    %0 = parameter 0 : f32 "narrow"
+    %1 = float_widen %0 : f32 -> f64
+    return %1
+
+define widenAssignment(%0: f32 "narrow") f64
+block entry(0):
+    %0 = parameter 0 : f32 "narrow"
+    %2 = float_widen %0 : f32 -> f64
+    return %2
+
+define takesWide(%0: f64 "value") f64
+block entry(0):
+    %0 = parameter 0 : f64 "value"
+    return %0
+
+define widenArgument(%0: f32 "narrow") f64
+block entry(0):
+    %0 = parameter 0 : f32 "narrow"
+    %1 = float_widen %0 : f32 -> f64
+    %2 = call takesWide(%1) : f64
+    return %2
+
+define widenReturn(%0: f32 "narrow") f64
+block entry(0):
+    %0 = parameter 0 : f32 "narrow"
+    %1 = float_widen %0 : f32 -> f64
+    return %1
+
+define holderWide(%0: f32 "value") f64
+block entry(0):
+    %0 = parameter 0 : f32 "value"
+    %slot0 = allocate_local : Holder "holder"
+    %1 = address_of %slot0 : ref Holder
+    call Holder.new(%1, %0)
+    %2 = address_of_field %1.0 : ref f64 "wide"
+    %3 = load_value %2 : f64
+    return %3
+
+define Holder.new(%0: ref Holder ".this", %1: f32 "value") void
+block entry(0):
+    %0 = parameter 0 : ref Holder ".this"
+    %1 = parameter 1 : f32 "value"
+    %2 = float_widen %1 : f32 -> f64
+    %3 = address_of_field %0.0 : ref f64 "wide"
+    store_value %2, %3 : f64
+    return

@@ -1,0 +1,157 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: narrow
+        }
+    }
+    Right: {
+        NumberLiteral: 5
+    }
+}
+ConstantDeclaration: {
+    Type: i64
+    Left: {
+        NameExpression: {
+            Type: i64
+            Name: wide
+        }
+    }
+    ExplicitType: {
+        TypeNameNode: {
+            Type: i64
+            Lexeme: i64
+        }
+    }
+    Right: {
+        NameExpression: {
+            Type: i32
+            Name: narrow
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: f32
+    Left: {
+        NameExpression: {
+            Type: f32
+            Name: narrowFloat
+        }
+    }
+    Right: {
+        NumberLiteral: 0.5
+    }
+}
+ConstantDeclaration: {
+    Type: f64
+    Left: {
+        NameExpression: {
+            Type: f64
+            Name: wideFloat
+        }
+    }
+    ExplicitType: {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    Right: {
+        NameExpression: {
+            Type: f32
+            Name: narrowFloat
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: i64
+    Left: {
+        NameExpression: {
+            Type: i64
+            Name: wideSum
+        }
+    }
+    Right: {
+        BinaryExpression: {
+            Type: i64
+            Left: {
+                NameExpression: {
+                    Type: i64
+                    Name: wide
+                }
+            }
+            Operation: AdditionWrapping
+            Right: {
+                NumberLiteral: 1
+                TypeNameNode: {
+                    Type: i64
+                    Lexeme: i64
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i64
+    Name: readWide
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i64
+            Lexeme: i64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i64
+            NameExpression: {
+                Type: i64
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> f64
+    Name: readWideFloat
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: f64
+            NameExpression: {
+                Type: f64
+                Name: wideFloat
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i64
+    Name: readWideSum
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i64
+            Lexeme: i64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i64
+            NameExpression: {
+                Type: i64
+                Name: wideSum
+            }
+        }
+    }
+}

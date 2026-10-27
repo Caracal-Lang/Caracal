@@ -783,6 +783,19 @@ namespace Caracal
                 defineValue(instruction.resultId, result);
                 return true;
             }
+            case InstructionKind::FloatWiden:
+            {
+                auto* operand = tryResolve(instruction.a);
+                if (operand == nullptr)
+                    return false;
+
+                auto* targetType = lowerType(instruction.type);
+                if (targetType == nullptr)
+                    return false;
+
+                defineValue(instruction.resultId, m_irBuilder->CreateFPExt(operand, targetType, "float_widen"));
+                return true;
+            }
             case InstructionKind::ValueNegation:
             {
                 auto* operand = tryResolve(instruction.a);

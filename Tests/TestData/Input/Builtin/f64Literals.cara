@@ -1,0 +1,28 @@
+wide : f64 : 0.1;
+
+def localConstant() f64
+{
+    narrow : f64 : 0.25;
+    return narrow;
+}
+
+def variable() f64
+{
+    value : f64 = 0.5;
+    return value;
+}
+
+def takesWide(value: f64) f64
+{
+    return value;
+}
+
+def argument() f64
+{
+    return takesWide(0.75);
+}
+
+def returned() f64
+{
+    return 0.125;
+}

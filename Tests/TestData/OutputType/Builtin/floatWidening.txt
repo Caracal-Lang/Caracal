@@ -1,0 +1,316 @@
+FunctionDefinitionStatement: {
+    Type: (f32) -> f64
+    Name: widen
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: f64
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: f64
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: f32
+                    Name: narrow
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: f64
+            NameExpression: {
+                Type: f64
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f32) -> f64
+    Name: widenAssignment
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: f64
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: f64
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NumberLiteral: 0.0
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: wide
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: f32
+                    Name: narrow
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: f64
+            NameExpression: {
+                Type: f64
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f64) -> f64
+    Name: takesWide
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f64
+                Lexeme: f64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: f64
+            NameExpression: {
+                Type: f64
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f32) -> f64
+    Name: widenArgument
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: f64
+            FunctionCallExpression: {
+                Type: f64
+                Function type: (f64) -> f64
+                NameExpression: {
+                    Type: (f64) -> f64
+                    Name: takesWide
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: f32
+                        Name: narrow
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f32) -> f64
+    Name: widenReturn
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: f32
+            NameExpression: {
+                Type: f32
+                Name: narrow
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Holder
+    Name: Holder
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: f64
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: f32
+                    Name: value
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f32) -> f64
+    Name: holderWide
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: Holder
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Holder
+                    Left: {
+                        NameExpression: {
+                            Type: Holder
+                            Name: Holder
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Holder
+                            Function type: (ref Holder, f32) -> void
+                            NameExpression: {
+                                Type: (ref Holder, f32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NameExpression: {
+                                    Type: f32
+                                    Name: value
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: f64
+            BinaryExpression: {
+                Type: f64
+                Left: {
+                    NameExpression: {
+                        Type: Holder
+                        Name: holder
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: f64
+                        Name: wide
+                    }
+                }
+            }
+        }
+    }
+}

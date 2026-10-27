@@ -1,0 +1,56 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @widen(float %0) local_unnamed_addr #0 {
+entry:
+  %float_widen = fpext float %0 to double
+  ret double %float_widen
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @widenAssignment(float %0) local_unnamed_addr #0 {
+entry:
+  %float_widen = fpext float %0 to double
+  ret double %float_widen
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @takesWide(double returned %0) local_unnamed_addr #0 {
+entry:
+  ret double %0
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @widenArgument(float %0) local_unnamed_addr #0 {
+entry:
+  %float_widen = fpext float %0 to double
+  ret double %float_widen
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @widenReturn(float %0) local_unnamed_addr #0 {
+entry:
+  %float_widen = fpext float %0 to double
+  ret double %float_widen
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define double @holderWide(float %0) local_unnamed_addr #0 {
+entry:
+  %float_widen.i = fpext float %0 to double
+  ret double %float_widen.i
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, float %1) local_unnamed_addr #1 {
+entry:
+  %float_widen = fpext float %1 to double
+  store double %float_widen, ptr %0, align 8
+  ret void
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }

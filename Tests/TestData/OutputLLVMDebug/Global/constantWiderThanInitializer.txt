@@ -1,0 +1,36 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@narrow = constant i32 5
+@wide = constant i64 5
+@narrowFloat = constant float 5.000000e-01
+@wideFloat = constant double 5.000000e-01
+@wideSum = constant i64 6
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i64 @readWide() {
+entry:
+  %load = load i64, ptr @wide, align 8
+  ret i64 %load
+}
+
+define double @readWideFloat() {
+entry:
+  %load = load double, ptr @wideFloat, align 8
+  ret double %load
+}
+
+define i64 @readWideSum() {
+entry:
+  %load = load i64, ptr @wideSum, align 8
+  ret i64 %load
+}

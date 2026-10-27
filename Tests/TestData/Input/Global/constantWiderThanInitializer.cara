@@ -1,0 +1,20 @@
+narrow :: 5;
+wide : i64 : narrow;
+narrowFloat :: 0.5;
+wideFloat : f64 : narrowFloat;
+wideSum :: wide %+ 1'i64;
+
+def readWide() i64
+{
+    return wide;
+}
+
+def readWideFloat() f64
+{
+    return wideFloat;
+}
+
+def readWideSum() i64
+{
+    return wideSum;
+}

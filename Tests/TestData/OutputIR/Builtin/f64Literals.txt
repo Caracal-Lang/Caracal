@@ -1,0 +1,35 @@
+global wide : f64 = 0.100000
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define localConstant() f64
+block entry(0):
+    %0 = const 0.250000 : f64
+    return %0
+
+define variable() f64
+block entry(0):
+    %0 = const 0.500000 : f64
+    return %0
+
+define takesWide(%0: f64 "value") f64
+block entry(0):
+    %0 = parameter 0 : f64 "value"
+    return %0
+
+define argument() f64
+block entry(0):
+    %0 = const 0.750000 : f64
+    %1 = call takesWide(%0) : f64
+    return %1
+
+define returned() f64
+block entry(0):
+    %0 = const 0.125000 : f64
+    return %0

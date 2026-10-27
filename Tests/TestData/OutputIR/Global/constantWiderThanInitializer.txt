@@ -1,0 +1,31 @@
+global narrow : i32 = 5
+global wide : i64 = 5
+global narrowFloat : f32 = 0.500000
+global wideFloat : f64 = 0.500000
+global wideSum : i64 = 6
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define readWide() i64
+block entry(0):
+    %0 = address_of_global @wide : ref i64
+    %1 = load_value %0 : i64
+    return %1
+
+define readWideFloat() f64
+block entry(0):
+    %0 = address_of_global @wideFloat : ref f64
+    %1 = load_value %0 : f64
+    return %1
+
+define readWideSum() i64
+block entry(0):
+    %0 = address_of_global @wideSum : ref i64
+    %1 = load_value %0 : i64
+    return %1

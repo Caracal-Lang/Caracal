@@ -1,0 +1,157 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: narrow
+        }
+    }
+    Right: {
+        NumberLiteral: 5
+    }
+}
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: wide
+        }
+    }
+    ExplicitType: {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i64
+        }
+    }
+    Right: {
+        NameExpression: {
+            Type: undefined
+            Name: narrow
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: narrowFloat
+        }
+    }
+    Right: {
+        NumberLiteral: 0.5
+    }
+}
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: wideFloat
+        }
+    }
+    ExplicitType: {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    Right: {
+        NameExpression: {
+            Type: undefined
+            Name: narrowFloat
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: wideSum
+        }
+    }
+    Right: {
+        BinaryExpression: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: wide
+                }
+            }
+            Operation: AdditionWrapping
+            Right: {
+                NumberLiteral: 1
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i64
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readWide
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readWideFloat
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: wideFloat
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readWideSum
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: wideSum
+            }
+        }
+    }
+}

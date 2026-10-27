@@ -616,15 +616,20 @@ namespace Caracal
             }
             case InstructionKind::IntToFloat:
             case InstructionKind::IntWiden:
+            case InstructionKind::FloatWiden:
             {
                 appendResult(instruction);
                 if (instruction.kind == InstructionKind::IntToFloat)
                 {
                     m_builder.append(" = int_to_float ");
                 }
-                else
+                else if (instruction.kind == InstructionKind::IntWiden)
                 {
                     m_builder.append(" = int_widen ");
+                }
+                else
+                {
+                    m_builder.append(" = float_widen ");
                 }
                 appendValue(ValueRef{ instruction.a });
                 m_builder.append(" : ");

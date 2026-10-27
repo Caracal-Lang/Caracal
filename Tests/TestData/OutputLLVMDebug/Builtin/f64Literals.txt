@@ -1,0 +1,40 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@wide = constant double 1.000000e-01
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define double @localConstant() {
+entry:
+  ret double 2.500000e-01
+}
+
+define double @variable() {
+entry:
+  ret double 5.000000e-01
+}
+
+define double @takesWide(double %0) {
+entry:
+  ret double %0
+}
+
+define double @argument() {
+entry:
+  %call = call double @takesWide(double 7.500000e-01)
+  ret double %call
+}
+
+define double @returned() {
+entry:
+  ret double 1.250000e-01
+}

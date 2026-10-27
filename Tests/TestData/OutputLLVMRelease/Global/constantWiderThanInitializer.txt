@@ -1,0 +1,30 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@narrow = local_unnamed_addr constant i32 5
+@wide = local_unnamed_addr constant i64 5
+@narrowFloat = local_unnamed_addr constant float 5.000000e-01
+@wideFloat = local_unnamed_addr constant double 5.000000e-01
+@wideSum = local_unnamed_addr constant i64 6
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i64 @readWide() local_unnamed_addr #0 {
+entry:
+  ret i64 5
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef double @readWideFloat() local_unnamed_addr #0 {
+entry:
+  ret double 5.000000e-01
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i64 @readWideSum() local_unnamed_addr #0 {
+entry:
+  ret i64 6
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

@@ -55,6 +55,70 @@ namespace Caracal
         return std::visit([](const auto value) { return FoldValue{ value }; }, parsedValue);
     }
 
+    template <typename Target>
+    [[nodiscard]] static FoldValue CastFoldValue(const FoldValue& value) noexcept
+    {
+        return std::visit([](const auto payload) { return FoldValue{ static_cast<Target>(payload) }; }, value);
+    }
+
+    [[nodiscard]] static FoldValue WidenFoldValue(const FoldValue& value, const BuiltinTypeDescription& target) noexcept
+    {
+        if (target.kind == BuiltinTypeKind::Float)
+        {
+            if (target.bits == 64)
+            {
+                return CastFoldValue<f64>(value);
+            }
+            else
+            {
+                return CastFoldValue<f32>(value);
+            }
+        }
+
+        if (target.isSigned)
+        {
+            switch (target.bits)
+            {
+                case 8:
+                {
+                    return CastFoldValue<i8>(value);
+                }
+                case 16:
+                {
+                    return CastFoldValue<i16>(value);
+                }
+                case 32:
+                {
+                    return CastFoldValue<i32>(value);
+                }
+                default:
+                {
+                    return CastFoldValue<i64>(value);
+                }
+            }
+        }
+
+        switch (target.bits)
+        {
+            case 8:
+            {
+                return CastFoldValue<u8>(value);
+            }
+            case 16:
+            {
+                return CastFoldValue<u16>(value);
+            }
+            case 32:
+            {
+                return CastFoldValue<u32>(value);
+            }
+            default:
+            {
+                return CastFoldValue<u64>(value);
+            }
+        }
+    }
+
     [[nodiscard]] static SourceLocation TypeNameSpan(const CompilationContext& context, const CompilationUnit& unit, u32 index)
     {
         return NodeSpans::typeNameSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), index);
@@ -2787,23 +2851,32 @@ namespace Caracal
                     std::string(name));
             }
 
+            auto folded = checkedRight.folded;
+            const auto* bindingDescription = m_module.tryGetBuiltinTypeDescription(bindingType);
+            if (folded.has_value() && bindingType != rightType && isAssignableTo(rightType, bindingType)
+                && bindingDescription != nullptr
+                && (bindingDescription->kind == BuiltinTypeKind::Int || bindingDescription->kind == BuiltinTypeKind::Float))
+            {
+                folded = WidenFoldValue(folded.value(), *bindingDescription);
+            }
+
             const auto nameId = nameIdOf(unit, declarationLayout.left);
             if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, bindingType, nameLocation(unit, declarationLayout.left), unit.source, VariableBindingKind::LocalConstant);
                 if (auto* newBinding = tryGetBindingMutable(nameId); newBinding != nullptr)
                 {
-                    newBinding->folded = checkedRight.folded;
+                    newBinding->folded = folded;
                 }
 
                 if (isGlobalConstant)
                 {
-                    static_cast<void>(m_module.createConstant(name, rightType, NodeIndex{ unit.fileId, declarationLayout.right }));
+                    static_cast<void>(m_module.createConstant(name, bindingType, NodeIndex{ unit.fileId, declarationLayout.right }));
                     if (!m_isPreludePass)
                     {
-                        if (checkedRight.folded.has_value())
+                        if (folded.has_value())
                         {
-                            m_emitter.emitGlobalConstant(name, rightType, IREmitter::constantFromFold(checkedRight.folded.value()));
+                            m_emitter.emitGlobalConstant(name, bindingType, IREmitter::constantFromFold(folded.value()));
                         }
                         else
                         {
@@ -5795,6 +5868,10 @@ namespace Caracal
                 {
                     numberType = contextualType;
                 }
+                else if (isFloatingLiteral && contextualDescription != nullptr && contextualDescription->kind == BuiltinTypeKind::Float)
+                {
+                    numberType = contextualType;
+                }
             }
 
             if (numberType == Type::Undefined() && isFloatingLiteral)
@@ -6030,7 +6107,7 @@ namespace Caracal
         }
 
         const auto* description = m_module.tryGetBuiltinTypeDescription(expectedType);
-        if (description != nullptr && description->kind == BuiltinTypeKind::Int)
+        if (description != nullptr && (description->kind == BuiltinTypeKind::Int || description->kind == BuiltinTypeKind::Float))
         {
             return expectedType;
         }

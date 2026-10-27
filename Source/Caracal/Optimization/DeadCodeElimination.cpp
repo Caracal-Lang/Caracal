@@ -39,6 +39,7 @@ namespace Caracal
             case InstructionKind::BitNot:
             case InstructionKind::IntToFloat:
             case InstructionKind::IntWiden:
+            case InstructionKind::FloatWiden:
             {
                 useOperand(function.aAt(instructionIndex));
                 return InstructionResult::RemovableValue;

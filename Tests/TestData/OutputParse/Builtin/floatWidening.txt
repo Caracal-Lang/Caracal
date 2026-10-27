@@ -1,0 +1,316 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: widen
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: narrow
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: widenAssignment
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NumberLiteral: 0.0
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: wide
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: narrow
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: wide
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: takesWide
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: widenArgument
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: takesWide
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: narrow
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: widenReturn
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: narrow
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: narrow
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Holder
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: holderWide
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: holder
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Holder
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: value
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: holder
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: wide
+                    }
+                }
+            }
+        }
+    }
+}

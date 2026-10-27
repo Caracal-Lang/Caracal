@@ -1,0 +1,170 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: wide
+        }
+    }
+    ExplicitType: {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    Right: {
+        NumberLiteral: 0.1
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: localConstant
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        ConstantDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: narrow
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NumberLiteral: 0.25
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: narrow
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: variable
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NumberLiteral: 0.5
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: takesWide
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: f64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: argument
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: takesWide
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 0.75
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: returned
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: f64
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 0.125
+        }
+    }
+}

@@ -1,0 +1,38 @@
+def widen(narrow: f32) f64
+{
+    wide : f64 = narrow;
+    return wide;
+}
+
+def widenAssignment(narrow: f32) f64
+{
+    wide : f64 = 0.0;
+    wide = narrow;
+    return wide;
+}
+
+def takesWide(value: f64) f64
+{
+    return value;
+}
+
+def widenArgument(narrow: f32) f64
+{
+    return takesWide(narrow);
+}
+
+def widenReturn(narrow: f32) f64
+{
+    return narrow;
+}
+
+type Holder(value: f32)
+{
+    wide : f64 = value
+}
+
+def holderWide(value: f32) f64
+{
+    holder := Holder.new(value);
+    return holder.wide;
+}

@@ -891,14 +891,22 @@ namespace Caracal
         const auto* targetDescription = m_semanticContext.tryGetBuiltinTypeDescription(targetType);
         if (sourceDescription == nullptr
             || targetDescription == nullptr
-            || sourceDescription->kind != BuiltinTypeKind::Int
-            || targetDescription->kind != BuiltinTypeKind::Int
+            || sourceDescription->kind != targetDescription->kind
             || sourceDescription->bits >= targetDescription->bits)
         {
             return value;
         }
 
-        return appendValueInstruction(Instruction::CreateConversion(InstructionKind::IntWiden, nextTemporaryId(), targetType, value.id(), sourceType));
+        if (sourceDescription->kind == BuiltinTypeKind::Int)
+        {
+            return appendValueInstruction(Instruction::CreateConversion(InstructionKind::IntWiden, nextTemporaryId(), targetType, value.id(), sourceType));
+        }
+        else if (sourceDescription->kind == BuiltinTypeKind::Float)
+        {
+            return appendValueInstruction(Instruction::CreateConversion(InstructionKind::FloatWiden, nextTemporaryId(), targetType, value.id(), sourceType));
+        }
+
+        return value;
     }
 
     ValueRef IREmitter::emitIntToFloat(ValueRef value, Type sourceType, Type targetType)

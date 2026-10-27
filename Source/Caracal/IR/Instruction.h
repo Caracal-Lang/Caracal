@@ -33,6 +33,7 @@ namespace Caracal
         ValueNegation,
         IntToFloat,
         IntWiden,
+        FloatWiden,
         SizeOf,
         LogicalNegation,
         Call,
@@ -108,7 +109,7 @@ namespace Caracal
     //                    a nul byte, type is the array type
     // LoadValue          a address
     // StoreValue         a value, b address, no result
-    // IntToFloat         a operand, c d source type, also IntWiden
+    // IntToFloat         a operand, c d source type, also IntWiden and FloatWiden
     // SizeOf             c d measured type
     // ValueNegation      a operand, also LogicalNegation and BitNot
     // Call               a function id, b c start and count in the operand pool, also CallVoid
@@ -237,7 +238,7 @@ namespace Caracal
             return instruction;
         }
 
-        // IntToFloat or IntWiden
+        // IntToFloat, IntWiden or FloatWiden
         [[nodiscard]] static Instruction CreateConversion(InstructionKind conversionKind, TemporaryId result, Type resultType, TemporaryId operand, Type sourceType) noexcept
         {
             auto instruction = Instruction{ conversionKind, result, resultType };
