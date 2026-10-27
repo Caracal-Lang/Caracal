@@ -82,4 +82,69 @@ namespace Caracal
 
         return result;
     }
+
+    std::string escapeStringLiteral(std::string_view text)
+    {
+        std::string result;
+        result.reserve(text.size());
+
+        for (const auto character : text)
+        {
+            switch (character)
+            {
+                case '\"':
+                {
+                    result += "\\\"";
+                    break;
+                }
+                case '\\':
+                {
+                    result += "\\\\";
+                    break;
+                }
+                case '\a':
+                {
+                    result += "\\a";
+                    break;
+                }
+                case '\b':
+                {
+                    result += "\\b";
+                    break;
+                }
+                case '\f':
+                {
+                    result += "\\f";
+                    break;
+                }
+                case '\n':
+                {
+                    result += "\\n";
+                    break;
+                }
+                case '\r':
+                {
+                    result += "\\r";
+                    break;
+                }
+                case '\t':
+                {
+                    result += "\\t";
+                    break;
+                }
+                case '\v':
+                {
+                    result += "\\v";
+                    break;
+                }
+                default:
+                {
+                    result.push_back(character);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
 }

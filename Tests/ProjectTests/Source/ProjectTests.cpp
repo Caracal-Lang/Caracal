@@ -1,6 +1,7 @@
 #include <CaraTest.h>
 #include <Caracal/Compiler.h>
 #include <Caracal/Project/Project.h>
+#include <Caracal/Project/ProjectConstants.h>
 #include <Caracal/Project/ProjectCreator.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Project/ProjectModes.h>
@@ -914,6 +915,39 @@ static void CreatingBuildCommandWithoutModeUsesDefaultMode()
     CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::None);
 }
 
+static bool ProjectBuildDeclaresConstant(const std::string& scratchName, std::string_view constantName)
+{
+    const auto result = LoadProjectText(scratchName, DebugModeField);
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "Debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    return buildCommand->projectConstants.text.find(constantName) != std::string::npos;
+}
+
+static void BuildCommandForProjectAddsItsNameAsConstant()
+{
+    CaraTest::isTrue(ProjectBuildDeclaresConstant("BuildCommandProjectName", "__caracal_project_name"));
+}
+
+static void BuildCommandForProjectAddsItsVersionAsConstant()
+{
+    CaraTest::isTrue(ProjectBuildDeclaresConstant("BuildCommandProjectVersion", "__caracal_project_version"));
+}
+
+static void VersionWithQuotesAndBackslashesKeepsThemInTheConstants()
+{
+    Caracal::Project project{ "Hello", "C:/Hello" };
+    project.version = R"(a"b\c)";
+
+    const auto text = Caracal::createProjectConstantsSource(project);
+
+    CaraTest::isTrue(text.find(R"("a\"b\\c")") != std::string::npos);
+}
+
 static void FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes()
 {
     Caracal::Project project{ "Hello", "C:/Hello" };
@@ -1069,6 +1103,9 @@ static auto tests =
     CaraTest::addTest("creating a build command for a mode without output uses its name", CreatingBuildCommandForModeWithoutOutputUsesModesName),
     CaraTest::addTest("creating a build command without a mode uses the default mode", CreatingBuildCommandWithoutModeUsesDefaultMode),
     CaraTest::addTest("creating a build command for an unknown mode fails", CreatingBuildCommandForUnknownModeFails),
+    CaraTest::addTest("a build command for a project adds its name as a constant", BuildCommandForProjectAddsItsNameAsConstant),
+    CaraTest::addTest("a build command for a project adds its version as a constant", BuildCommandForProjectAddsItsVersionAsConstant),
+    CaraTest::addTest("a version with quotes and backslashes keeps them in the constants", VersionWithQuotesAndBackslashesKeepsThemInTheConstants),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),

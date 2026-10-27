@@ -21,6 +21,7 @@ namespace Caracal
     {
         Prelude,
         Core,
+        Project,
         User,
     };
 

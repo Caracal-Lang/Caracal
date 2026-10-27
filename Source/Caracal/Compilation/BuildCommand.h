@@ -6,13 +6,21 @@
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
 #include <Caracal/Semantic/TypeCheckerOptions.h>
 #include <filesystem>
+#include <string>
 #include <vector>
 
 namespace Caracal
 {
+    struct CARACAL_API GeneratedSource
+    {
+        std::filesystem::path path;
+        std::string text;
+    };
+
     struct CARACAL_API BuildCommand
     {
         std::vector<std::filesystem::path> sourceFiles;
+        GeneratedSource projectConstants;
         std::filesystem::path preludeDirectory;
         std::vector<std::filesystem::path> libraryDirectories;
         TypeCheckerOptions typeCheckerOptions;

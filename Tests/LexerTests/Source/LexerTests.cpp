@@ -6,6 +6,7 @@
 #include <Caracal/Compilation.h>
 #include <Caracal/CompilationContext.h>
 #include <Caracal/Syntax/LexerSimd.h>
+#include <Caracal/Syntax/StringEscapes.h>
 #include <Caracal/Syntax/Token.h>
 #include <Caracal/Syntax/TokenKind.h>
 #include <Caracal/Syntax/TokenBuffer.h>
@@ -236,6 +237,38 @@ static std::vector<std::tuple<std::string, std::string_view>> StringsWithEscapes
         std::make_tuple("\"carriage return\\r\"", "\"carriage return\\r\""),
         std::make_tuple("\"horizonal tab\\t\"", "\"horizonal tab\\t\""),
         std::make_tuple("\"vertical tab\\v\"", "\"vertical tab\\v\""),
+    };
+}
+
+static void EscapedStringsReadBackUnchanged(const std::string& text)
+{
+    const auto escapedText = Caracal::escapeStringLiteral(text);
+    CaraTest::areEqual(text, Caracal::replaceEscapeSequences(escapedText));
+
+    const auto source = std::make_shared<Caracal::SourceText>("\"" + escapedText + "\"");
+    Caracal::DiagnosticsBag diagnostics;
+    const auto tokens = Caracal::lex(source, diagnostics);
+    CaraTest::isFalse(diagnostics.hasErrors());
+    CaraTest::areEqual(TokenKind::String, tokens.getToken(0).kind);
+    CaraTest::areEqual(2, tokens.size());
+}
+
+static std::vector<std::tuple<std::string>> EscapedStringsReadBackUnchanged_Data()
+{
+    return {
+        std::make_tuple(std::string("no escapes")),
+        std::make_tuple(std::string("double quote \"")),
+        std::make_tuple(std::string("single quote '")),
+        std::make_tuple(std::string("backslash \\")),
+        std::make_tuple(std::string("backslash before an escape letter \\n")),
+        std::make_tuple(std::string("audible bell \a")),
+        std::make_tuple(std::string("backspace \b")),
+        std::make_tuple(std::string("form feed \f")),
+        std::make_tuple(std::string("line feed \n")),
+        std::make_tuple(std::string("carriage return \r")),
+        std::make_tuple(std::string("horizontal tab \t")),
+        std::make_tuple(std::string("vertical tab \v")),
+        std::make_tuple(std::string("control character without an escape \x01")),
     };
 }
 
@@ -577,4 +610,5 @@ static const auto tests =
     CaraTest::addTest("ScanPrimitivesDifferential", ScanPrimitivesDifferential),
     CaraTest::addTest("LongRunBoundaries", LongRunBoundaries),
     CaraTest::addTest("TokenResolutionAcrossUnits", TokenResolutionAcrossUnits),
+    CaraTest::addTest("EscapedStringsReadBackUnchanged", EscapedStringsReadBackUnchanged, EscapedStringsReadBackUnchanged_Data),
 };

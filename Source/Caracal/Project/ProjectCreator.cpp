@@ -125,7 +125,7 @@ namespace Caracal
         return {};
     }
 
-    static std::string ProjectVersion(std::chrono::year_month_day day)
+    std::string projectVersion(std::chrono::year_month_day day)
     {
         return std::format(
             "{}.{}.{}",
@@ -213,7 +213,7 @@ namespace Caracal
         if (!WriteIfMissing(projectDirectory / ".editorconfig", EditorConfigText(projectDirectory)))
             return Failure("Couldn't write " + (projectDirectory / ".editorconfig").string());
 
-        Project project{ projectName, projectDirectory, ProjectType::Executable, ProjectVersion(creationDay), {}, { { "Core", false } }, defaultProjectModes() };
+        Project project{ projectName, projectDirectory, ProjectType::Executable, projectVersion(creationDay), {}, { { "Core", false } }, defaultProjectModes() };
 
         if (!WriteIfMissing(projectDirectory / ".gitattributes", GitAttributesText(project)))
             return Failure("Couldn't write " + (projectDirectory / ".gitattributes").string());

@@ -8,6 +8,7 @@
 #include <Caracal/IR/Module.h>
 #include <Caracal/Project/Project.h>
 #include <Caracal/Semantic/SemanticContext.h>
+#include <chrono>
 #include <filesystem>
 #include <optional>
 #include <string>
@@ -17,8 +18,15 @@ namespace Caracal
 {
     [[nodiscard]] CARACAL_API std::filesystem::path compilerDirectory();
 
+    [[nodiscard]] CARACAL_API BuildCommand createFileBuildCommand(
+        const std::filesystem::path& filePath,
+        std::chrono::year_month_day buildDay,
+        const DiagnosticOptions& diagnosticOptions = {},
+        const PrintOptions& printOptions = {});
+
     CARACAL_API int compileFile(
         const std::filesystem::path& filePath,
+        std::chrono::year_month_day buildDay,
         const DiagnosticOptions& diagnosticOptions = {},
         const PrintOptions& printOptions = {});
 

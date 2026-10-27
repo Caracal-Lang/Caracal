@@ -8,4 +8,5 @@
 namespace Caracal
 {
     [[nodiscard]] CARACAL_API std::string replaceEscapeSequences(std::string_view input);
+    [[nodiscard]] CARACAL_API std::string escapeStringLiteral(std::string_view text);
 }

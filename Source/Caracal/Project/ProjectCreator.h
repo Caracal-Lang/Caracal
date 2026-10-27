@@ -9,6 +9,7 @@
 
 namespace Caracal
 {
+    [[nodiscard]] CARACAL_API std::string projectVersion(std::chrono::year_month_day day);
     [[nodiscard]] CARACAL_API ProjectResult createProject(
         const std::filesystem::path& workingDirectory,
         const std::optional<std::string>& name,

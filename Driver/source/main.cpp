@@ -321,5 +321,5 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    return Caracal::compileFile(absolutePath, Caracal::DiagnosticOptions{}, printOptions);
+    return Caracal::compileFile(absolutePath, today(), Caracal::DiagnosticOptions{}, printOptions);
 }
