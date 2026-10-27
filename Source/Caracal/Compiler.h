@@ -24,18 +24,18 @@ namespace Caracal
 
     [[nodiscard]] CARACAL_API std::optional<BuildCommand> createProjectBuildCommand(
         const Project& project,
-        std::string_view modeName = "Debug",
+        std::optional<std::string_view> modeName = std::nullopt,
         const DiagnosticOptions& diagnosticOptions = {},
         bool shouldRunAfterBuild = false);
 
     CARACAL_API int buildProject(
         const Project& project,
-        std::string_view modeName = "Debug",
+        std::optional<std::string_view> modeName = std::nullopt,
         const DiagnosticOptions& diagnosticOptions = {});
 
     CARACAL_API int runProject(
         const Project& project,
-        std::string_view modeName = "Debug",
+        std::optional<std::string_view> modeName = std::nullopt,
         const DiagnosticOptions& diagnosticOptions = {});
 
     CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(

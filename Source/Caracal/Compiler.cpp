@@ -540,7 +540,7 @@ namespace Caracal
 
     std::optional<BuildCommand> createProjectBuildCommand(
         const Project& project,
-        std::string_view modeName,
+        std::optional<std::string_view> modeName,
         const DiagnosticOptions& diagnosticOptions,
         bool shouldRunAfterBuild)
     {
@@ -615,7 +615,7 @@ namespace Caracal
 
     int buildProject(
         const Project& project,
-        std::string_view modeName,
+        std::optional<std::string_view> modeName,
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("buildProject");
@@ -628,7 +628,7 @@ namespace Caracal
 
     int runProject(
         const Project& project,
-        std::string_view modeName,
+        std::optional<std::string_view> modeName,
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("runProject");

@@ -25,11 +25,24 @@ namespace Caracal
     std::vector<ProjectMode> defaultProjectModes()
     {
         return {
-            { "Debug", OptimizationLevel::None, "Debug", true },
-            { "Release", OptimizationLevel::Speed, "Release", false } };
+            { "Debug", OptimizationLevel::None, "Debug", true, true },
+            { "Release", OptimizationLevel::Speed, "Release", false, false } };
     }
 
-    ProjectModeResult findProjectMode(const Project& project, std::string_view modeName)
+    static ProjectModeResult FindDefaultMode(const Project& project)
+    {
+        for (const auto& mode : project.modes)
+        {
+            if (mode.isDefault)
+            {
+                return { mode, {} };
+            }
+        }
+
+        return { std::nullopt, "No mode in caracal.json has \"default\": true, pass one with -mode, the project has " + ModeNames(project) };
+    }
+
+    static ProjectModeResult FindNamedMode(const Project& project, std::string_view modeName)
     {
         for (const auto& mode : project.modes)
         {
@@ -40,5 +53,13 @@ namespace Caracal
         }
 
         return { std::nullopt, "There is no mode \"" + std::string(modeName) + "\" in caracal.json, the project has " + ModeNames(project) };
+    }
+
+    ProjectModeResult findProjectMode(const Project& project, std::optional<std::string_view> modeName)
+    {
+        if (!modeName.has_value())
+            return FindDefaultMode(project);
+
+        return FindNamedMode(project, modeName.value());
     }
 }

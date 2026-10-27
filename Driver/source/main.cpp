@@ -86,12 +86,12 @@ int createNewProject(int argc, char* argv[])
 struct ProjectArguments
 {
     Caracal::Project project;
-    std::string modeName;
+    std::optional<std::string> modeName;
 };
 
 std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
 {
-    std::string modeName{ "Debug" };
+    std::optional<std::string> modeName{};
     std::optional<std::filesystem::path> path{};
     for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
     {

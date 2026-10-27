@@ -512,6 +512,16 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data()
+{
+    const std::string field = "\"modes.debug.default\" in caracal.json has to be true or false";
+    return {
+        std::make_tuple("string", R"(, "modes": { "debug": { "default": "true" } })", field),
+        std::make_tuple("number", R"(, "modes": { "debug": { "default": 1 } })", field),
+        std::make_tuple("two defaults", R"(, "modes": { "debug": { "default": true }, "release": { "default": true } })", "\"modes.debug\" and \"modes.release\" in caracal.json both have \"default\": true"),
+    };
+}
+
 static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
 {
     const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])" + DebugModeField);
@@ -890,6 +900,31 @@ static void CreatingBuildCommandForModeWithoutOutputUsesModesName()
     CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::Speed);
 }
 
+static void CreatingBuildCommandWithoutModeUsesDefaultMode()
+{
+    const auto result = LoadProjectText("BuildCommandDefaultMode", R"(, "modes": { "fast": { "optimize": "speed", "default": false }, "slow": { "default": true } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project);
+
+    CaraTest::isTrue(buildCommand.has_value());
+    CaraTest::areEqual((project.rootDirectory / "Output" / "slow" / "Hello.exe").string(), buildCommand->executablePath.string());
+    CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::None);
+}
+
+static void FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes()
+{
+    Caracal::Project project{ "Hello", "C:/Hello" };
+    project.modes = { { "Debug", Caracal::OptimizationLevel::None, "Debug" }, { "Release", Caracal::OptimizationLevel::Speed, "Release" } };
+
+    const auto result = Caracal::findProjectMode(project, std::nullopt);
+
+    CaraTest::isFalse(result.mode.has_value());
+    CaraTest::areEqual(std::string("No mode in caracal.json has \"default\": true, pass one with -mode, the project has Debug and Release"), result.error);
+}
+
 static void CreatingBuildCommandForUnknownModeFails()
 {
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandUnknownMode");
@@ -1009,6 +1044,7 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with debug information that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
     CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
+    CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
     CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
     CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
     CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
@@ -1028,8 +1064,10 @@ static auto tests =
     CaraTest::addTest("updating a project without a core copy changes nothing", UpdatingProjectWithoutCoreCopyChangesNothing),
     CaraTest::addTest("updating a project without core next to the compiler fails", UpdatingProjectWithoutCoreNextToCompilerFails),
     CaraTest::addTest("finding a mode the project does not have lists its modes", FindingModeTheProjectDoesNotHaveListsItsModes),
+    CaraTest::addTest("finding a mode without a name when no mode is the default lists the modes", FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes),
     CaraTest::addTest("creating a build command for debug builds into the mode's folders", CreatingBuildCommandForDebugBuildsIntoTheModesFolders),
     CaraTest::addTest("creating a build command for a mode without output uses its name", CreatingBuildCommandForModeWithoutOutputUsesModesName),
+    CaraTest::addTest("creating a build command without a mode uses the default mode", CreatingBuildCommandWithoutModeUsesDefaultMode),
     CaraTest::addTest("creating a build command for an unknown mode fails", CreatingBuildCommandForUnknownModeFails),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),

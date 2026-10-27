@@ -16,5 +16,5 @@ namespace Caracal
     };
 
     [[nodiscard]] CARACAL_API std::vector<ProjectMode> defaultProjectModes();
-    [[nodiscard]] CARACAL_API ProjectModeResult findProjectMode(const Project& project, std::string_view modeName);
+    [[nodiscard]] CARACAL_API ProjectModeResult findProjectMode(const Project& project, std::optional<std::string_view> modeName);
 }

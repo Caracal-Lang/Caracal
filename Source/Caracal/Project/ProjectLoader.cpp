@@ -303,6 +303,13 @@ namespace Caracal
 
                 mode.debugInfo = setting.get<bool>();
             }
+            else if (key == "default")
+            {
+                if (!setting.is_boolean())
+                    return settingName + " in " + fileName + " has to be true or false";
+
+                mode.isDefault = setting.get<bool>();
+            }
             else if (key == "output")
             {
                 if (!setting.is_string())
@@ -357,6 +364,9 @@ namespace Caracal
 
                 if (FolderComparisonText(firstMode.outputFolder) == FolderComparisonText(secondMode.outputFolder))
                     return bothModes + " both build into " + (folders.output / firstMode.outputFolder).generic_string();
+
+                if (firstMode.isDefault && secondMode.isDefault)
+                    return bothModes + " both have \"default\": true";
             }
         }
 
