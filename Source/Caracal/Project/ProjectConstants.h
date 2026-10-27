@@ -7,5 +7,6 @@
 
 namespace Caracal
 {
+    [[nodiscard]] CARACAL_API std::vector<ProjectConstant> projectConstantsForMode(const Project& project, const ProjectMode& mode);
     [[nodiscard]] CARACAL_API std::string createProjectConstantsSource(const std::vector<ProjectConstant>& constants);
 }

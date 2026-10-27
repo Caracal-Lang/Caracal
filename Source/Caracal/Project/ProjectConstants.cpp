@@ -1,6 +1,8 @@
 #include <Caracal/Project/ProjectConstants.h>
 #include <Caracal/Syntax/StringEscapes.h>
 
+#include <algorithm>
+
 namespace Caracal
 {
     static std::string ConstantDeclaration(const ProjectConstant& constant)
@@ -24,6 +26,25 @@ namespace Caracal
         {
             return constant.name + " : string : \"" + escapeStringLiteral(std::get<std::string>(constant.value)) + "\";\n";
         }
+    }
+
+    std::vector<ProjectConstant> projectConstantsForMode(const Project& project, const ProjectMode& mode)
+    {
+        auto constants = project.constants;
+        for (const auto& modeConstant : mode.constants)
+        {
+            const auto constant = std::ranges::find(constants, modeConstant.name, &ProjectConstant::name);
+            if (constant != constants.end())
+            {
+                constant->value = modeConstant.value;
+            }
+            else
+            {
+                constants.push_back(modeConstant);
+            }
+        }
+
+        return constants;
     }
 
     std::string createProjectConstantsSource(const std::vector<ProjectConstant>& constants)

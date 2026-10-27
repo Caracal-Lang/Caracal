@@ -278,107 +278,6 @@ namespace Caracal
         return std::nullopt;
     }
 
-    static std::optional<std::string> ReadMode(const std::string& modeName, const nlohmann::json& value, const std::string& fileName, ProjectMode& mode)
-    {
-        const auto fieldName = QuotedFieldName("modes." + modeName);
-        if (const auto problem = checkProjectName(modeName))
-            return fieldName + " in " + fileName + " has to be a valid folder name, " + problem.value();
-
-        if (!value.is_object())
-            return fieldName + " in " + fileName + " has to be an object";
-
-        mode = { modeName, OptimizationLevel::None, modeName };
-        for (const auto& [key, setting] : value.items())
-        {
-            const auto settingName = QuotedFieldName("modes." + modeName + "." + key);
-            if (key == "optimize")
-            {
-                std::optional<OptimizationLevel> optimizationLevel{};
-                if (setting.is_string())
-                    optimizationLevel = optimizationLevelFromString(setting.get_ref<const std::string&>());
-
-                if (!optimizationLevel.has_value())
-                    return settingName + " in " + fileName + " has to be \"none\" or \"speed\"";
-
-                mode.optimizationLevel = optimizationLevel.value();
-            }
-            else if (key == "debugInfo")
-            {
-                if (!setting.is_boolean())
-                    return settingName + " in " + fileName + " has to be true or false";
-
-                mode.debugInfo = setting.get<bool>();
-            }
-            else if (key == "default")
-            {
-                if (!setting.is_boolean())
-                    return settingName + " in " + fileName + " has to be true or false";
-
-                mode.isDefault = setting.get<bool>();
-            }
-            else if (key == "output")
-            {
-                if (!setting.is_string())
-                    return settingName + " in " + fileName + " has to be a string";
-
-                const auto& outputFolder = setting.get_ref<const std::string&>();
-                if (const auto problem = checkProjectName(outputFolder))
-                    return settingName + " in " + fileName + " has to be a valid folder name, " + problem.value();
-
-                mode.outputFolder = outputFolder;
-            }
-            else
-            {
-                return settingName + " in " + fileName + " is not supported";
-            }
-        }
-
-        return std::nullopt;
-    }
-
-    static std::optional<std::string> ReadModes(const nlohmann::json& document, const std::string& fileName, const ProjectFolders& folders, std::vector<ProjectMode>& modes)
-    {
-        const auto modesField = document.find("modes");
-        if (modesField == document.end())
-            return fileName + " has no \"modes\"";
-
-        if (!modesField->is_object())
-            return "\"modes\" in " + fileName + " has to be an object";
-
-        if (modesField->empty())
-            return "\"modes\" in " + fileName + " has to name at least one mode";
-
-        for (const auto& [modeName, value] : modesField->items())
-        {
-            ProjectMode mode{};
-            if (const auto problem = ReadMode(modeName, value, fileName, mode))
-                return problem;
-
-            modes.push_back(std::move(mode));
-        }
-
-        for (size_t first = 0; first < modes.size(); ++first)
-        {
-            for (size_t second = first + 1; second < modes.size(); ++second)
-            {
-                const auto& firstMode = modes[first];
-                const auto& secondMode = modes[second];
-                const auto bothModes = QuotedFieldName("modes." + firstMode.name) + " and " + QuotedFieldName("modes." + secondMode.name) + " in " + fileName;
-
-                if (FolderComparisonText(firstMode.name) == FolderComparisonText(secondMode.name))
-                    return bothModes + " both build into " + (folders.temp / firstMode.name).generic_string();
-
-                if (FolderComparisonText(firstMode.outputFolder) == FolderComparisonText(secondMode.outputFolder))
-                    return bothModes + " both build into " + (folders.output / firstMode.outputFolder).generic_string();
-
-                if (firstMode.isDefault && secondMode.isDefault)
-                    return bothModes + " both have \"default\": true";
-            }
-        }
-
-        return std::nullopt;
-    }
-
     static bool IsAllowedName(const std::string& name)
     {
         DiagnosticsBag diagnostics;
@@ -393,9 +292,13 @@ namespace Caracal
         return tokens.getLexeme(token) == name;
     }
 
-    static std::optional<std::string> ReadConstant(const std::string& name, const nlohmann::json& entry, const std::string& fileName, ProjectConstant& constant)
+    static std::optional<std::string> ReadConstant(
+        const std::string& entryPath,
+        const std::string& name,
+        const nlohmann::json& entry,
+        const std::string& fileName,
+        ProjectConstant& constant)
     {
-        const auto entryPath = "constants." + name;
         if (!IsAllowedName(name))
             return QuotedFieldName(entryPath) + " in " + fileName + " has to be a valid constant name";
 
@@ -461,22 +364,185 @@ namespace Caracal
         return QuotedFieldName(entryPath + ".type") + " in " + fileName + " has to be \"bool\", \"i32\" or \"string\"";
     }
 
-    static std::optional<std::string> ReadConstants(const nlohmann::json& document, const std::string& fileName, std::vector<ProjectConstant>& constants)
+    static std::optional<std::string> ReadConstants(
+        const nlohmann::json& constantsField,
+        const std::string& fieldPath,
+        const std::string& fileName,
+        std::vector<ProjectConstant>& constants)
     {
-        const auto constantsField = document.find("constants");
-        if (constantsField == document.end())
-            return std::nullopt;
+        if (!constantsField.is_object())
+            return QuotedFieldName(fieldPath) + " in " + fileName + " has to be an object";
 
-        if (!constantsField->is_object())
-            return "\"constants\" in " + fileName + " has to be an object";
-
-        for (const auto& [name, entry] : constantsField->items())
+        for (const auto& [name, entry] : constantsField.items())
         {
             ProjectConstant constant{};
-            if (const auto problem = ReadConstant(name, entry, fileName, constant))
+            if (const auto problem = ReadConstant(fieldPath + "." + name, name, entry, fileName, constant))
                 return problem;
 
             constants.push_back(std::move(constant));
+        }
+
+        return std::nullopt;
+    }
+
+    static std::optional<std::string> ReadMode(const std::string& modeName, const nlohmann::json& value, const std::string& fileName, ProjectMode& mode)
+    {
+        const auto fieldName = QuotedFieldName("modes." + modeName);
+        if (const auto problem = checkProjectName(modeName))
+            return fieldName + " in " + fileName + " has to be a valid folder name, " + problem.value();
+
+        if (!value.is_object())
+            return fieldName + " in " + fileName + " has to be an object";
+
+        mode = { modeName, OptimizationLevel::None, modeName };
+        for (const auto& [key, setting] : value.items())
+        {
+            const auto settingName = QuotedFieldName("modes." + modeName + "." + key);
+            if (key == "optimize")
+            {
+                std::optional<OptimizationLevel> optimizationLevel{};
+                if (setting.is_string())
+                    optimizationLevel = optimizationLevelFromString(setting.get_ref<const std::string&>());
+
+                if (!optimizationLevel.has_value())
+                    return settingName + " in " + fileName + " has to be \"none\" or \"speed\"";
+
+                mode.optimizationLevel = optimizationLevel.value();
+            }
+            else if (key == "debugInfo")
+            {
+                if (!setting.is_boolean())
+                    return settingName + " in " + fileName + " has to be true or false";
+
+                mode.debugInfo = setting.get<bool>();
+            }
+            else if (key == "default")
+            {
+                if (!setting.is_boolean())
+                    return settingName + " in " + fileName + " has to be true or false";
+
+                mode.isDefault = setting.get<bool>();
+            }
+            else if (key == "output")
+            {
+                if (!setting.is_string())
+                    return settingName + " in " + fileName + " has to be a string";
+
+                const auto& outputFolder = setting.get_ref<const std::string&>();
+                if (const auto problem = checkProjectName(outputFolder))
+                    return settingName + " in " + fileName + " has to be a valid folder name, " + problem.value();
+
+                mode.outputFolder = outputFolder;
+            }
+            else if (key == "constants")
+            {
+                if (const auto problem = ReadConstants(setting, "modes." + modeName + ".constants", fileName, mode.constants))
+                    return problem;
+            }
+            else
+            {
+                return settingName + " in " + fileName + " is not supported";
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    static std::optional<std::string> ReadModes(const nlohmann::json& document, const std::string& fileName, const ProjectFolders& folders, std::vector<ProjectMode>& modes)
+    {
+        const auto modesField = document.find("modes");
+        if (modesField == document.end())
+            return fileName + " has no \"modes\"";
+
+        if (!modesField->is_object())
+            return "\"modes\" in " + fileName + " has to be an object";
+
+        if (modesField->empty())
+            return "\"modes\" in " + fileName + " has to name at least one mode";
+
+        for (const auto& [modeName, value] : modesField->items())
+        {
+            ProjectMode mode{};
+            if (const auto problem = ReadMode(modeName, value, fileName, mode))
+                return problem;
+
+            modes.push_back(std::move(mode));
+        }
+
+        for (size_t first = 0; first < modes.size(); ++first)
+        {
+            for (size_t second = first + 1; second < modes.size(); ++second)
+            {
+                const auto& firstMode = modes[first];
+                const auto& secondMode = modes[second];
+                const auto bothModes = QuotedFieldName("modes." + firstMode.name) + " and " + QuotedFieldName("modes." + secondMode.name) + " in " + fileName;
+
+                if (FolderComparisonText(firstMode.name) == FolderComparisonText(secondMode.name))
+                    return bothModes + " both build into " + (folders.temp / firstMode.name).generic_string();
+
+                if (FolderComparisonText(firstMode.outputFolder) == FolderComparisonText(secondMode.outputFolder))
+                    return bothModes + " both build into " + (folders.output / firstMode.outputFolder).generic_string();
+
+                if (firstMode.isDefault && secondMode.isDefault)
+                    return bothModes + " both have \"default\": true";
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    static const ProjectConstant* FindConstant(const std::vector<ProjectConstant>& constants, std::string_view name)
+    {
+        const auto constant = std::ranges::find(constants, name, &ProjectConstant::name);
+        if (constant == constants.end())
+            return nullptr;
+
+        return &*constant;
+    }
+
+    static std::string ConstantTypeText(const ProjectConstant& constant)
+    {
+        if (std::holds_alternative<bool>(constant.value))
+        {
+            return "a bool";
+        }
+        else if (std::holds_alternative<i32>(constant.value))
+        {
+            return "an i32";
+        }
+        else
+        {
+            return "a string";
+        }
+    }
+
+    static std::optional<std::string> CheckModeConstants(const Project& project, const std::string& fileName)
+    {
+        for (const auto& mode : project.modes)
+        {
+            const auto modePath = "modes." + mode.name;
+            for (const auto& constant : mode.constants)
+            {
+                const auto constantPath = modePath + ".constants." + constant.name;
+                if (const auto* projectConstant = FindConstant(project.constants, constant.name))
+                {
+                    if (constant.value.index() != projectConstant->value.index())
+                        return QuotedFieldName(constantPath) + " in " + fileName + " has to be " + ConstantTypeText(*projectConstant) + " like " + QuotedFieldName("constants." + constant.name);
+
+                    continue;
+                }
+
+                for (const auto& otherMode : project.modes)
+                {
+                    const auto otherModePath = "modes." + otherMode.name;
+                    const auto* otherConstant = FindConstant(otherMode.constants, constant.name);
+                    if (otherConstant == nullptr)
+                        return QuotedFieldName(otherModePath) + " in " + fileName + " has no constant \"" + constant.name + "\", which " + QuotedFieldName(modePath) + " declares and \"constants\" does not";
+
+                    if (otherConstant->value.index() != constant.value.index())
+                        return QuotedFieldName(constantPath) + " and " + QuotedFieldName(otherModePath + ".constants." + constant.name) + " in " + fileName + " have different types";
+                }
+            }
         }
 
         return std::nullopt;
@@ -543,10 +609,17 @@ namespace Caracal
             return Failure(problem.value());
 
         Project project{ nameText, rootDirectory, ProjectType::Executable, versionText, folders, std::move(dependencies) };
+        const auto constantsField = document.find("constants");
+        if (constantsField != document.end())
+        {
+            if (const auto problem = ReadConstants(*constantsField, "constants", fileName, project.constants))
+                return Failure(problem.value());
+        }
+
         if (const auto problem = ReadModes(document, fileName, folders, project.modes))
             return Failure(problem.value());
 
-        if (const auto problem = ReadConstants(document, fileName, project.constants))
+        if (const auto problem = CheckModeConstants(project, fileName))
             return Failure(problem.value());
 
         return { std::move(project), {} };

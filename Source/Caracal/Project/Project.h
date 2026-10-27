@@ -29,6 +29,12 @@ namespace Caracal
         bool isPrelude = false;
     };
 
+    struct CARACAL_API ProjectConstant
+    {
+        std::string name;
+        std::variant<bool, i32, std::string> value;
+    };
+
     struct CARACAL_API ProjectMode
     {
         std::string name;
@@ -36,12 +42,7 @@ namespace Caracal
         std::string outputFolder;
         bool debugInfo = false;
         bool isDefault = false;
-    };
-
-    struct CARACAL_API ProjectConstant
-    {
-        std::string name;
-        std::variant<bool, i32, std::string> value;
+        std::vector<ProjectConstant> constants;
     };
 
     struct CARACAL_API Project

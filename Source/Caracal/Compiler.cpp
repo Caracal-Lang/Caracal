@@ -533,11 +533,12 @@ namespace Caracal
         return temporaryDirectory / "Caracal" / std::format("{}-{:016x}", filePath.stem().string(), pathHash);
     }
 
-    static std::vector<ProjectConstant> CompilerConstants(std::string name, std::string version)
+    static std::vector<ProjectConstant> CompilerConstants(std::string name, std::string version, std::string modeName)
     {
         return {
             { "__caracal_project_name", std::move(name) },
-            { "__caracal_project_version", std::move(version) } };
+            { "__caracal_project_version", std::move(version) },
+            { "__caracal_build_mode_name", std::move(modeName) } };
     }
 
     BuildCommand createFileBuildCommand(
@@ -550,7 +551,7 @@ namespace Caracal
         const auto temporaryDirectory = ResolveTemporaryDirectory(filePath);
         return CreateBuildCommand(
             { filePath },
-            CompilerConstants(inputFileName, projectVersion(buildDay)),
+            CompilerConstants(inputFileName, projectVersion(buildDay), "File"),
             temporaryDirectory / "ProjectConstants.cara",
             ResolvePreludeDirectory(),
             { ResolveCoreDirectory() },
@@ -604,8 +605,9 @@ namespace Caracal
         auto objectFilePath = project.rootDirectory / folders.temp / mode.name / (project.name + ".o");
         auto executablePath = project.rootDirectory / folders.output / mode.outputFolder / (project.name + ".exe");
         auto projectConstantsPath = project.rootDirectory / folders.temp / mode.name / "ProjectConstants.cara";
-        auto projectConstants = CompilerConstants(project.name, project.version);
-        projectConstants.insert(projectConstants.end(), project.constants.begin(), project.constants.end());
+        auto projectConstants = CompilerConstants(project.name, project.version, mode.name);
+        const auto modeConstants = projectConstantsForMode(project, mode);
+        projectConstants.insert(projectConstants.end(), modeConstants.begin(), modeConstants.end());
         if (project.dependencies.empty())
         {
             return CreateBuildCommand(

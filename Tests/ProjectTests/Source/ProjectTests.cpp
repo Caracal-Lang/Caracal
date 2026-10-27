@@ -546,6 +546,17 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithModeConstantsThatCannotWorkFails_Data()
+{
+    return {
+        std::make_tuple("mode constants that are not an object", R"(, "modes": { "Debug": { "constants": [] } })", "\"modes.Debug.constants\" in caracal.json has to be an object"),
+        std::make_tuple("a mode constant with a wrong value", R"(, "modes": { "Debug": { "constants": { "logLevel": { "type": "i32", "value": 1.5 } } } })", "\"modes.Debug.constants.logLevel.value\" in caracal.json has to be a number between -2147483648 and 2147483647"),
+        std::make_tuple("an overwrite with another type", R"(, "constants": { "logLevel": { "type": "i32", "value": 0 } }, "modes": { "Debug": { "constants": { "logLevel": { "type": "bool", "value": true } } } })", "\"modes.Debug.constants.logLevel\" in caracal.json has to be an i32 like \"constants.logLevel\""),
+        std::make_tuple("a mode constant another mode does not declare", R"(, "modes": { "Debug": { "constants": { "tracing": { "type": "bool", "value": true } } }, "Release": {} })", "\"modes.Release\" in caracal.json has no constant \"tracing\", which \"modes.Debug\" declares and \"constants\" does not"),
+        std::make_tuple("mode constants with different types", R"(, "modes": { "Debug": { "constants": { "tracing": { "type": "bool", "value": true } } }, "Release": { "constants": { "tracing": { "type": "i32", "value": 1 } } } })", "\"modes.Debug.constants.tracing\" and \"modes.Release.constants.tracing\" in caracal.json have different types"),
+    };
+}
+
 static void LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag()
 {
     const auto result = LoadProjectText("Dependencies", R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" } ])" + DebugModeField);
@@ -938,6 +949,53 @@ static void CreatingBuildCommandWithoutModeUsesDefaultMode()
     CaraTest::isTrue(buildCommand->optimizationLevel == Caracal::OptimizationLevel::None);
 }
 
+template<typename T>
+static std::optional<T> ConstantValue(const std::vector<Caracal::ProjectConstant>& constants, std::string_view name)
+{
+    const auto constant = std::ranges::find(constants, name, &Caracal::ProjectConstant::name);
+    if (constant == constants.end())
+        return std::nullopt;
+
+    const auto* value = std::get_if<T>(&constant->value);
+    if (value == nullptr)
+        return std::nullopt;
+
+    return *value;
+}
+
+static void BuildCommandForModeUsesModesConstantValues()
+{
+    const auto result = LoadProjectText("BuildCommandModeConstants", R"(, "constants": { "logLevel": { "type": "i32", "value": 0 } }, "modes": { "Debug": { "constants": { "logLevel": { "type": "i32", "value": 3 }, "tracing": { "type": "bool", "value": true } } }, "Release": { "constants": { "tracing": { "type": "bool", "value": false } } } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto debugCommand = Caracal::createProjectBuildCommand(project, "Debug");
+    const auto releaseCommand = Caracal::createProjectBuildCommand(project, "Release");
+
+    CaraTest::isTrue(debugCommand.has_value());
+    CaraTest::isTrue(releaseCommand.has_value());
+    CaraTest::isTrue(ConstantValue<i32>(debugCommand->projectConstants, "logLevel") == 3);
+    CaraTest::isTrue(ConstantValue<bool>(debugCommand->projectConstants, "tracing") == true);
+    CaraTest::isTrue(ConstantValue<i32>(releaseCommand->projectConstants, "logLevel") == 0);
+    CaraTest::isTrue(ConstantValue<bool>(releaseCommand->projectConstants, "tracing") == false);
+}
+
+static void BuildCommandForProjectAddsItsModeNameAsConstant()
+{
+    const auto workingDirectory = EmptyScratchDirectory("BuildCommandModeName");
+    Caracal::File::writeText(workingDirectory / "main.cara", "");
+    const auto project = ProjectWithDefaultModes("Hello", workingDirectory);
+
+    const auto debugCommand = Caracal::createProjectBuildCommand(project, "Debug");
+    const auto releaseCommand = Caracal::createProjectBuildCommand(project, "Release");
+
+    CaraTest::isTrue(debugCommand.has_value());
+    CaraTest::isTrue(releaseCommand.has_value());
+    CaraTest::isTrue(ConstantValue<std::string>(debugCommand->projectConstants, "__caracal_build_mode_name") == "Debug");
+    CaraTest::isTrue(ConstantValue<std::string>(releaseCommand->projectConstants, "__caracal_build_mode_name") == "Release");
+}
+
 static bool ProjectBuildDeclaresConstant(const std::string& scratchName, std::string_view constantName)
 {
     const auto result = LoadProjectText(scratchName, DebugModeField);
@@ -1110,6 +1168,7 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
     CaraTest::addTest("loading a caracal.json with constants that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data),
+    CaraTest::addTest("loading a caracal.json with mode constants that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModeConstantsThatCannotWorkFails_Data),
     CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
     CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
     CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
@@ -1137,6 +1196,8 @@ static auto tests =
     CaraTest::addTest("a build command for a project adds its name as a constant", BuildCommandForProjectAddsItsNameAsConstant),
     CaraTest::addTest("a build command for a project adds its version as a constant", BuildCommandForProjectAddsItsVersionAsConstant),
     CaraTest::addTest("a build command for a project adds its constants", BuildCommandForProjectAddsItsConstants),
+    CaraTest::addTest("a build command for a mode uses the mode's constant values", BuildCommandForModeUsesModesConstantValues),
+    CaraTest::addTest("a build command for a project adds its mode name as a constant", BuildCommandForProjectAddsItsModeNameAsConstant),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
