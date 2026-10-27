@@ -22,6 +22,7 @@ namespace llvm
     class DISubroutineType;
     class DIType;
     class Function;
+    class GlobalVariable;
     class IRBuilderBase;
     class Metadata;
     class Module;
@@ -45,6 +46,7 @@ namespace Caracal
         void beginFunction(const Function& function, llvm::Function& llvmFunction, llvm::IRBuilderBase& irBuilder);
         void setInstructionLine(SourceLine sourceLine, llvm::IRBuilderBase& irBuilder);
         void declareVariable(std::string_view name, Type type, i32 variable, SourceLine sourceLine, llvm::AllocaInst& slot);
+        void declareGlobal(std::string_view name, Type type, llvm::GlobalVariable& global);
         void finalize();
 
     private:
