@@ -8,12 +8,14 @@
 #include <Caracal/Project/ProjectRepository.h>
 #include <Caracal/Project/ProjectSources.h>
 #include <Caracal/Project/ProjectUpdater.h>
+#include <Caracal/Semantic/NumberLiteralParsing.h>
 #include <Caracal/Text/File.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -523,21 +525,35 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static std::string AnswerRangeMessage(const std::string& minimum, const std::string& maximum)
+{
+    return "\"constants.answer.value\" in caracal.json has to be a number between " + minimum + " and " + maximum;
+}
+
 static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data()
 {
-    const std::string range = "\"constants.answer.value\" in caracal.json has to be a number between -2147483648 and 2147483647";
-    const std::string type = "\"constants.answer.type\" in caracal.json has to be \"bool\", \"i32\" or \"string\"";
+    const std::string range = AnswerRangeMessage("-2147483648", "2147483647");
+    const std::string type = R"("constants.answer.type" in caracal.json has to be "bool", "f32", "f64", "i8", "i16", "i32", "i64", "string", "u8", "u16", "u32", "u64")";
     return {
         std::make_tuple("constants that are not an object", R"(, "constants": [])" + DebugModeField, "\"constants\" in caracal.json has to be an object"),
         std::make_tuple("a constant that is not an object", R"(, "constants": { "answer": 42 })" + DebugModeField, "\"constants.answer\" in caracal.json has to be an object"),
         std::make_tuple("an unknown key", R"(, "constants": { "answer": { "type": "i32", "value": 1, "default": 2 } })" + DebugModeField, "\"constants.answer.default\" in caracal.json is not supported"),
         std::make_tuple("no type", R"(, "constants": { "answer": { "value": 1 } })" + DebugModeField, "\"constants.answer\" in caracal.json has no \"type\""),
         std::make_tuple("no value", R"(, "constants": { "answer": { "type": "i32" } })" + DebugModeField, "\"constants.answer\" in caracal.json has no \"value\""),
-        std::make_tuple("an unknown type", R"(, "constants": { "answer": { "type": "u8", "value": 1 } })" + DebugModeField, type),
+        std::make_tuple("an unknown type", R"(, "constants": { "answer": { "type": "cstring", "value": "a" } })" + DebugModeField, type),
         std::make_tuple("a bool that is not true or false", R"(, "constants": { "answer": { "type": "bool", "value": 1 } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be true or false"),
         std::make_tuple("an i32 that is not a whole number", R"(, "constants": { "answer": { "type": "i32", "value": 1.5 } })" + DebugModeField, range),
         std::make_tuple("an i32 above the range", R"(, "constants": { "answer": { "type": "i32", "value": 2147483648 } })" + DebugModeField, range),
         std::make_tuple("an i32 below the range", R"(, "constants": { "answer": { "type": "i32", "value": -2147483649 } })" + DebugModeField, range),
+        std::make_tuple("an i8 below the range", R"(, "constants": { "answer": { "type": "i8", "value": -129 } })" + DebugModeField, AnswerRangeMessage("-128", "127")),
+        std::make_tuple("an i16 below the range", R"(, "constants": { "answer": { "type": "i16", "value": -32769 } })" + DebugModeField, AnswerRangeMessage("-32768", "32767")),
+        std::make_tuple("an i64 below the range", R"(, "constants": { "answer": { "type": "i64", "value": -9223372036854775809 } })" + DebugModeField, AnswerRangeMessage("-9223372036854775808", "9223372036854775807")),
+        std::make_tuple("a u8 below the range", R"(, "constants": { "answer": { "type": "u8", "value": -1 } })" + DebugModeField, AnswerRangeMessage("0", "255")),
+        std::make_tuple("a u16 above the range", R"(, "constants": { "answer": { "type": "u16", "value": 65536 } })" + DebugModeField, AnswerRangeMessage("0", "65535")),
+        std::make_tuple("a u32 above the range", R"(, "constants": { "answer": { "type": "u32", "value": 4294967296 } })" + DebugModeField, AnswerRangeMessage("0", "4294967295")),
+        std::make_tuple("a u64 above the range", R"(, "constants": { "answer": { "type": "u64", "value": 18446744073709551616 } })" + DebugModeField, AnswerRangeMessage("0", "18446744073709551615")),
+        std::make_tuple("an f32 above the range", R"(, "constants": { "answer": { "type": "f32", "value": 3.5e38 } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a number that fits in an f32"),
+        std::make_tuple("an f64 that is a string", R"(, "constants": { "answer": { "type": "f64", "value": "1.5" } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a number that fits in an f64"),
         std::make_tuple("a string that is not a string", R"(, "constants": { "answer": { "type": "string", "value": 1 } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a string"),
         std::make_tuple("a string with a NUL", R"(, "constants": { "answer": { "type": "string", "value": "a\u0000b" } })" + DebugModeField, "\"constants.answer.value\" in caracal.json has to be a string without a NUL"),
         std::make_tuple("a name that is a keyword", R"(, "constants": { "return": { "type": "i32", "value": 1 } })" + DebugModeField, "\"constants.return\" in caracal.json has to be a valid constant name"),
@@ -552,6 +568,7 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
         std::make_tuple("mode constants that are not an object", R"(, "modes": { "Debug": { "constants": [] } })", "\"modes.Debug.constants\" in caracal.json has to be an object"),
         std::make_tuple("a mode constant with a wrong value", R"(, "modes": { "Debug": { "constants": { "logLevel": { "type": "i32", "value": 1.5 } } } })", "\"modes.Debug.constants.logLevel.value\" in caracal.json has to be a number between -2147483648 and 2147483647"),
         std::make_tuple("an overwrite with another type", R"(, "constants": { "logLevel": { "type": "i32", "value": 0 } }, "modes": { "Debug": { "constants": { "logLevel": { "type": "bool", "value": true } } } })", "\"modes.Debug.constants.logLevel\" in caracal.json has to be an i32 like \"constants.logLevel\""),
+        std::make_tuple("an overwrite of a u8 with an i32", R"(, "constants": { "logLevel": { "type": "u8", "value": 0 } }, "modes": { "Debug": { "constants": { "logLevel": { "type": "i32", "value": 3 } } } })", "\"modes.Debug.constants.logLevel\" in caracal.json has to be a u8 like \"constants.logLevel\""),
         std::make_tuple("a mode constant another mode does not declare", R"(, "modes": { "Debug": { "constants": { "tracing": { "type": "bool", "value": true } } }, "Release": {} })", "\"modes.Release\" in caracal.json has no constant \"tracing\", which \"modes.Debug\" declares and \"constants\" does not"),
         std::make_tuple("mode constants with different types", R"(, "modes": { "Debug": { "constants": { "tracing": { "type": "bool", "value": true } } }, "Release": { "constants": { "tracing": { "type": "i32", "value": 1 } } } })", "\"modes.Debug.constants.tracing\" and \"modes.Release.constants.tracing\" in caracal.json have different types"),
     };
@@ -1031,6 +1048,83 @@ static void BuildCommandForProjectAddsItsConstants()
     CaraTest::isTrue(text.find(R"(greeting : string : "say \"hi\"";)") != std::string::npos);
 }
 
+static void BuildCommandForProjectWritesEveryType(const std::string& /*testName*/, const std::string& constant, const std::string& expectedDeclaration)
+{
+    const auto result = LoadProjectText("BuildCommandEveryType", R"(, "constants": { "value": )" + constant + " }" + DebugModeField);
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, "Debug");
+
+    CaraTest::isTrue(buildCommand.has_value());
+    const auto text = Caracal::createProjectConstantsSource(buildCommand->projectConstants);
+    CaraTest::isTrue(text.find(expectedDeclaration + "\n") != std::string::npos);
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> BuildCommandForProjectWritesEveryType_Data()
+{
+    return {
+        std::make_tuple("the lowest i8", R"({ "type": "i8", "value": -128 })", "value : i8 : -128;"),
+        std::make_tuple("the highest i16", R"({ "type": "i16", "value": 32767 })", "value : i16 : 32767;"),
+        std::make_tuple("the highest i64", R"({ "type": "i64", "value": 9223372036854775807 })", "value : i64 : 9223372036854775807;"),
+        std::make_tuple("the highest u8", R"({ "type": "u8", "value": 255 })", "value : u8 : 255;"),
+        std::make_tuple("the highest u16", R"({ "type": "u16", "value": 65535 })", "value : u16 : 65535;"),
+        std::make_tuple("the highest u32", R"({ "type": "u32", "value": 4294967295 })", "value : u32 : 4294967295;"),
+        std::make_tuple("the highest u64", R"({ "type": "u64", "value": 18446744073709551615 })", "value : u64 : 18446744073709551615;"),
+        std::make_tuple("an f32", R"({ "type": "f32", "value": 0.5 })", "value : f32 : 0.5'f32;"),
+        std::make_tuple("an f64 from a whole number", R"({ "type": "f64", "value": 1 })", "value : f64 : 1'f64;"),
+    };
+}
+
+// the literal between "value : f32 : " and "'f32;"
+static std::string GeneratedFloatLiteral(const Caracal::ProjectConstant& constant, const std::string& typeName)
+{
+    const auto text = Caracal::createProjectConstantsSource({ constant });
+
+    const auto prefix = "value : " + typeName + " : ";
+    const auto suffix = "'" + typeName + ";\n";
+    const auto start = text.find(prefix);
+    const auto end = text.find(suffix);
+    CaraTest::isTrue(start != std::string::npos);
+    CaraTest::isTrue(end != std::string::npos);
+    return text.substr(start + prefix.size(), end - start - prefix.size());
+}
+
+static void F32ConstantsReadBackUnchanged(const std::string& /*testName*/, f32 value)
+{
+    const Caracal::ProjectConstant constant{ "value", value };
+
+    const auto literal = GeneratedFloatLiteral(constant, "f32");
+
+    CaraTest::isTrue(Caracal::tryParseF32Literal(literal) == value);
+}
+
+static std::vector<std::tuple<std::string, f32>> F32ConstantsReadBackUnchanged_Data()
+{
+    return {
+        std::make_tuple("the largest f32", std::numeric_limits<f32>::max()),
+        std::make_tuple("the smallest positive f32", std::numeric_limits<f32>::denorm_min()),
+    };
+}
+
+static void F64ConstantsReadBackUnchanged(const std::string& /*testName*/, f64 value)
+{
+    const Caracal::ProjectConstant constant{ "value", value };
+
+    const auto literal = GeneratedFloatLiteral(constant, "f64");
+
+    CaraTest::isTrue(Caracal::tryParseF64Literal(literal) == value);
+}
+
+static std::vector<std::tuple<std::string, f64>> F64ConstantsReadBackUnchanged_Data()
+{
+    return {
+        std::make_tuple("the largest f64", std::numeric_limits<f64>::max()),
+        std::make_tuple("the smallest positive f64", std::numeric_limits<f64>::denorm_min()),
+    };
+}
+
 static void BuildCommandForProjectAddsItsVersionAsConstant()
 {
     CaraTest::isTrue(ProjectBuildDeclaresConstant("BuildCommandProjectVersion", "__caracal_project_version"));
@@ -1196,6 +1290,9 @@ static auto tests =
     CaraTest::addTest("a build command for a project adds its name as a constant", BuildCommandForProjectAddsItsNameAsConstant),
     CaraTest::addTest("a build command for a project adds its version as a constant", BuildCommandForProjectAddsItsVersionAsConstant),
     CaraTest::addTest("a build command for a project adds its constants", BuildCommandForProjectAddsItsConstants),
+    CaraTest::addTest("a build command for a project writes every type", BuildCommandForProjectWritesEveryType, BuildCommandForProjectWritesEveryType_Data),
+    CaraTest::addTest("an f32 constant reads back unchanged", F32ConstantsReadBackUnchanged, F32ConstantsReadBackUnchanged_Data),
+    CaraTest::addTest("an f64 constant reads back unchanged", F64ConstantsReadBackUnchanged, F64ConstantsReadBackUnchanged_Data),
     CaraTest::addTest("a build command for a mode uses the mode's constant values", BuildCommandForModeUsesModesConstantValues),
     CaraTest::addTest("a build command for a project adds its mode name as a constant", BuildCommandForProjectAddsItsModeNameAsConstant),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),

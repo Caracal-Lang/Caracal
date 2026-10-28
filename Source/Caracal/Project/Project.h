@@ -32,7 +32,7 @@ namespace Caracal
     struct CARACAL_API ProjectConstant
     {
         std::string name;
-        std::variant<bool, i32, std::string> value;
+        std::variant<bool, i8, i16, i32, i64, u8, u16, u32, u64, f32, f64, std::string> value;
     };
 
     struct CARACAL_API ProjectMode

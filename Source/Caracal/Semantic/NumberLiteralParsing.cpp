@@ -7,6 +7,40 @@
 
 namespace Caracal
 {
+    static NumberLiteralValue IntegerLiteralValue(u64 value, const BuiltinTypeDescription& description)
+    {
+        if (description.isSigned)
+        {
+            if (description.bits <= 8)
+            {
+                return NumberLiteralValue{ static_cast<i8>(value) };
+            }
+            if (description.bits <= 16)
+            {
+                return NumberLiteralValue{ static_cast<i16>(value) };
+            }
+            if (description.bits <= 32)
+            {
+                return NumberLiteralValue{ static_cast<i32>(value) };
+            }
+            return NumberLiteralValue{ static_cast<i64>(value) };
+        }
+
+        if (description.bits <= 8)
+        {
+            return NumberLiteralValue{ static_cast<u8>(value) };
+        }
+        if (description.bits <= 16)
+        {
+            return NumberLiteralValue{ static_cast<u16>(value) };
+        }
+        if (description.bits <= 32)
+        {
+            return NumberLiteralValue{ static_cast<u32>(value) };
+        }
+        return NumberLiteralValue{ static_cast<u64>(value) };
+    }
+
     std::optional<i32> tryParseI32Literal(std::string_view lexeme)
     {
         i32 value = 0;
@@ -119,6 +153,11 @@ namespace Caracal
             return std::nullopt;
         }
 
+        return tryParseIntegerLiteral(lexeme, *description);
+    }
+
+    std::optional<NumberLiteralValue> tryParseIntegerLiteral(std::string_view lexeme, const BuiltinTypeDescription& description)
+    {
         u64 magnitude = 0;
         const auto* begin = lexeme.data();
         const auto* end = begin + lexeme.size();
@@ -129,17 +168,17 @@ namespace Caracal
         }
 
         auto maxValue = u64{ 0 };
-        if (description->isSigned)
+        if (description.isSigned)
         {
-            maxValue = (u64{ 1 } << (description->bits - 1)) - 1;
+            maxValue = (u64{ 1 } << (description.bits - 1)) - 1;
         }
-        else if (description->bits == 64)
+        else if (description.bits == 64)
         {
             maxValue = std::numeric_limits<u64>::max();
         }
         else
         {
-            maxValue = (u64{ 1 } << description->bits) - 1;
+            maxValue = (u64{ 1 } << description.bits) - 1;
         }
 
         if (magnitude > maxValue)
@@ -147,35 +186,31 @@ namespace Caracal
             return std::nullopt;
         }
 
-        if (description->isSigned)
+        return IntegerLiteralValue(magnitude, description);
+    }
+
+    std::optional<NumberLiteralValue> tryParseNegatedIntegerLiteral(std::string_view lexeme, const BuiltinTypeDescription& description)
+    {
+        u64 magnitude = 0;
+        const auto* begin = lexeme.data();
+        const auto* end = begin + lexeme.size();
+        const auto result = std::from_chars(begin, end, magnitude);
+        if (result.ec != std::errc{} || result.ptr != end)
         {
-            if (description->bits <= 8)
-            {
-                return NumberLiteralValue{ static_cast<i8>(magnitude) };
-            }
-            if (description->bits <= 16)
-            {
-                return NumberLiteralValue{ static_cast<i16>(magnitude) };
-            }
-            if (description->bits <= 32)
-            {
-                return NumberLiteralValue{ static_cast<i32>(magnitude) };
-            }
-            return NumberLiteralValue{ static_cast<i64>(magnitude) };
+            return std::nullopt;
         }
 
-        if (description->bits <= 8)
+        auto lowestMagnitude = u64{ 0 };
+        if (description.isSigned)
         {
-            return NumberLiteralValue{ static_cast<u8>(magnitude) };
+            lowestMagnitude = u64{ 1 } << (description.bits - 1);
         }
-        if (description->bits <= 16)
+
+        if (magnitude > lowestMagnitude)
         {
-            return NumberLiteralValue{ static_cast<u16>(magnitude) };
+            return std::nullopt;
         }
-        if (description->bits <= 32)
-        {
-            return NumberLiteralValue{ static_cast<u32>(magnitude) };
-        }
-        return NumberLiteralValue{ static_cast<u64>(magnitude) };
+
+        return IntegerLiteralValue(u64{ 0 } - magnitude, description);
     }
 }

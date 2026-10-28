@@ -2,6 +2,7 @@
 #include <Caracal/Compilation/OptimizationLevel.h>
 #include <Caracal/Defines.h>
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
+#include <Caracal/Project/ProjectConstants.h>
 #include <Caracal/Project/ProjectLoader.h>
 #include <Caracal/Semantic/NumberLiteralParsing.h>
 #include <Caracal/Syntax/TokenKind.h>
@@ -13,7 +14,10 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <limits>
 #include <memory>
+#include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace Caracal
@@ -292,6 +296,55 @@ namespace Caracal
         return tokens.getLexeme(token) == name;
     }
 
+    template <typename Number>
+    static std::optional<Number> ParseInteger(std::string_view text)
+    {
+        const BuiltinTypeDescription description{ BuiltinTypeKind::Int, static_cast<i32>(sizeof(Number) * 8), std::is_signed_v<Number> };
+        std::optional<NumberLiteralValue> literal{};
+        if (text.starts_with('-'))
+            literal = tryParseNegatedIntegerLiteral(text.substr(1), description);
+        else
+            literal = tryParseIntegerLiteral(text, description);
+
+        if (!literal.has_value())
+            return std::nullopt;
+
+        return std::get<Number>(literal.value());
+    }
+
+    template <typename Number>
+    static std::optional<std::string> ReadIntegerConstant(const nlohmann::json& value, const std::string& valueFieldName, ProjectConstant& constant)
+    {
+        std::optional<Number> number{};
+        if (value.is_number_integer())
+            number = ParseInteger<Number>(value.dump());
+
+        if (!number.has_value())
+            return valueFieldName + " has to be a number between " + std::to_string(std::numeric_limits<Number>::min()) + " and " + std::to_string(std::numeric_limits<Number>::max());
+
+        constant.value = number.value();
+        return std::nullopt;
+    }
+
+    template <typename Number>
+    static std::optional<std::string> ReadFloatConstant(
+        const nlohmann::json& value,
+        std::optional<Number> (*parse)(std::string_view),
+        std::string_view typeName,
+        const std::string& valueFieldName,
+        ProjectConstant& constant)
+    {
+        std::optional<Number> number{};
+        if (value.is_number())
+            number = parse(value.dump());
+
+        if (!number.has_value())
+            return valueFieldName + " has to be a number that fits in an " + std::string(typeName);
+
+        constant.value = number.value();
+        return std::nullopt;
+    }
+
     static std::optional<std::string> ReadConstant(
         const std::string& entryPath,
         const std::string& name,
@@ -334,18 +387,35 @@ namespace Caracal
             return std::nullopt;
         }
 
+        if (typeName == "i8")
+            return ReadIntegerConstant<i8>(*value, valueFieldName, constant);
+
+        if (typeName == "i16")
+            return ReadIntegerConstant<i16>(*value, valueFieldName, constant);
+
         if (typeName == "i32")
-        {
-            std::optional<i32> number{};
-            if (value->is_number_integer())
-                number = tryParseI32Literal(value->dump());
+            return ReadIntegerConstant<i32>(*value, valueFieldName, constant);
 
-            if (!number.has_value())
-                return valueFieldName + " has to be a number between -2147483648 and 2147483647";
+        if (typeName == "i64")
+            return ReadIntegerConstant<i64>(*value, valueFieldName, constant);
 
-            constant.value = number.value();
-            return std::nullopt;
-        }
+        if (typeName == "u8")
+            return ReadIntegerConstant<u8>(*value, valueFieldName, constant);
+
+        if (typeName == "u16")
+            return ReadIntegerConstant<u16>(*value, valueFieldName, constant);
+
+        if (typeName == "u32")
+            return ReadIntegerConstant<u32>(*value, valueFieldName, constant);
+
+        if (typeName == "u64")
+            return ReadIntegerConstant<u64>(*value, valueFieldName, constant);
+
+        if (typeName == "f32")
+            return ReadFloatConstant(*value, &tryParseF32Literal, typeName, valueFieldName, constant);
+
+        if (typeName == "f64")
+            return ReadFloatConstant(*value, &tryParseF64Literal, typeName, valueFieldName, constant);
 
         if (typeName == "string")
         {
@@ -361,7 +431,7 @@ namespace Caracal
             return std::nullopt;
         }
 
-        return QuotedFieldName(entryPath + ".type") + " in " + fileName + " has to be \"bool\", \"i32\" or \"string\"";
+        return QuotedFieldName(entryPath + ".type") + " in " + fileName + R"( has to be "bool", "f32", "f64", "i8", "i16", "i32", "i64", "string", "u8", "u16", "u32", "u64")";
     }
 
     static std::optional<std::string> ReadConstants(
@@ -500,19 +570,17 @@ namespace Caracal
         return &*constant;
     }
 
+    // "an i32", "an f64", "a u8"
     static std::string ConstantTypeText(const ProjectConstant& constant)
     {
-        if (std::holds_alternative<bool>(constant.value))
+        const auto typeName = std::string(projectConstantTypeName(constant));
+        if (typeName.starts_with('i') || typeName.starts_with('f'))
         {
-            return "a bool";
-        }
-        else if (std::holds_alternative<i32>(constant.value))
-        {
-            return "an i32";
+            return "an " + typeName;
         }
         else
         {
-            return "a string";
+            return "a " + typeName;
         }
     }
 

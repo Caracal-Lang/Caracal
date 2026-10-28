@@ -2,30 +2,66 @@
 #include <Caracal/Syntax/StringEscapes.h>
 
 #include <algorithm>
+#include <array>
+#include <charconv>
+#include <concepts>
 
 namespace Caracal
 {
-    static std::string ConstantDeclaration(const ProjectConstant& constant)
+    static constexpr std::array<std::string_view, 12> TypeNames{ "bool", "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64", "string" };
+    static_assert(TypeNames.size() == std::variant_size_v<decltype(ProjectConstant::value)>);
+
+    static std::string Stringify(bool value)
     {
-        if (const auto* flag = std::get_if<bool>(&constant.value))
+        if (value)
         {
-            if (*flag)
-            {
-                return constant.name + " : bool : true;\n";
-            }
-            else
-            {
-                return constant.name + " : bool : false;\n";
-            }
-        }
-        else if (const auto* number = std::get_if<i32>(&constant.value))
-        {
-            return constant.name + " : i32 : " + std::to_string(*number) + ";\n";
+            return "true";
         }
         else
         {
-            return constant.name + " : string : \"" + escapeStringLiteral(std::get<std::string>(constant.value)) + "\";\n";
+            return "false";
         }
+    }
+
+    template <std::integral Number>
+    static std::string Stringify(Number number)
+    {
+        return std::to_string(number);
+    }
+
+    // fixed notation, the lexer reads no exponent
+    template <std::floating_point Number>
+    static std::string FloatText(Number number, std::string_view suffix)
+    {
+        std::array<char, 512> buffer{};
+        const auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), number, std::chars_format::fixed);
+        return std::string(buffer.data(), result.ptr) + "'" + std::string(suffix);
+    }
+
+    static std::string Stringify(f32 number)
+    {
+        return FloatText(number, "f32");
+    }
+
+    static std::string Stringify(f64 number)
+    {
+        return FloatText(number, "f64");
+    }
+
+    static std::string Stringify(const std::string& text)
+    {
+        return "\"" + escapeStringLiteral(text) + "\"";
+    }
+
+    static std::string ConstantDeclaration(const ProjectConstant& constant)
+    {
+        const auto value = std::visit([](const auto& alternative) { return Stringify(alternative); }, constant.value);
+        return constant.name + " : " + std::string(projectConstantTypeName(constant)) + " : " + value + ";\n";
+    }
+
+    std::string_view projectConstantTypeName(const ProjectConstant& constant)
+    {
+        return TypeNames.at(constant.value.index());
     }
 
     std::vector<ProjectConstant> projectConstantsForMode(const Project& project, const ProjectMode& mode)
