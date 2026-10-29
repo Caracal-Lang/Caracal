@@ -22,6 +22,7 @@ namespace Caracal
             { NodeKind::EnumDefinitionStatement,        std::string_view("EnumDefinitionStatement") },
             { NodeKind::TypeDefinitionStatement,        std::string_view("TypeDefinitionStatement") },
             { NodeKind::MethodDefinitionStatement,      std::string_view("MethodDefinitionStatement") },
+            { NodeKind::TestDefinitionStatement,        std::string_view("TestDefinitionStatement") },
             { NodeKind::IfStatement,                    std::string_view("IfStatement") },
             { NodeKind::TrailingIfStatement,            std::string_view("TrailingIfStatement") },
             { NodeKind::WhileStatement,                 std::string_view("WhileStatement") },

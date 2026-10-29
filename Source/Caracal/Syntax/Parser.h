@@ -42,6 +42,7 @@ namespace Caracal
         void parseTypeDefinitionStatement();
         void parseTypeFieldDeclaration(u32 subtreeStart);
         void parseMethodDefinitionStatement();
+        void parseTestDefinitionStatement();
         void parseIfStatement(StatementScope scope);
         void parseWhileStatement(StatementScope scope);
         void parseBreakStatement();

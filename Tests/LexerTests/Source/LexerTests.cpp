@@ -78,6 +78,7 @@ static std::vector<std::tuple<std::string, std::string, TokenKind>> Keyword_Data
         std::make_tuple("Def", "def", TokenKind::DefKeyword),
         std::make_tuple("Enum", "enum", TokenKind::EnumKeyword),
         std::make_tuple("Type", "type", TokenKind::TypeKeyword),
+        std::make_tuple("Test", "test", TokenKind::TestKeyword),
         std::make_tuple("If", "if", TokenKind::IfKeyword),
         std::make_tuple("Else", "else", TokenKind::ElseKeyword),
         std::make_tuple("While", "while", TokenKind::WhileKeyword),

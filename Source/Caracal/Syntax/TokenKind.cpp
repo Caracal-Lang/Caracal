@@ -51,6 +51,7 @@ std::string stringify(TokenKind kind)
         { TokenKind::DefKeyword,        std::string_view("DefKeyword") },
         { TokenKind::EnumKeyword,       std::string_view("EnumKeyword") },
         { TokenKind::TypeKeyword,       std::string_view("TypeKeyword") },
+        { TokenKind::TestKeyword,       std::string_view("TestKeyword") },
         { TokenKind::IfKeyword,         std::string_view("IfKeyword") },
         { TokenKind::ElseKeyword,       std::string_view("ElseKeyword") },
         { TokenKind::WhileKeyword,      std::string_view("WhileKeyword") },

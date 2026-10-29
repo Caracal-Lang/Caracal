@@ -1,3 +1,4 @@
+#include <Caracal/Constants.h>
 #include <Caracal/Syntax/Parser.h>
 
 #include <algorithm>
@@ -193,6 +194,15 @@ namespace Caracal
                 }
                 break;
             }
+            case TokenKind::TestKeyword:
+            {
+                if (scope == StatementScope::Global)
+                {
+                    parseTestDefinitionStatement();
+                    return;
+                }
+                break;
+            }
             case TokenKind::IfKeyword:
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
@@ -358,7 +368,7 @@ namespace Caracal
         const auto subtreeStart = m_nodeBuffer.nodeCount();
         static_cast<void>(advanceOnMatch(TokenKind::DefKeyword));
         auto nameToken = advanceOnIdentifier();
-        if (nameToken.kind == TokenKind::PrivateIdentifier)
+        if (nameToken.kind == TokenKind::PrivateIdentifier && !m_tokens.getLexeme(nameToken).starts_with(CompilerNamePrefix))
         {
             m_diagnostics.addPrivateFreeFunctionError(
                 m_tokens.source(),
@@ -592,6 +602,25 @@ namespace Caracal
 
         m_pendingAnnotations.clear();
         append(NodeKind::MethodDefinitionStatement, tokenIndexOf(keyword), subtreeStart);
+    }
+
+    void Parser::parseTestDefinitionStatement()
+    {
+        flushDanglingAnnotations();
+
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        static_cast<void>(advanceOnMatch(TokenKind::TestKeyword));
+        auto nameToken = advanceOnMatch(TokenKind::String);
+
+        {
+            const auto bodyStart = m_nodeBuffer.nodeCount();
+            auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+            parseStatements(StatementScope::Function);
+            static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+            append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
+        }
+
+        append(NodeKind::TestDefinitionStatement, tokenIndexOf(nameToken), subtreeStart);
     }
 
     void Parser::parseIfStatement(StatementScope scope)

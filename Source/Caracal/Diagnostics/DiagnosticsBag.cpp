@@ -88,6 +88,7 @@ namespace Caracal
             { TokenKind::DefKeyword,        std::string_view("'def'") },
             { TokenKind::EnumKeyword,       std::string_view("'enum'") },
             { TokenKind::TypeKeyword,       std::string_view("'type'") },
+            { TokenKind::TestKeyword,       std::string_view("'test'") },
             { TokenKind::IfKeyword,         std::string_view("'if'") },
             { TokenKind::ElseKeyword,       std::string_view("'else'") },
             { TokenKind::WhileKeyword,      std::string_view("'while'") },

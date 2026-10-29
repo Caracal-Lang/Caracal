@@ -1,0 +1,45 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: __caracal_helper
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 7
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callsHelper
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: __caracal_helper
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

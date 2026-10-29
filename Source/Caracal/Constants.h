@@ -13,6 +13,9 @@ namespace Caracal
     inline constexpr const char* CRuntimeEntrySymbolName = "main";
     inline constexpr const char* UserMainSymbolName = "caracal.userMain";
 
+    // free functions and constants the compiler owns, like __caracal_project_name
+    inline constexpr const char* CompilerNamePrefix = "__caracal_";
+
     // the language-wide member name for array lengths
     inline constexpr const char* ArrayLengthMemberName = "length";
 

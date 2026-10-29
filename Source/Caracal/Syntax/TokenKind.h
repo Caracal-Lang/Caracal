@@ -52,6 +52,7 @@ enum class TokenKind : u8
     DefKeyword,
     EnumKeyword,
     TypeKeyword,
+    TestKeyword,
     IfKeyword,
     ElseKeyword,
     WhileKeyword,

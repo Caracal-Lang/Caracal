@@ -155,6 +155,11 @@ static void CapacityBoundHoldsOnDegenerateInputs()
         "def f(){ ((((",
         "def f(){ [[[[",
         "def f(...,...,...){}",
+        "test",
+        "test \"t\"",
+        "test \"t\" {",
+        "test {}",
+        "def f(){ test \"t\" {} }",
     };
 
     for (const auto& input : inputs)

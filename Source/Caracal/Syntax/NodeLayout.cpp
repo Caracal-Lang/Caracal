@@ -215,6 +215,17 @@ namespace Caracal
                     }
                     break;
                 }
+                case NodeKind::TestDefinitionStatement:
+                {
+                    minimumChildren = 1;
+                    maximumChildren = 1;
+                    if (childCount == 1 && buffer.kind(children[0]) != NodeKind::BlockNode)
+                    {
+                        failureMessage = FormatProblem(index, kind, "the body child is not a block");
+                        return false;
+                    }
+                    break;
+                }
                 case NodeKind::EnumDefinitionStatement:
                 {
                     for (u32 child = 0; child < childCount; child++)

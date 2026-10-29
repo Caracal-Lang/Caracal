@@ -704,6 +704,24 @@ namespace Caracal
             m_builder.appendIndentedLine("}");
         }
 
+        void printTestDefinitionStatement(u32 index)
+        {
+            const auto testLayout = NodeLayout::testDefinition(index);
+
+            m_builder
+                .appendIndented(stringify(NodeKind::TestDefinitionStatement))
+                .appendLine(": {");
+            m_builder.pushIndentation();
+
+            m_builder
+                .appendIndented("Name: ")
+                .appendLine(lexeme(m_buffer.mainToken(index)));
+            printBlock(testLayout.body);
+
+            m_builder.popIndentation();
+            m_builder.appendIndentedLine("}");
+        }
+
         void printEnumDefinitionStatement(u32 index)
         {
             const auto childrenStart = collectChildrenOf(index);
@@ -1156,6 +1174,11 @@ namespace Caracal
                 case NodeKind::MethodDefinitionStatement:
                 {
                     printMethodDefinitionStatement(index);
+                    break;
+                }
+                case NodeKind::TestDefinitionStatement:
+                {
+                    printTestDefinitionStatement(index);
                     break;
                 }
                 case NodeKind::IfStatement:

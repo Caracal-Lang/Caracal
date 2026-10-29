@@ -23,6 +23,7 @@ namespace Caracal
         EnumDefinitionStatement,
         TypeDefinitionStatement,
         MethodDefinitionStatement,
+        TestDefinitionStatement,
         IfStatement,
         TrailingIfStatement,
         WhileStatement,
