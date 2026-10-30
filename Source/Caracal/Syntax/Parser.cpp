@@ -194,15 +194,6 @@ namespace Caracal
                 }
                 break;
             }
-            case TokenKind::TestKeyword:
-            {
-                if (scope == StatementScope::Global)
-                {
-                    parseTestDefinitionStatement();
-                    return;
-                }
-                break;
-            }
             case TokenKind::IfKeyword:
             {
                 if (scope == StatementScope::Function || scope == StatementScope::Method)
@@ -266,6 +257,15 @@ namespace Caracal
                 if (scope != StatementScope::Method)
                 {
                     break;
+                }
+                [[fallthrough]];
+            }
+            case TokenKind::TestKeyword:
+            {
+                if (current.kind == TokenKind::TestKeyword && scope == StatementScope::Global && nextToken().kind == TokenKind::String)
+                {
+                    parseTestDefinitionStatement();
+                    return;
                 }
                 [[fallthrough]];
             }
@@ -778,6 +778,7 @@ namespace Caracal
             case TokenKind::Identifier:
             case TokenKind::PrivateIdentifier:
             case TokenKind::InitKeyword:
+            case TokenKind::TestKeyword:
             case TokenKind::NewKeyword:
             {
                 if (nextToken().kind == TokenKind::OpenParenthesis)
@@ -856,6 +857,7 @@ namespace Caracal
             case TokenKind::Identifier:
             case TokenKind::PrivateIdentifier:
             case TokenKind::InitKeyword:
+            case TokenKind::TestKeyword:
             case TokenKind::NewKeyword:
             {
                 parseFunctionCallOrNameExpression(scope);

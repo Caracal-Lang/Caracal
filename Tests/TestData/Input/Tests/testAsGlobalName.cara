@@ -1,0 +1,6 @@
+test :: 2;
+
+def readsTest() i32
+{
+    return test %* 3;
+}

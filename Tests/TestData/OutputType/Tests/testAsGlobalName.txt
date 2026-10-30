@@ -1,0 +1,42 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: test
+        }
+    }
+    Right: {
+        NumberLiteral: 2
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: readsTest
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: test
+                    }
+                }
+                Operation: MultiplicationWrapping
+                Right: {
+                    NumberLiteral: 3
+                }
+            }
+        }
+    }
+}

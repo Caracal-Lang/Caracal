@@ -1,0 +1,16 @@
+type Counter
+{
+    test : i32 = 4
+}
+
+def twice(test: i32) i32
+{
+    return test %* 2;
+}
+
+def usesTest() i32
+{
+    test := twice(3);
+    counter := Counter.new();
+    return test %+ counter.test;
+}
