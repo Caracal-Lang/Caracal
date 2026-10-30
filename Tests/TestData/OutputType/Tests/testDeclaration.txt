@@ -1,0 +1,72 @@
+FunctionDefinitionStatement: {
+    Type: (i32, i32) -> i32
+    Name: add
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: left
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: right
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: left
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: right
+                    }
+                }
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: () -> void
+    Name: "add test"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32, i32) -> i32
+                    NameExpression: {
+                        Type: (i32, i32) -> i32
+                        Name: add
+                    }
+                    ArgumentsNode(2): {
+                        NumberLiteral: 2
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+    }
+}

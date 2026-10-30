@@ -99,6 +99,7 @@ namespace Caracal
         void collectDeclarations();
         void collectUnitDeclarations(CompilationUnit& unit);
         void collectFunctionDeclaration(const CompilationUnit& unit, u32 index);
+        void collectTestDeclaration(const CompilationUnit& unit, u32 index);
         void collectEnumDeclaration(const CompilationUnit& unit, u32 index);
         void collectTypeDeclaration(const CompilationUnit& unit, u32 index);
         void collectBuiltinTypeDeclaration(const CompilationUnit& unit, u32 index);
@@ -140,6 +141,7 @@ namespace Caracal
         void typeCheckEnumDefinitions();
         void typeCheckTypeFieldDefinitions();
         void typeCheckFunctionDefinitions();
+        void typeCheckTestDefinitions();
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
         void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
@@ -149,6 +151,7 @@ namespace Caracal
         void typeCheckExpressionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckTypeFieldDeclaration(const CompilationUnit& unit, u32 index, TypeDefinition& typeDefinition, i32 fieldIndex);
         void typeCheckMethodDefinitionStatement(const CompilationUnit& unit, u32 index);
@@ -228,6 +231,7 @@ namespace Caracal
         std::vector<CompilationUnit*> m_units;
         std::vector<NodeIndex> m_globalConstantDeclarations;
         std::vector<NodeIndex> m_functionDeclarations;
+        std::vector<NodeIndex> m_testDeclarations;
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
 

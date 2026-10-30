@@ -1,0 +1,21 @@
+def add(left: i32, right: i32) i32
+{
+    return left %+ right;
+}
+
+test "adds two" { _ = add(1, 1); }
+
+test "adds two"
+{
+    _ = add(2, 2);
+}
+
+test "adds: 3 + 3"
+{
+    _ = add(3, 3);
+}
+
+test "Größe"
+{
+    _ = add(4, 4);
+}

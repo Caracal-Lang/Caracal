@@ -1,0 +1,5 @@
+test "wrong type"
+{
+    value : i32 = "text";
+    _ = value;
+}

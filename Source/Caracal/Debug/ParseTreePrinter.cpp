@@ -713,6 +713,7 @@ namespace Caracal
                 .appendLine(": {");
             m_builder.pushIndentation();
 
+            WriteIndentedTypeName(m_builder, m_module, typeOf(index));
             m_builder
                 .appendIndented("Name: ")
                 .appendLine(lexeme(m_buffer.mainToken(index)));

@@ -14,8 +14,10 @@
 #include <Caracal/Syntax/StringEscapes.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 #include <Caracal/Syntax/UnaryOperatorKind.h>
+#include <Caracal/Text/AsciiName.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 #include <optional>
 #include <span>
@@ -558,6 +560,21 @@ namespace Caracal
         return NodeSpans::callArgumentsLocation(unit.nodeBuffer, context.tokenBuffer(unit.fileId), callIndex, argumentNodes);
     }
 
+    // __caracal_test_<file name>_<test name>
+    [[nodiscard]] static std::string TestFunctionBaseName(const std::filesystem::path& filePath, std::string_view testName)
+    {
+        auto name = std::string(TestFunctionNamePrefix);
+        const auto stem = filePath.stem().u8string();
+        name.append(stem.begin(), stem.end());
+        if (!stem.empty() && !testName.empty())
+        {
+            name.push_back('_');
+        }
+        name += testName;
+        replaceNonAsciiCharacters(name);
+        return name;
+    }
+
     TypeChecker::TypeChecker(
         CompilationContext& compilationContext,
         bool isPreludePass,
@@ -614,6 +631,7 @@ namespace Caracal
         typeCheckGlobalConstants();
         typeCheckTypeFieldDefinitions();
         typeCheckFunctionDefinitions();
+        typeCheckTestDefinitions();
         typeCheckTypeMethodDefinitions();
 
         checkUninitializedInitConstants();
@@ -685,6 +703,11 @@ namespace Caracal
                     collectFunctionDeclaration(unit, index);
                     break;
                 }
+                case NodeKind::TestDefinitionStatement:
+                {
+                    collectTestDeclaration(unit, index);
+                    break;
+                }
                 default:
                 {
                     break;
@@ -724,6 +747,23 @@ namespace Caracal
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
         m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
+    }
+
+    void TypeChecker::collectTestDeclaration(const CompilationUnit& unit, u32 index)
+    {
+        const auto baseName = TestFunctionBaseName(unit.source->filePath, escapedStringContent(unit, index));
+
+        // we need to append a number in case the name is already in use
+        auto functionName = baseName;
+        for (auto suffix = 1; m_module.tryGetFunctionTypeByName(functionName) != Type::Undefined(); ++suffix)
+        {
+            functionName = baseName + "_" + std::to_string(suffix);
+        }
+
+        auto& functionDefinition = m_module.createFunction(functionName, std::vector<Parameter>(), std::vector<Type>());
+        functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
+        m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
+        m_testDeclarations.push_back(NodeIndex{ unit.fileId, index });
     }
 
     void TypeChecker::reportDuplicateTypeDeclaration(const CompilationUnit& unit, u32 index, std::string_view name, Type existingType)
@@ -2168,6 +2208,16 @@ namespace Caracal
         }
     }
 
+    void TypeChecker::typeCheckTestDefinitions()
+    {
+        CARACAL_ZONE_NAMED("check.testDefinitions");
+        for (const auto declaration : m_testDeclarations)
+        {
+            const auto& unit = unitFor(declaration);
+            typeCheckTestDefinitionStatement(unit, declaration.index);
+        }
+    }
+
     void TypeChecker::typeCheckEnumDefinitions()
     {
         CARACAL_ZONE_NAMED("check.enumDefinitions");
@@ -3574,6 +3624,27 @@ namespace Caracal
         }
 
         popScope(!isExtern);
+    }
+
+    void TypeChecker::typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index)
+    {
+        CARACAL_ZONE_NAMED("check.testBody");
+        const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
+        pushScope(ScopeKind::Function);
+
+        const auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
+        const auto testLayout = NodeLayout::testDefinition(index);
+
+        m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, testLayout.body));
+        m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
+
+        m_currentFunctionName = functionDefinition.fullName();
+        typeCheckBlockNode(unit, testLayout.body);
+        m_currentFunctionName.clear();
+
+        m_emitter.endFunction();
+        popScope(true);
     }
 
     void TypeChecker::typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index)

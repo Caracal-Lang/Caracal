@@ -46,6 +46,7 @@ FunctionDefinitionStatement: {
     }
 }
 TestDefinitionStatement: {
+    Type: undefined
     Name: "add test"
     BlockNode(1): {
         AssignmentStatement: {

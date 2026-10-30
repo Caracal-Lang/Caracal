@@ -1,0 +1,12 @@
+ Error T0023 Explicit variable type mismatch
+    ,-[Diagnostics/Input/typeErrorInTest.cara:3:19]
+  1 | test "wrong type"
+  2 | {
+  3 |     value : i32 = "text";
+    .                   ------
+    .                      `-- Variable is declared as 'i32', but its initializer has type 'string'
+  4 |     _ = value;
+  5 | }
+  6 | 
+    `----
+  Fix: Initialize this variable with a value of type 'i32' or change its explicit type.

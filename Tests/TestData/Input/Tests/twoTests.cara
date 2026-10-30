@@ -1,0 +1,14 @@
+def square(value: i32) i32
+{
+    return value %* value;
+}
+
+test "square of two"
+{
+    _ = square(2);
+}
+
+test "square of three"
+{
+    _ = square(3);
+}

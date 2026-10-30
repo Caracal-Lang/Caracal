@@ -1,0 +1,25 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define square(%0: i32 "value") i32
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = multiply %0, %0 : i32
+    return %1
+
+define __caracal_test_square_of_two() void
+block entry(0):
+    %0 = const 2 : i32
+    %1 = call square(%0) : i32
+    return
+
+define __caracal_test_square_of_three() void
+block entry(0):
+    %0 = const 3 : i32
+    %1 = call square(%0) : i32
+    return
