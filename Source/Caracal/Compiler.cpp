@@ -497,6 +497,7 @@ namespace Caracal
         std::filesystem::path executablePath,
         OptimizationLevel optimizationLevel,
         bool debugInfo,
+        bool runsTests,
         const DiagnosticOptions& diagnosticOptions,
         const PrintOptions& printOptions,
         bool shouldRunAfterBuild)
@@ -510,6 +511,7 @@ namespace Caracal
             .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo },
             .optimizationLevel = optimizationLevel,
             .debugInfo = debugInfo,
+            .runsTests = runsTests,
             .diagnosticOptions = diagnosticOptions,
             .printOptions = printOptions,
             .objectFilePath = std::move(objectFilePath),
@@ -533,12 +535,13 @@ namespace Caracal
         return temporaryDirectory / "Caracal" / std::format("{}-{:016x}", filePath.stem().string(), pathHash);
     }
 
-    static std::vector<ProjectConstant> CompilerConstants(std::string name, std::string version, std::string modeName)
+    static std::vector<ProjectConstant> CompilerConstants(std::string name, std::string version, std::string modeName, bool runsTests)
     {
         return {
             { "__caracal_project_name", std::move(name) },
             { "__caracal_project_version", std::move(version) },
-            { "__caracal_build_mode_name", std::move(modeName) } };
+            { "__caracal_build_mode_name", std::move(modeName) },
+            { "__caracal_run_tests", runsTests } };
     }
 
     BuildCommand createFileBuildCommand(
@@ -551,13 +554,14 @@ namespace Caracal
         const auto temporaryDirectory = ResolveTemporaryDirectory(filePath);
         return CreateBuildCommand(
             { filePath },
-            CompilerConstants(inputFileName, projectVersion(buildDay), "File"),
+            CompilerConstants(inputFileName, projectVersion(buildDay), "File", false),
             temporaryDirectory / "ProjectConstants.cara",
             ResolvePreludeDirectory(),
             { ResolveCoreDirectory() },
             temporaryDirectory / (inputFileName + ".o"),
             inputFileName + ".exe",
             OptimizationLevel::None,
+            false,
             false,
             diagnosticOptions,
             printOptions,
@@ -605,7 +609,7 @@ namespace Caracal
         auto objectFilePath = project.rootDirectory / folders.temp / mode.name / (project.name + ".o");
         auto executablePath = project.rootDirectory / folders.output / mode.outputFolder / (project.name + ".exe");
         auto projectConstantsPath = project.rootDirectory / folders.temp / mode.name / "ProjectConstants.cara";
-        auto projectConstants = CompilerConstants(project.name, project.version, mode.name);
+        auto projectConstants = CompilerConstants(project.name, project.version, mode.name, mode.test);
         const auto modeConstants = projectConstantsForMode(project, mode);
         projectConstants.insert(projectConstants.end(), modeConstants.begin(), modeConstants.end());
         if (project.dependencies.empty())
@@ -620,6 +624,7 @@ namespace Caracal
                 std::move(executablePath),
                 mode.optimizationLevel,
                 mode.debugInfo,
+                mode.test,
                 diagnosticOptions,
                 {},
                 shouldRunAfterBuild);
@@ -652,6 +657,7 @@ namespace Caracal
             std::move(executablePath),
             mode.optimizationLevel,
             mode.debugInfo,
+            mode.test,
             diagnosticOptions,
             {},
             shouldRunAfterBuild);

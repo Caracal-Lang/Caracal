@@ -23,6 +23,12 @@
       "optimize": "speed",
       "debugInfo": false,
       "output": "Release"
+    },
+    "Test": {
+      "test": true,
+      "optimize": "none",
+      "debugInfo": true,
+      "output": "Test"
     }
   }
 }

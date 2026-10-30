@@ -25,8 +25,9 @@ namespace Caracal
     std::vector<ProjectMode> defaultProjectModes()
     {
         return {
-            { "Debug", OptimizationLevel::None, "Debug", true, true },
-            { "Release", OptimizationLevel::Speed, "Release", false, false } };
+            { .name = "Debug", .optimizationLevel = OptimizationLevel::None, .outputFolder = "Debug", .debugInfo = true, .isDefault = true },
+            { .name = "Release", .optimizationLevel = OptimizationLevel::Speed, .outputFolder = "Release" },
+            { .name = "Test", .optimizationLevel = OptimizationLevel::None, .outputFolder = "Test", .debugInfo = true, .test = true } };
     }
 
     static ProjectModeResult FindDefaultMode(const Project& project)

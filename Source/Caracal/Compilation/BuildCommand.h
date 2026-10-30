@@ -21,6 +21,7 @@ namespace Caracal
         TypeCheckerOptions typeCheckerOptions;
         OptimizationLevel optimizationLevel = OptimizationLevel::None;
         bool debugInfo = false;
+        bool runsTests = false;
         DiagnosticOptions diagnosticOptions;
         PrintOptions printOptions;
         std::filesystem::path objectFilePath;

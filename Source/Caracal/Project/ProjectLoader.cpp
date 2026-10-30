@@ -493,6 +493,13 @@ namespace Caracal
 
                 mode.isDefault = setting.get<bool>();
             }
+            else if (key == "test")
+            {
+                if (!setting.is_boolean())
+                    return settingName + " in " + fileName + " has to be true or false";
+
+                mode.test = setting.get<bool>();
+            }
             else if (key == "output")
             {
                 if (!setting.is_string())

@@ -496,6 +496,28 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
+static void LoadingCaracalJsonReadsWhetherModesRunTests()
+{
+    const auto result = LoadProjectText("ModesTest", R"(, "modes": { "debug": { "test": true }, "release": { "test": false }, "profile": {} })");
+
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& modes = result.project.value().modes;
+    CaraTest::areEqual(size_t(3), modes.size());
+    CaraTest::isTrue(modes.at(0).test);
+    CaraTest::isFalse(modes.at(1).test);
+    CaraTest::isFalse(modes.at(2).test);
+}
+
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithTestThatIsNotTrueOrFalseFails_Data()
+{
+    const std::string field = "\"modes.debug.test\" in caracal.json has to be true or false";
+    return {
+        std::make_tuple("string", R"(, "modes": { "debug": { "test": "true" } })", field),
+        std::make_tuple("number", R"(, "modes": { "debug": { "test": 1 } })", field),
+        std::make_tuple("null", R"(, "modes": { "debug": { "test": null } })", field),
+    };
+}
+
 static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data()
 {
     const std::string field = "\"modes.debug.output\" in caracal.json has to be a valid folder name, ";
@@ -921,7 +943,7 @@ static void FindingModeTheProjectDoesNotHaveListsItsModes()
     const auto result = Caracal::findProjectMode(project, "fast");
 
     CaraTest::isFalse(result.mode.has_value());
-    CaraTest::areEqual(std::string("There is no mode \"fast\" in caracal.json, the project has Debug, Release and Profile"), result.error);
+    CaraTest::areEqual(std::string("There is no mode \"fast\" in caracal.json, the project has Debug, Release, Test and Profile"), result.error);
 }
 
 static void CreatingBuildCommandForDebugBuildsIntoTheModesFolders()
@@ -1229,6 +1251,34 @@ static void ModeWithoutDebugInformationRecordsNoSourceLocations()
     CaraTest::isFalse(buildCommand->typeCheckerOptions.recordsSourceLocations);
 }
 
+static void BuildCommandForTestModeRunsTests()
+{
+    const auto result = LoadProjectText("BuildCommandRunsTests", R"(, "modes": { "Debug": {}, "Test": { "test": true } })");
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto debugCommand = Caracal::createProjectBuildCommand(project, "Debug");
+    const auto testCommand = Caracal::createProjectBuildCommand(project, "Test");
+
+    CaraTest::isTrue(debugCommand.has_value());
+    CaraTest::isTrue(testCommand.has_value());
+    CaraTest::isFalse(debugCommand->runsTests);
+    CaraTest::isTrue(testCommand->runsTests);
+    CaraTest::isTrue(ConstantValue<bool>(debugCommand->projectConstants, "__caracal_run_tests") == false);
+    CaraTest::isTrue(ConstantValue<bool>(testCommand->projectConstants, "__caracal_run_tests") == true);
+}
+
+static void BuildCommandForFileRunsNoTests()
+{
+    const auto workingDirectory = EmptyScratchDirectory("FileBuildCommandRunsNoTests");
+
+    const auto buildCommand = Caracal::createFileBuildCommand(workingDirectory / "main.cara", CreationDay);
+
+    CaraTest::isFalse(buildCommand.runsTests);
+    CaraTest::isTrue(ConstantValue<bool>(buildCommand.projectConstants, "__caracal_run_tests") == false);
+}
+
 static auto tests =
 {
     CaraTest::addTest("creating a project with a name uses that name", CreatingProjectWithNameUsesThatName),
@@ -1258,6 +1308,8 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with modes of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
     CaraTest::addTest("loading a caracal.json reads a mode's debug information", LoadingCaracalJsonReadsModesDebugInformation),
     CaraTest::addTest("loading a caracal.json with debug information that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("loading a caracal.json reads whether a mode runs tests", LoadingCaracalJsonReadsWhetherModesRunTests),
+    CaraTest::addTest("loading a caracal.json with a test setting that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTestThatIsNotTrueOrFalseFails_Data),
     CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
@@ -1295,6 +1347,8 @@ static auto tests =
     CaraTest::addTest("an f64 constant reads back unchanged", F64ConstantsReadBackUnchanged, F64ConstantsReadBackUnchanged_Data),
     CaraTest::addTest("a build command for a mode uses the mode's constant values", BuildCommandForModeUsesModesConstantValues),
     CaraTest::addTest("a build command for a project adds its mode name as a constant", BuildCommandForProjectAddsItsModeNameAsConstant),
+    CaraTest::addTest("a build command for a test mode runs tests", BuildCommandForTestModeRunsTests),
+    CaraTest::addTest("a build command for a file runs no tests", BuildCommandForFileRunsNoTests),
     CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
     CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
     CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
