@@ -63,4 +63,17 @@ namespace Caracal
 
         return FindNamedMode(project, modeName.value());
     }
+
+    ProjectModeResult findProjectTestMode(const Project& project)
+    {
+        for (const auto& mode : project.modes)
+        {
+            if (mode.test)
+            {
+                return { mode, {} };
+            }
+        }
+
+        return { std::nullopt, "No mode in caracal.json has \"test\": true, the project has " + ModeNames(project) };
+    }
 }

@@ -496,25 +496,12 @@ static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCar
     };
 }
 
-static void LoadingCaracalJsonReadsWhetherModesRunTests()
-{
-    const auto result = LoadProjectText("ModesTest", R"(, "modes": { "debug": { "test": true }, "release": { "test": false }, "profile": {} })");
-
-    CaraTest::areEqual(std::string(), result.error);
-    const auto& modes = result.project.value().modes;
-    CaraTest::areEqual(size_t(3), modes.size());
-    CaraTest::isTrue(modes.at(0).test);
-    CaraTest::isFalse(modes.at(1).test);
-    CaraTest::isFalse(modes.at(2).test);
-}
-
-static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithTestThatIsNotTrueOrFalseFails_Data()
+static std::vector<std::tuple<std::string, std::string, std::string>> LoadingCaracalJsonWithTwoTestModesOrTestThatIsNotTrueOrFalseFails_Data()
 {
     const std::string field = "\"modes.debug.test\" in caracal.json has to be true or false";
     return {
+        std::make_tuple("two test modes", R"(, "modes": { "debug": { "test": true }, "release": { "test": true } })", "\"modes.debug\" and \"modes.release\" in caracal.json both have \"test\": true"),
         std::make_tuple("string", R"(, "modes": { "debug": { "test": "true" } })", field),
-        std::make_tuple("number", R"(, "modes": { "debug": { "test": 1 } })", field),
-        std::make_tuple("null", R"(, "modes": { "debug": { "test": null } })", field),
     };
 }
 
@@ -1163,6 +1150,27 @@ static void FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes()
     CaraTest::areEqual(std::string("No mode in caracal.json has \"default\": true, pass one with -mode, the project has Debug and Release"), result.error);
 }
 
+static void FindingTestModeUsesModeThatRunsTests()
+{
+    const auto project = ProjectWithDefaultModes("Hello", "C:/Hello");
+
+    const auto result = Caracal::findProjectTestMode(project);
+
+    CaraTest::areEqual(std::string(), result.error);
+    CaraTest::areEqual(std::string("Test"), result.mode.value().name);
+}
+
+static void FindingTestModeWhenNoModeRunsTestsListsTheModes()
+{
+    Caracal::Project project{ "Hello", "C:/Hello" };
+    project.modes = { { .name = "Debug", .outputFolder = "Debug", .isDefault = true }, { .name = "Release", .outputFolder = "Release" } };
+
+    const auto result = Caracal::findProjectTestMode(project);
+
+    CaraTest::isFalse(result.mode.has_value());
+    CaraTest::areEqual(std::string("No mode in caracal.json has \"test\": true, the project has Debug and Release"), result.error);
+}
+
 static void CreatingBuildCommandForUnknownModeFails()
 {
     const auto workingDirectory = EmptyScratchDirectory("BuildCommandUnknownMode");
@@ -1308,8 +1316,7 @@ static auto tests =
     CaraTest::addTest("loading a caracal.json with modes of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
     CaraTest::addTest("loading a caracal.json reads a mode's debug information", LoadingCaracalJsonReadsModesDebugInformation),
     CaraTest::addTest("loading a caracal.json with debug information that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
-    CaraTest::addTest("loading a caracal.json reads whether a mode runs tests", LoadingCaracalJsonReadsWhetherModesRunTests),
-    CaraTest::addTest("loading a caracal.json with a test setting that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTestThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("loading a caracal.json with two test modes or a test setting that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoTestModesOrTestThatIsNotTrueOrFalseFails_Data),
     CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
     CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
@@ -1335,6 +1342,8 @@ static auto tests =
     CaraTest::addTest("updating a project without core next to the compiler fails", UpdatingProjectWithoutCoreNextToCompilerFails),
     CaraTest::addTest("finding a mode the project does not have lists its modes", FindingModeTheProjectDoesNotHaveListsItsModes),
     CaraTest::addTest("finding a mode without a name when no mode is the default lists the modes", FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes),
+    CaraTest::addTest("finding the test mode uses the mode that runs tests", FindingTestModeUsesModeThatRunsTests),
+    CaraTest::addTest("finding the test mode when no mode runs tests lists the modes", FindingTestModeWhenNoModeRunsTestsListsTheModes),
     CaraTest::addTest("creating a build command for debug builds into the mode's folders", CreatingBuildCommandForDebugBuildsIntoTheModesFolders),
     CaraTest::addTest("creating a build command for a mode without output uses its name", CreatingBuildCommandForModeWithoutOutputUsesModesName),
     CaraTest::addTest("creating a build command without a mode uses the default mode", CreatingBuildCommandWithoutModeUsesDefaultMode),

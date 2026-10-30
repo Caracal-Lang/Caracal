@@ -689,6 +689,25 @@ namespace Caracal
         return Build(buildCommand.value());
     }
 
+    int testProject(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions)
+    {
+        CARACAL_ZONE_NAMED("testProject");
+        const auto modeResult = findProjectTestMode(project);
+        if (!modeResult.mode.has_value())
+        {
+            std::cout << modeResult.error << "\n";
+            return 1;
+        }
+
+        const auto buildCommand = createProjectBuildCommand(project, modeResult.mode->name, diagnosticOptions, true);
+        if (!buildCommand.has_value())
+            return 1;
+
+        return Build(buildCommand.value());
+    }
+
     std::pair<bool, std::string> generateLLVMIRFromModule(Module& irModule, std::string targetTriple, OptimizationLevel optimizationLevel, bool debugInfo)
     {
         llvm::InitializeNativeTarget();

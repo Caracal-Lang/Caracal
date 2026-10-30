@@ -562,6 +562,9 @@ namespace Caracal
 
                 if (firstMode.isDefault && secondMode.isDefault)
                     return bothModes + " both have \"default\": true";
+
+                if (firstMode.test && secondMode.test)
+                    return bothModes + " both have \"test\": true";
             }
         }
 

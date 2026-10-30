@@ -46,6 +46,10 @@ namespace Caracal
         std::optional<std::string_view> modeName = std::nullopt,
         const DiagnosticOptions& diagnosticOptions = {});
 
+    CARACAL_API int testProject(
+        const Project& project,
+        const DiagnosticOptions& diagnosticOptions = {});
+
     CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(
         Module& irModule,
         std::string targetTriple,

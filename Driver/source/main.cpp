@@ -22,6 +22,7 @@ void printHelp()
     std::cout << "  caracal new [name] [-no-git]                   creates a project in the current folder or in [name]\n";
     std::cout << "  caracal build [path] [-mode <name>]            builds the project in the current folder, or in [path]\n";
     std::cout << "  caracal run [path] [-mode <name>]              builds and runs the project in the current folder, or in [path]\n";
+    std::cout << "  caracal test [path]                            builds and runs the tests in the current folder, or in [path]\n";
     std::cout << "  caracal update [path] [-dry]                   updates the libraries of the project in the current folder, or in [path]\n";
     std::cout << "  caracal help\n";
 }
@@ -89,14 +90,14 @@ struct ProjectArguments
     std::optional<std::string> modeName;
 };
 
-std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
+std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[], bool takesMode = true)
 {
     std::optional<std::string> modeName{};
     std::optional<std::filesystem::path> path{};
     for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
     {
         const auto argument = std::string_view(argv[argumentIndex]);
-        if (argument == "-mode")
+        if (argument == "-mode" && takesMode)
         {
             if (argumentIndex + 1 == argc)
             {
@@ -152,6 +153,17 @@ int runProject(int argc, char* argv[])
     }
 
     return Caracal::runProject(projectArguments->project, projectArguments->modeName);
+}
+
+int testProject(int argc, char* argv[])
+{
+    const auto projectArguments = findProjectFromArguments(argc, argv, false);
+    if (!projectArguments.has_value())
+    {
+        return 1;
+    }
+
+    return Caracal::testProject(projectArguments->project);
 }
 
 void printUpdatedFiles(std::string_view label, const std::vector<std::filesystem::path>& filePaths)
@@ -268,6 +280,11 @@ int main(int argc, char* argv[])
     if (std::string_view(argv[1]) == "run")
     {
         return runProject(argc, argv);
+    }
+
+    if (std::string_view(argv[1]) == "test")
+    {
+        return testProject(argc, argv);
     }
 
     if (std::string_view(argv[1]) == "update")
