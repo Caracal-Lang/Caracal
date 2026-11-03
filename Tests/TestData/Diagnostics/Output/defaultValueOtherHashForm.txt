@@ -1,0 +1,10 @@
+ Error P0020 Unknown annotation expression
+    ,-[Diagnostics/Input/defaultValueOtherHashForm.cara:1:26]
+  1 | def show(text: string = #caller(value), count: i32 = 1)
+    .                          ------
+    .                             `-- This is not a known annotation expression
+  2 | {
+  3 |     _ = text;
+  4 |     _ = count;
+    `----
+  Fix: Write #sourceText(<parameter>) or an ordinary value.

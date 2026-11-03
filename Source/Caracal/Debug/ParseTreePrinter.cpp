@@ -1245,6 +1245,7 @@ namespace Caracal
                 }
                 case NodeKind::BoolLiteral:
                 case NodeKind::StringLiteral:
+                case NodeKind::SourceTextDefault:
                 {
                     m_builder
                         .appendIndented(stringify(kind))

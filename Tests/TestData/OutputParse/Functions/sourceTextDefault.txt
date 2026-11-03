@@ -1,0 +1,235 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Box
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: measure
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: value
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: text
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: string
+                    }
+                    DefaultValue: {
+                        SourceTextDefault: value
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: string
+                }
+            }
+            BlockNode(2): {
+                AssignmentStatement: {
+                    Left: {
+                        Discard: _
+                    }
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: value
+                        }
+                    }
+                }
+                ReturnStatement: {
+                    Type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: text
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: describe
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: value
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(4): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NumberLiteral: 1
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(2): {
+                        NumberLiteral: 3
+                        StringLiteral: "written"
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: measure
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NumberLiteral: 2
+                                    }
+                                    Operation: MultiplicationWrapping
+                                    Right: {
+                                        NumberLiteral: 2
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

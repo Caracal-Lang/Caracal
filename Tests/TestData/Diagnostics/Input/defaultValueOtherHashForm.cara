@@ -1,0 +1,5 @@
+def show(text: string = #caller(value), count: i32 = 1)
+{
+    _ = text;
+    _ = count;
+}

@@ -65,6 +65,7 @@ namespace Caracal
         void parseArgumentList(StatementScope scope);
         void parseNumberLiteral();
         void parseStringLiteral();
+        void parseSourceTextDefault();
         void parseArrayLiteralExpression(StatementScope scope);
         void buildAnnotationNode(StatementScope scope);
         void flushDanglingAnnotations();

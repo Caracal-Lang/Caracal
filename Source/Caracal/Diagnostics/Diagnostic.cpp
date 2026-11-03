@@ -49,6 +49,8 @@ namespace Caracal
                 return "P0015";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "P0016";
+            case DiagnosticKind::P0020_UnknownAnnotationExpression:
+                return "P0020";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:
@@ -316,6 +318,8 @@ namespace Caracal
                 return "Expected an array length";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "Plain arithmetic operators are reserved until checked arithmetic exists";
+            case DiagnosticKind::P0020_UnknownAnnotationExpression:
+                return "Unknown annotation expression";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:

@@ -44,6 +44,7 @@ namespace Caracal
         BoolLiteral,
         NumberLiteral,
         StringLiteral,
+        SourceTextDefault,
         ArrayLiteral,
 
         AnnotationNode,

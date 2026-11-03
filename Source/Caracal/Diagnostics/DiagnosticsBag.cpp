@@ -484,6 +484,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0020_UnknownAnnotationExpression,
+            source,
+            location,
+            "Write #sourceText(<parameter>) or an ordinary value.");
+        diagnostic.addPrimaryLabel(location, "This is not a known annotation expression");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addDanglingAnnotationError(const SourceTextSharedPtr& source, const SourceLocation& location)
     {
         auto diagnostic = Diagnostic(

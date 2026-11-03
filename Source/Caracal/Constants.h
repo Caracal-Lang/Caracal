@@ -51,6 +51,7 @@ namespace Caracal
     inline constexpr const char* FlagAnnotationName = "flag";
     inline constexpr const char* StepAnnotationName = "step";
     inline constexpr const char* BuiltinAnnotationName = "builtin";
+    inline constexpr const char* SourceTextAnnotationName = "sourceText";
     inline constexpr const char* SymbolAnnotationArgumentName = "symbol";
     inline constexpr const char* KindAnnotationArgumentName = "kind";
     inline constexpr const char* BitsAnnotationArgumentName = "bits";

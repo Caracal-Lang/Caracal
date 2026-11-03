@@ -29,6 +29,7 @@ namespace Caracal
         P0014_PrivateFreeFunction,
         P0015_ExpectedArrayLength,
         P0016_ReservedOperator,
+        P0020_UnknownAnnotationExpression,
 
         // Annotation diagnostics
         T0001_UnknownAnnotation,

@@ -1083,8 +1083,15 @@ namespace Caracal
                 if (currentToken().kind == TokenKind::Equal)
                 {
                     static_cast<void>(advanceOnMatch(TokenKind::Equal));
-                    // parse with method scope so member access reaches the type checker, which rejects it
-                    parseExpression(StatementScope::Method);
+                    if (currentToken().kind == TokenKind::Hash)
+                    {
+                        parseSourceTextDefault();
+                    }
+                    else
+                    {
+                        // parse with method scope so member access reaches the type checker, which rejects it
+                        parseExpression(StatementScope::Method);
+                    }
                 }
 
                 append(NodeKind::ParameterNode, tokenIndexOf(nameToken), parameterStart);
@@ -1121,6 +1128,32 @@ namespace Caracal
         static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
 
         append(NodeKind::ParametersNode, tokenIndexOf(openParenthesis), subtreeStart);
+    }
+
+    void Parser::parseSourceTextDefault()
+    {
+        static_cast<void>(advanceOnMatch(TokenKind::Hash));
+        const auto& formToken = currentToken();
+        if (!isIdentifierKind(formToken.kind) || m_tokens.getLexeme(formToken) != SourceTextAnnotationName)
+        {
+            m_diagnostics.addUnknownAnnotationExpressionError(m_tokens.source(), m_tokens.getSourceLocation(formToken));
+            if (isIdentifierKind(formToken.kind))
+            {
+                advanceCurrentIndex();
+            }
+            if (currentToken().kind == TokenKind::OpenParenthesis)
+            {
+                skipUntil({ TokenKind::CloseParenthesis });
+                static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
+            }
+            return;
+        }
+
+        advanceCurrentIndex();
+        static_cast<void>(advanceOnMatch(TokenKind::OpenParenthesis));
+        auto parameterName = advanceOnIdentifier();
+        static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
+        appendNode(NodeKind::SourceTextDefault, tokenIndexOf(parameterName));
     }
 
     void Parser::parseReturnTypesNode()

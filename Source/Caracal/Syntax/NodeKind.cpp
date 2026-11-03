@@ -42,6 +42,7 @@ namespace Caracal
             { NodeKind::BoolLiteral,                    std::string_view("BoolLiteral") },
             { NodeKind::NumberLiteral,                  std::string_view("NumberLiteral") },
             { NodeKind::StringLiteral,                  std::string_view("StringLiteral") },
+            { NodeKind::SourceTextDefault,              std::string_view("SourceTextDefault") },
             { NodeKind::ArrayLiteral,                   std::string_view("ArrayLiteral") },
 
             { NodeKind::AnnotationNode,                 std::string_view("AnnotationNode") },
