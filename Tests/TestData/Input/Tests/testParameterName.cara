@@ -1,0 +1,11 @@
+def readsLocal() i32
+{
+    Test := 7;
+    return Test;
+}
+
+test "a local named Test"
+{
+    Test := 1;
+    _ = Test;
+}

@@ -1,0 +1,13 @@
+ Error T0035 Duplicate variable declaration
+     ,-[Diagnostics/Input/localNamedLikeStubParameter.cara:7:5]
+   4 | 
+   5 | test "a local named Test"
+   6 | {
+   7 |     Test := 1;
+     .     ----
+     .       `-- Variable 'Test' is already declared
+   8 |     _ = Test;
+   9 | }
+  10 | 
+     `----
+  Fix: Rename this variable, or remove the duplicate declaration.

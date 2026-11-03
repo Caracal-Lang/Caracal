@@ -199,13 +199,13 @@ block if.true(1):
     %slot3 = allocate_local : string "temp"
     %5 = address_of %slot1 : ref string
     %6 = address_of_field %5.0 : ref [u8; _] "_bytes"
-    %7 = const "isTrue\0" : cstring
+    %7 = const "Test.isTrue\0" : cstring
     %8 = address_of_field %6.0 : ref u8 "data"
     store_value %7, %8 : ref u8
-    %9 = const 6 : i32
+    %9 = const 11 : i32
     %10 = address_of_field %6.1 : ref i32 "length"
     store_value %9, %10 : i32
-    %11 = const 6 : i32
+    %11 = const 11 : i32
     %12 = address_of_field %6.2 : ref i32 "capacity"
     store_value %11, %12 : i32
     %13 = load_value %5 : string
@@ -256,13 +256,13 @@ block if.true(1):
     %slot3 = allocate_local : string "temp"
     %4 = address_of %slot1 : ref string
     %5 = address_of_field %4.0 : ref [u8; _] "_bytes"
-    %6 = const "isFalse\0" : cstring
+    %6 = const "Test.isFalse\0" : cstring
     %7 = address_of_field %5.0 : ref u8 "data"
     store_value %6, %7 : ref u8
-    %8 = const 7 : i32
+    %8 = const 12 : i32
     %9 = address_of_field %5.1 : ref i32 "length"
     store_value %8, %9 : i32
-    %10 = const 7 : i32
+    %10 = const 12 : i32
     %11 = address_of_field %5.2 : ref i32 "capacity"
     store_value %10, %11 : i32
     %12 = load_value %4 : string

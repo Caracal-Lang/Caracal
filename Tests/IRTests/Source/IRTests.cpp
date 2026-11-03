@@ -152,7 +152,7 @@ static void TestBuildFileTests(
     }
 
     Caracal::Module module{};
-    if (!Caracal::typeCheck(compilationContext, diagnostics, module))
+    if (!Caracal::typeCheck(compilationContext, diagnostics, module) || diagnostics.hasWarnings())
     {
         Caracal::writeDiagnostics(std::cout, diagnostics);
         CaraTest::fail();

@@ -1,0 +1,62 @@
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: readsLocal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: Test
+                }
+            }
+            Right: {
+                NumberLiteral: 7
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: Test
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: () -> void
+    Name: "a local named Test"
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: Test
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: Test
+                }
+            }
+        }
+    }
+}
