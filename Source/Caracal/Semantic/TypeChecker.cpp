@@ -635,6 +635,7 @@ namespace Caracal
         typeCheckTypeMethodDefinitions();
 
         checkUninitializedInitConstants();
+        typeCheckTestsStub();
 
         if (!m_isPreludePass)
         {
@@ -2204,8 +2205,24 @@ namespace Caracal
         for (const auto declaration : m_functionDeclarations)
         {
             const auto& unit = unitFor(declaration);
+            if (nameOf(unit, declaration.index) == TestsStubName)
+            {
+                m_testsStubDeclaration = declaration;
+                continue;
+            }
+
             typeCheckFunctionDefinitionStatement(unit, declaration.index);
         }
+    }
+
+    void TypeChecker::typeCheckTestsStub()
+    {
+        if (m_testsStubDeclaration.index == InvalidNodeIndex)
+        {
+            return;
+        }
+
+        typeCheckFunctionDefinitionStatement(unitFor(m_testsStubDeclaration), m_testsStubDeclaration.index);
     }
 
     void TypeChecker::typeCheckTestDefinitions()
@@ -3590,8 +3607,16 @@ namespace Caracal
             TODO("Handle multiple return types in function definition");
         }
 
+        const auto isTestsStub = NodeIndex{ unit.fileId, index } == m_testsStubDeclaration;
         m_currentFunctionName = functionDefinition.fullName();
-        typeCheckBlockNode(unit, functionLayout.body);
+        if (isTestsStub)
+        {
+            emitTestsStubBody();
+        }
+        else
+        {
+            typeCheckBlockNode(unit, functionLayout.body);
+        }
         m_currentFunctionName.clear();
 
         if (emitBody)
@@ -3611,6 +3636,7 @@ namespace Caracal
         }
 
         if (!isExtern
+            && !isTestsStub
             && m_currentReturnType != Type::Void()
             && m_currentReturnType != Type::Undefined()
             && !StatementGuaranteesReturn(unit.nodeBuffer, tokens, functionLayout.body))
@@ -3624,6 +3650,26 @@ namespace Caracal
         }
 
         popScope(!isExtern);
+    }
+
+    void TypeChecker::emitTestsStubBody()
+    {
+        CARACAL_ZONE_NAMED("check.testsStubBody");
+        const auto printLineType = m_module.tryGetFunctionTypeByName(PrintLineFunctionName);
+        const auto stringType = m_module.wellKnown().string;
+        for (const auto declaration : m_testDeclarations)
+        {
+            if (printLineType != Type::Undefined())
+            {
+                m_module.markPreludeTypeRequired(stringType);
+                const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
+                m_emitter.emitStringLiteralIntoAddress(temp, escapedStringContent(unitFor(declaration), declaration.index));
+                const ValueRef testName[] = { m_emitter.emitLoad(temp, stringType) };
+                static_cast<void>(m_emitter.emitCall(printLineType.id(), testName, Type::Void()));
+            }
+
+            static_cast<void>(m_emitter.emitCall(m_module.typeOfNode(declaration).id(), {}, Type::Void()));
+        }
     }
 
     void TypeChecker::typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index)

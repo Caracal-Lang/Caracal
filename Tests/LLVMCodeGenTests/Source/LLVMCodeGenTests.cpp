@@ -227,6 +227,7 @@ static void CoreEntryPointAndUserMainGetDebugInformation()
         CaraTest::fail();
 
     Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
+    compilationContext.addSource("__caracal_run_tests : bool : false;\n", "ProjectConstants.cara", Caracal::UnitOrigin::Project);
     compilationContext.addSource(std::move(coreSource.value()), "Core/Entrypoint.cara", Caracal::UnitOrigin::Core);
     Caracal::Module module{};
     CompileFixtureToModule(TestDataDirectory() / "InputDebugInfoCore" / "entryPoint.cara", compilationContext, module, "InputDebugInfoCore/entryPoint.cara");

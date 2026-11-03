@@ -2,5 +2,14 @@
 // The C runtime calls this function and runs before the user's main
 def caracalMain() i32
 {
+    if __caracal_run_tests
+    {
+        __caracal_tests_stub();
+        return 0;
+    }
     return main();
+}
+
+def __caracal_tests_stub()
+{
 }

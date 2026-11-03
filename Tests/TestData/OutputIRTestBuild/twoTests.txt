@@ -1,0 +1,122 @@
+type string
+    const _bytes: [u8; _]
+
+type C
+
+global __caracal_run_tests : bool = true
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+extern C.printf(%0: cstring "format", %1: ... "varargs") i32 symbol "printf"
+
+extern C.puts(%0: cstring "message") i32 symbol "puts"
+
+define caracalMain() i32
+block entry(0):
+    %0 = address_of_global @__caracal_run_tests : ref bool
+    %1 = load_value %0 : bool
+    branch if %1, if.true(1), if.continuation(2)
+block if.true(1):
+    call __caracal_tests_stub()
+    %2 = const 0 : i32
+    return %2
+block if.continuation(2):
+    %3 = call main() : i32
+    return %3
+
+define __caracal_tests_stub() void
+block entry(0):
+    %slot0 = allocate_local : string "temp"
+    %slot1 = allocate_local : string "temp"
+    %0 = address_of %slot0 : ref string
+    %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
+    %2 = const "square of two\0" : cstring
+    %3 = address_of_field %1.0 : ref u8 "data"
+    store_value %2, %3 : ref u8
+    %4 = const 13 : i32
+    %5 = address_of_field %1.1 : ref i32 "length"
+    store_value %4, %5 : i32
+    %6 = const 13 : i32
+    %7 = address_of_field %1.2 : ref i32 "capacity"
+    store_value %6, %7 : i32
+    %8 = load_value %0 : string
+    call printLine(%8)
+    call __caracal_test_square_of_two()
+    %9 = address_of %slot1 : ref string
+    %10 = address_of_field %9.0 : ref [u8; _] "_bytes"
+    %11 = const "square of three\0" : cstring
+    %12 = address_of_field %10.0 : ref u8 "data"
+    store_value %11, %12 : ref u8
+    %13 = const 15 : i32
+    %14 = address_of_field %10.1 : ref i32 "length"
+    store_value %13, %14 : i32
+    %15 = const 15 : i32
+    %16 = address_of_field %10.2 : ref i32 "capacity"
+    store_value %15, %16 : i32
+    %17 = load_value %9 : string
+    call printLine(%17)
+    call __caracal_test_square_of_three()
+    return
+
+define print(%0: string "message") void
+block entry(0):
+    %0 = parameter 0 : string "message"
+    %slot0 = allocate_local : string "message"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = const "%.*s\0" : cstring
+    %3 = call string.length(%1) : i32
+    %4 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %5 = address_of_field %4.0 : ref u8 "data"
+    %6 = load_value %5 : cstring
+    %7 = call C.printf(%2, %3, %6) : i32
+    return
+
+define printLine(%0: string "message") void
+block entry(0):
+    %0 = parameter 0 : string "message"
+    %slot0 = allocate_local : string "message"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %3 = address_of_field %2.0 : ref u8 "data"
+    %4 = load_value %3 : cstring
+    %5 = call C.puts(%4) : i32
+    return
+
+define square(%0: i32 "value") i32
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = multiply %0, %0 : i32
+    return %1
+
+define __caracal_test_square_of_two() void
+block entry(0):
+    %0 = const 2 : i32
+    %1 = call square(%0) : i32
+    return
+
+define __caracal_test_square_of_three() void
+block entry(0):
+    %0 = const 3 : i32
+    %1 = call square(%0) : i32
+    return
+
+define main() i32
+block entry(0):
+    %0 = const 0 : i32
+    return %0
+
+define string.length(%0: ref string ".this") i32
+block entry(0):
+    %0 = parameter 0 : ref string ".this"
+    %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
+    %2 = address_of_field %1.1 : ref i32 "length"
+    %3 = load_value %2 : i32
+    return %3

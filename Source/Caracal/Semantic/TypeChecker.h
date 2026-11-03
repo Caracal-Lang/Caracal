@@ -142,6 +142,7 @@ namespace Caracal
         void typeCheckTypeFieldDefinitions();
         void typeCheckFunctionDefinitions();
         void typeCheckTestDefinitions();
+        void typeCheckTestsStub();
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
         void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
@@ -152,6 +153,7 @@ namespace Caracal
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void emitTestsStubBody();
         void typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckTypeFieldDeclaration(const CompilationUnit& unit, u32 index, TypeDefinition& typeDefinition, i32 fieldIndex);
         void typeCheckMethodDefinitionStatement(const CompilationUnit& unit, u32 index);
@@ -232,6 +234,7 @@ namespace Caracal
         std::vector<NodeIndex> m_globalConstantDeclarations;
         std::vector<NodeIndex> m_functionDeclarations;
         std::vector<NodeIndex> m_testDeclarations;
+        NodeIndex m_testsStubDeclaration{};
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
 
