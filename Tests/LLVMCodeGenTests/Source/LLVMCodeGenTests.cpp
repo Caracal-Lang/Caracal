@@ -221,14 +221,16 @@ static void FunctionWithoutSourceLineGetsNoDebugInformation()
 
 static void CoreEntryPointAndUserMainGetDebugInformation()
 {
-    const auto coreFilePath = TestDataDirectory() / "../../Core/Entrypoint.cara";
-    auto coreSource = Caracal::File::readText(coreFilePath);
-    if (!coreSource.has_value())
-        CaraTest::fail();
-
     Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
     compilationContext.addSource("__caracal_run_tests : bool : false;\n", "ProjectConstants.cara", Caracal::UnitOrigin::Project);
-    compilationContext.addSource(std::move(coreSource.value()), "Core/Entrypoint.cara", Caracal::UnitOrigin::Core);
+    for (const auto* coreFileName : { "Entrypoint.cara", "Print.cara", "TestRun.cara" })
+    {
+        auto coreSource = Caracal::File::readText(TestDataDirectory() / "../../Core" / coreFileName);
+        if (!coreSource.has_value())
+            CaraTest::fail();
+
+        compilationContext.addSource(std::move(coreSource.value()), std::filesystem::path("Core") / coreFileName, Caracal::UnitOrigin::Core);
+    }
     Caracal::Module module{};
     CompileFixtureToModule(TestDataDirectory() / "InputDebugInfoCore" / "entryPoint.cara", compilationContext, module, "InputDebugInfoCore/entryPoint.cara");
 

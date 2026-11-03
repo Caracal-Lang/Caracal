@@ -1,0 +1,77 @@
+type TestRun
+{
+    currentTest := ""
+    currentTestFailed := false
+    testCount := 0
+    failedTestCount := 0
+
+    def beginTest(name: string)
+    {
+        .currentTest = name;
+        .currentTestFailed = false;
+        .testCount = .testCount %+ 1;
+    }
+
+    def endTest()
+    {
+        if .currentTestFailed
+        {
+            .failedTestCount = .failedTestCount %+ 1;
+            return;
+        }
+
+        print("PASS ");
+        printLine(.currentTest);
+    }
+
+    def isTrue(condition: bool, message: string = "")
+    {
+        if !condition
+        {
+            ._fail("Test.isTrue", message);
+            printLine("      Expected: true");
+            printLine("      But got:  false");
+        }
+    }
+
+    def isFalse(condition: bool, message: string = "")
+    {
+        if condition
+        {
+            ._fail("Test.isFalse", message);
+            printLine("      Expected: false");
+            printLine("      But got:  true");
+        }
+    }
+
+    def printSummary()
+    {
+        passedTestCount := .testCount %- .failedTestCount;
+        C.printf("PASS %d/%d FAIL %d/%d\n", passedTestCount, .testCount, .failedTestCount, .testCount);
+    }
+
+    def exitCode() i32
+    {
+        return 1 if .failedTestCount != 0;
+        return 0;
+    }
+
+    def _fail(checkName: string, message: string)
+    {
+        if !.currentTestFailed
+        {
+            print("FAIL ");
+            printLine(.currentTest);
+        }
+        .currentTestFailed = true;
+        
+        print("   ");
+        print(checkName);
+        if !message.isEmpty()
+        {
+            print(": ");
+            print(message);
+        }
+        printLine("");
+    }
+}

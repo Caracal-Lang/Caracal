@@ -16,7 +16,8 @@ namespace Caracal
     inline constexpr const char* CompilerNamePrefix = "__caracal_";
     inline constexpr const char* TestFunctionNamePrefix = "__caracal_test_";
     inline constexpr const char* TestsStubName = "__caracal_tests_stub";
-    inline constexpr const char* PrintLineFunctionName = "printLine";
+    inline constexpr const char* TestBeginMethodName = "beginTest";
+    inline constexpr const char* TestEndMethodName = "endTest";
 
     // the language-wide member name for array lengths
     inline constexpr const char* ArrayLengthMemberName = "length";

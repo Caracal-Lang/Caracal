@@ -4,12 +4,14 @@ def caracalMain() i32
 {
     if __caracal_run_tests
     {
-        __caracal_tests_stub();
-        return 0;
+        run := TestRun.new();
+        __caracal_tests_stub(ref run);
+        run.printSummary();
+        return run.exitCode();
     }
     return main();
 }
 
-def __caracal_tests_stub()
+def __caracal_tests_stub(Test: ref TestRun)
 {
 }

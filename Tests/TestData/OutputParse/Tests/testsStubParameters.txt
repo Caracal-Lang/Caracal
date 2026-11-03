@@ -1,0 +1,57 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: __caracal_tests_stub
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: count
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: total
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(0): {
+    }
+}
+TestDefinitionStatement: {
+    Type: undefined
+    Name: "adds count to total"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: total
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: count
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

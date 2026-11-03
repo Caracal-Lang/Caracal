@@ -135,7 +135,7 @@ static void TestBuildFileTests(
     Caracal::DiagnosticsBag diagnostics;
     Caracal::CompilationContext compilationContext;
     compilationContext.addSource("__caracal_run_tests : bool : true;\n", "ProjectConstants.cara", Caracal::UnitOrigin::Project);
-    for (const auto* coreFileName : { "Entrypoint.cara", "Print.cara" })
+    for (const auto* coreFileName : { "Entrypoint.cara", "Print.cara", "TestRun.cara" })
     {
         auto coreSource = Caracal::File::readText(repositoryDirectory / "Core" / coreFileName);
         if (!coreSource.has_value())

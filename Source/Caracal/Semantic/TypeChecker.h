@@ -143,6 +143,7 @@ namespace Caracal
         void typeCheckFunctionDefinitions();
         void typeCheckTestDefinitions();
         void typeCheckTestsStub();
+        void copyTestsStubParameters();
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
         void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
@@ -152,6 +153,7 @@ namespace Caracal
         void typeCheckExpressionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void bindParameters(const CompilationUnit& unit, u32 parametersNode, const FunctionDefinition& functionDefinition, bool emitBody);
         void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
         void emitTestsStubBody();
         void typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index);
