@@ -12,6 +12,6 @@ def caracalMain() i32
     return main();
 }
 
-def __caracal_tests_stub(Test: ref TestRun)
+def __caracal_tests_stub(Assert: ref TestRun)
 {
 }

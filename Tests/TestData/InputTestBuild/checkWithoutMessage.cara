@@ -1,0 +1,33 @@
+def checkSum(Assert: ref TestRun, left: i32, right: i32)
+{
+    Assert.isTrue(left %+ right == 4);
+}
+
+test "no message"
+{
+    x := 2 %+ 2;
+    Assert.isTrue(x == 4);
+    Assert.isFalse(x == 5);
+}
+
+test "written message"
+{
+    x := 2 %+ 2;
+    Assert.isTrue(x == 4, "x is four");
+    Assert.isFalse(x == 5, "");
+}
+
+test "folded condition"
+{
+    Assert.isTrue(2 == 3);
+}
+
+test "a helper checks"
+{
+    checkSum(Assert, 2, 2);
+}
+
+def main() i32
+{
+    return 0;
+}

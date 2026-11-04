@@ -15,7 +15,7 @@ FunctionDefinitionStatement: {
             Left: {
                 NameExpression: {
                     Type: undefined
-                    Name: Test
+                    Name: Assert
                 }
             }
             Right: {
@@ -26,21 +26,21 @@ FunctionDefinitionStatement: {
             Type: undefined
             NameExpression: {
                 Type: undefined
-                Name: Test
+                Name: Assert
             }
         }
     }
 }
 TestDefinitionStatement: {
     Type: undefined
-    Name: "a local named Test"
+    Name: "a local named Assert"
     BlockNode(2): {
         VariableDeclaration: {
             Type: undefined
             Left: {
                 NameExpression: {
                     Type: undefined
-                    Name: Test
+                    Name: Assert
                 }
             }
             Right: {
@@ -54,7 +54,7 @@ TestDefinitionStatement: {
             Right: {
                 NameExpression: {
                     Type: undefined
-                    Name: Test
+                    Name: Assert
                 }
             }
         }

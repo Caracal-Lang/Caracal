@@ -15,7 +15,7 @@ FunctionDefinitionStatement: {
             Left: {
                 NameExpression: {
                     Type: i32
-                    Name: Test
+                    Name: Assert
                 }
             }
             Right: {
@@ -26,21 +26,21 @@ FunctionDefinitionStatement: {
             Type: i32
             NameExpression: {
                 Type: i32
-                Name: Test
+                Name: Assert
             }
         }
     }
 }
 TestDefinitionStatement: {
     Type: () -> void
-    Name: "a local named Test"
+    Name: "a local named Assert"
     BlockNode(2): {
         VariableDeclaration: {
             Type: i32
             Left: {
                 NameExpression: {
                     Type: i32
-                    Name: Test
+                    Name: Assert
                 }
             }
             Right: {
@@ -54,7 +54,7 @@ TestDefinitionStatement: {
             Right: {
                 NameExpression: {
                     Type: i32
-                    Name: Test
+                    Name: Assert
                 }
             }
         }

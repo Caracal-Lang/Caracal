@@ -1,4 +1,4 @@
-test "never uses Test"
+test "never uses Assert"
 {
 }
 

@@ -1,11 +1,11 @@
 def readsLocal() i32
 {
-    Test := 7;
-    return Test;
+    Assert := 7;
+    return Assert;
 }
 
-test "a local named Test"
+test "a local named Assert"
 {
-    Test := 1;
-    _ = Test;
+    Assert := 1;
+    _ = Assert;
 }

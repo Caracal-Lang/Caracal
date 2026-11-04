@@ -1,9 +1,9 @@
-def __caracal_tests_stub(Test: i32)
+def __caracal_tests_stub(Assert: i32)
 {
 }
 
-test "a local named Test"
+test "a local named Assert"
 {
-    Test := 1;
-    _ = Test;
+    Assert := 1;
+    _ = Assert;
 }

@@ -24,21 +24,21 @@ type TestRun
         printLine(.currentTest);
     }
 
-    def isTrue(condition: bool, message: string = "")
+    def isTrue(condition: bool, message: string = #sourceText(condition))
     {
         if !condition
         {
-            ._fail("Test.isTrue", message);
+            ._fail("Assert.isTrue", message);
             printLine("      Expected: true");
             printLine("      But got:  false");
         }
     }
 
-    def isFalse(condition: bool, message: string = "")
+    def isFalse(condition: bool, message: string = #sourceText(condition))
     {
         if condition
         {
-            ._fail("Test.isFalse", message);
+            ._fail("Assert.isFalse", message);
             printLine("      Expected: false");
             printLine("      But got:  true");
         }

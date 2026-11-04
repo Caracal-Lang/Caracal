@@ -1,12 +1,12 @@
  Error T0035 Duplicate variable declaration
      ,-[Diagnostics/Input/localNamedLikeStubParameter.cara:7:5]
    4 | 
-   5 | test "a local named Test"
+   5 | test "a local named Assert"
    6 | {
-   7 |     Test := 1;
-     .     ----
-     .       `-- Variable 'Test' is already declared
-   8 |     _ = Test;
+   7 |     Assert := 1;
+     .     ------
+     .        `-- Variable 'Assert' is already declared
+   8 |     _ = Assert;
    9 | }
   10 | 
      `----

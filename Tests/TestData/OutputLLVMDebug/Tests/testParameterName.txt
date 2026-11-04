@@ -16,7 +16,7 @@ entry:
   ret i32 7
 }
 
-define void @__caracal_test_a_local_named_Test() {
+define void @__caracal_test_a_local_named_Assert() {
 entry:
   ret void
 }
