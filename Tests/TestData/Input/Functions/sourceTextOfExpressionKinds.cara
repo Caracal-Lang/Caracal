@@ -1,0 +1,74 @@
+type Inner
+{
+    def size() i32
+    {
+        return 1;
+    }
+}
+
+type Box(inner: Inner)
+{
+    inner := inner
+    count := 2
+
+    def twice(value: i32) i32
+    {
+        return value %* 2;
+    }
+}
+
+def add(left: i32, right: i32) i32
+{
+    return left %+ right;
+}
+
+def describe(value: i32, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def describeBool(value: bool, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def describeString(value: string, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def describeBox(value: Box, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def describeReference(value: ref i32, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def callers(local: i32, flag: bool)
+{
+    box := Box.new(Inner.new());
+    target := 3;
+
+    _ = describe(local);
+    _ = describe(7);
+    _ = describe(-local);
+    _ = describe(add(1, 2));
+    _ = describe(add(add(1, 2), 3));
+    _ = describe(box.count);
+    _ = describe(box.inner.size());
+    _ = describe(box.twice(box.count) %+ 1);
+    _ = describeBool(!flag);
+    _ = describeBool(flag and local == 1);
+    _ = describeString("text");
+    _ = describeBox(Box.new(Inner.new()));
+    _ = describeBox(box);
+    _ = describeReference(ref target);
+}

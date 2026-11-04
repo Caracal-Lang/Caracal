@@ -1,0 +1,24 @@
+def describe(first: i32, second: i32, third: i32, text: string = #sourceText(second)) string
+{
+    _ = first;
+    _ = second;
+    _ = third;
+    return text;
+}
+
+type Box
+{
+    def measure(first: i32, second: i32, text: string = #sourceText(second)) string
+    {
+        _ = first;
+        _ = second;
+        return text;
+    }
+}
+
+def callers()
+{
+    _ = describe(1, 2 %+ 3, 4);
+    box := Box.new();
+    _ = box.measure(5, 6 %* 7);
+}

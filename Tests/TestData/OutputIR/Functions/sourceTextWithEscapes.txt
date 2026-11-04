@@ -1,0 +1,112 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define describe(%0: bool "condition", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : bool "condition"
+    %1 = parameter 1 : string "text"
+    %slot0 = allocate_local : string "text"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = load_value %2 : string
+    return %3
+
+define caller(%0: string "path") string
+block entry(0):
+    %0 = parameter 0 : string "path"
+    %slot0 = allocate_local : string "path"
+    %slot1 = allocate_local : string "temp"
+    %slot2 = allocate_local : string "temp"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = load_value %1 : string
+    %3 = address_of %slot1 : ref string
+    %4 = address_of_field %3.0 : ref [u8; _] "_bytes"
+    %5 = const "a\\b\n\"c\"\0" : cstring
+    %6 = address_of_field %4.0 : ref u8 "data"
+    store_value %5, %6 : ref u8
+    %7 = const 7 : i32
+    %8 = address_of_field %4.1 : ref i32 "length"
+    store_value %7, %8 : i32
+    %9 = const 7 : i32
+    %10 = address_of_field %4.2 : ref i32 "capacity"
+    store_value %9, %10 : i32
+    %11 = load_value %3 : string
+    %12 = call string.equals(%2, %11) : bool
+    %13 = address_of %slot2 : ref string
+    %14 = address_of_field %13.0 : ref [u8; _] "_bytes"
+    %15 = const "path == \"a\\\\b\\n\\\"c\\\"\"\0" : cstring
+    %16 = address_of_field %14.0 : ref u8 "data"
+    store_value %15, %16 : ref u8
+    %17 = const 21 : i32
+    %18 = address_of_field %14.1 : ref i32 "length"
+    store_value %17, %18 : i32
+    %19 = const 21 : i32
+    %20 = address_of_field %14.2 : ref i32 "capacity"
+    store_value %19, %20 : i32
+    %21 = load_value %13 : string
+    %22 = call describe(%12, %21) : string
+    return %22
+
+define string.equals(%0: string "lhs", %1: string "rhs") bool
+block entry(0):
+    %0 = parameter 0 : string "lhs"
+    %slot0 = allocate_local : string "lhs"
+    %slot1 = allocate_local : string "rhs"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = parameter 1 : string "rhs"
+    %3 = address_of %slot1 : ref string
+    store_value %2, %3 : string
+    %4 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %5 = address_of_field %4.1 : ref i32 "length"
+    %6 = load_value %5 : i32
+    %7 = address_of_field %3.0 : ref [u8; _] "_bytes"
+    %8 = address_of_field %7.1 : ref i32 "length"
+    %9 = load_value %8 : i32
+    %10 = not_equal %6, %9 : bool
+    branch if %10, if.true(1), if.continuation(2)
+block if.true(1):
+    %11 = const false : bool
+    return %11
+block if.continuation(2):
+    %12 = const 0 : i32
+    jump while.condition(3)
+block while.condition(3):
+    %13 = phi [if.continuation(2): %12], [if.continuation(7): %31] : i32
+    %14 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %15 = address_of_field %14.1 : ref i32 "length"
+    %16 = load_value %15 : i32
+    %17 = less_than %13, %16 : bool
+    branch if %17, while.body(4), while.continuation(5)
+block while.body(4):
+    %18 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %19 = address_of_field %18.0 : ref u8 "data"
+    %20 = load_value %19 : ref u8
+    %21 = element_address %20[%13] : u8
+    %22 = load_value %21 : u8
+    %23 = address_of_field %3.0 : ref [u8; _] "_bytes"
+    %24 = address_of_field %23.0 : ref u8 "data"
+    %25 = load_value %24 : ref u8
+    %26 = element_address %25[%13] : u8
+    %27 = load_value %26 : u8
+    %28 = not_equal %22, %27 : bool
+    branch if %28, if.true(6), if.continuation(7)
+block if.true(6):
+    %29 = const false : bool
+    return %29
+block if.continuation(7):
+    %30 = const 1 : i32
+    %31 = add %13, %30 : i32
+    jump while.condition(3)
+block while.continuation(5):
+    %32 = const true : bool
+    return %32

@@ -1,0 +1,96 @@
+FunctionDefinitionStatement: {
+    Type: (bool, string) -> string
+    Name: describe
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: condition
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: string
+            Lexeme: string
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: bool
+                    Name: condition
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: string
+            NameExpression: {
+                Type: string
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (string) -> string
+    Name: caller
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: path
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: string
+            Lexeme: string
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: string
+            FunctionCallExpression: {
+                Type: string
+                Function type: (bool, string) -> string
+                NameExpression: {
+                    Type: (bool, string) -> string
+                    Name: describe
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: bool
+                        Left: {
+                            NameExpression: {
+                                Type: string
+                                Name: path
+                            }
+                        }
+                        Operation: Equal
+                        Right: {
+                            StringLiteral: "a\\b\n\"c\""
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

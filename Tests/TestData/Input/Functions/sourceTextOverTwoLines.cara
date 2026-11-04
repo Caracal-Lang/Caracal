@@ -1,0 +1,11 @@
+def describe(value: i32, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def caller() string
+{
+    return describe(1
+        %+ 2);
+}
