@@ -1,0 +1,10 @@
+def show(first: string = #sourceText(second), second: string = #sourceText(first))
+{
+    _ = first;
+    _ = second;
+}
+
+def caller()
+{
+    show();
+}

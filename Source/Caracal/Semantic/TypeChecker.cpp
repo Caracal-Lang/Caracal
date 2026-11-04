@@ -1206,31 +1206,48 @@ namespace Caracal
         return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
     }
 
-    ValueRef TypeChecker::emitSourceTextDefault(const CompilationUnit& unit, NodeIndex defaultNode, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset)
+    ValueRef TypeChecker::emitSourceTextDefault(const CompilationUnit& unit, size_t parameterIndex, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset)
     {
-        const auto namedParameter = nameOf(unitFor(defaultNode), defaultNode.index);
-        for (size_t i = parameterOffset; i < parameters.size(); ++i)
+        auto sourceNode = parameters[parameterIndex].defaultValueNode();
+        // only earlier parameters are allowed
+        auto searchEnd = parameterIndex;
+        while (unitFor(sourceNode).nodeBuffer.kind(sourceNode.index) == NodeKind::SourceTextDefault)
         {
-            if (parameters[i].name() != namedParameter)
+            const auto namedParameter = nameOf(unitFor(sourceNode), sourceNode.index);
+            auto namedIndex = parameterOffset;
+            while (namedIndex < searchEnd && parameters[namedIndex].name() != namedParameter)
             {
-                continue;
+                ++namedIndex;
             }
-
-            const auto argumentNode = m_orderedSlotStack[orderedStart + i - parameterOffset];
-            if (argumentNode == DefaultBoundArgumentSlot || argumentNode == UnboundArgumentSlot)
+            if (namedIndex >= searchEnd)
             {
                 return ValueRef{};
             }
 
-            const auto location = ExpressionSourceLocation(m_compilationContext, unit, argumentNode);
-            const auto text = std::string_view(unit.source->text).substr(location.startIndex, location.endIndex - location.startIndex);
-            const auto stringType = m_module.wellKnown().string;
-            const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
-            m_emitter.emitStringLiteralIntoAddress(temp, text);
-            return m_emitter.emitLoad(temp, stringType);
+            const auto argumentNode = m_orderedSlotStack[orderedStart + namedIndex - parameterOffset];
+            if (argumentNode == UnboundArgumentSlot)
+            {
+                return ValueRef{};
+            }
+
+            if (argumentNode == DefaultBoundArgumentSlot)
+            {
+                sourceNode = parameters[namedIndex].defaultValueNode();
+            }
+            else
+            {
+                sourceNode = NodeIndex{ unit.fileId, argumentNode };
+            }
+            searchEnd = namedIndex;
         }
 
-        return ValueRef{};
+        const auto& sourceUnit = unitFor(sourceNode);
+        const auto location = ExpressionSourceLocation(m_compilationContext, sourceUnit, sourceNode.index);
+        const auto text = std::string_view(sourceUnit.source->text).substr(location.startIndex, location.endIndex - location.startIndex);
+        const auto stringType = m_module.wellKnown().string;
+        const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
+        m_emitter.emitStringLiteralIntoAddress(temp, text);
+        return m_emitter.emitLoad(temp, stringType);
     }
 
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
@@ -1643,6 +1660,20 @@ namespace Caracal
         return recordType(unit, index, arrayType);
     }
 
+    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters)
+    {
+        const auto namedParameter = nameOf(unit, defaultIndex);
+        for (const auto& parameter : earlierParameters)
+        {
+            if (parameter.name() == namedParameter)
+            {
+                return;
+            }
+        }
+
+        m_diagnostics.addSourceTextMustReferToEarlierParameterError(unit.source, nameLocation(unit, defaultIndex), std::string(namedParameter));
+    }
+
     std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index)
     {
         std::vector<Parameter> parameters{};
@@ -1700,6 +1731,10 @@ namespace Caracal
                             formatTypeName(m_module, parameterType),
                             formatTypeName(m_module, defaultType));
                     }
+                }
+                if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
+                {
+                    typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, parameters);
                 }
                 seenDefault = true;
             }
@@ -5824,7 +5859,7 @@ namespace Caracal
                         const auto defaultNode = parameter.defaultValueNode();
                         if (unitFor(defaultNode).nodeBuffer.kind(defaultNode.index) == NodeKind::SourceTextDefault)
                         {
-                            emittedDefault = emitSourceTextDefault(unit, defaultNode, checkedParameters, orderedStart, parameterOffset);
+                            emittedDefault = emitSourceTextDefault(unit, i + parameterOffset, checkedParameters, orderedStart, parameterOffset);
                         }
                         else
                         {

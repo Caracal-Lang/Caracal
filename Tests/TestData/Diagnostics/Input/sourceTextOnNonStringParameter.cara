@@ -1,0 +1,5 @@
+def show(value: i32, count: i32 = #sourceText(value))
+{
+    _ = value;
+    _ = count;
+}

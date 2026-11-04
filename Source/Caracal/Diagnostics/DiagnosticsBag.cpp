@@ -1102,6 +1102,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addSourceTextMustReferToEarlierParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter,
+            source,
+            location,
+            "Refer to a parameter declared earlier in the list.");
+        diagnostic.addPrimaryLabel(location, "'" + parameterName + "' is not an earlier parameter");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addUnknownNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name)
     {
         auto diagnostic = Diagnostic(

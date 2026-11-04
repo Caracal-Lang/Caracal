@@ -38,6 +38,7 @@ namespace Caracal
         T0004_WrongNumberOfAnnotationArguments,
         T0005_AnnotationArgumentTypeMismatch,
         T0006_ConflictingEnumAnnotations,
+        T0101_SourceTextMustReferToEarlierParameter,
 
         // Unknown symbol and member access diagnostics
         T0007_UnknownName,

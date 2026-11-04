@@ -1,0 +1,21 @@
+def describe(value: i32, first: string = #sourceText(value), second: string = #sourceText(first), third: string = #sourceText(second)) string
+{
+    _ = value;
+    _ = first;
+    _ = second;
+    return third;
+}
+
+def fromDefault(count: i32 = 5 %+ 6, first: string = #sourceText(count), second: string = #sourceText(first)) string
+{
+    _ = count;
+    _ = first;
+    return second;
+}
+
+def callers()
+{
+    _ = describe(1 %+ 2);
+    _ = describe(1 %+ 2, "written");
+    _ = fromDefault();
+}

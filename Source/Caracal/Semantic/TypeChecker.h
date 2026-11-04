@@ -123,6 +123,7 @@ namespace Caracal
         [[nodiscard]] Type typeCheckTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index);
+        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters);
         [[nodiscard]] std::vector<Type> typeCheckReturnTypesNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] i32 convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex);
         void pushScope(ScopeKind kind);
@@ -222,7 +223,7 @@ namespace Caracal
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
         [[nodiscard]] ValueRef emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType);
-        [[nodiscard]] ValueRef emitSourceTextDefault(const CompilationUnit& unit, NodeIndex defaultNode, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset);
+        [[nodiscard]] ValueRef emitSourceTextDefault(const CompilationUnit& unit, size_t parameterIndex, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset);
         [[nodiscard]] ValueRef materializeValue(const CheckedValue& checked);
         [[nodiscard]] ValueRef dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType);
 

@@ -1,0 +1,156 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define describe(%0: i32 "value", %1: string "first", %2: string "second", %3: string "third") string
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = parameter 1 : string "first"
+    %slot0 = allocate_local : string "first"
+    %slot1 = allocate_local : string "second"
+    %slot2 = allocate_local : string "third"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = parameter 2 : string "second"
+    %4 = address_of %slot1 : ref string
+    store_value %3, %4 : string
+    %5 = parameter 3 : string "third"
+    %6 = address_of %slot2 : ref string
+    store_value %5, %6 : string
+    %9 = load_value %6 : string
+    return %9
+
+define fromDefault(%0: i32 "count", %1: string "first", %2: string "second") string
+block entry(0):
+    %0 = parameter 0 : i32 "count"
+    %1 = parameter 1 : string "first"
+    %slot0 = allocate_local : string "first"
+    %slot1 = allocate_local : string "second"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = parameter 2 : string "second"
+    %4 = address_of %slot1 : ref string
+    store_value %3, %4 : string
+    %6 = load_value %4 : string
+    return %6
+
+define callers() void
+block entry(0):
+    %slot0 = allocate_local : string "temp"
+    %slot1 = allocate_local : string "temp"
+    %slot2 = allocate_local : string "temp"
+    %slot3 = allocate_local : string "temp"
+    %slot4 = allocate_local : string "temp"
+    %slot5 = allocate_local : string "temp"
+    %slot6 = allocate_local : string "temp"
+    %slot7 = allocate_local : string "temp"
+    %0 = const 3 : i32
+    %1 = address_of %slot0 : ref string
+    %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %3 = const "1 %+ 2\0" : cstring
+    %4 = address_of_field %2.0 : ref u8 "data"
+    store_value %3, %4 : ref u8
+    %5 = const 6 : i32
+    %6 = address_of_field %2.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 6 : i32
+    %8 = address_of_field %2.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = load_value %1 : string
+    %10 = address_of %slot1 : ref string
+    %11 = address_of_field %10.0 : ref [u8; _] "_bytes"
+    %12 = const "1 %+ 2\0" : cstring
+    %13 = address_of_field %11.0 : ref u8 "data"
+    store_value %12, %13 : ref u8
+    %14 = const 6 : i32
+    %15 = address_of_field %11.1 : ref i32 "length"
+    store_value %14, %15 : i32
+    %16 = const 6 : i32
+    %17 = address_of_field %11.2 : ref i32 "capacity"
+    store_value %16, %17 : i32
+    %18 = load_value %10 : string
+    %19 = address_of %slot2 : ref string
+    %20 = address_of_field %19.0 : ref [u8; _] "_bytes"
+    %21 = const "1 %+ 2\0" : cstring
+    %22 = address_of_field %20.0 : ref u8 "data"
+    store_value %21, %22 : ref u8
+    %23 = const 6 : i32
+    %24 = address_of_field %20.1 : ref i32 "length"
+    store_value %23, %24 : i32
+    %25 = const 6 : i32
+    %26 = address_of_field %20.2 : ref i32 "capacity"
+    store_value %25, %26 : i32
+    %27 = load_value %19 : string
+    %28 = call describe(%0, %9, %18, %27) : string
+    %29 = address_of %slot3 : ref string
+    %30 = address_of_field %29.0 : ref [u8; _] "_bytes"
+    %31 = const "written\0" : cstring
+    %32 = address_of_field %30.0 : ref u8 "data"
+    store_value %31, %32 : ref u8
+    %33 = const 7 : i32
+    %34 = address_of_field %30.1 : ref i32 "length"
+    store_value %33, %34 : i32
+    %35 = const 7 : i32
+    %36 = address_of_field %30.2 : ref i32 "capacity"
+    store_value %35, %36 : i32
+    %37 = load_value %29 : string
+    %38 = const 3 : i32
+    %39 = address_of %slot4 : ref string
+    %40 = address_of_field %39.0 : ref [u8; _] "_bytes"
+    %41 = const "\"written\"\0" : cstring
+    %42 = address_of_field %40.0 : ref u8 "data"
+    store_value %41, %42 : ref u8
+    %43 = const 9 : i32
+    %44 = address_of_field %40.1 : ref i32 "length"
+    store_value %43, %44 : i32
+    %45 = const 9 : i32
+    %46 = address_of_field %40.2 : ref i32 "capacity"
+    store_value %45, %46 : i32
+    %47 = load_value %39 : string
+    %48 = address_of %slot5 : ref string
+    %49 = address_of_field %48.0 : ref [u8; _] "_bytes"
+    %50 = const "\"written\"\0" : cstring
+    %51 = address_of_field %49.0 : ref u8 "data"
+    store_value %50, %51 : ref u8
+    %52 = const 9 : i32
+    %53 = address_of_field %49.1 : ref i32 "length"
+    store_value %52, %53 : i32
+    %54 = const 9 : i32
+    %55 = address_of_field %49.2 : ref i32 "capacity"
+    store_value %54, %55 : i32
+    %56 = load_value %48 : string
+    %57 = call describe(%38, %37, %47, %56) : string
+    %58 = const 11 : i32
+    %59 = address_of %slot6 : ref string
+    %60 = address_of_field %59.0 : ref [u8; _] "_bytes"
+    %61 = const "5 %+ 6\0" : cstring
+    %62 = address_of_field %60.0 : ref u8 "data"
+    store_value %61, %62 : ref u8
+    %63 = const 6 : i32
+    %64 = address_of_field %60.1 : ref i32 "length"
+    store_value %63, %64 : i32
+    %65 = const 6 : i32
+    %66 = address_of_field %60.2 : ref i32 "capacity"
+    store_value %65, %66 : i32
+    %67 = load_value %59 : string
+    %68 = address_of %slot7 : ref string
+    %69 = address_of_field %68.0 : ref [u8; _] "_bytes"
+    %70 = const "5 %+ 6\0" : cstring
+    %71 = address_of_field %69.0 : ref u8 "data"
+    store_value %70, %71 : ref u8
+    %72 = const 6 : i32
+    %73 = address_of_field %69.1 : ref i32 "length"
+    store_value %72, %73 : i32
+    %74 = const 6 : i32
+    %75 = address_of_field %69.2 : ref i32 "capacity"
+    store_value %74, %75 : i32
+    %76 = load_value %68 : string
+    %77 = call fromDefault(%58, %67, %76) : string
+    return

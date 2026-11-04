@@ -53,6 +53,7 @@ namespace Caracal
         void addDuplicateAnnotationArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& annotationName, const std::string& argumentName);
         void addExternMethodRequiresSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName);
         void addConflictingEnumAnnotationsError(const SourceTextSharedPtr& source, const SourceLocation& location, const SourceLocation& otherLocation, const std::string& annotationName, const std::string& otherAnnotationName);
+        void addSourceTextMustReferToEarlierParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName);
 
         // Unknown symbol and member access diagnostics
         void addUnknownNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);

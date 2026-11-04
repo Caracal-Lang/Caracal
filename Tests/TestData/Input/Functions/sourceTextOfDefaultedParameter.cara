@@ -1,0 +1,23 @@
+type Box
+{
+    def measure(count: i32 = 2 %* 2, text: string = #sourceText(count)) string
+    {
+        _ = count;
+        return text;
+    }
+}
+
+def describe(count: i32 = 1 %+ 1, text: string = #sourceText(count)) string
+{
+    _ = count;
+    return text;
+}
+
+def callers()
+{
+    _ = describe();
+    _ = describe(3 %+ 4);
+    _ = describe(3 %+ 4, "written");
+    box := Box.new();
+    _ = box.measure();
+}

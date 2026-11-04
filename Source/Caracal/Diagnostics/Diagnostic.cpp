@@ -65,6 +65,8 @@ namespace Caracal
                 return "T0005";
             case DiagnosticKind::T0006_ConflictingEnumAnnotations:
                 return "T0006";
+            case DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter:
+                return "T0101";
 
             // Unknown symbol and member access diagnostics
             case DiagnosticKind::T0007_UnknownName:
@@ -334,6 +336,8 @@ namespace Caracal
                 return "Annotation argument type mismatch";
             case DiagnosticKind::T0006_ConflictingEnumAnnotations:
                 return "Conflicting enum annotations";
+            case DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter:
+                return "#sourceText must refer to an earlier parameter";
 
             // Unknown symbol and member access diagnostics
             case DiagnosticKind::T0007_UnknownName:
