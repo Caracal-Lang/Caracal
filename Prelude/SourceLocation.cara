@@ -1,0 +1,5 @@
+type SourceLocation(filePath: string, line: i32)
+{
+    filePath := filePath
+    line := line
+}

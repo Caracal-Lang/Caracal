@@ -581,6 +581,7 @@ namespace Caracal
         m_wellKnownTypes.cstring = tryGetTypeByName("cstring");
         m_wellKnownTypes.rawptr = tryGetTypeByName("rawptr");
         m_wellKnownTypes.string = tryGetTypeByName("string");
+        m_wellKnownTypes.sourceLocation = tryGetTypeByName("SourceLocation");
     }
 
     TypeDefinition& SemanticContext::bindBuiltinTypeDefinition(Type type) noexcept

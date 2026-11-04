@@ -1,6 +1,10 @@
 type string
     const _bytes: [u8; _]
 
+type SourceLocation
+    filePath: string
+    line: i32
+
 type C
 
 type TestRun
@@ -109,6 +113,7 @@ block entry(0):
     %1 = parameter 1 : i32 "left"
     %2 = parameter 2 : i32 "right"
     %slot0 = allocate_local : string "temp"
+    %slot1 = allocate_local : SourceLocation "temp"
     %3 = add %1, %2 : i32
     %4 = const 4 : i32
     %5 = equal %3, %4 : bool
@@ -124,14 +129,32 @@ block entry(0):
     %13 = address_of_field %7.2 : ref i32 "capacity"
     store_value %12, %13 : i32
     %14 = load_value %6 : string
-    call TestRun.isTrue(%0, %5, %14)
+    %15 = address_of %slot1 : ref SourceLocation
+    %16 = address_of_field %15.0 : ref string "filePath"
+    %17 = address_of_field %16.0 : ref [u8; _] "_bytes"
+    %18 = const "\0" : cstring
+    %19 = address_of_field %17.0 : ref u8 "data"
+    store_value %18, %19 : ref u8
+    %20 = const 0 : i32
+    %21 = address_of_field %17.1 : ref i32 "length"
+    store_value %20, %21 : i32
+    %22 = const 0 : i32
+    %23 = address_of_field %17.2 : ref i32 "capacity"
+    store_value %22, %23 : i32
+    %24 = address_of_field %15.1 : ref i32 "line"
+    %25 = const 3 : i32
+    store_value %25, %24 : i32
+    %26 = load_value %15 : SourceLocation
+    call TestRun.isTrue(%0, %5, %14, %26)
     return
 
 define __caracal_test_both_checks(%0: ref TestRun "Assert") void
 block entry(0):
     %0 = parameter 0 : ref TestRun "Assert"
     %slot0 = allocate_local : string "temp"
-    %slot1 = allocate_local : string "temp"
+    %slot1 = allocate_local : SourceLocation "temp"
+    %slot2 = allocate_local : string "temp"
+    %slot3 = allocate_local : SourceLocation "temp"
     %1 = const 2 : i32
     %2 = const 2 : i32
     %3 = equal %1, %2 : bool
@@ -147,22 +170,54 @@ block entry(0):
     %11 = address_of_field %5.2 : ref i32 "capacity"
     store_value %10, %11 : i32
     %12 = load_value %4 : string
-    call TestRun.isTrue(%0, %3, %12)
-    %13 = const 3 : i32
-    %14 = equal %1, %13 : bool
-    %15 = address_of %slot1 : ref string
-    %16 = address_of_field %15.0 : ref [u8; _] "_bytes"
-    %17 = const "value is not three\0" : cstring
-    %18 = address_of_field %16.0 : ref u8 "data"
-    store_value %17, %18 : ref u8
-    %19 = const 18 : i32
-    %20 = address_of_field %16.1 : ref i32 "length"
-    store_value %19, %20 : i32
-    %21 = const 18 : i32
-    %22 = address_of_field %16.2 : ref i32 "capacity"
-    store_value %21, %22 : i32
-    %23 = load_value %15 : string
-    call TestRun.isFalse(%0, %14, %23)
+    %13 = address_of %slot1 : ref SourceLocation
+    %14 = address_of_field %13.0 : ref string "filePath"
+    %15 = address_of_field %14.0 : ref [u8; _] "_bytes"
+    %16 = const "\0" : cstring
+    %17 = address_of_field %15.0 : ref u8 "data"
+    store_value %16, %17 : ref u8
+    %18 = const 0 : i32
+    %19 = address_of_field %15.1 : ref i32 "length"
+    store_value %18, %19 : i32
+    %20 = const 0 : i32
+    %21 = address_of_field %15.2 : ref i32 "capacity"
+    store_value %20, %21 : i32
+    %22 = address_of_field %13.1 : ref i32 "line"
+    %23 = const 9 : i32
+    store_value %23, %22 : i32
+    %24 = load_value %13 : SourceLocation
+    call TestRun.isTrue(%0, %3, %12, %24)
+    %25 = const 3 : i32
+    %26 = equal %1, %25 : bool
+    %27 = address_of %slot2 : ref string
+    %28 = address_of_field %27.0 : ref [u8; _] "_bytes"
+    %29 = const "value is not three\0" : cstring
+    %30 = address_of_field %28.0 : ref u8 "data"
+    store_value %29, %30 : ref u8
+    %31 = const 18 : i32
+    %32 = address_of_field %28.1 : ref i32 "length"
+    store_value %31, %32 : i32
+    %33 = const 18 : i32
+    %34 = address_of_field %28.2 : ref i32 "capacity"
+    store_value %33, %34 : i32
+    %35 = load_value %27 : string
+    %36 = address_of %slot3 : ref SourceLocation
+    %37 = address_of_field %36.0 : ref string "filePath"
+    %38 = address_of_field %37.0 : ref [u8; _] "_bytes"
+    %39 = const "\0" : cstring
+    %40 = address_of_field %38.0 : ref u8 "data"
+    store_value %39, %40 : ref u8
+    %41 = const 0 : i32
+    %42 = address_of_field %38.1 : ref i32 "length"
+    store_value %41, %42 : i32
+    %43 = const 0 : i32
+    %44 = address_of_field %38.2 : ref i32 "capacity"
+    store_value %43, %44 : i32
+    %45 = address_of_field %36.1 : ref i32 "line"
+    %46 = const 10 : i32
+    store_value %46, %45 : i32
+    %47 = load_value %36 : SourceLocation
+    call TestRun.isFalse(%0, %26, %35, %47)
     return
 
 define __caracal_test_a_helper_checks(%0: ref TestRun "Assert") void
@@ -233,117 +288,127 @@ block if.continuation(2):
     call printLine(%18)
     return
 
-define TestRun.isTrue(%0: ref TestRun ".this", %1: bool "condition", %2: string "message") void
+define TestRun.isTrue(%0: ref TestRun ".this", %1: bool "condition", %2: string "message", %3: SourceLocation "location") void
 block entry(0):
     %0 = parameter 0 : ref TestRun ".this"
     %1 = parameter 1 : bool "condition"
     %2 = parameter 2 : string "message"
     %slot0 = allocate_local : string "message"
+    %slot1 = allocate_local : SourceLocation "location"
     %3 = address_of %slot0 : ref string
     store_value %2, %3 : string
-    %4 = logical_negate %1 : bool
-    branch if %4, if.true(1), if.continuation(2)
+    %4 = parameter 3 : SourceLocation "location"
+    %5 = address_of %slot1 : ref SourceLocation
+    store_value %4, %5 : SourceLocation
+    %6 = logical_negate %1 : bool
+    branch if %6, if.true(1), if.continuation(2)
 block if.true(1):
-    %slot1 = allocate_local : string "temp"
     %slot2 = allocate_local : string "temp"
     %slot3 = allocate_local : string "temp"
-    %5 = address_of %slot1 : ref string
-    %6 = address_of_field %5.0 : ref [u8; _] "_bytes"
-    %7 = const "Assert.isTrue\0" : cstring
-    %8 = address_of_field %6.0 : ref u8 "data"
-    store_value %7, %8 : ref u8
-    %9 = const 13 : i32
-    %10 = address_of_field %6.1 : ref i32 "length"
-    store_value %9, %10 : i32
+    %slot4 = allocate_local : string "temp"
+    %7 = address_of %slot2 : ref string
+    %8 = address_of_field %7.0 : ref [u8; _] "_bytes"
+    %9 = const "Assert.isTrue\0" : cstring
+    %10 = address_of_field %8.0 : ref u8 "data"
+    store_value %9, %10 : ref u8
     %11 = const 13 : i32
-    %12 = address_of_field %6.2 : ref i32 "capacity"
+    %12 = address_of_field %8.1 : ref i32 "length"
     store_value %11, %12 : i32
-    %13 = load_value %5 : string
-    %14 = load_value %3 : string
-    call TestRun._fail(%0, %13, %14)
-    %15 = address_of %slot2 : ref string
-    %16 = address_of_field %15.0 : ref [u8; _] "_bytes"
-    %17 = const "      Expected: true\0" : cstring
-    %18 = address_of_field %16.0 : ref u8 "data"
-    store_value %17, %18 : ref u8
-    %19 = const 20 : i32
-    %20 = address_of_field %16.1 : ref i32 "length"
-    store_value %19, %20 : i32
-    %21 = const 20 : i32
-    %22 = address_of_field %16.2 : ref i32 "capacity"
-    store_value %21, %22 : i32
-    %23 = load_value %15 : string
-    call printLine(%23)
-    %24 = address_of %slot3 : ref string
-    %25 = address_of_field %24.0 : ref [u8; _] "_bytes"
-    %26 = const "      But got:  false\0" : cstring
-    %27 = address_of_field %25.0 : ref u8 "data"
-    store_value %26, %27 : ref u8
-    %28 = const 21 : i32
-    %29 = address_of_field %25.1 : ref i32 "length"
-    store_value %28, %29 : i32
-    %30 = const 21 : i32
-    %31 = address_of_field %25.2 : ref i32 "capacity"
-    store_value %30, %31 : i32
-    %32 = load_value %24 : string
-    call printLine(%32)
+    %13 = const 13 : i32
+    %14 = address_of_field %8.2 : ref i32 "capacity"
+    store_value %13, %14 : i32
+    %15 = load_value %7 : string
+    %16 = load_value %3 : string
+    %17 = load_value %5 : SourceLocation
+    call TestRun._fail(%0, %15, %16, %17)
+    %18 = address_of %slot3 : ref string
+    %19 = address_of_field %18.0 : ref [u8; _] "_bytes"
+    %20 = const "      Expected: true\0" : cstring
+    %21 = address_of_field %19.0 : ref u8 "data"
+    store_value %20, %21 : ref u8
+    %22 = const 20 : i32
+    %23 = address_of_field %19.1 : ref i32 "length"
+    store_value %22, %23 : i32
+    %24 = const 20 : i32
+    %25 = address_of_field %19.2 : ref i32 "capacity"
+    store_value %24, %25 : i32
+    %26 = load_value %18 : string
+    call printLine(%26)
+    %27 = address_of %slot4 : ref string
+    %28 = address_of_field %27.0 : ref [u8; _] "_bytes"
+    %29 = const "      But got:  false\0" : cstring
+    %30 = address_of_field %28.0 : ref u8 "data"
+    store_value %29, %30 : ref u8
+    %31 = const 21 : i32
+    %32 = address_of_field %28.1 : ref i32 "length"
+    store_value %31, %32 : i32
+    %33 = const 21 : i32
+    %34 = address_of_field %28.2 : ref i32 "capacity"
+    store_value %33, %34 : i32
+    %35 = load_value %27 : string
+    call printLine(%35)
     jump if.continuation(2)
 block if.continuation(2):
     return
 
-define TestRun.isFalse(%0: ref TestRun ".this", %1: bool "condition", %2: string "message") void
+define TestRun.isFalse(%0: ref TestRun ".this", %1: bool "condition", %2: string "message", %3: SourceLocation "location") void
 block entry(0):
     %0 = parameter 0 : ref TestRun ".this"
     %1 = parameter 1 : bool "condition"
     %2 = parameter 2 : string "message"
     %slot0 = allocate_local : string "message"
+    %slot1 = allocate_local : SourceLocation "location"
     %3 = address_of %slot0 : ref string
     store_value %2, %3 : string
+    %4 = parameter 3 : SourceLocation "location"
+    %5 = address_of %slot1 : ref SourceLocation
+    store_value %4, %5 : SourceLocation
     branch if %1, if.true(1), if.continuation(2)
 block if.true(1):
-    %slot1 = allocate_local : string "temp"
     %slot2 = allocate_local : string "temp"
     %slot3 = allocate_local : string "temp"
-    %4 = address_of %slot1 : ref string
-    %5 = address_of_field %4.0 : ref [u8; _] "_bytes"
-    %6 = const "Assert.isFalse\0" : cstring
-    %7 = address_of_field %5.0 : ref u8 "data"
-    store_value %6, %7 : ref u8
-    %8 = const 14 : i32
-    %9 = address_of_field %5.1 : ref i32 "length"
-    store_value %8, %9 : i32
+    %slot4 = allocate_local : string "temp"
+    %6 = address_of %slot2 : ref string
+    %7 = address_of_field %6.0 : ref [u8; _] "_bytes"
+    %8 = const "Assert.isFalse\0" : cstring
+    %9 = address_of_field %7.0 : ref u8 "data"
+    store_value %8, %9 : ref u8
     %10 = const 14 : i32
-    %11 = address_of_field %5.2 : ref i32 "capacity"
+    %11 = address_of_field %7.1 : ref i32 "length"
     store_value %10, %11 : i32
-    %12 = load_value %4 : string
-    %13 = load_value %3 : string
-    call TestRun._fail(%0, %12, %13)
-    %14 = address_of %slot2 : ref string
-    %15 = address_of_field %14.0 : ref [u8; _] "_bytes"
-    %16 = const "      Expected: false\0" : cstring
-    %17 = address_of_field %15.0 : ref u8 "data"
-    store_value %16, %17 : ref u8
-    %18 = const 21 : i32
-    %19 = address_of_field %15.1 : ref i32 "length"
-    store_value %18, %19 : i32
-    %20 = const 21 : i32
-    %21 = address_of_field %15.2 : ref i32 "capacity"
-    store_value %20, %21 : i32
-    %22 = load_value %14 : string
-    call printLine(%22)
-    %23 = address_of %slot3 : ref string
-    %24 = address_of_field %23.0 : ref [u8; _] "_bytes"
-    %25 = const "      But got:  true\0" : cstring
-    %26 = address_of_field %24.0 : ref u8 "data"
-    store_value %25, %26 : ref u8
-    %27 = const 20 : i32
-    %28 = address_of_field %24.1 : ref i32 "length"
-    store_value %27, %28 : i32
-    %29 = const 20 : i32
-    %30 = address_of_field %24.2 : ref i32 "capacity"
-    store_value %29, %30 : i32
-    %31 = load_value %23 : string
-    call printLine(%31)
+    %12 = const 14 : i32
+    %13 = address_of_field %7.2 : ref i32 "capacity"
+    store_value %12, %13 : i32
+    %14 = load_value %6 : string
+    %15 = load_value %3 : string
+    %16 = load_value %5 : SourceLocation
+    call TestRun._fail(%0, %14, %15, %16)
+    %17 = address_of %slot3 : ref string
+    %18 = address_of_field %17.0 : ref [u8; _] "_bytes"
+    %19 = const "      Expected: false\0" : cstring
+    %20 = address_of_field %18.0 : ref u8 "data"
+    store_value %19, %20 : ref u8
+    %21 = const 21 : i32
+    %22 = address_of_field %18.1 : ref i32 "length"
+    store_value %21, %22 : i32
+    %23 = const 21 : i32
+    %24 = address_of_field %18.2 : ref i32 "capacity"
+    store_value %23, %24 : i32
+    %25 = load_value %17 : string
+    call printLine(%25)
+    %26 = address_of %slot4 : ref string
+    %27 = address_of_field %26.0 : ref [u8; _] "_bytes"
+    %28 = const "      But got:  true\0" : cstring
+    %29 = address_of_field %27.0 : ref u8 "data"
+    store_value %28, %29 : ref u8
+    %30 = const 20 : i32
+    %31 = address_of_field %27.1 : ref i32 "length"
+    store_value %30, %31 : i32
+    %32 = const 20 : i32
+    %33 = address_of_field %27.2 : ref i32 "capacity"
+    store_value %32, %33 : i32
+    %34 = load_value %26 : string
+    call printLine(%34)
     jump if.continuation(2)
 block if.continuation(2):
     return
@@ -381,96 +446,121 @@ block if.continuation(2):
     %6 = const 0 : i32
     return %6
 
-define TestRun._fail(%0: ref TestRun ".this", %1: string "checkName", %2: string "message") void
+define TestRun._fail(%0: ref TestRun ".this", %1: string "checkName", %2: string "message", %3: SourceLocation "location") void
 block entry(0):
     %0 = parameter 0 : ref TestRun ".this"
     %1 = parameter 1 : string "checkName"
     %slot0 = allocate_local : string "checkName"
     %slot1 = allocate_local : string "message"
+    %slot2 = allocate_local : SourceLocation "location"
     %2 = address_of %slot0 : ref string
     store_value %1, %2 : string
     %3 = parameter 2 : string "message"
     %4 = address_of %slot1 : ref string
     store_value %3, %4 : string
-    %5 = address_of_field %0.1 : ref bool "currentTestFailed"
-    %6 = load_value %5 : bool
-    %7 = logical_negate %6 : bool
-    branch if %7, if.true(1), if.continuation(2)
+    %5 = parameter 3 : SourceLocation "location"
+    %6 = address_of %slot2 : ref SourceLocation
+    store_value %5, %6 : SourceLocation
+    %7 = address_of_field %0.1 : ref bool "currentTestFailed"
+    %8 = load_value %7 : bool
+    %9 = logical_negate %8 : bool
+    branch if %9, if.true(1), if.continuation(2)
 block if.true(1):
-    %slot2 = allocate_local : string "temp"
-    %8 = address_of %slot2 : ref string
-    %9 = address_of_field %8.0 : ref [u8; _] "_bytes"
-    %10 = const "FAIL \0" : cstring
-    %11 = address_of_field %9.0 : ref u8 "data"
-    store_value %10, %11 : ref u8
-    %12 = const 5 : i32
-    %13 = address_of_field %9.1 : ref i32 "length"
-    store_value %12, %13 : i32
+    %slot3 = allocate_local : string "temp"
+    %10 = address_of %slot3 : ref string
+    %11 = address_of_field %10.0 : ref [u8; _] "_bytes"
+    %12 = const "FAIL \0" : cstring
+    %13 = address_of_field %11.0 : ref u8 "data"
+    store_value %12, %13 : ref u8
     %14 = const 5 : i32
-    %15 = address_of_field %9.2 : ref i32 "capacity"
+    %15 = address_of_field %11.1 : ref i32 "length"
     store_value %14, %15 : i32
-    %16 = load_value %8 : string
-    call print(%16)
-    %17 = address_of_field %0.0 : ref string "currentTest"
-    %18 = load_value %17 : string
-    call printLine(%18)
+    %16 = const 5 : i32
+    %17 = address_of_field %11.2 : ref i32 "capacity"
+    store_value %16, %17 : i32
+    %18 = load_value %10 : string
+    call print(%18)
+    %19 = address_of_field %0.0 : ref string "currentTest"
+    %20 = load_value %19 : string
+    call printLine(%20)
     jump if.continuation(2)
 block if.continuation(2):
-    %slot3 = allocate_local : string "temp"
-    %19 = const true : bool
-    %20 = address_of_field %0.1 : ref bool "currentTestFailed"
-    store_value %19, %20 : bool
-    %21 = address_of %slot3 : ref string
-    %22 = address_of_field %21.0 : ref [u8; _] "_bytes"
-    %23 = const "   \0" : cstring
-    %24 = address_of_field %22.0 : ref u8 "data"
-    store_value %23, %24 : ref u8
-    %25 = const 3 : i32
-    %26 = address_of_field %22.1 : ref i32 "length"
-    store_value %25, %26 : i32
-    %27 = const 3 : i32
-    %28 = address_of_field %22.2 : ref i32 "capacity"
-    store_value %27, %28 : i32
-    %29 = load_value %21 : string
-    call print(%29)
-    %30 = load_value %2 : string
-    call print(%30)
-    %31 = call string.isEmpty(%4) : bool
-    %32 = logical_negate %31 : bool
-    branch if %32, if.true(3), if.continuation(4)
-block if.true(3):
     %slot4 = allocate_local : string "temp"
-    %33 = address_of %slot4 : ref string
-    %34 = address_of_field %33.0 : ref [u8; _] "_bytes"
-    %35 = const ": \0" : cstring
-    %36 = address_of_field %34.0 : ref u8 "data"
-    store_value %35, %36 : ref u8
-    %37 = const 2 : i32
-    %38 = address_of_field %34.1 : ref i32 "length"
-    store_value %37, %38 : i32
+    %21 = const true : bool
+    %22 = address_of_field %0.1 : ref bool "currentTestFailed"
+    store_value %21, %22 : bool
+    %23 = address_of %slot4 : ref string
+    %24 = address_of_field %23.0 : ref [u8; _] "_bytes"
+    %25 = const "   \0" : cstring
+    %26 = address_of_field %24.0 : ref u8 "data"
+    store_value %25, %26 : ref u8
+    %27 = const 3 : i32
+    %28 = address_of_field %24.1 : ref i32 "length"
+    store_value %27, %28 : i32
+    %29 = const 3 : i32
+    %30 = address_of_field %24.2 : ref i32 "capacity"
+    store_value %29, %30 : i32
+    %31 = load_value %23 : string
+    call print(%31)
+    %32 = load_value %2 : string
+    call print(%32)
+    %33 = call string.isEmpty(%4) : bool
+    %34 = logical_negate %33 : bool
+    branch if %34, if.true(3), if.continuation(4)
+block if.true(3):
+    %slot5 = allocate_local : string "temp"
+    %35 = address_of %slot5 : ref string
+    %36 = address_of_field %35.0 : ref [u8; _] "_bytes"
+    %37 = const ": \0" : cstring
+    %38 = address_of_field %36.0 : ref u8 "data"
+    store_value %37, %38 : ref u8
     %39 = const 2 : i32
-    %40 = address_of_field %34.2 : ref i32 "capacity"
+    %40 = address_of_field %36.1 : ref i32 "length"
     store_value %39, %40 : i32
-    %41 = load_value %33 : string
-    call print(%41)
-    %42 = load_value %4 : string
-    call print(%42)
+    %41 = const 2 : i32
+    %42 = address_of_field %36.2 : ref i32 "capacity"
+    store_value %41, %42 : i32
+    %43 = load_value %35 : string
+    call print(%43)
+    %44 = load_value %4 : string
+    call print(%44)
     jump if.continuation(4)
 block if.continuation(4):
-    %slot5 = allocate_local : string "temp"
-    %43 = address_of %slot5 : ref string
-    %44 = address_of_field %43.0 : ref [u8; _] "_bytes"
-    %45 = const "\0" : cstring
-    %46 = address_of_field %44.0 : ref u8 "data"
-    store_value %45, %46 : ref u8
-    %47 = const 0 : i32
-    %48 = address_of_field %44.1 : ref i32 "length"
-    store_value %47, %48 : i32
+    %slot6 = allocate_local : string "temp"
+    %slot7 = allocate_local : string "temp"
+    %45 = address_of %slot6 : ref string
+    %46 = address_of_field %45.0 : ref [u8; _] "_bytes"
+    %47 = const "\0" : cstring
+    %48 = address_of_field %46.0 : ref u8 "data"
+    store_value %47, %48 : ref u8
     %49 = const 0 : i32
-    %50 = address_of_field %44.2 : ref i32 "capacity"
+    %50 = address_of_field %46.1 : ref i32 "length"
     store_value %49, %50 : i32
-    %51 = load_value %43 : string
-    call printLine(%51)
+    %51 = const 0 : i32
+    %52 = address_of_field %46.2 : ref i32 "capacity"
+    store_value %51, %52 : i32
+    %53 = load_value %45 : string
+    call printLine(%53)
+    %54 = address_of %slot7 : ref string
+    %55 = address_of_field %54.0 : ref [u8; _] "_bytes"
+    %56 = const "      at \0" : cstring
+    %57 = address_of_field %55.0 : ref u8 "data"
+    store_value %56, %57 : ref u8
+    %58 = const 9 : i32
+    %59 = address_of_field %55.1 : ref i32 "length"
+    store_value %58, %59 : i32
+    %60 = const 9 : i32
+    %61 = address_of_field %55.2 : ref i32 "capacity"
+    store_value %60, %61 : i32
+    %62 = load_value %54 : string
+    call print(%62)
+    %63 = address_of_field %6.0 : ref string "filePath"
+    %64 = load_value %63 : string
+    call print(%64)
+    %65 = const ":%d\n\0" : cstring
+    %66 = address_of_field %6.1 : ref i32 "line"
+    %67 = load_value %66 : i32
+    %68 = call C.printf(%65, %67) : i32
     return
 
 define TestRun.new(%0: ref TestRun ".this") void

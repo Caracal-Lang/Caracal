@@ -1,0 +1,9 @@
+#builtin(kind = int, bits = 32, signed = true)
+type i32
+{
+}
+
+def where(place: i32 = #sourceLocation)
+{
+    _ = place;
+}

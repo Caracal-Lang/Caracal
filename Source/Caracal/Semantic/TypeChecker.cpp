@@ -1250,6 +1250,25 @@ namespace Caracal
         return m_emitter.emitLoad(temp, stringType);
     }
 
+    ValueRef TypeChecker::emitSourceLocationDefault(const CompilationUnit& unit, u32 callIndex)
+    {
+        const auto locationType = m_module.wellKnown().sourceLocation;
+        const auto temp = m_emitter.allocateTempAggregateSlot("temp", locationType);
+
+        const auto filePathField = m_module.getTypeDefinition(locationType).tryGetFieldByName("filePath");
+        const auto filePathAddress = m_emitter.emitFieldAddress(temp, locationType, filePathField.index(), filePathField.type());
+        const auto path = unit.source->filePath.generic_u8string();
+        m_emitter.emitStringLiteralIntoAddress(filePathAddress, std::string_view(reinterpret_cast<const char*>(path.data()), path.size()));
+
+        const auto lineField = m_module.getTypeDefinition(locationType).tryGetFieldByName("line");
+        const auto lineAddress = m_emitter.emitFieldAddress(temp, locationType, lineField.index(), lineField.type());
+        const auto callStart = ExpressionSourceLocation(m_compilationContext, unit, callIndex).startIndex;
+        const auto line = unit.source->lineColumnAt(callStart).line;
+        m_emitter.emitStoreValue(m_emitter.emitConstant(ConstantValue::FromI32(line), lineField.type()), lineAddress, lineField.type());
+
+        return m_emitter.emitLoad(temp, locationType);
+    }
+
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
     {
         const auto defaultType = m_module.typeOfNode(defaultNode);
@@ -4381,6 +4400,18 @@ namespace Caracal
                 m_module.markPreludeTypeRequired(m_module.wellKnown().string);
                 return CheckedValue{ recordType(unit, index, m_module.wellKnown().string) };
             }
+            case NodeKind::SourceLocationDefault:
+            {
+                const auto locationType = m_module.wellKnown().sourceLocation;
+                if (locationType == Type::Undefined())
+                {
+                    m_diagnostics.addPreludeTypeMissingError("SourceLocation");
+                    return Type::Undefined();
+                }
+
+                m_module.markPreludeTypeRequired(locationType);
+                return CheckedValue{ recordType(unit, index, locationType) };
+            }
             case NodeKind::StringLiteral:
             {
                 auto literalType = m_module.wellKnown().string;
@@ -5857,9 +5888,14 @@ namespace Caracal
                     if (parameter.hasDefaultNode())
                     {
                         const auto defaultNode = parameter.defaultValueNode();
-                        if (unitFor(defaultNode).nodeBuffer.kind(defaultNode.index) == NodeKind::SourceTextDefault)
+                        const auto defaultKind = unitFor(defaultNode).nodeBuffer.kind(defaultNode.index);
+                        if (defaultKind == NodeKind::SourceTextDefault)
                         {
                             emittedDefault = emitSourceTextDefault(unit, i + parameterOffset, checkedParameters, orderedStart, parameterOffset);
+                        }
+                        else if (defaultKind == NodeKind::SourceLocationDefault)
+                        {
+                            emittedDefault = emitSourceLocationDefault(unit, callIndex);
                         }
                         else
                         {

@@ -1,0 +1,225 @@
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: (ref Box, SourceLocation) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: measure
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: place
+                    TypeNameNode: {
+                        Type: SourceLocation
+                        Lexeme: SourceLocation
+                    }
+                    DefaultValue: {
+                        SourceLocationDefault: sourceLocation
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: SourceLocation
+                                Name: place
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: line
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (SourceLocation) -> i32
+    Name: where
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: place
+            TypeNameNode: {
+                Type: SourceLocation
+                Lexeme: SourceLocation
+            }
+            DefaultValue: {
+                SourceLocationDefault: sourceLocation
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: SourceLocation
+                        Name: place
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: line
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> void
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(4): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (SourceLocation) -> i32
+                    NameExpression: {
+                        Type: (SourceLocation) -> i32
+                        Name: where
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (SourceLocation) -> i32
+                    NameExpression: {
+                        Type: (SourceLocation) -> i32
+                        Name: where
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: SourceLocation
+                            Left: {
+                                NameExpression: {
+                                    Type: SourceLocation
+                                    Name: SourceLocation
+                                }
+                            }
+                            Operation: ConstructorCall
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: SourceLocation
+                                    Function type: (ref SourceLocation, string, i32) -> void
+                                    NameExpression: {
+                                        Type: (ref SourceLocation, string, i32) -> void
+                                        Name: new
+                                    }
+                                    ArgumentsNode(2): {
+                                        StringLiteral: "written"
+                                        NumberLiteral: 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box) -> void
+                            NameExpression: {
+                                Type: (ref Box) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (ref Box, SourceLocation) -> i32
+                            NameExpression: {
+                                Type: (ref Box, SourceLocation) -> i32
+                                Name: measure
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

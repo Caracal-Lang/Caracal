@@ -5,6 +5,7 @@ target triple = "x86_64-unknown-none"
 
 %TestRun = type { %string, i1, i32, i32 }
 %string = type { { ptr, i32, i32 } }
+%SourceLocation = type { %string, i32 }
 
 @__caracal_run_tests = constant i1 false, !dbg !0
 @0 = private unnamed_addr constant [5 x i8] c"%.*s\00", align 1
@@ -20,7 +21,9 @@ target triple = "x86_64-unknown-none"
 @10 = private unnamed_addr constant [4 x i8] c"   \00", align 1
 @11 = private unnamed_addr constant [3 x i8] c": \00", align 1
 @12 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
-@13 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+@13 = private unnamed_addr constant [10 x i8] c"      at \00", align 1
+@14 = private unnamed_addr constant [5 x i8] c":%d\0A\00", align 1
+@15 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
 
 declare i32 @strcmp(ptr %0, ptr %1)
 
@@ -38,363 +41,390 @@ define i32 @main() !dbg !8 {
 entry:
   %load = load i1, ptr @__caracal_run_tests, align 1, !dbg !14
   %run = alloca %TestRun, align 8, !dbg !14
-    #dbg_declare(ptr %run, !15, !DIExpression(), !52)
+    #dbg_declare(ptr %run, !15, !DIExpression(), !56)
   br i1 %load, label %if.true, label %if.continuation, !dbg !14
 
 if.true:                                          ; preds = %entry
-  call void @TestRun.new(ptr %run), !dbg !52
-  call void @__caracal_tests_stub(ptr %run), !dbg !53
-  call void @TestRun.printSummary(ptr %run), !dbg !54
-  %call = call i32 @TestRun.exitCode(ptr %run), !dbg !55
-  ret i32 %call, !dbg !55
+  call void @TestRun.new(ptr %run), !dbg !56
+  call void @__caracal_tests_stub(ptr %run), !dbg !57
+  call void @TestRun.printSummary(ptr %run), !dbg !58
+  %call = call i32 @TestRun.exitCode(ptr %run), !dbg !59
+  ret i32 %call, !dbg !59
 
 if.continuation:                                  ; preds = %entry
-  %call1 = call i32 @caracal.userMain(), !dbg !56
-  ret i32 %call1, !dbg !56
+  %call1 = call i32 @caracal.userMain(), !dbg !60
+  ret i32 %call1, !dbg !60
 }
 
-define void @__caracal_tests_stub(ptr nonnull %0) !dbg !57 {
+define void @__caracal_tests_stub(ptr nonnull %0) !dbg !61 {
 entry:
-  %Assert = alloca ptr, align 8, !dbg !61
-    #dbg_declare(ptr %Assert, !62, !DIExpression(), !61)
-  store ptr %0, ptr %Assert, align 8, !dbg !61
-  ret void, !dbg !61
+  %Assert = alloca ptr, align 8, !dbg !65
+    #dbg_declare(ptr %Assert, !66, !DIExpression(), !65)
+  store ptr %0, ptr %Assert, align 8, !dbg !65
+  ret void, !dbg !65
 }
 
-define void @print(%string %0) !dbg !63 {
-entry:
-  %message = alloca %string, align 8, !dbg !67
-    #dbg_declare(ptr %message, !68, !DIExpression(), !67)
-  store %string %0, ptr %message, align 8, !dbg !67
-  %call = call i32 @string.length(ptr %message), !dbg !69
-  %_bytes = getelementptr inbounds nuw %string, ptr %message, i32 0, i32 0, !dbg !69
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !69
-  %load = load ptr, ptr %data, align 8, !dbg !69
-  %call1 = call i32 (ptr, ...) @printf(ptr @0, i32 %call, ptr %load), !dbg !69
-  ret void, !dbg !67
-}
-
-define void @printLine(%string %0) !dbg !70 {
+define void @print(%string %0) !dbg !67 {
 entry:
   %message = alloca %string, align 8, !dbg !71
     #dbg_declare(ptr %message, !72, !DIExpression(), !71)
   store %string %0, ptr %message, align 8, !dbg !71
+  %call = call i32 @string.length(ptr %message), !dbg !73
   %_bytes = getelementptr inbounds nuw %string, ptr %message, i32 0, i32 0, !dbg !73
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !73
   %load = load ptr, ptr %data, align 8, !dbg !73
-  %call = call i32 @puts(ptr %load), !dbg !73
+  %call1 = call i32 (ptr, ...) @printf(ptr @0, i32 %call, ptr %load), !dbg !73
   ret void, !dbg !71
 }
 
-define i32 @caracal.userMain() !dbg !74 {
+define void @printLine(%string %0) !dbg !74 {
 entry:
-  ret i32 0, !dbg !75
+  %message = alloca %string, align 8, !dbg !75
+    #dbg_declare(ptr %message, !76, !DIExpression(), !75)
+  store %string %0, ptr %message, align 8, !dbg !75
+  %_bytes = getelementptr inbounds nuw %string, ptr %message, i32 0, i32 0, !dbg !77
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !77
+  %load = load ptr, ptr %data, align 8, !dbg !77
+  %call = call i32 @puts(ptr %load), !dbg !77
+  ret void, !dbg !75
 }
 
-define void @TestRun.beginTest(ptr nonnull %0, %string %1) !dbg !76 {
+define i32 @caracal.userMain() !dbg !78 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !77
-    #dbg_declare(ptr %.this, !78, !DIExpression(), !77)
-  %name = alloca %string, align 8, !dbg !77
-    #dbg_declare(ptr %name, !79, !DIExpression(), !77)
-  store ptr %0, ptr %.this, align 8, !dbg !77
-  store %string %1, ptr %name, align 8, !dbg !77
-  %load = load %string, ptr %name, align 8, !dbg !80
-  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !80
-  store %string %load, ptr %currentTest, align 8, !dbg !80
-  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !81
-  store i1 false, ptr %currentTestFailed, align 1, !dbg !81
-  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !82
-  %load1 = load i32, ptr %testCount, align 4, !dbg !82
-  %add = add i32 %load1, 1, !dbg !82
-  %testCount2 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !82
-  store i32 %add, ptr %testCount2, align 4, !dbg !82
-  ret void, !dbg !77
+  ret i32 0, !dbg !79
 }
 
-define void @TestRun.endTest(ptr nonnull %0) !dbg !83 {
+define void @TestRun.beginTest(ptr nonnull %0, %string %1) !dbg !80 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !84
-    #dbg_declare(ptr %.this, !85, !DIExpression(), !84)
-  store ptr %0, ptr %.this, align 8, !dbg !84
-  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !86
-  %load = load i1, ptr %currentTestFailed, align 1, !dbg !86
-  %temp = alloca %string, align 8, !dbg !86
-  br i1 %load, label %if.true, label %if.continuation, !dbg !86
+  %.this = alloca ptr, align 8, !dbg !81
+    #dbg_declare(ptr %.this, !82, !DIExpression(), !81)
+  %name = alloca %string, align 8, !dbg !81
+    #dbg_declare(ptr %name, !83, !DIExpression(), !81)
+  store ptr %0, ptr %.this, align 8, !dbg !81
+  store %string %1, ptr %name, align 8, !dbg !81
+  %load = load %string, ptr %name, align 8, !dbg !84
+  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !84
+  store %string %load, ptr %currentTest, align 8, !dbg !84
+  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !85
+  store i1 false, ptr %currentTestFailed, align 1, !dbg !85
+  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !86
+  %load1 = load i32, ptr %testCount, align 4, !dbg !86
+  %add = add i32 %load1, 1, !dbg !86
+  %testCount2 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !86
+  store i32 %add, ptr %testCount2, align 4, !dbg !86
+  ret void, !dbg !81
+}
+
+define void @TestRun.endTest(ptr nonnull %0) !dbg !87 {
+entry:
+  %.this = alloca ptr, align 8, !dbg !88
+    #dbg_declare(ptr %.this, !89, !DIExpression(), !88)
+  store ptr %0, ptr %.this, align 8, !dbg !88
+  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !90
+  %load = load i1, ptr %currentTestFailed, align 1, !dbg !90
+  %temp = alloca %string, align 8, !dbg !90
+  br i1 %load, label %if.true, label %if.continuation, !dbg !90
 
 if.true:                                          ; preds = %entry
-  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !87
-  %load1 = load i32, ptr %failedTestCount, align 4, !dbg !87
-  %add = add i32 %load1, 1, !dbg !87
-  %failedTestCount2 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !87
-  store i32 %add, ptr %failedTestCount2, align 4, !dbg !87
-  ret void, !dbg !88
+  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !91
+  %load1 = load i32, ptr %failedTestCount, align 4, !dbg !91
+  %add = add i32 %load1, 1, !dbg !91
+  %failedTestCount2 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !91
+  store i32 %add, ptr %failedTestCount2, align 4, !dbg !91
+  ret void, !dbg !92
 
 if.continuation:                                  ; preds = %entry
-  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !89
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !89
-  store ptr @1, ptr %data, align 8, !dbg !89
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !89
-  store i32 5, ptr %length, align 4, !dbg !89
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !89
-  store i32 5, ptr %capacity, align 4, !dbg !89
-  %load3 = load %string, ptr %temp, align 8, !dbg !89
-  call void @print(%string %load3), !dbg !89
-  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !90
-  %load4 = load %string, ptr %currentTest, align 8, !dbg !90
-  call void @printLine(%string %load4), !dbg !90
-  ret void, !dbg !84
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !93
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !93
+  store ptr @1, ptr %data, align 8, !dbg !93
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !93
+  store i32 5, ptr %length, align 4, !dbg !93
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !93
+  store i32 5, ptr %capacity, align 4, !dbg !93
+  %load3 = load %string, ptr %temp, align 8, !dbg !93
+  call void @print(%string %load3), !dbg !93
+  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !94
+  %load4 = load %string, ptr %currentTest, align 8, !dbg !94
+  call void @printLine(%string %load4), !dbg !94
+  ret void, !dbg !88
 }
 
-define void @TestRun.isTrue(ptr nonnull %0, i1 %1, %string %2) !dbg !91 {
+define void @TestRun.isTrue(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !95 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !92
-    #dbg_declare(ptr %.this, !93, !DIExpression(), !92)
-  %condition = alloca i1, align 1, !dbg !92
-    #dbg_declare(ptr %condition, !94, !DIExpression(), !92)
-  %message = alloca %string, align 8, !dbg !92
-    #dbg_declare(ptr %message, !95, !DIExpression(), !92)
-  store ptr %0, ptr %.this, align 8, !dbg !92
-  store i1 %1, ptr %condition, align 1, !dbg !92
-  store %string %2, ptr %message, align 8, !dbg !92
-  %load = load i1, ptr %condition, align 1, !dbg !96
-  %3 = xor i1 %load, true, !dbg !96
-  %temp = alloca %string, align 8, !dbg !96
-  %temp1 = alloca %string, align 8, !dbg !96
-  %temp2 = alloca %string, align 8, !dbg !96
-  br i1 %3, label %if.true, label %if.continuation, !dbg !96
+  %.this = alloca ptr, align 8, !dbg !96
+    #dbg_declare(ptr %.this, !97, !DIExpression(), !96)
+  %condition = alloca i1, align 1, !dbg !96
+    #dbg_declare(ptr %condition, !98, !DIExpression(), !96)
+  %message = alloca %string, align 8, !dbg !96
+    #dbg_declare(ptr %message, !99, !DIExpression(), !96)
+  %location = alloca %SourceLocation, align 8, !dbg !96
+    #dbg_declare(ptr %location, !100, !DIExpression(), !96)
+  store ptr %0, ptr %.this, align 8, !dbg !96
+  store i1 %1, ptr %condition, align 1, !dbg !96
+  store %string %2, ptr %message, align 8, !dbg !96
+  store %SourceLocation %3, ptr %location, align 8, !dbg !96
+  %load = load i1, ptr %condition, align 1, !dbg !101
+  %4 = xor i1 %load, true, !dbg !101
+  %temp = alloca %string, align 8, !dbg !101
+  %temp1 = alloca %string, align 8, !dbg !101
+  %temp2 = alloca %string, align 8, !dbg !101
+  br i1 %4, label %if.true, label %if.continuation, !dbg !101
 
 if.true:                                          ; preds = %entry
-  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !97
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !97
-  store ptr @2, ptr %data, align 8, !dbg !97
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !97
-  store i32 13, ptr %length, align 4, !dbg !97
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !97
-  store i32 13, ptr %capacity, align 4, !dbg !97
-  %load3 = load %string, ptr %temp, align 8, !dbg !97
-  %load4 = load %string, ptr %message, align 8, !dbg !97
-  call void @TestRun._fail(ptr %0, %string %load3, %string %load4), !dbg !97
-  %_bytes5 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !98
-  %data6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 0, !dbg !98
-  store ptr @3, ptr %data6, align 8, !dbg !98
-  %length7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 1, !dbg !98
-  store i32 20, ptr %length7, align 4, !dbg !98
-  %capacity8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 2, !dbg !98
-  store i32 20, ptr %capacity8, align 4, !dbg !98
-  %load9 = load %string, ptr %temp1, align 8, !dbg !98
-  call void @printLine(%string %load9), !dbg !98
-  %_bytes10 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !99
-  %data11 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 0, !dbg !99
-  store ptr @4, ptr %data11, align 8, !dbg !99
-  %length12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 1, !dbg !99
-  store i32 21, ptr %length12, align 4, !dbg !99
-  %capacity13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 2, !dbg !99
-  store i32 21, ptr %capacity13, align 4, !dbg !99
-  %load14 = load %string, ptr %temp2, align 8, !dbg !99
-  call void @printLine(%string %load14), !dbg !99
-  br label %if.continuation, !dbg !96
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !102
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !102
+  store ptr @2, ptr %data, align 8, !dbg !102
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !102
+  store i32 13, ptr %length, align 4, !dbg !102
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !102
+  store i32 13, ptr %capacity, align 4, !dbg !102
+  %load3 = load %string, ptr %temp, align 8, !dbg !102
+  %load4 = load %string, ptr %message, align 8, !dbg !102
+  %load5 = load %SourceLocation, ptr %location, align 8, !dbg !102
+  call void @TestRun._fail(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !102
+  %_bytes6 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !103
+  %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 0, !dbg !103
+  store ptr @3, ptr %data7, align 8, !dbg !103
+  %length8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 1, !dbg !103
+  store i32 20, ptr %length8, align 4, !dbg !103
+  %capacity9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 2, !dbg !103
+  store i32 20, ptr %capacity9, align 4, !dbg !103
+  %load10 = load %string, ptr %temp1, align 8, !dbg !103
+  call void @printLine(%string %load10), !dbg !103
+  %_bytes11 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !104
+  %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0, !dbg !104
+  store ptr @4, ptr %data12, align 8, !dbg !104
+  %length13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 1, !dbg !104
+  store i32 21, ptr %length13, align 4, !dbg !104
+  %capacity14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 2, !dbg !104
+  store i32 21, ptr %capacity14, align 4, !dbg !104
+  %load15 = load %string, ptr %temp2, align 8, !dbg !104
+  call void @printLine(%string %load15), !dbg !104
+  br label %if.continuation, !dbg !101
 
 if.continuation:                                  ; preds = %if.true, %entry
-  ret void, !dbg !92
+  ret void, !dbg !96
 }
 
-define void @TestRun.isFalse(ptr nonnull %0, i1 %1, %string %2) !dbg !100 {
+define void @TestRun.isFalse(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !105 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !101
-    #dbg_declare(ptr %.this, !102, !DIExpression(), !101)
-  %condition = alloca i1, align 1, !dbg !101
-    #dbg_declare(ptr %condition, !103, !DIExpression(), !101)
-  %message = alloca %string, align 8, !dbg !101
-    #dbg_declare(ptr %message, !104, !DIExpression(), !101)
-  store ptr %0, ptr %.this, align 8, !dbg !101
-  store i1 %1, ptr %condition, align 1, !dbg !101
-  store %string %2, ptr %message, align 8, !dbg !101
-  %load = load i1, ptr %condition, align 1, !dbg !105
-  %temp = alloca %string, align 8, !dbg !105
-  %temp1 = alloca %string, align 8, !dbg !105
-  %temp2 = alloca %string, align 8, !dbg !105
-  br i1 %load, label %if.true, label %if.continuation, !dbg !105
+  %.this = alloca ptr, align 8, !dbg !106
+    #dbg_declare(ptr %.this, !107, !DIExpression(), !106)
+  %condition = alloca i1, align 1, !dbg !106
+    #dbg_declare(ptr %condition, !108, !DIExpression(), !106)
+  %message = alloca %string, align 8, !dbg !106
+    #dbg_declare(ptr %message, !109, !DIExpression(), !106)
+  %location = alloca %SourceLocation, align 8, !dbg !106
+    #dbg_declare(ptr %location, !110, !DIExpression(), !106)
+  store ptr %0, ptr %.this, align 8, !dbg !106
+  store i1 %1, ptr %condition, align 1, !dbg !106
+  store %string %2, ptr %message, align 8, !dbg !106
+  store %SourceLocation %3, ptr %location, align 8, !dbg !106
+  %load = load i1, ptr %condition, align 1, !dbg !111
+  %temp = alloca %string, align 8, !dbg !111
+  %temp1 = alloca %string, align 8, !dbg !111
+  %temp2 = alloca %string, align 8, !dbg !111
+  br i1 %load, label %if.true, label %if.continuation, !dbg !111
 
 if.true:                                          ; preds = %entry
-  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !106
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !106
-  store ptr @5, ptr %data, align 8, !dbg !106
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !106
-  store i32 14, ptr %length, align 4, !dbg !106
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !106
-  store i32 14, ptr %capacity, align 4, !dbg !106
-  %load3 = load %string, ptr %temp, align 8, !dbg !106
-  %load4 = load %string, ptr %message, align 8, !dbg !106
-  call void @TestRun._fail(ptr %0, %string %load3, %string %load4), !dbg !106
-  %_bytes5 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !107
-  %data6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 0, !dbg !107
-  store ptr @6, ptr %data6, align 8, !dbg !107
-  %length7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 1, !dbg !107
-  store i32 21, ptr %length7, align 4, !dbg !107
-  %capacity8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 2, !dbg !107
-  store i32 21, ptr %capacity8, align 4, !dbg !107
-  %load9 = load %string, ptr %temp1, align 8, !dbg !107
-  call void @printLine(%string %load9), !dbg !107
-  %_bytes10 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !108
-  %data11 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 0, !dbg !108
-  store ptr @7, ptr %data11, align 8, !dbg !108
-  %length12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 1, !dbg !108
-  store i32 20, ptr %length12, align 4, !dbg !108
-  %capacity13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes10, i32 0, i32 2, !dbg !108
-  store i32 20, ptr %capacity13, align 4, !dbg !108
-  %load14 = load %string, ptr %temp2, align 8, !dbg !108
-  call void @printLine(%string %load14), !dbg !108
-  br label %if.continuation, !dbg !105
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !112
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !112
+  store ptr @5, ptr %data, align 8, !dbg !112
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !112
+  store i32 14, ptr %length, align 4, !dbg !112
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !112
+  store i32 14, ptr %capacity, align 4, !dbg !112
+  %load3 = load %string, ptr %temp, align 8, !dbg !112
+  %load4 = load %string, ptr %message, align 8, !dbg !112
+  %load5 = load %SourceLocation, ptr %location, align 8, !dbg !112
+  call void @TestRun._fail(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !112
+  %_bytes6 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !113
+  %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 0, !dbg !113
+  store ptr @6, ptr %data7, align 8, !dbg !113
+  %length8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 1, !dbg !113
+  store i32 21, ptr %length8, align 4, !dbg !113
+  %capacity9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 2, !dbg !113
+  store i32 21, ptr %capacity9, align 4, !dbg !113
+  %load10 = load %string, ptr %temp1, align 8, !dbg !113
+  call void @printLine(%string %load10), !dbg !113
+  %_bytes11 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !114
+  %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0, !dbg !114
+  store ptr @7, ptr %data12, align 8, !dbg !114
+  %length13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 1, !dbg !114
+  store i32 20, ptr %length13, align 4, !dbg !114
+  %capacity14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 2, !dbg !114
+  store i32 20, ptr %capacity14, align 4, !dbg !114
+  %load15 = load %string, ptr %temp2, align 8, !dbg !114
+  call void @printLine(%string %load15), !dbg !114
+  br label %if.continuation, !dbg !111
 
 if.continuation:                                  ; preds = %if.true, %entry
-  ret void, !dbg !101
+  ret void, !dbg !106
 }
 
-define void @TestRun.printSummary(ptr nonnull %0) !dbg !109 {
-entry:
-  %.this = alloca ptr, align 8, !dbg !110
-    #dbg_declare(ptr %.this, !111, !DIExpression(), !110)
-  %passedTestCount = alloca i32, align 4, !dbg !112
-    #dbg_declare(ptr %passedTestCount, !113, !DIExpression(), !112)
-  store ptr %0, ptr %.this, align 8, !dbg !110
-  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !112
-  %load = load i32, ptr %testCount, align 4, !dbg !112
-  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !112
-  %load1 = load i32, ptr %failedTestCount, align 4, !dbg !112
-  %subtract = sub i32 %load, %load1, !dbg !112
-  store i32 %subtract, ptr %passedTestCount, align 4, !dbg !112
-  %load2 = load i32, ptr %passedTestCount, align 4, !dbg !114
-  %testCount3 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !114
-  %load4 = load i32, ptr %testCount3, align 4, !dbg !114
-  %failedTestCount5 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !114
-  %load6 = load i32, ptr %failedTestCount5, align 4, !dbg !114
-  %testCount7 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !114
-  %load8 = load i32, ptr %testCount7, align 4, !dbg !114
-  %call = call i32 (ptr, ...) @printf(ptr @8, i32 %load2, i32 %load4, i32 %load6, i32 %load8), !dbg !114
-  ret void, !dbg !110
-}
-
-define i32 @TestRun.exitCode(ptr nonnull %0) !dbg !115 {
+define void @TestRun.printSummary(ptr nonnull %0) !dbg !115 {
 entry:
   %.this = alloca ptr, align 8, !dbg !116
     #dbg_declare(ptr %.this, !117, !DIExpression(), !116)
+  %passedTestCount = alloca i32, align 4, !dbg !118
+    #dbg_declare(ptr %passedTestCount, !119, !DIExpression(), !118)
   store ptr %0, ptr %.this, align 8, !dbg !116
+  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !118
+  %load = load i32, ptr %testCount, align 4, !dbg !118
   %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !118
-  %load = load i32, ptr %failedTestCount, align 4, !dbg !118
-  %not_equal = icmp ne i32 %load, 0, !dbg !118
-  br i1 %not_equal, label %if.true, label %if.continuation, !dbg !118
+  %load1 = load i32, ptr %failedTestCount, align 4, !dbg !118
+  %subtract = sub i32 %load, %load1, !dbg !118
+  store i32 %subtract, ptr %passedTestCount, align 4, !dbg !118
+  %load2 = load i32, ptr %passedTestCount, align 4, !dbg !120
+  %testCount3 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !120
+  %load4 = load i32, ptr %testCount3, align 4, !dbg !120
+  %failedTestCount5 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !120
+  %load6 = load i32, ptr %failedTestCount5, align 4, !dbg !120
+  %testCount7 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !120
+  %load8 = load i32, ptr %testCount7, align 4, !dbg !120
+  %call = call i32 (ptr, ...) @printf(ptr @8, i32 %load2, i32 %load4, i32 %load6, i32 %load8), !dbg !120
+  ret void, !dbg !116
+}
+
+define i32 @TestRun.exitCode(ptr nonnull %0) !dbg !121 {
+entry:
+  %.this = alloca ptr, align 8, !dbg !122
+    #dbg_declare(ptr %.this, !123, !DIExpression(), !122)
+  store ptr %0, ptr %.this, align 8, !dbg !122
+  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !124
+  %load = load i32, ptr %failedTestCount, align 4, !dbg !124
+  %not_equal = icmp ne i32 %load, 0, !dbg !124
+  br i1 %not_equal, label %if.true, label %if.continuation, !dbg !124
 
 if.true:                                          ; preds = %entry
-  ret i32 1, !dbg !118
+  ret i32 1, !dbg !124
 
 if.continuation:                                  ; preds = %entry
-  ret i32 0, !dbg !119
+  ret i32 0, !dbg !125
 }
 
-define void @TestRun._fail(ptr nonnull %0, %string %1, %string %2) !dbg !120 {
+define void @TestRun._fail(ptr nonnull %0, %string %1, %string %2, %SourceLocation %3) !dbg !126 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !121
-    #dbg_declare(ptr %.this, !122, !DIExpression(), !121)
-  %checkName = alloca %string, align 8, !dbg !121
-    #dbg_declare(ptr %checkName, !123, !DIExpression(), !121)
-  %message = alloca %string, align 8, !dbg !121
-    #dbg_declare(ptr %message, !124, !DIExpression(), !121)
-  store ptr %0, ptr %.this, align 8, !dbg !121
-  store %string %1, ptr %checkName, align 8, !dbg !121
-  store %string %2, ptr %message, align 8, !dbg !121
-  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !125
-  %load = load i1, ptr %currentTestFailed, align 1, !dbg !125
-  %3 = xor i1 %load, true, !dbg !125
-  %temp = alloca %string, align 8, !dbg !125
-  %temp5 = alloca %string, align 8, !dbg !125
-  %temp13 = alloca %string, align 8, !dbg !125
-  %temp20 = alloca %string, align 8, !dbg !125
-  br i1 %3, label %if.true, label %if.continuation, !dbg !125
+  %.this = alloca ptr, align 8, !dbg !127
+    #dbg_declare(ptr %.this, !128, !DIExpression(), !127)
+  %checkName = alloca %string, align 8, !dbg !127
+    #dbg_declare(ptr %checkName, !129, !DIExpression(), !127)
+  %message = alloca %string, align 8, !dbg !127
+    #dbg_declare(ptr %message, !130, !DIExpression(), !127)
+  %location = alloca %SourceLocation, align 8, !dbg !127
+    #dbg_declare(ptr %location, !131, !DIExpression(), !127)
+  store ptr %0, ptr %.this, align 8, !dbg !127
+  store %string %1, ptr %checkName, align 8, !dbg !127
+  store %string %2, ptr %message, align 8, !dbg !127
+  store %SourceLocation %3, ptr %location, align 8, !dbg !127
+  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !132
+  %load = load i1, ptr %currentTestFailed, align 1, !dbg !132
+  %4 = xor i1 %load, true, !dbg !132
+  %temp = alloca %string, align 8, !dbg !132
+  %temp5 = alloca %string, align 8, !dbg !132
+  %temp13 = alloca %string, align 8, !dbg !132
+  %temp20 = alloca %string, align 8, !dbg !132
+  %temp21 = alloca %string, align 8, !dbg !132
+  br i1 %4, label %if.true, label %if.continuation, !dbg !132
 
 if.true:                                          ; preds = %entry
-  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !126
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !126
-  store ptr @9, ptr %data, align 8, !dbg !126
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !126
-  store i32 5, ptr %length, align 4, !dbg !126
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !126
-  store i32 5, ptr %capacity, align 4, !dbg !126
-  %load3 = load %string, ptr %temp, align 8, !dbg !126
-  call void @print(%string %load3), !dbg !126
-  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !127
-  %load4 = load %string, ptr %currentTest, align 8, !dbg !127
-  call void @printLine(%string %load4), !dbg !127
-  br label %if.continuation, !dbg !125
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !133
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !133
+  store ptr @9, ptr %data, align 8, !dbg !133
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !133
+  store i32 5, ptr %length, align 4, !dbg !133
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !133
+  store i32 5, ptr %capacity, align 4, !dbg !133
+  %load3 = load %string, ptr %temp, align 8, !dbg !133
+  call void @print(%string %load3), !dbg !133
+  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !134
+  %load4 = load %string, ptr %currentTest, align 8, !dbg !134
+  call void @printLine(%string %load4), !dbg !134
+  br label %if.continuation, !dbg !132
 
 if.continuation:                                  ; preds = %if.true, %entry
-  %currentTestFailed6 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !128
-  store i1 true, ptr %currentTestFailed6, align 1, !dbg !128
-  %_bytes7 = getelementptr inbounds nuw %string, ptr %temp5, i32 0, i32 0, !dbg !129
-  %data8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 0, !dbg !129
-  store ptr @10, ptr %data8, align 8, !dbg !129
-  %length9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 1, !dbg !129
-  store i32 3, ptr %length9, align 4, !dbg !129
-  %capacity10 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 2, !dbg !129
-  store i32 3, ptr %capacity10, align 4, !dbg !129
-  %load11 = load %string, ptr %temp5, align 8, !dbg !129
-  call void @print(%string %load11), !dbg !129
-  %load12 = load %string, ptr %checkName, align 8, !dbg !130
-  call void @print(%string %load12), !dbg !130
-  %call = call i1 @string.isEmpty(ptr %message), !dbg !131
-  %4 = xor i1 %call, true, !dbg !131
-  br i1 %4, label %if.true1, label %if.continuation2, !dbg !131
+  %currentTestFailed6 = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !135
+  store i1 true, ptr %currentTestFailed6, align 1, !dbg !135
+  %_bytes7 = getelementptr inbounds nuw %string, ptr %temp5, i32 0, i32 0, !dbg !136
+  %data8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 0, !dbg !136
+  store ptr @10, ptr %data8, align 8, !dbg !136
+  %length9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 1, !dbg !136
+  store i32 3, ptr %length9, align 4, !dbg !136
+  %capacity10 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 2, !dbg !136
+  store i32 3, ptr %capacity10, align 4, !dbg !136
+  %load11 = load %string, ptr %temp5, align 8, !dbg !136
+  call void @print(%string %load11), !dbg !136
+  %load12 = load %string, ptr %checkName, align 8, !dbg !137
+  call void @print(%string %load12), !dbg !137
+  %call = call i1 @string.isEmpty(ptr %message), !dbg !138
+  %5 = xor i1 %call, true, !dbg !138
+  br i1 %5, label %if.true1, label %if.continuation2, !dbg !138
 
 if.true1:                                         ; preds = %if.continuation
-  %_bytes14 = getelementptr inbounds nuw %string, ptr %temp13, i32 0, i32 0, !dbg !132
-  %data15 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 0, !dbg !132
-  store ptr @11, ptr %data15, align 8, !dbg !132
-  %length16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 1, !dbg !132
-  store i32 2, ptr %length16, align 4, !dbg !132
-  %capacity17 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 2, !dbg !132
-  store i32 2, ptr %capacity17, align 4, !dbg !132
-  %load18 = load %string, ptr %temp13, align 8, !dbg !132
-  call void @print(%string %load18), !dbg !132
-  %load19 = load %string, ptr %message, align 8, !dbg !133
-  call void @print(%string %load19), !dbg !133
-  br label %if.continuation2, !dbg !131
+  %_bytes14 = getelementptr inbounds nuw %string, ptr %temp13, i32 0, i32 0, !dbg !139
+  %data15 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 0, !dbg !139
+  store ptr @11, ptr %data15, align 8, !dbg !139
+  %length16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 1, !dbg !139
+  store i32 2, ptr %length16, align 4, !dbg !139
+  %capacity17 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 2, !dbg !139
+  store i32 2, ptr %capacity17, align 4, !dbg !139
+  %load18 = load %string, ptr %temp13, align 8, !dbg !139
+  call void @print(%string %load18), !dbg !139
+  %load19 = load %string, ptr %message, align 8, !dbg !140
+  call void @print(%string %load19), !dbg !140
+  br label %if.continuation2, !dbg !138
 
 if.continuation2:                                 ; preds = %if.true1, %if.continuation
-  %_bytes21 = getelementptr inbounds nuw %string, ptr %temp20, i32 0, i32 0, !dbg !134
-  %data22 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes21, i32 0, i32 0, !dbg !134
-  store ptr @12, ptr %data22, align 8, !dbg !134
-  %length23 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes21, i32 0, i32 1, !dbg !134
-  store i32 0, ptr %length23, align 4, !dbg !134
-  %capacity24 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes21, i32 0, i32 2, !dbg !134
-  store i32 0, ptr %capacity24, align 4, !dbg !134
-  %load25 = load %string, ptr %temp20, align 8, !dbg !134
-  call void @printLine(%string %load25), !dbg !134
-  ret void, !dbg !121
+  %_bytes22 = getelementptr inbounds nuw %string, ptr %temp20, i32 0, i32 0, !dbg !141
+  %data23 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes22, i32 0, i32 0, !dbg !141
+  store ptr @12, ptr %data23, align 8, !dbg !141
+  %length24 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes22, i32 0, i32 1, !dbg !141
+  store i32 0, ptr %length24, align 4, !dbg !141
+  %capacity25 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes22, i32 0, i32 2, !dbg !141
+  store i32 0, ptr %capacity25, align 4, !dbg !141
+  %load26 = load %string, ptr %temp20, align 8, !dbg !141
+  call void @printLine(%string %load26), !dbg !141
+  %_bytes27 = getelementptr inbounds nuw %string, ptr %temp21, i32 0, i32 0, !dbg !142
+  %data28 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 0, !dbg !142
+  store ptr @13, ptr %data28, align 8, !dbg !142
+  %length29 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 1, !dbg !142
+  store i32 9, ptr %length29, align 4, !dbg !142
+  %capacity30 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 2, !dbg !142
+  store i32 9, ptr %capacity30, align 4, !dbg !142
+  %load31 = load %string, ptr %temp21, align 8, !dbg !142
+  call void @print(%string %load31), !dbg !142
+  %filePath = getelementptr inbounds nuw %SourceLocation, ptr %location, i32 0, i32 0, !dbg !143
+  %load32 = load %string, ptr %filePath, align 8, !dbg !143
+  call void @print(%string %load32), !dbg !143
+  %line = getelementptr inbounds nuw %SourceLocation, ptr %location, i32 0, i32 1, !dbg !144
+  %load33 = load i32, ptr %line, align 4, !dbg !144
+  %call34 = call i32 (ptr, ...) @printf(ptr @14, i32 %load33), !dbg !144
+  ret void, !dbg !127
 }
 
-define void @TestRun.new(ptr nonnull %0) !dbg !135 {
+define void @TestRun.new(ptr nonnull %0) !dbg !145 {
 entry:
-  %.this = alloca ptr, align 8, !dbg !136
-    #dbg_declare(ptr %.this, !137, !DIExpression(), !136)
-  %temp = alloca %string, align 8, !dbg !138
-  store ptr %0, ptr %.this, align 8, !dbg !136
-  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !138
-  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !138
-  store ptr @13, ptr %data, align 8, !dbg !138
-  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !138
-  store i32 0, ptr %length, align 4, !dbg !138
-  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !138
-  store i32 0, ptr %capacity, align 4, !dbg !138
-  %load = load %string, ptr %temp, align 8, !dbg !138
-  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !138
-  store %string %load, ptr %currentTest, align 8, !dbg !138
-  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !139
-  store i1 false, ptr %currentTestFailed, align 1, !dbg !139
-  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !140
-  store i32 0, ptr %testCount, align 4, !dbg !140
-  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !141
-  store i32 0, ptr %failedTestCount, align 4, !dbg !141
-  ret void, !dbg !136
+  %.this = alloca ptr, align 8, !dbg !146
+    #dbg_declare(ptr %.this, !147, !DIExpression(), !146)
+  %temp = alloca %string, align 8, !dbg !148
+  store ptr %0, ptr %.this, align 8, !dbg !146
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0, !dbg !148
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !148
+  store ptr @15, ptr %data, align 8, !dbg !148
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1, !dbg !148
+  store i32 0, ptr %length, align 4, !dbg !148
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !148
+  store i32 0, ptr %capacity, align 4, !dbg !148
+  %load = load %string, ptr %temp, align 8, !dbg !148
+  %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !148
+  store %string %load, ptr %currentTest, align 8, !dbg !148
+  %currentTestFailed = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 1, !dbg !149
+  store i1 false, ptr %currentTestFailed, align 1, !dbg !149
+  %testCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 2, !dbg !150
+  store i32 0, ptr %testCount, align 4, !dbg !150
+  %failedTestCount = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 3, !dbg !151
+  store i32 0, ptr %failedTestCount, align 4, !dbg !151
+  ret void, !dbg !146
 }
 
 define i32 @string.length(ptr nonnull %0) {
@@ -441,7 +471,7 @@ uselistorder ptr @TestRun._fail, { 1, 0 }
 !14 = !DILocation(line: 5, scope: !8)
 !15 = !DILocalVariable(name: "run", scope: !8, file: !9, line: 7, type: !16)
 !16 = !DICompositeType(tag: DW_TAG_structure_type, name: "TestRun", size: 256, elements: !17)
-!17 = !{!18, !29, !30, !31, !32, !37, !40, !43, !44, !45, !48, !51}
+!17 = !{!18, !29, !30, !31, !32, !37, !40, !47, !48, !49, !52, !55}
 !18 = !DIDerivedType(tag: DW_TAG_member, name: "currentTest", scope: !16, baseType: !19, size: 128)
 !19 = !DICompositeType(tag: DW_TAG_structure_type, name: "string", size: 128, elements: !20)
 !20 = !{!21}
@@ -466,103 +496,113 @@ uselistorder ptr @TestRun._fail, { 1, 0 }
 !39 = !{null, !36}
 !40 = !DISubprogram(name: "isTrue", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: 0)
 !41 = !DISubroutineType(types: !42)
-!42 = !{null, !36, !5, !19}
-!43 = !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: 0)
-!44 = !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: 0)
-!45 = !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !46, scopeLine: 53, flags: DIFlagPrototyped, spFlags: 0)
-!46 = !DISubroutineType(types: !47)
-!47 = !{!12, !36}
-!48 = !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !49, scopeLine: 59, flags: DIFlagPrototyped, spFlags: 0)
-!49 = !DISubroutineType(types: !50)
-!50 = !{null, !36, !19, !19}
-!51 = !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
-!52 = !DILocation(line: 7, scope: !8)
-!53 = !DILocation(line: 8, scope: !8)
-!54 = !DILocation(line: 9, scope: !8)
-!55 = !DILocation(line: 10, scope: !8)
-!56 = !DILocation(line: 12, scope: !8)
-!57 = distinct !DISubprogram(name: "__caracal_tests_stub", scope: !9, file: !9, line: 15, type: !58, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
-!58 = !DISubroutineType(types: !59)
-!59 = !{null, !60}
-!60 = !DIDerivedType(tag: DW_TAG_reference_type, baseType: !16, size: 64)
-!61 = !DILocation(line: 15, scope: !57)
-!62 = !DILocalVariable(name: "Assert", arg: 1, scope: !57, file: !9, line: 15, type: !60)
-!63 = distinct !DISubprogram(name: "print", scope: !64, file: !64, line: 1, type: !65, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
-!64 = !DIFile(filename: "Print.cara", directory: "Core")
-!65 = !DISubroutineType(types: !66)
-!66 = !{null, !19}
-!67 = !DILocation(line: 1, scope: !63)
-!68 = !DILocalVariable(name: "message", arg: 1, scope: !63, file: !64, line: 1, type: !19)
-!69 = !DILocation(line: 3, scope: !63)
-!70 = distinct !DISubprogram(name: "printLine", scope: !64, file: !64, line: 6, type: !65, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
-!71 = !DILocation(line: 6, scope: !70)
-!72 = !DILocalVariable(name: "message", arg: 1, scope: !70, file: !64, line: 6, type: !19)
-!73 = !DILocation(line: 8, scope: !70)
-!74 = distinct !DISubprogram(name: "main", linkageName: "caracal.userMain", scope: !3, file: !3, line: 1, type: !10, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
-!75 = !DILocation(line: 3, scope: !74)
-!76 = distinct !DISubprogram(name: "beginTest", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !32, retainedNodes: !13)
-!77 = !DILocation(line: 8, scope: !76)
-!78 = !DILocalVariable(name: "this", arg: 1, scope: !76, file: !33, line: 8, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!79 = !DILocalVariable(name: "name", arg: 2, scope: !76, file: !33, line: 8, type: !19)
-!80 = !DILocation(line: 10, scope: !76)
-!81 = !DILocation(line: 11, scope: !76)
-!82 = !DILocation(line: 12, scope: !76)
-!83 = distinct !DISubprogram(name: "endTest", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !37, retainedNodes: !13)
-!84 = !DILocation(line: 15, scope: !83)
-!85 = !DILocalVariable(name: "this", arg: 1, scope: !83, file: !33, line: 15, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!86 = !DILocation(line: 17, scope: !83)
-!87 = !DILocation(line: 19, scope: !83)
-!88 = !DILocation(line: 20, scope: !83)
-!89 = !DILocation(line: 23, scope: !83)
-!90 = !DILocation(line: 24, scope: !83)
-!91 = distinct !DISubprogram(name: "isTrue", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !40, retainedNodes: !13)
-!92 = !DILocation(line: 27, scope: !91)
-!93 = !DILocalVariable(name: "this", arg: 1, scope: !91, file: !33, line: 27, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!94 = !DILocalVariable(name: "condition", arg: 2, scope: !91, file: !33, line: 27, type: !5)
-!95 = !DILocalVariable(name: "message", arg: 3, scope: !91, file: !33, line: 27, type: !19)
-!96 = !DILocation(line: 29, scope: !91)
-!97 = !DILocation(line: 31, scope: !91)
-!98 = !DILocation(line: 32, scope: !91)
-!99 = !DILocation(line: 33, scope: !91)
-!100 = distinct !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !43, retainedNodes: !13)
-!101 = !DILocation(line: 37, scope: !100)
-!102 = !DILocalVariable(name: "this", arg: 1, scope: !100, file: !33, line: 37, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!103 = !DILocalVariable(name: "condition", arg: 2, scope: !100, file: !33, line: 37, type: !5)
-!104 = !DILocalVariable(name: "message", arg: 3, scope: !100, file: !33, line: 37, type: !19)
-!105 = !DILocation(line: 39, scope: !100)
-!106 = !DILocation(line: 41, scope: !100)
-!107 = !DILocation(line: 42, scope: !100)
-!108 = !DILocation(line: 43, scope: !100)
-!109 = distinct !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !44, retainedNodes: !13)
-!110 = !DILocation(line: 47, scope: !109)
-!111 = !DILocalVariable(name: "this", arg: 1, scope: !109, file: !33, line: 47, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!112 = !DILocation(line: 49, scope: !109)
-!113 = !DILocalVariable(name: "passedTestCount", scope: !109, file: !33, line: 49, type: !12)
-!114 = !DILocation(line: 50, scope: !109)
-!115 = distinct !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !46, scopeLine: 53, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !45, retainedNodes: !13)
-!116 = !DILocation(line: 53, scope: !115)
-!117 = !DILocalVariable(name: "this", arg: 1, scope: !115, file: !33, line: 53, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!118 = !DILocation(line: 55, scope: !115)
-!119 = !DILocation(line: 56, scope: !115)
-!120 = distinct !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !49, scopeLine: 59, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !48, retainedNodes: !13)
-!121 = !DILocation(line: 59, scope: !120)
-!122 = !DILocalVariable(name: "this", arg: 1, scope: !120, file: !33, line: 59, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!123 = !DILocalVariable(name: "checkName", arg: 2, scope: !120, file: !33, line: 59, type: !19)
-!124 = !DILocalVariable(name: "message", arg: 3, scope: !120, file: !33, line: 59, type: !19)
-!125 = !DILocation(line: 61, scope: !120)
-!126 = !DILocation(line: 63, scope: !120)
-!127 = !DILocation(line: 64, scope: !120)
-!128 = !DILocation(line: 66, scope: !120)
-!129 = !DILocation(line: 68, scope: !120)
-!130 = !DILocation(line: 69, scope: !120)
-!131 = !DILocation(line: 70, scope: !120)
-!132 = !DILocation(line: 72, scope: !120)
-!133 = !DILocation(line: 73, scope: !120)
-!134 = !DILocation(line: 75, scope: !120)
-!135 = distinct !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !51, retainedNodes: !13)
-!136 = !DILocation(line: 1, scope: !135)
-!137 = !DILocalVariable(name: "this", arg: 1, scope: !135, file: !33, line: 1, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
-!138 = !DILocation(line: 3, scope: !135)
-!139 = !DILocation(line: 4, scope: !135)
-!140 = !DILocation(line: 5, scope: !135)
-!141 = !DILocation(line: 6, scope: !135)
+!42 = !{null, !36, !5, !19, !43}
+!43 = !DICompositeType(tag: DW_TAG_structure_type, name: "SourceLocation", size: 192, elements: !44)
+!44 = !{!45, !46}
+!45 = !DIDerivedType(tag: DW_TAG_member, name: "filePath", scope: !43, baseType: !19, size: 128)
+!46 = !DIDerivedType(tag: DW_TAG_member, name: "line", scope: !43, baseType: !12, size: 32, offset: 128)
+!47 = !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: 0)
+!48 = !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: 0)
+!49 = !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: 0)
+!50 = !DISubroutineType(types: !51)
+!51 = !{!12, !36}
+!52 = !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: 0)
+!53 = !DISubroutineType(types: !54)
+!54 = !{null, !36, !19, !19, !43}
+!55 = !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
+!56 = !DILocation(line: 7, scope: !8)
+!57 = !DILocation(line: 8, scope: !8)
+!58 = !DILocation(line: 9, scope: !8)
+!59 = !DILocation(line: 10, scope: !8)
+!60 = !DILocation(line: 12, scope: !8)
+!61 = distinct !DISubprogram(name: "__caracal_tests_stub", scope: !9, file: !9, line: 15, type: !62, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!62 = !DISubroutineType(types: !63)
+!63 = !{null, !64}
+!64 = !DIDerivedType(tag: DW_TAG_reference_type, baseType: !16, size: 64)
+!65 = !DILocation(line: 15, scope: !61)
+!66 = !DILocalVariable(name: "Assert", arg: 1, scope: !61, file: !9, line: 15, type: !64)
+!67 = distinct !DISubprogram(name: "print", scope: !68, file: !68, line: 1, type: !69, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!68 = !DIFile(filename: "Print.cara", directory: "Core")
+!69 = !DISubroutineType(types: !70)
+!70 = !{null, !19}
+!71 = !DILocation(line: 1, scope: !67)
+!72 = !DILocalVariable(name: "message", arg: 1, scope: !67, file: !68, line: 1, type: !19)
+!73 = !DILocation(line: 3, scope: !67)
+!74 = distinct !DISubprogram(name: "printLine", scope: !68, file: !68, line: 6, type: !69, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!75 = !DILocation(line: 6, scope: !74)
+!76 = !DILocalVariable(name: "message", arg: 1, scope: !74, file: !68, line: 6, type: !19)
+!77 = !DILocation(line: 8, scope: !74)
+!78 = distinct !DISubprogram(name: "main", linkageName: "caracal.userMain", scope: !3, file: !3, line: 1, type: !10, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
+!79 = !DILocation(line: 3, scope: !78)
+!80 = distinct !DISubprogram(name: "beginTest", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !32, retainedNodes: !13)
+!81 = !DILocation(line: 8, scope: !80)
+!82 = !DILocalVariable(name: "this", arg: 1, scope: !80, file: !33, line: 8, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!83 = !DILocalVariable(name: "name", arg: 2, scope: !80, file: !33, line: 8, type: !19)
+!84 = !DILocation(line: 10, scope: !80)
+!85 = !DILocation(line: 11, scope: !80)
+!86 = !DILocation(line: 12, scope: !80)
+!87 = distinct !DISubprogram(name: "endTest", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !37, retainedNodes: !13)
+!88 = !DILocation(line: 15, scope: !87)
+!89 = !DILocalVariable(name: "this", arg: 1, scope: !87, file: !33, line: 15, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!90 = !DILocation(line: 17, scope: !87)
+!91 = !DILocation(line: 19, scope: !87)
+!92 = !DILocation(line: 20, scope: !87)
+!93 = !DILocation(line: 23, scope: !87)
+!94 = !DILocation(line: 24, scope: !87)
+!95 = distinct !DISubprogram(name: "isTrue", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !40, retainedNodes: !13)
+!96 = !DILocation(line: 27, scope: !95)
+!97 = !DILocalVariable(name: "this", arg: 1, scope: !95, file: !33, line: 27, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!98 = !DILocalVariable(name: "condition", arg: 2, scope: !95, file: !33, line: 27, type: !5)
+!99 = !DILocalVariable(name: "message", arg: 3, scope: !95, file: !33, line: 27, type: !19)
+!100 = !DILocalVariable(name: "location", arg: 4, scope: !95, file: !33, line: 27, type: !43)
+!101 = !DILocation(line: 29, scope: !95)
+!102 = !DILocation(line: 31, scope: !95)
+!103 = !DILocation(line: 32, scope: !95)
+!104 = !DILocation(line: 33, scope: !95)
+!105 = distinct !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !47, retainedNodes: !13)
+!106 = !DILocation(line: 37, scope: !105)
+!107 = !DILocalVariable(name: "this", arg: 1, scope: !105, file: !33, line: 37, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!108 = !DILocalVariable(name: "condition", arg: 2, scope: !105, file: !33, line: 37, type: !5)
+!109 = !DILocalVariable(name: "message", arg: 3, scope: !105, file: !33, line: 37, type: !19)
+!110 = !DILocalVariable(name: "location", arg: 4, scope: !105, file: !33, line: 37, type: !43)
+!111 = !DILocation(line: 39, scope: !105)
+!112 = !DILocation(line: 41, scope: !105)
+!113 = !DILocation(line: 42, scope: !105)
+!114 = !DILocation(line: 43, scope: !105)
+!115 = distinct !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !48, retainedNodes: !13)
+!116 = !DILocation(line: 47, scope: !115)
+!117 = !DILocalVariable(name: "this", arg: 1, scope: !115, file: !33, line: 47, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!118 = !DILocation(line: 49, scope: !115)
+!119 = !DILocalVariable(name: "passedTestCount", scope: !115, file: !33, line: 49, type: !12)
+!120 = !DILocation(line: 50, scope: !115)
+!121 = distinct !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !49, retainedNodes: !13)
+!122 = !DILocation(line: 53, scope: !121)
+!123 = !DILocalVariable(name: "this", arg: 1, scope: !121, file: !33, line: 53, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!124 = !DILocation(line: 55, scope: !121)
+!125 = !DILocation(line: 56, scope: !121)
+!126 = distinct !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !52, retainedNodes: !13)
+!127 = !DILocation(line: 59, scope: !126)
+!128 = !DILocalVariable(name: "this", arg: 1, scope: !126, file: !33, line: 59, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!129 = !DILocalVariable(name: "checkName", arg: 2, scope: !126, file: !33, line: 59, type: !19)
+!130 = !DILocalVariable(name: "message", arg: 3, scope: !126, file: !33, line: 59, type: !19)
+!131 = !DILocalVariable(name: "location", arg: 4, scope: !126, file: !33, line: 59, type: !43)
+!132 = !DILocation(line: 61, scope: !126)
+!133 = !DILocation(line: 63, scope: !126)
+!134 = !DILocation(line: 64, scope: !126)
+!135 = !DILocation(line: 66, scope: !126)
+!136 = !DILocation(line: 68, scope: !126)
+!137 = !DILocation(line: 69, scope: !126)
+!138 = !DILocation(line: 70, scope: !126)
+!139 = !DILocation(line: 72, scope: !126)
+!140 = !DILocation(line: 73, scope: !126)
+!141 = !DILocation(line: 75, scope: !126)
+!142 = !DILocation(line: 77, scope: !126)
+!143 = !DILocation(line: 78, scope: !126)
+!144 = !DILocation(line: 79, scope: !126)
+!145 = distinct !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !55, retainedNodes: !13)
+!146 = !DILocation(line: 1, scope: !145)
+!147 = !DILocalVariable(name: "this", arg: 1, scope: !145, file: !33, line: 1, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
+!148 = !DILocation(line: 3, scope: !145)
+!149 = !DILocation(line: 4, scope: !145)
+!150 = !DILocation(line: 5, scope: !145)
+!151 = !DILocation(line: 6, scope: !145)

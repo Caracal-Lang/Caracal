@@ -1,0 +1,151 @@
+FunctionDefinitionStatement: {
+    Type: (SourceLocation) -> i32
+    Name: where
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: place
+            TypeNameNode: {
+                Type: SourceLocation
+                Lexeme: SourceLocation
+            }
+            DefaultValue: {
+                SourceLocationDefault: sourceLocation
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: SourceLocation
+                        Name: place
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: line
+                    }
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: (ref Box) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: measure
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (SourceLocation) -> i32
+                        NameExpression: {
+                            Type: (SourceLocation) -> i32
+                            Name: where
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: caller
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box) -> void
+                            NameExpression: {
+                                Type: (ref Box) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Box
+                        Name: box
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref Box) -> i32
+                        NameExpression: {
+                            Type: (ref Box) -> i32
+                            Name: measure
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

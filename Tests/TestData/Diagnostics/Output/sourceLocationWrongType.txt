@@ -1,0 +1,10 @@
+ Error T0051 Default parameter type mismatch
+    ,-[Diagnostics/Input/sourceLocationWrongType.cara:1:28]
+  1 | def where(place: string = #sourceLocation)
+    .                            --------------
+    .                                   `-- Default value of type 'SourceLocation' does not match parameter type 'string'.
+  2 | {
+  3 |     _ = place;
+  4 | }
+    `----
+  Fix: Change the default value to match the parameter type.

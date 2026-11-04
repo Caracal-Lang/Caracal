@@ -1,0 +1,101 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%SourceLocation = type { %string, i32 }
+%string = type { { ptr, i32, i32 } }
+%Box = type {}
+
+@0 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+@1 = private unnamed_addr constant [8 x i8] c"written\00", align 1
+@2 = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @where(%SourceLocation %0) {
+entry:
+  %place = alloca %SourceLocation, align 8
+  store %SourceLocation %0, ptr %place, align 8
+  %line = getelementptr inbounds nuw %SourceLocation, ptr %place, i32 0, i32 1
+  %load = load i32, ptr %line, align 4
+  ret i32 %load
+}
+
+define void @callers() {
+entry:
+  %temp = alloca %SourceLocation, align 8
+  %constructed = alloca %SourceLocation, align 8
+  %temp1 = alloca %string, align 8
+  %box = alloca %Box, align 8
+  %temp2 = alloca %SourceLocation, align 8
+  %filePath = getelementptr inbounds nuw %SourceLocation, ptr %temp, i32 0, i32 0
+  %_bytes = getelementptr inbounds nuw %string, ptr %filePath, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
+  store ptr @0, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  store i32 0, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
+  store i32 0, ptr %capacity, align 4
+  %line = getelementptr inbounds nuw %SourceLocation, ptr %temp, i32 0, i32 1
+  store i32 16, ptr %line, align 4
+  %load = load %SourceLocation, ptr %temp, align 8
+  %call = call i32 @where(%SourceLocation %load)
+  %_bytes3 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
+  %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 0
+  store ptr @1, ptr %data4, align 8
+  %length5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 1
+  store i32 7, ptr %length5, align 4
+  %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 2
+  store i32 7, ptr %capacity6, align 4
+  %load7 = load %string, ptr %temp1, align 8
+  call void @SourceLocation.new(ptr %constructed, %string %load7, i32 1)
+  %load8 = load %SourceLocation, ptr %constructed, align 8
+  %call9 = call i32 @where(%SourceLocation %load8)
+  call void @Box.new(ptr %box)
+  %filePath10 = getelementptr inbounds nuw %SourceLocation, ptr %temp2, i32 0, i32 0
+  %_bytes11 = getelementptr inbounds nuw %string, ptr %filePath10, i32 0, i32 0
+  %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0
+  store ptr @2, ptr %data12, align 8
+  %length13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 1
+  store i32 0, ptr %length13, align 4
+  %capacity14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 2
+  store i32 0, ptr %capacity14, align 4
+  %line15 = getelementptr inbounds nuw %SourceLocation, ptr %temp2, i32 0, i32 1
+  store i32 19, ptr %line15, align 4
+  %load16 = load %SourceLocation, ptr %temp2, align 8
+  %call17 = call i32 @Box.measure(ptr %box, %SourceLocation %load16)
+  ret void
+}
+
+define i32 @Box.measure(ptr nonnull %0, %SourceLocation %1) {
+entry:
+  %place = alloca %SourceLocation, align 8
+  store %SourceLocation %1, ptr %place, align 8
+  %line = getelementptr inbounds nuw %SourceLocation, ptr %place, i32 0, i32 1
+  %load = load i32, ptr %line, align 4
+  ret i32 %load
+}
+
+define void @Box.new(ptr nonnull %0) {
+entry:
+  ret void
+}
+
+define void @SourceLocation.new(ptr nonnull %0, %string %1, i32 %2) {
+entry:
+  %filePath = alloca %string, align 8
+  store %string %1, ptr %filePath, align 8
+  %load = load %string, ptr %filePath, align 8
+  %filePath1 = getelementptr inbounds nuw %SourceLocation, ptr %0, i32 0, i32 0
+  store %string %load, ptr %filePath1, align 8
+  %line = getelementptr inbounds nuw %SourceLocation, ptr %0, i32 0, i32 1
+  store i32 %2, ptr %line, align 4
+  ret void
+}

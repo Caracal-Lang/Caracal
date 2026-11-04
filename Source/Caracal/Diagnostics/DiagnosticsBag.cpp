@@ -491,7 +491,7 @@ namespace Caracal
             DiagnosticKind::P0020_UnknownAnnotationExpression,
             source,
             location,
-            "Write #sourceText(<parameter>) or an ordinary value.");
+            "Write #sourceText(<parameter>), #sourceLocation or an ordinary value.");
         diagnostic.addPrimaryLabel(location, "This is not a known annotation expression");
 
         m_diagnostics.push_back(std::move(diagnostic));

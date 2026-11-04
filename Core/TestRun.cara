@@ -24,21 +24,21 @@ type TestRun
         printLine(.currentTest);
     }
 
-    def isTrue(condition: bool, message: string = #sourceText(condition))
+    def isTrue(condition: bool, message: string = #sourceText(condition), location: SourceLocation = #sourceLocation)
     {
         if !condition
         {
-            ._fail("Assert.isTrue", message);
+            ._fail("Assert.isTrue", message, location);
             printLine("      Expected: true");
             printLine("      But got:  false");
         }
     }
 
-    def isFalse(condition: bool, message: string = #sourceText(condition))
+    def isFalse(condition: bool, message: string = #sourceText(condition), location: SourceLocation = #sourceLocation)
     {
         if condition
         {
-            ._fail("Assert.isFalse", message);
+            ._fail("Assert.isFalse", message, location);
             printLine("      Expected: false");
             printLine("      But got:  true");
         }
@@ -56,7 +56,7 @@ type TestRun
         return 0;
     }
 
-    def _fail(checkName: string, message: string)
+    def _fail(checkName: string, message: string, location: SourceLocation)
     {
         if !.currentTestFailed
         {
@@ -73,5 +73,9 @@ type TestRun
             print(message);
         }
         printLine("");
+
+        print("      at ");
+        print(location.filePath);
+        C.printf(":%d\n", location.line);
     }
 }

@@ -1085,7 +1085,7 @@ namespace Caracal
                     static_cast<void>(advanceOnMatch(TokenKind::Equal));
                     if (currentToken().kind == TokenKind::Hash)
                     {
-                        parseSourceTextDefault();
+                        parseAnnotationExpressionDefault();
                     }
                     else
                     {
@@ -1130,10 +1130,17 @@ namespace Caracal
         append(NodeKind::ParametersNode, tokenIndexOf(openParenthesis), subtreeStart);
     }
 
-    void Parser::parseSourceTextDefault()
+    void Parser::parseAnnotationExpressionDefault()
     {
         static_cast<void>(advanceOnMatch(TokenKind::Hash));
         const auto& formToken = currentToken();
+        if (isIdentifierKind(formToken.kind) && m_tokens.getLexeme(formToken) == SourceLocationAnnotationName)
+        {
+            auto nameToken = advanceOnIdentifier();
+            appendNode(NodeKind::SourceLocationDefault, tokenIndexOf(nameToken));
+            return;
+        }
+
         if (!isIdentifierKind(formToken.kind) || m_tokens.getLexeme(formToken) != SourceTextAnnotationName)
         {
             m_diagnostics.addUnknownAnnotationExpressionError(m_tokens.source(), m_tokens.getSourceLocation(formToken));
