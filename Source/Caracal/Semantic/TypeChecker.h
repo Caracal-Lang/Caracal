@@ -222,6 +222,7 @@ namespace Caracal
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
         [[nodiscard]] ValueRef emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType);
+        [[nodiscard]] ValueRef emitSourceTextDefault(const CompilationUnit& unit, NodeIndex defaultNode, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset);
         [[nodiscard]] ValueRef materializeValue(const CheckedValue& checked);
         [[nodiscard]] ValueRef dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType);
 

@@ -1206,6 +1206,33 @@ namespace Caracal
         return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
     }
 
+    ValueRef TypeChecker::emitSourceTextDefault(const CompilationUnit& unit, NodeIndex defaultNode, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset)
+    {
+        const auto namedParameter = nameOf(unitFor(defaultNode), defaultNode.index);
+        for (size_t i = parameterOffset; i < parameters.size(); ++i)
+        {
+            if (parameters[i].name() != namedParameter)
+            {
+                continue;
+            }
+
+            const auto argumentNode = m_orderedSlotStack[orderedStart + i - parameterOffset];
+            if (argumentNode == DefaultBoundArgumentSlot || argumentNode == UnboundArgumentSlot)
+            {
+                return ValueRef{};
+            }
+
+            const auto location = ExpressionSourceLocation(m_compilationContext, unit, argumentNode);
+            const auto text = std::string_view(unit.source->text).substr(location.startIndex, location.endIndex - location.startIndex);
+            const auto stringType = m_module.wellKnown().string;
+            const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
+            m_emitter.emitStringLiteralIntoAddress(temp, text);
+            return m_emitter.emitLoad(temp, stringType);
+        }
+
+        return ValueRef{};
+    }
+
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
     {
         const auto defaultType = m_module.typeOfNode(defaultNode);
@@ -4314,6 +4341,11 @@ namespace Caracal
     {
         switch (unit.nodeBuffer.kind(index))
         {
+            case NodeKind::SourceTextDefault:
+            {
+                m_module.markPreludeTypeRequired(m_module.wellKnown().string);
+                return CheckedValue{ recordType(unit, index, m_module.wellKnown().string) };
+            }
             case NodeKind::StringLiteral:
             {
                 auto literalType = m_module.wellKnown().string;
@@ -5790,15 +5822,22 @@ namespace Caracal
                     if (parameter.hasDefaultNode())
                     {
                         const auto defaultNode = parameter.defaultValueNode();
-                        emittedDefault = m_emitter.emitDefaultArgument(
-                            defaultNode.fileId,
-                            defaultNode.index,
-                            m_module.typeOfNode(defaultNode).toValue(),
-                            parameter.type().toValue());
-                        if (emittedDefault.id() < 0)
+                        if (unitFor(defaultNode).nodeBuffer.kind(defaultNode.index) == NodeKind::SourceTextDefault)
                         {
-                            // a non-scalar default has no fold, its expression emits here
-                            emittedDefault = emitDefaultArgumentExpression(defaultNode, parameter.type());
+                            emittedDefault = emitSourceTextDefault(unit, defaultNode, checkedParameters, orderedStart, parameterOffset);
+                        }
+                        else
+                        {
+                            emittedDefault = m_emitter.emitDefaultArgument(
+                                defaultNode.fileId,
+                                defaultNode.index,
+                                m_module.typeOfNode(defaultNode).toValue(),
+                                parameter.type().toValue());
+                            if (emittedDefault.id() < 0)
+                            {
+                                // a non-scalar default has no fold, its expression emits here
+                                emittedDefault = emitDefaultArgumentExpression(defaultNode, parameter.type());
+                            }
                         }
                     }
                     if (emittedDefault.id() < 0)
