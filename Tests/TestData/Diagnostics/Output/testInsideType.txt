@@ -1,0 +1,12 @@
+ Error P0017 Tests can only be declared at the top level
+    ,-[Diagnostics/Input/testInsideType.cara:3:5]
+  1 | type Box
+  2 | {
+  3 |     test "inside"
+    .     ----
+    .       `-- This test is not at the top level
+  4 |     {
+  5 |         _ = 1;
+  6 |     }
+    `----
+  Fix: Move this test out of the function or type.

@@ -1,0 +1,45 @@
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: __caracal_helper
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 7
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callsHelper
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: () -> i32
+                NameExpression: {
+                    Type: () -> i32
+                    Name: __caracal_helper
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

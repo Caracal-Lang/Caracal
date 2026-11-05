@@ -1,0 +1,167 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: describe
+    ParametersNode(3): {
+        ParameterNode: {
+            Name: first
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: second
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: second
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(3): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: first
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: second
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(3): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(2): {
+                        NamedArgument: {
+                            Name: second
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NumberLiteral: 1
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                        NamedArgument: {
+                            Name: first
+                            NumberLiteral: 3
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(2): {
+                        NamedArgument: {
+                            Name: first
+                            NumberLiteral: 4
+                        }
+                        NamedArgument: {
+                            Name: second
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NumberLiteral: 5
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NumberLiteral: 6
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(2): {
+                        NumberLiteral: 7
+                        NamedArgument: {
+                            Name: second
+                            NumberLiteral: 8
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

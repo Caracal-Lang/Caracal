@@ -1,0 +1,375 @@
+type string
+    const _bytes: [u8; _]
+
+type Inner
+
+type Box
+    inner: Inner
+    count: i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define add(%0: i32 "left", %1: i32 "right") i32
+block entry(0):
+    %0 = parameter 0 : i32 "left"
+    %1 = parameter 1 : i32 "right"
+    %2 = add %0, %1 : i32
+    return %2
+
+define describe(%0: i32 "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = parameter 1 : string "text"
+    %slot0 = allocate_local : string "text"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = load_value %2 : string
+    return %3
+
+define describeBool(%0: bool "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : bool "value"
+    %1 = parameter 1 : string "text"
+    %slot0 = allocate_local : string "text"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = load_value %2 : string
+    return %3
+
+define describeString(%0: string "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : string "value"
+    %slot0 = allocate_local : string "value"
+    %slot1 = allocate_local : string "text"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = parameter 1 : string "text"
+    %3 = address_of %slot1 : ref string
+    store_value %2, %3 : string
+    %5 = load_value %3 : string
+    return %5
+
+define describeBox(%0: Box "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : Box "value"
+    %slot0 = allocate_local : Box "value"
+    %slot1 = allocate_local : string "text"
+    %1 = address_of %slot0 : ref Box
+    store_value %0, %1 : Box
+    %2 = parameter 1 : string "text"
+    %3 = address_of %slot1 : ref string
+    store_value %2, %3 : string
+    %5 = load_value %3 : string
+    return %5
+
+define describeReference(%0: ref i32 "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : ref i32 "value"
+    %1 = parameter 1 : string "text"
+    %slot0 = allocate_local : string "text"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %4 = load_value %2 : string
+    return %4
+
+define callers(%0: i32 "local", %1: bool "flag") void
+block entry(0):
+    %0 = parameter 0 : i32 "local"
+    %1 = parameter 1 : bool "flag"
+    %slot0 = allocate_local : Box "box"
+    %slot1 = allocate_local : Inner "constructed"
+    %slot2 = allocate_local : i32 "target"
+    %slot3 = allocate_local : string "temp"
+    %slot4 = allocate_local : string "temp"
+    %slot5 = allocate_local : string "temp"
+    %slot6 = allocate_local : string "temp"
+    %slot7 = allocate_local : string "temp"
+    %slot8 = allocate_local : string "temp"
+    %slot9 = allocate_local : string "temp"
+    %slot10 = allocate_local : string "temp"
+    %slot11 = allocate_local : string "temp"
+    %2 = address_of %slot0 : ref Box
+    %3 = address_of %slot1 : ref Inner
+    call Inner.new(%3)
+    %4 = load_value %3 : Inner
+    call Box.new(%2, %4)
+    %5 = const 3 : i32
+    %6 = address_of %slot2 : ref i32
+    store_value %5, %6 : i32
+    %7 = address_of %slot3 : ref string
+    %8 = address_of_field %7.0 : ref [u8; _] "_bytes"
+    %9 = const "local\0" : cstring
+    %10 = address_of_field %8.0 : ref u8 "data"
+    store_value %9, %10 : ref u8
+    %11 = const 5 : i32
+    %12 = address_of_field %8.1 : ref i32 "length"
+    store_value %11, %12 : i32
+    %13 = const 5 : i32
+    %14 = address_of_field %8.2 : ref i32 "capacity"
+    store_value %13, %14 : i32
+    %15 = load_value %7 : string
+    %16 = call describe(%0, %15) : string
+    %17 = const 7 : i32
+    %18 = address_of %slot4 : ref string
+    %19 = address_of_field %18.0 : ref [u8; _] "_bytes"
+    %20 = const "7\0" : cstring
+    %21 = address_of_field %19.0 : ref u8 "data"
+    store_value %20, %21 : ref u8
+    %22 = const 1 : i32
+    %23 = address_of_field %19.1 : ref i32 "length"
+    store_value %22, %23 : i32
+    %24 = const 1 : i32
+    %25 = address_of_field %19.2 : ref i32 "capacity"
+    store_value %24, %25 : i32
+    %26 = load_value %18 : string
+    %27 = call describe(%17, %26) : string
+    %28 = value_negate %0 : i32
+    %29 = address_of %slot5 : ref string
+    %30 = address_of_field %29.0 : ref [u8; _] "_bytes"
+    %31 = const "-local\0" : cstring
+    %32 = address_of_field %30.0 : ref u8 "data"
+    store_value %31, %32 : ref u8
+    %33 = const 6 : i32
+    %34 = address_of_field %30.1 : ref i32 "length"
+    store_value %33, %34 : i32
+    %35 = const 6 : i32
+    %36 = address_of_field %30.2 : ref i32 "capacity"
+    store_value %35, %36 : i32
+    %37 = load_value %29 : string
+    %38 = call describe(%28, %37) : string
+    %39 = const 1 : i32
+    %40 = const 2 : i32
+    %41 = call add(%39, %40) : i32
+    %42 = address_of %slot6 : ref string
+    %43 = address_of_field %42.0 : ref [u8; _] "_bytes"
+    %44 = const "add(1, 2)\0" : cstring
+    %45 = address_of_field %43.0 : ref u8 "data"
+    store_value %44, %45 : ref u8
+    %46 = const 9 : i32
+    %47 = address_of_field %43.1 : ref i32 "length"
+    store_value %46, %47 : i32
+    %48 = const 9 : i32
+    %49 = address_of_field %43.2 : ref i32 "capacity"
+    store_value %48, %49 : i32
+    %50 = load_value %42 : string
+    %51 = call describe(%41, %50) : string
+    %52 = const 1 : i32
+    %53 = const 2 : i32
+    %54 = call add(%52, %53) : i32
+    %55 = const 3 : i32
+    %56 = call add(%54, %55) : i32
+    %57 = address_of %slot7 : ref string
+    %58 = address_of_field %57.0 : ref [u8; _] "_bytes"
+    %59 = const "add(add(1, 2), 3)\0" : cstring
+    %60 = address_of_field %58.0 : ref u8 "data"
+    store_value %59, %60 : ref u8
+    %61 = const 17 : i32
+    %62 = address_of_field %58.1 : ref i32 "length"
+    store_value %61, %62 : i32
+    %63 = const 17 : i32
+    %64 = address_of_field %58.2 : ref i32 "capacity"
+    store_value %63, %64 : i32
+    %65 = load_value %57 : string
+    %66 = call describe(%56, %65) : string
+    %67 = address_of_field %2.1 : ref i32 "count"
+    %68 = load_value %67 : i32
+    %69 = address_of %slot8 : ref string
+    %70 = address_of_field %69.0 : ref [u8; _] "_bytes"
+    %71 = const "box.count\0" : cstring
+    %72 = address_of_field %70.0 : ref u8 "data"
+    store_value %71, %72 : ref u8
+    %73 = const 9 : i32
+    %74 = address_of_field %70.1 : ref i32 "length"
+    store_value %73, %74 : i32
+    %75 = const 9 : i32
+    %76 = address_of_field %70.2 : ref i32 "capacity"
+    store_value %75, %76 : i32
+    %77 = load_value %69 : string
+    %78 = call describe(%68, %77) : string
+    %79 = address_of_field %2.0 : ref Inner "inner"
+    %80 = call Inner.size(%79) : i32
+    %81 = address_of %slot9 : ref string
+    %82 = address_of_field %81.0 : ref [u8; _] "_bytes"
+    %83 = const "box.inner.size()\0" : cstring
+    %84 = address_of_field %82.0 : ref u8 "data"
+    store_value %83, %84 : ref u8
+    %85 = const 16 : i32
+    %86 = address_of_field %82.1 : ref i32 "length"
+    store_value %85, %86 : i32
+    %87 = const 16 : i32
+    %88 = address_of_field %82.2 : ref i32 "capacity"
+    store_value %87, %88 : i32
+    %89 = load_value %81 : string
+    %90 = call describe(%80, %89) : string
+    %91 = address_of_field %2.1 : ref i32 "count"
+    %92 = load_value %91 : i32
+    %93 = call Box.twice(%2, %92) : i32
+    %94 = const 1 : i32
+    %95 = add %93, %94 : i32
+    %96 = address_of %slot10 : ref string
+    %97 = address_of_field %96.0 : ref [u8; _] "_bytes"
+    %98 = const "box.twice(box.count) %+ 1\0" : cstring
+    %99 = address_of_field %97.0 : ref u8 "data"
+    store_value %98, %99 : ref u8
+    %100 = const 25 : i32
+    %101 = address_of_field %97.1 : ref i32 "length"
+    store_value %100, %101 : i32
+    %102 = const 25 : i32
+    %103 = address_of_field %97.2 : ref i32 "capacity"
+    store_value %102, %103 : i32
+    %104 = load_value %96 : string
+    %105 = call describe(%95, %104) : string
+    %106 = logical_negate %1 : bool
+    %107 = address_of %slot11 : ref string
+    %108 = address_of_field %107.0 : ref [u8; _] "_bytes"
+    %109 = const "!flag\0" : cstring
+    %110 = address_of_field %108.0 : ref u8 "data"
+    store_value %109, %110 : ref u8
+    %111 = const 5 : i32
+    %112 = address_of_field %108.1 : ref i32 "length"
+    store_value %111, %112 : i32
+    %113 = const 5 : i32
+    %114 = address_of_field %108.2 : ref i32 "capacity"
+    store_value %113, %114 : i32
+    %115 = load_value %107 : string
+    %116 = call describeBool(%106, %115) : string
+    branch if %1, and.rhs(1), and.merge(2)
+block and.rhs(1):
+    %117 = const 1 : i32
+    %118 = equal %0, %117 : bool
+    jump and.merge(2)
+block and.merge(2):
+    %slot12 = allocate_local : string "temp"
+    %slot13 = allocate_local : string "temp"
+    %slot14 = allocate_local : string "temp"
+    %slot15 = allocate_local : Box "constructed"
+    %slot16 = allocate_local : Inner "constructed"
+    %slot17 = allocate_local : string "temp"
+    %slot18 = allocate_local : string "temp"
+    %slot19 = allocate_local : string "temp"
+    %119 = phi [entry(0): %1], [and.rhs(1): %118] : bool
+    %120 = address_of %slot12 : ref string
+    %121 = address_of_field %120.0 : ref [u8; _] "_bytes"
+    %122 = const "flag and local == 1\0" : cstring
+    %123 = address_of_field %121.0 : ref u8 "data"
+    store_value %122, %123 : ref u8
+    %124 = const 19 : i32
+    %125 = address_of_field %121.1 : ref i32 "length"
+    store_value %124, %125 : i32
+    %126 = const 19 : i32
+    %127 = address_of_field %121.2 : ref i32 "capacity"
+    store_value %126, %127 : i32
+    %128 = load_value %120 : string
+    %129 = call describeBool(%119, %128) : string
+    %130 = address_of %slot13 : ref string
+    %131 = address_of_field %130.0 : ref [u8; _] "_bytes"
+    %132 = const "text\0" : cstring
+    %133 = address_of_field %131.0 : ref u8 "data"
+    store_value %132, %133 : ref u8
+    %134 = const 4 : i32
+    %135 = address_of_field %131.1 : ref i32 "length"
+    store_value %134, %135 : i32
+    %136 = const 4 : i32
+    %137 = address_of_field %131.2 : ref i32 "capacity"
+    store_value %136, %137 : i32
+    %138 = load_value %130 : string
+    %139 = address_of %slot14 : ref string
+    %140 = address_of_field %139.0 : ref [u8; _] "_bytes"
+    %141 = const "\"text\"\0" : cstring
+    %142 = address_of_field %140.0 : ref u8 "data"
+    store_value %141, %142 : ref u8
+    %143 = const 6 : i32
+    %144 = address_of_field %140.1 : ref i32 "length"
+    store_value %143, %144 : i32
+    %145 = const 6 : i32
+    %146 = address_of_field %140.2 : ref i32 "capacity"
+    store_value %145, %146 : i32
+    %147 = load_value %139 : string
+    %148 = call describeString(%138, %147) : string
+    %149 = address_of %slot15 : ref Box
+    %150 = address_of %slot16 : ref Inner
+    call Inner.new(%150)
+    %151 = load_value %150 : Inner
+    call Box.new(%149, %151)
+    %152 = load_value %149 : Box
+    %153 = address_of %slot17 : ref string
+    %154 = address_of_field %153.0 : ref [u8; _] "_bytes"
+    %155 = const "Box.new(Inner.new())\0" : cstring
+    %156 = address_of_field %154.0 : ref u8 "data"
+    store_value %155, %156 : ref u8
+    %157 = const 20 : i32
+    %158 = address_of_field %154.1 : ref i32 "length"
+    store_value %157, %158 : i32
+    %159 = const 20 : i32
+    %160 = address_of_field %154.2 : ref i32 "capacity"
+    store_value %159, %160 : i32
+    %161 = load_value %153 : string
+    %162 = call describeBox(%152, %161) : string
+    %163 = load_value %2 : Box
+    %164 = address_of %slot18 : ref string
+    %165 = address_of_field %164.0 : ref [u8; _] "_bytes"
+    %166 = const "box\0" : cstring
+    %167 = address_of_field %165.0 : ref u8 "data"
+    store_value %166, %167 : ref u8
+    %168 = const 3 : i32
+    %169 = address_of_field %165.1 : ref i32 "length"
+    store_value %168, %169 : i32
+    %170 = const 3 : i32
+    %171 = address_of_field %165.2 : ref i32 "capacity"
+    store_value %170, %171 : i32
+    %172 = load_value %164 : string
+    %173 = call describeBox(%163, %172) : string
+    %174 = address_of %slot19 : ref string
+    %175 = address_of_field %174.0 : ref [u8; _] "_bytes"
+    %176 = const "ref target\0" : cstring
+    %177 = address_of_field %175.0 : ref u8 "data"
+    store_value %176, %177 : ref u8
+    %178 = const 10 : i32
+    %179 = address_of_field %175.1 : ref i32 "length"
+    store_value %178, %179 : i32
+    %180 = const 10 : i32
+    %181 = address_of_field %175.2 : ref i32 "capacity"
+    store_value %180, %181 : i32
+    %182 = load_value %174 : string
+    %183 = call describeReference(%6, %182) : string
+    return
+
+define Inner.size(%0: ref Inner ".this") i32
+block entry(0):
+    %0 = parameter 0 : ref Inner ".this"
+    %1 = const 1 : i32
+    return %1
+
+define Inner.new(%0: ref Inner ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Inner ".this"
+    return
+
+define Box.twice(%0: ref Box ".this", %1: i32 "value") i32
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = parameter 1 : i32 "value"
+    %2 = const 2 : i32
+    %3 = multiply %1, %2 : i32
+    return %3
+
+define Box.new(%0: ref Box ".this", %1: Inner "inner") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = parameter 1 : Inner "inner"
+    %slot0 = allocate_local : Inner "inner"
+    %2 = address_of %slot0 : ref Inner
+    store_value %1, %2 : Inner
+    %3 = load_value %2 : Inner
+    %4 = address_of_field %0.0 : ref Inner "inner"
+    store_value %3, %4 : Inner
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "count"
+    store_value %5, %6 : i32
+    return

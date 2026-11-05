@@ -1,0 +1,11 @@
+def __caracal_tests_stub(count: i32)
+{
+}
+
+def helper(unused: i32)
+{
+}
+
+test "never reads count"
+{
+}

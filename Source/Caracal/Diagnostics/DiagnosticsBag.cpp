@@ -88,6 +88,7 @@ namespace Caracal
             { TokenKind::DefKeyword,        std::string_view("'def'") },
             { TokenKind::EnumKeyword,       std::string_view("'enum'") },
             { TokenKind::TypeKeyword,       std::string_view("'type'") },
+            { TokenKind::TestKeyword,       std::string_view("'test'") },
             { TokenKind::IfKeyword,         std::string_view("'if'") },
             { TokenKind::ElseKeyword,       std::string_view("'else'") },
             { TokenKind::WhileKeyword,      std::string_view("'while'") },
@@ -479,6 +480,58 @@ namespace Caracal
             location,
             "Use the wrapping operator " + wrappingOperator + " instead.");
         diagnostic.addPrimaryLabel(location, ToTokenSource(reservedOperator) + " is reserved for checked arithmetic");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestNotAtTopLevelError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0017_TestNotAtTopLevel,
+            source,
+            location,
+            "Move this test out of the function or type.");
+        diagnostic.addPrimaryLabel(location, "This test is not at the top level");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestWithParametersError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0018_TestWithParameters,
+            source,
+            location,
+            "Remove the parameter list.");
+        diagnostic.addPrimaryLabel(location, "A test cannot have a parameter list");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestNameNotInQuotesError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0019_TestNameNotInQuotes,
+            source,
+            location,
+            "Write the name in quotes, for example test \"adds two numbers\" { }.");
+        diagnostic.addPrimaryLabel(location, "This test has no name in quotes");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0020_UnknownAnnotationExpression,
+            source,
+            location,
+            "Write #sourceText(<parameter>), #sourceLocation or an ordinary value.");
+        diagnostic.addPrimaryLabel(location, "This is not a known annotation expression");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }
@@ -1084,6 +1137,19 @@ namespace Caracal
             "Remove one of the conflicting enum annotations.");
         diagnostic.addPrimaryLabel(location, "Annotation '#" + annotationName + "' cannot be used together with '#" + otherAnnotationName + "' on the same enum.");
         diagnostic.addSecondaryLabel(otherLocation, "Conflicting annotation '#" + otherAnnotationName + "' was already used here.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addSourceTextMustReferToEarlierParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter,
+            source,
+            location,
+            "Refer to a parameter declared earlier in the list.");
+        diagnostic.addPrimaryLabel(location, "'" + parameterName + "' is not an earlier parameter");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }
@@ -2156,6 +2222,19 @@ namespace Caracal
             location,
             "Remove this constant, rename it to '_', or use its value.");
         diagnostic.addPrimaryLabel(location, "Local constant '" + name + "' is never used");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0102_TestsStubMissing,
+            source,
+            location,
+            "Declare __caracal_tests_stub in Core, or try running caracal update.");
+        diagnostic.addPrimaryLabel(location, "This test cannot run without the test stub");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }

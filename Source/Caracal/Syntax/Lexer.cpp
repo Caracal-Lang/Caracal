@@ -93,6 +93,8 @@ namespace Caracal
                     return TokenKind::EnumKeyword;
                 if (EqualsKeyword<"type">(start))
                     return TokenKind::TypeKeyword;
+                if (EqualsKeyword<"test">(start))
+                    return TokenKind::TestKeyword;
                 if (EqualsKeyword<"else">(start))
                     return TokenKind::ElseKeyword;
                 if (EqualsKeyword<"skip">(start))

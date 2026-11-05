@@ -7,6 +7,7 @@
 #include <Caracal/Diagnostics/DiagnosticOptions.h>
 #include <Caracal/IR/Module.h>
 #include <Caracal/Project/Project.h>
+#include <Caracal/Project/ProjectModes.h>
 #include <Caracal/Semantic/SemanticContext.h>
 #include <chrono>
 #include <filesystem>
@@ -34,7 +35,8 @@ namespace Caracal
         const Project& project,
         std::optional<std::string_view> modeName = std::nullopt,
         const DiagnosticOptions& diagnosticOptions = {},
-        bool shouldRunAfterBuild = false);
+        bool shouldRunAfterBuild = false,
+        const TestSelection& testSelection = {});
 
     CARACAL_API int buildProject(
         const Project& project,
@@ -44,6 +46,11 @@ namespace Caracal
     CARACAL_API int runProject(
         const Project& project,
         std::optional<std::string_view> modeName = std::nullopt,
+        const DiagnosticOptions& diagnosticOptions = {});
+
+    CARACAL_API int testProject(
+        const Project& project,
+        const TestSelection& testSelection = {},
         const DiagnosticOptions& diagnosticOptions = {});
 
     CARACAL_API std::pair<bool, std::string> generateLLVMIRFromModule(

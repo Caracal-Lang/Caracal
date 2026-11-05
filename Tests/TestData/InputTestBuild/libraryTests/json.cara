@@ -1,0 +1,4 @@
+test "json"
+{
+    Assert.isTrue(3 == 3);
+}

@@ -1,0 +1,16 @@
+def takesText(text: string)
+{
+    _ = text;
+}
+
+test "several errors"
+{
+    unused := 1;
+    value : i32 = "text";
+    _ = missing;
+    takesText(1);
+    constant :: 2;
+    constant = 3;
+    return;
+    _ = value;
+}

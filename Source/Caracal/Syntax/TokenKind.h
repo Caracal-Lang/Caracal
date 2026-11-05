@@ -45,6 +45,7 @@ enum class TokenKind : u8
     Identifier,
     PrivateIdentifier,
     InitKeyword,
+    TestKeyword,
     NewKeyword,
     Number,
     String,
@@ -67,7 +68,7 @@ enum class TokenKind : u8
     EndOfFile
 };
 
-// Identifier, PrivateIdentifier, InitKeyword and NewKeyword
+// Identifier, PrivateIdentifier, InitKeyword, TestKeyword and NewKeyword
 [[nodiscard]] inline bool isIdentifierKind(TokenKind kind)
 {
     return kind >= TokenKind::Identifier && kind <= TokenKind::NewKeyword;

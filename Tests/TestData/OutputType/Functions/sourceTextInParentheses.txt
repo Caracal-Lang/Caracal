@@ -1,0 +1,173 @@
+FunctionDefinitionStatement: {
+    Type: (i32, string) -> string
+    Name: describe
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: value
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: string
+            Lexeme: string
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: string
+            NameExpression: {
+                Type: string
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> void
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(4): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (i32, string) -> string
+                    NameExpression: {
+                        Type: (i32, string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        GroupingExpression: {
+                            Type: i32
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NumberLiteral: 1
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (i32, string) -> string
+                    NameExpression: {
+                        Type: (i32, string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                GroupingExpression: {
+                                    Type: i32
+                                    NumberLiteral: 1
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                GroupingExpression: {
+                                    Type: i32
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (i32, string) -> string
+                    NameExpression: {
+                        Type: (i32, string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        GroupingExpression: {
+                            Type: i32
+                            GroupingExpression: {
+                                Type: i32
+                                NumberLiteral: 3
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (i32, string) -> string
+                    NameExpression: {
+                        Type: (i32, string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                NumberLiteral: 4
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 5
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

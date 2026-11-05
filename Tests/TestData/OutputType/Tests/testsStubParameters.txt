@@ -1,0 +1,57 @@
+FunctionDefinitionStatement: {
+    Type: (i32, ref i32) -> void
+    Name: __caracal_tests_stub
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: count
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: total
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(0): {
+    }
+}
+TestDefinitionStatement: {
+    Type: (i32, ref i32) -> void
+    Name: "adds count to total"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: total
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: ref i32
+                            Name: total
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: count
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

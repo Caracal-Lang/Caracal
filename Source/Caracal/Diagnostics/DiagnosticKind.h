@@ -29,6 +29,10 @@ namespace Caracal
         P0014_PrivateFreeFunction,
         P0015_ExpectedArrayLength,
         P0016_ReservedOperator,
+        P0017_TestNotAtTopLevel,
+        P0018_TestWithParameters,
+        P0019_TestNameNotInQuotes,
+        P0020_UnknownAnnotationExpression,
 
         // Annotation diagnostics
         T0001_UnknownAnnotation,
@@ -37,6 +41,7 @@ namespace Caracal
         T0004_WrongNumberOfAnnotationArguments,
         T0005_AnnotationArgumentTypeMismatch,
         T0006_ConflictingEnumAnnotations,
+        T0101_SourceTextMustReferToEarlierParameter,
 
         // Unknown symbol and member access diagnostics
         T0007_UnknownName,
@@ -162,6 +167,9 @@ namespace Caracal
         T0072_InvalidOperatorMethodSignature,
         T0083_BitwiseMethodOnNonIntegerType,
         T0089_UnsupportedFloatBits,
+
+        // Test diagnostics
+        T0102_TestsStubMissing,
 
         // Prelude diagnostics
         T0097_PreludeTypeMissing,

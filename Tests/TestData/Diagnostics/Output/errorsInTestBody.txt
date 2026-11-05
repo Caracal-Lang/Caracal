@@ -1,0 +1,64 @@
+ Error T0023 Explicit variable type mismatch
+     ,-[Diagnostics/Input/errorsInTestBody.cara:9:19]
+   6 | test "several errors"
+   7 | {
+   8 |     unused := 1;
+   9 |     value : i32 = "text";
+     .                   ------
+     .                      `-- Variable is declared as 'i32', but its initializer has type 'string'
+  10 |     _ = missing;
+  11 |     takesText(1);
+  12 |     constant :: 2;
+     `----
+  Fix: Initialize this variable with a value of type 'i32' or change its explicit type.
+ Error T0007 Unknown name
+     ,-[Diagnostics/Input/errorsInTestBody.cara:10:9]
+   7 | {
+   8 |     unused := 1;
+   9 |     value : i32 = "text";
+  10 |     _ = missing;
+     .         -------
+     .            `-- Unknown name 'missing'
+  11 |     takesText(1);
+  12 |     constant :: 2;
+  13 |     constant = 3;
+     `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.
+ Error T0016 Argument type mismatch
+     ,-[Diagnostics/Input/errorsInTestBody.cara:11:15]
+   8 |     unused := 1;
+   9 |     value : i32 = "text";
+  10 |     _ = missing;
+  11 |     takesText(1);
+     .               -
+     .               `-- Argument 1 of 'takesText' expects 'string', but got 'i32'
+  12 |     constant :: 2;
+  13 |     constant = 3;
+  14 |     return;
+     `----
+  Fix: Change the mismatched argument to match the parameter type.
+ Error T0057 Assignment to constant
+     ,-[Diagnostics/Input/errorsInTestBody.cara:13:5]
+  10 |     _ = missing;
+  11 |     takesText(1);
+  12 |     constant :: 2;
+  13 |     constant = 3;
+     .     --------
+     .         `-- 'constant' is a constant and cannot be reassigned.
+  14 |     return;
+  15 |     _ = value;
+  16 | }
+     `----
+  Fix: Declare 'constant' as a variable if it needs to change, or remove the assignment.
+ Warning T0059 Unreachable code
+     ,-[Diagnostics/Input/errorsInTestBody.cara:15:5]
+  12 |     constant :: 2;
+  13 |     constant = 3;
+  14 |     return;
+  15 |     _ = value;
+     .     -
+     .     `-- Unreachable code after a 'return', 'break', or 'skip'.
+  16 | }
+  17 | 
+     `----
+  Fix: This code can never run, remove it.

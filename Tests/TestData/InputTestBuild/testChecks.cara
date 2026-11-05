@@ -1,0 +1,21 @@
+def checkSum(Assert: ref TestRun, left: i32, right: i32)
+{
+    Assert.isTrue(left %+ right == 4, "the sum is four");
+}
+
+test "both checks"
+{
+    value := 2;
+    Assert.isTrue(value == 2);
+    Assert.isFalse(value == 3, "value is not three");
+}
+
+test "a helper checks"
+{
+    checkSum(Assert, 2, 2);
+}
+
+def main() i32
+{
+    return 0;
+}

@@ -158,8 +158,10 @@ static std::vector<std::tuple<std::string, std::string_view, TokenKind>> Identif
         std::make_tuple("enumeration", "enumeration", TokenKind::Identifier),
         std::make_tuple("init", "init", TokenKind::InitKeyword),
         std::make_tuple("new", "new", TokenKind::NewKeyword),
+        std::make_tuple("test", "test", TokenKind::TestKeyword),
         std::make_tuple("initial", "initial", TokenKind::Identifier),
         std::make_tuple("news", "news", TokenKind::Identifier),
+        std::make_tuple("tests", "tests", TokenKind::Identifier),
     };
 }
 

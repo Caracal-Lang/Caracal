@@ -1,0 +1,20 @@
+def checkSum(Assert: ref TestRun, left: i32, right: i32)
+{
+    Assert.isTrue(left %+ right == 4);
+}
+
+test "each check has its own place"
+{
+    Assert.isTrue(1 == 1);
+    Assert.isFalse(1 == 2);
+}
+
+test "a helper passes its own line"
+{
+    checkSum(Assert, 2, 2);
+}
+
+def main() i32
+{
+    return 0;
+}

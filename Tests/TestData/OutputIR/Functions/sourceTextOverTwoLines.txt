@@ -1,0 +1,39 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define describe(%0: i32 "value", %1: string "text") string
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = parameter 1 : string "text"
+    %slot0 = allocate_local : string "text"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = load_value %2 : string
+    return %3
+
+define caller() string
+block entry(0):
+    %slot0 = allocate_local : string "temp"
+    %0 = const 3 : i32
+    %1 = address_of %slot0 : ref string
+    %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %3 = const "1\n        %+ 2\0" : cstring
+    %4 = address_of_field %2.0 : ref u8 "data"
+    store_value %3, %4 : ref u8
+    %5 = const 14 : i32
+    %6 = address_of_field %2.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 14 : i32
+    %8 = address_of_field %2.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = load_value %1 : string
+    %10 = call describe(%0, %9) : string
+    return %10

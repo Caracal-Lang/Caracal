@@ -264,6 +264,18 @@ namespace Caracal
             return layout;
         }
 
+        struct TestDefinitionNodeLayout
+        {
+            u32 body;
+        };
+
+        [[nodiscard]] inline TestDefinitionNodeLayout testDefinition(u32 index)
+        {
+            TestDefinitionNodeLayout layout{};
+            layout.body = lastChild(index);
+            return layout;
+        }
+
         struct TypeDefinitionNodeLayout
         {
             u32 constructorParameters;

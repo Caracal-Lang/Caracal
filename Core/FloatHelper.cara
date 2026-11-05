@@ -15,4 +15,41 @@ def approxEquals(left: f32, right: f32, tolerance: f32) bool
     return difference <= tolerance;
 }
 
-// TODO add tests when the language supports them
+test "isNan returns true for NaN"
+{
+    Assert.isTrue(isNan(0.0 / 0.0));
+}
+
+test "isNan returns false for other values"
+{
+    Assert.isFalse(isNan(0.0));
+    Assert.isFalse(isNan(-0.0));
+    Assert.isFalse(isNan(1.5));
+    Assert.isFalse(isNan(-1.5));
+    Assert.isFalse(isNan(1.0 / 0.0));
+    Assert.isFalse(isNan(-1.0 / 0.0));
+}
+
+test "approxEquals returns true for equal values"
+{
+    Assert.isTrue(approxEquals(1.5, 1.5, 0.0));
+    Assert.isTrue(approxEquals(0.0, -0.0, 0.0));
+}
+
+test "approxEquals returns true for a difference equal to the tolerance"
+{
+    Assert.isTrue(approxEquals(1.5, 1.0, 0.5));
+}
+
+test "approxEquals returns false for a difference more than the tolerance"
+{
+    Assert.isFalse(approxEquals(1.0, 2.0, 0.5));
+    Assert.isFalse(approxEquals(2.0, 1.0, 0.5));
+}
+
+test "approxEquals returns false for NaN"
+{
+    Assert.isFalse(approxEquals(0.0 / 0.0, 1.0, 10.0));
+    Assert.isFalse(approxEquals(1.0, 0.0 / 0.0, 10.0));
+    Assert.isFalse(approxEquals(0.0 / 0.0, 0.0 / 0.0, 10.0));
+}

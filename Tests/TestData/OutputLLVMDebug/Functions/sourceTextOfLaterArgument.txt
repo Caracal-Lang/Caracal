@@ -1,0 +1,66 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+%Box = type {}
+
+@0 = private unnamed_addr constant [7 x i8] c"2 %+ 3\00", align 1
+@1 = private unnamed_addr constant [7 x i8] c"6 %* 7\00", align 1
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define %string @describe(i32 %0, i32 %1, i32 %2, %string %3) {
+entry:
+  %text = alloca %string, align 8
+  store %string %3, ptr %text, align 8
+  %load = load %string, ptr %text, align 8
+  ret %string %load
+}
+
+define void @callers() {
+entry:
+  %temp = alloca %string, align 8
+  %box = alloca %Box, align 8
+  %temp1 = alloca %string, align 8
+  %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
+  store ptr @0, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  store i32 6, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
+  store i32 6, ptr %capacity, align 4
+  %load = load %string, ptr %temp, align 8
+  %call = call %string @describe(i32 1, i32 5, i32 4, %string %load)
+  call void @Box.new(ptr %box)
+  %_bytes2 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
+  %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 0
+  store ptr @1, ptr %data3, align 8
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 1
+  store i32 6, ptr %length4, align 4
+  %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 2
+  store i32 6, ptr %capacity5, align 4
+  %load6 = load %string, ptr %temp1, align 8
+  %call7 = call %string @Box.measure(ptr %box, i32 5, i32 42, %string %load6)
+  ret void
+}
+
+define %string @Box.measure(ptr nonnull %0, i32 %1, i32 %2, %string %3) {
+entry:
+  %text = alloca %string, align 8
+  store %string %3, ptr %text, align 8
+  %load = load %string, ptr %text, align 8
+  ret %string %load
+}
+
+define void @Box.new(ptr nonnull %0) {
+entry:
+  ret void
+}

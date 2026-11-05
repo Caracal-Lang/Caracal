@@ -1,0 +1,10 @@
+ Error T0101 #sourceText must refer to an earlier parameter
+    ,-[Diagnostics/Input/sourceTextOfUnknownParameter.cara:1:49]
+  1 | def show(value: i32, text: string = #sourceText(nope))
+    .                                                 ----
+    .                                                   `-- 'nope' is not an earlier parameter
+  2 | {
+  3 |     _ = value;
+  4 |     _ = text;
+    `----
+  Fix: Refer to a parameter declared earlier in the list.

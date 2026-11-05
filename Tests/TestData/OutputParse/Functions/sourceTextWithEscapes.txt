@@ -1,0 +1,96 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: describe
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: condition
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: condition
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: caller
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: path
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: describe
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: path
+                            }
+                        }
+                        Operation: Equal
+                        Right: {
+                            StringLiteral: "a\\b\n\"c\""
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

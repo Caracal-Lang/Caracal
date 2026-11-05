@@ -1,0 +1,12 @@
+ Error T0101 #sourceText must refer to an earlier parameter
+    ,-[Diagnostics/Input/sourceTextOfThis.cara:3:56]
+  1 | type Box
+  2 | {
+  3 |     def measure(value: i32, text: string = #sourceText(this))
+    .                                                        ----
+    .                                                          `-- 'this' is not an earlier parameter
+  4 |     {
+  5 |         _ = value;
+  6 |         _ = text;
+    `----
+  Fix: Refer to a parameter declared earlier in the list.

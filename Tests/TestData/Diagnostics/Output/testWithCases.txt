@@ -1,0 +1,13 @@
+ Error P0001 Unexpected token
+    ,-[Diagnostics/Input/testWithCases.cara:6:18]
+  3 |     return 1;
+  4 | }
+  5 | 
+  6 | test "has cases" with cases()
+    .                  ----
+    .                    `-- Expected '{' but got identifier
+  7 | {
+  8 |     _ = 1;
+  9 | }
+    `----
+  Fix: Replace identifier with '{'.

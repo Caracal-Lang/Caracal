@@ -1,0 +1,62 @@
+type SourceLocation
+    filePath: string
+    line: i32
+
+type string
+    const _bytes: [u8; _]
+
+type Box
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define where(%0: SourceLocation "place") i32
+block entry(0):
+    %0 = parameter 0 : SourceLocation "place"
+    %slot0 = allocate_local : SourceLocation "place"
+    %1 = address_of %slot0 : ref SourceLocation
+    store_value %0, %1 : SourceLocation
+    %2 = address_of_field %1.1 : ref i32 "line"
+    %3 = load_value %2 : i32
+    return %3
+
+define caller() i32
+block entry(0):
+    %slot0 = allocate_local : Box "box"
+    %0 = address_of %slot0 : ref Box
+    call Box.new(%0)
+    %1 = call Box.measure(%0) : i32
+    return %1
+
+define Box.measure(%0: ref Box ".this") i32
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %slot0 = allocate_local : SourceLocation "temp"
+    %1 = address_of %slot0 : ref SourceLocation
+    %2 = address_of_field %1.0 : ref string "filePath"
+    %3 = address_of_field %2.0 : ref [u8; _] "_bytes"
+    %4 = const "\0" : cstring
+    %5 = address_of_field %3.0 : ref u8 "data"
+    store_value %4, %5 : ref u8
+    %6 = const 0 : i32
+    %7 = address_of_field %3.1 : ref i32 "length"
+    store_value %6, %7 : i32
+    %8 = const 0 : i32
+    %9 = address_of_field %3.2 : ref i32 "capacity"
+    store_value %8, %9 : i32
+    %10 = address_of_field %1.1 : ref i32 "line"
+    %11 = const 10 : i32
+    store_value %11, %10 : i32
+    %12 = load_value %1 : SourceLocation
+    %13 = call where(%12) : i32
+    return %13
+
+define Box.new(%0: ref Box ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    return

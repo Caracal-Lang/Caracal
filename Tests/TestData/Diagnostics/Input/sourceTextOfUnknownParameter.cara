@@ -1,0 +1,10 @@
+def show(value: i32, text: string = #sourceText(nope))
+{
+    _ = value;
+    _ = text;
+}
+
+def caller()
+{
+    show(1);
+}

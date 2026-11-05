@@ -42,6 +42,7 @@ namespace Caracal
         std::string outputFolder;
         bool debugInfo = false;
         bool isDefault = false;
+        bool test = false;
         std::vector<ProjectConstant> constants;
     };
 

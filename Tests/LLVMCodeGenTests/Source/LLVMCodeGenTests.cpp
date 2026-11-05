@@ -171,7 +171,7 @@ static void DebugInfoFileTests(
     if (!std::filesystem::exists(outputFilePath))
         CaraTest::skip();// ("Out file missing");
 
-    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
+    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true, .emitsTests = true } };
     Caracal::Module module{};
     const auto sourceFilePath = inputFilePath.lexically_relative(TestDataDirectory());
     CompileFixtureToModule(inputFilePath, compilationContext, module, sourceFilePath);
@@ -221,13 +221,16 @@ static void FunctionWithoutSourceLineGetsNoDebugInformation()
 
 static void CoreEntryPointAndUserMainGetDebugInformation()
 {
-    const auto coreFilePath = TestDataDirectory() / "../../Core/Entrypoint.cara";
-    auto coreSource = Caracal::File::readText(coreFilePath);
-    if (!coreSource.has_value())
-        CaraTest::fail();
-
     Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
-    compilationContext.addSource(std::move(coreSource.value()), "Core/Entrypoint.cara", Caracal::UnitOrigin::Core);
+    compilationContext.addSource("__caracal_run_tests : bool : false;\n", "ProjectConstants.cara", Caracal::UnitOrigin::Project);
+    for (const auto* coreFileName : { "Entrypoint.cara", "Print.cara", "TestRun.cara" })
+    {
+        auto coreSource = Caracal::File::readText(TestDataDirectory() / "../../Core" / coreFileName);
+        if (!coreSource.has_value())
+            CaraTest::fail();
+
+        compilationContext.addSource(std::move(coreSource.value()), std::filesystem::path("Core") / coreFileName, Caracal::UnitOrigin::Core);
+    }
     Caracal::Module module{};
     CompileFixtureToModule(TestDataDirectory() / "InputDebugInfoCore" / "entryPoint.cara", compilationContext, module, "InputDebugInfoCore/entryPoint.cara");
 

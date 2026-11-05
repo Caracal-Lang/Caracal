@@ -39,6 +39,10 @@ namespace Caracal
         void addPrivateFreeFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addExpectedArrayLengthError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addReservedOperatorError(const SourceTextSharedPtr& source, const SourceLocation& location, TokenKind reservedOperator);
+        void addTestNotAtTopLevelError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addTestWithParametersError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addTestNameNotInQuotesError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location);
 
         // Annotation diagnostics
         void addDanglingAnnotationError(const SourceTextSharedPtr& source, const SourceLocation& location);
@@ -52,6 +56,7 @@ namespace Caracal
         void addDuplicateAnnotationArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& annotationName, const std::string& argumentName);
         void addExternMethodRequiresSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName);
         void addConflictingEnumAnnotationsError(const SourceTextSharedPtr& source, const SourceLocation& location, const SourceLocation& otherLocation, const std::string& annotationName, const std::string& otherAnnotationName);
+        void addSourceTextMustReferToEarlierParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName);
 
         // Unknown symbol and member access diagnostics
         void addUnknownNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
@@ -162,6 +167,7 @@ namespace Caracal
         void addUnusedLocalConstantWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
 
         // Prelude diagnostics
+        void addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addPreludeTypeMissingError(const std::string& typeName);
         void addPreludeCFunctionMissingError(const std::string& symbolName, const std::string& signature);
         void addPreludeCFunctionMismatchError(const std::string& functionName, const std::string& signature);

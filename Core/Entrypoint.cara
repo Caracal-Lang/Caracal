@@ -2,5 +2,16 @@
 // The C runtime calls this function and runs before the user's main
 def caracalMain() i32
 {
+    if __caracal_run_tests
+    {
+        run := TestRun.new();
+        __caracal_tests_stub(ref run);
+        run.printSummary();
+        return run.exitCode();
+    }
     return main();
+}
+
+def __caracal_tests_stub(Assert: ref TestRun)
+{
 }

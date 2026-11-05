@@ -1,0 +1,275 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Box
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: measure
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: count
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                    DefaultValue: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NumberLiteral: 2
+                            }
+                            Operation: MultiplicationWrapping
+                            Right: {
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                }
+                ParameterNode: {
+                    Name: text
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: string
+                    }
+                    DefaultValue: {
+                        SourceTextDefault: count
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: string
+                }
+            }
+            BlockNode(2): {
+                AssignmentStatement: {
+                    Left: {
+                        Discard: _
+                    }
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: count
+                        }
+                    }
+                }
+                ReturnStatement: {
+                    Type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: text
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: describe
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: count
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+            DefaultValue: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NumberLiteral: 1
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: count
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: count
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: text
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(5): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NumberLiteral: 3
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: describe
+                    }
+                    ArgumentsNode(2): {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NumberLiteral: 3
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 4
+                            }
+                        }
+                        StringLiteral: "written"
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: measure
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

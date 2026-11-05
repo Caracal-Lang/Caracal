@@ -1,0 +1,20 @@
+ Error T0040 Duplicate type declaration
+    ,-[Diagnostics/Input/userTypeNamedSourceLocation.cara:1:6]
+  1 | type SourceLocation
+    .      --------------
+    .             `-- Type 'SourceLocation' is already declared
+  2 | {
+  3 |     count := 0
+  4 | }
+    `----
+  Fix: Rename this type declaration, or remove the duplicate.
+
+ Info Related Previous type declaration
+    ,-[<prelude>:1:6]
+  1 | type SourceLocation(filePath: string, line: i32)
+    .      --------------
+    .             `-- Previous type declaration of 'SourceLocation' is here.
+  2 | {
+  3 |     filePath := filePath
+  4 |     line := line
+    `----

@@ -1,0 +1,4 @@
+test "cannot run"
+{
+    _ = 1;
+}

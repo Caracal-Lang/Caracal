@@ -13,6 +13,12 @@ namespace Caracal
     inline constexpr const char* CRuntimeEntrySymbolName = "main";
     inline constexpr const char* UserMainSymbolName = "caracal.userMain";
 
+    inline constexpr const char* CompilerNamePrefix = "__caracal_";
+    inline constexpr const char* TestFunctionNamePrefix = "__caracal_test_";
+    inline constexpr const char* TestsStubName = "__caracal_tests_stub";
+    inline constexpr const char* TestBeginMethodName = "beginTest";
+    inline constexpr const char* TestEndMethodName = "endTest";
+
     // the language-wide member name for array lengths
     inline constexpr const char* ArrayLengthMemberName = "length";
 
@@ -45,6 +51,8 @@ namespace Caracal
     inline constexpr const char* FlagAnnotationName = "flag";
     inline constexpr const char* StepAnnotationName = "step";
     inline constexpr const char* BuiltinAnnotationName = "builtin";
+    inline constexpr const char* SourceTextAnnotationName = "sourceText";
+    inline constexpr const char* SourceLocationAnnotationName = "sourceLocation";
     inline constexpr const char* SymbolAnnotationArgumentName = "symbol";
     inline constexpr const char* KindAnnotationArgumentName = "kind";
     inline constexpr const char* BitsAnnotationArgumentName = "bits";

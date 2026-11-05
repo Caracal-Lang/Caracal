@@ -36,5 +36,6 @@ namespace Caracal
         Type cstring = Type::Undefined();
         Type rawptr = Type::Undefined();
         Type string = Type::Undefined();
+        Type sourceLocation = Type::Undefined();
     };
 }

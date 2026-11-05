@@ -1,0 +1,18 @@
+def where(place: SourceLocation = #sourceLocation) i32
+{
+    return place.line;
+}
+
+type Box
+{
+    def measure() i32
+    {
+        return where();
+    }
+}
+
+def caller() i32
+{
+    box := Box.new();
+    return box.measure();
+}

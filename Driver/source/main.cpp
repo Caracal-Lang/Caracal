@@ -22,6 +22,7 @@ void printHelp()
     std::cout << "  caracal new [name] [-no-git]                   creates a project in the current folder or in [name]\n";
     std::cout << "  caracal build [path] [-mode <name>]            builds the project in the current folder, or in [path]\n";
     std::cout << "  caracal run [path] [-mode <name>]              builds and runs the project in the current folder, or in [path]\n";
+    std::cout << "  caracal test [path] [-all] [-libs <a>,<b>]     builds and runs the tests in the current folder, or in [path]\n";
     std::cout << "  caracal update [path] [-dry]                   updates the libraries of the project in the current folder, or in [path]\n";
     std::cout << "  caracal help\n";
 }
@@ -87,16 +88,36 @@ struct ProjectArguments
 {
     Caracal::Project project;
     std::optional<std::string> modeName;
+    Caracal::TestSelection testSelection;
 };
 
-std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
+static std::vector<std::string> SplitLibraryNames(std::string_view list)
+{
+    std::vector<std::string> names{};
+    size_t start = 0;
+    while (true)
+    {
+        const auto comma = list.find(',', start);
+        if (comma == std::string_view::npos)
+        {
+            names.emplace_back(list.substr(start));
+            return names;
+        }
+
+        names.emplace_back(list.substr(start, comma - start));
+        start = comma + 1;
+    }
+}
+
+std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[], bool takesMode = true, bool takesTestSelection = false)
 {
     std::optional<std::string> modeName{};
+    Caracal::TestSelection testSelection{};
     std::optional<std::filesystem::path> path{};
     for (int argumentIndex = 2; argumentIndex < argc; ++argumentIndex)
     {
         const auto argument = std::string_view(argv[argumentIndex]);
-        if (argument == "-mode")
+        if (argument == "-mode" && takesMode)
         {
             if (argumentIndex + 1 == argc)
             {
@@ -105,6 +126,20 @@ std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
             }
 
             modeName = argv[++argumentIndex];
+        }
+        else if (argument == "-all" && takesTestSelection)
+        {
+            testSelection.allLibraries = true;
+        }
+        else if (argument == "-libs" && takesTestSelection)
+        {
+            if (argumentIndex + 1 == argc)
+            {
+                std::cout << "-libs has to be followed by libraries from caracal.json, for example -libs Core,Json.\n";
+                return std::nullopt;
+            }
+
+            testSelection.libraries = SplitLibraryNames(argv[++argumentIndex]);
         }
         else if (argument.starts_with("-"))
         {
@@ -129,7 +164,7 @@ std::optional<ProjectArguments> findProjectFromArguments(int argc, char* argv[])
         return std::nullopt;
     }
 
-    return ProjectArguments{ result.project.value(), modeName };
+    return ProjectArguments{ result.project.value(), modeName, std::move(testSelection) };
 }
 
 int buildProject(int argc, char* argv[])
@@ -152,6 +187,17 @@ int runProject(int argc, char* argv[])
     }
 
     return Caracal::runProject(projectArguments->project, projectArguments->modeName);
+}
+
+int testProject(int argc, char* argv[])
+{
+    const auto projectArguments = findProjectFromArguments(argc, argv, false, true);
+    if (!projectArguments.has_value())
+    {
+        return 1;
+    }
+
+    return Caracal::testProject(projectArguments->project, projectArguments->testSelection);
 }
 
 void printUpdatedFiles(std::string_view label, const std::vector<std::filesystem::path>& filePaths)
@@ -268,6 +314,11 @@ int main(int argc, char* argv[])
     if (std::string_view(argv[1]) == "run")
     {
         return runProject(argc, argv);
+    }
+
+    if (std::string_view(argv[1]) == "test")
+    {
+        return testProject(argc, argv);
     }
 
     if (std::string_view(argv[1]) == "update")

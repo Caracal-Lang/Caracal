@@ -1,0 +1,81 @@
+type TestRun
+{
+    currentTest := ""
+    currentTestFailed := false
+    testCount := 0
+    failedTestCount := 0
+
+    def beginTest(name: string)
+    {
+        .currentTest = name;
+        .currentTestFailed = false;
+        .testCount = .testCount %+ 1;
+    }
+
+    def endTest()
+    {
+        if .currentTestFailed
+        {
+            .failedTestCount = .failedTestCount %+ 1;
+            return;
+        }
+
+        print("PASS ");
+        printLine(.currentTest);
+    }
+
+    def isTrue(condition: bool, message: string = #sourceText(condition), location: SourceLocation = #sourceLocation)
+    {
+        if !condition
+        {
+            ._fail("Assert.isTrue", message, location);
+            printLine("      Expected: true");
+            printLine("      But got:  false");
+        }
+    }
+
+    def isFalse(condition: bool, message: string = #sourceText(condition), location: SourceLocation = #sourceLocation)
+    {
+        if condition
+        {
+            ._fail("Assert.isFalse", message, location);
+            printLine("      Expected: false");
+            printLine("      But got:  true");
+        }
+    }
+
+    def printSummary()
+    {
+        passedTestCount := .testCount %- .failedTestCount;
+        C.printf("PASS %d/%d FAIL %d/%d\n", passedTestCount, .testCount, .failedTestCount, .testCount);
+    }
+
+    def exitCode() i32
+    {
+        return 1 if .failedTestCount != 0;
+        return 0;
+    }
+
+    def _fail(checkName: string, message: string, location: SourceLocation)
+    {
+        if !.currentTestFailed
+        {
+            print("FAIL ");
+            printLine(.currentTest);
+        }
+        .currentTestFailed = true;
+        
+        print("   ");
+        print(checkName);
+        if !message.isEmpty()
+        {
+            print(": ");
+            print(message);
+        }
+        printLine("");
+
+        print("      at ");
+        print(location.filePath);
+        C.printf(":%d\n", location.line);
+    }
+}

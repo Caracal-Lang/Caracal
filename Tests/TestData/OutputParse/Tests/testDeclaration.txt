@@ -1,0 +1,72 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: add
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: left
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: right
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: left
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: right
+                    }
+                }
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: undefined
+    Name: "add test"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: add
+                    }
+                    ArgumentsNode(2): {
+                        NumberLiteral: 2
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+    }
+}

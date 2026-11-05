@@ -22,6 +22,7 @@ namespace Caracal
             { NodeKind::EnumDefinitionStatement,        std::string_view("EnumDefinitionStatement") },
             { NodeKind::TypeDefinitionStatement,        std::string_view("TypeDefinitionStatement") },
             { NodeKind::MethodDefinitionStatement,      std::string_view("MethodDefinitionStatement") },
+            { NodeKind::TestDefinitionStatement,        std::string_view("TestDefinitionStatement") },
             { NodeKind::IfStatement,                    std::string_view("IfStatement") },
             { NodeKind::TrailingIfStatement,            std::string_view("TrailingIfStatement") },
             { NodeKind::WhileStatement,                 std::string_view("WhileStatement") },
@@ -41,6 +42,8 @@ namespace Caracal
             { NodeKind::BoolLiteral,                    std::string_view("BoolLiteral") },
             { NodeKind::NumberLiteral,                  std::string_view("NumberLiteral") },
             { NodeKind::StringLiteral,                  std::string_view("StringLiteral") },
+            { NodeKind::SourceTextDefault,              std::string_view("SourceTextDefault") },
+            { NodeKind::SourceLocationDefault,          std::string_view("SourceLocationDefault") },
             { NodeKind::ArrayLiteral,                   std::string_view("ArrayLiteral") },
 
             { NodeKind::AnnotationNode,                 std::string_view("AnnotationNode") },

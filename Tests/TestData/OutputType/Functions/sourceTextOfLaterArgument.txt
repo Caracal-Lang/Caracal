@@ -1,0 +1,273 @@
+FunctionDefinitionStatement: {
+    Type: (i32, i32, i32, string) -> string
+    Name: describe
+    ParametersNode(4): {
+        ParameterNode: {
+            Name: first
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: second
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: third
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: second
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: string
+            Lexeme: string
+        }
+    }
+    BlockNode(4): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: first
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: second
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: third
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: string
+            NameExpression: {
+                Type: string
+                Name: text
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: (ref Box, i32, i32, string) -> string
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: measure
+            }
+            ParametersNode(3): {
+                ParameterNode: {
+                    Name: first
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: second
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: text
+                    TypeNameNode: {
+                        Type: string
+                        Lexeme: string
+                    }
+                    DefaultValue: {
+                        SourceTextDefault: second
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: string
+                    Lexeme: string
+                }
+            }
+            BlockNode(3): {
+                AssignmentStatement: {
+                    Left: {
+                        Discard: _
+                    }
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: first
+                        }
+                    }
+                }
+                AssignmentStatement: {
+                    Left: {
+                        Discard: _
+                    }
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: second
+                        }
+                    }
+                }
+                ReturnStatement: {
+                    Type: string
+                    NameExpression: {
+                        Type: string
+                        Name: text
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> void
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(3): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: string
+                    Function type: (i32, i32, i32, string) -> string
+                    NameExpression: {
+                        Type: (i32, i32, i32, string) -> string
+                        Name: describe
+                    }
+                    ArgumentsNode(3): {
+                        NumberLiteral: 1
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                NumberLiteral: 2
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 3
+                            }
+                        }
+                        NumberLiteral: 4
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box) -> void
+                            NameExpression: {
+                                Type: (ref Box) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: string
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: string
+                            Function type: (ref Box, i32, i32, string) -> string
+                            NameExpression: {
+                                Type: (ref Box, i32, i32, string) -> string
+                                Name: measure
+                            }
+                            ArgumentsNode(2): {
+                                NumberLiteral: 5
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        NumberLiteral: 6
+                                    }
+                                    Operation: MultiplicationWrapping
+                                    Right: {
+                                        NumberLiteral: 7
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

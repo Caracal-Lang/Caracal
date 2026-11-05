@@ -1,0 +1,7 @@
+type Box
+{
+    test "inside"
+    {
+        _ = 1;
+    }
+}

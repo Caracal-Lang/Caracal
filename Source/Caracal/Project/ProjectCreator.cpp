@@ -59,6 +59,7 @@ namespace Caracal
             "caracal build                  # builds into {1}/Debug\n"
             "caracal run                    # builds and runs\n"
             "caracal build -mode Release    # builds into {1}/Release\n"
+            "caracal test                   # builds and runs the tests\n"
             "caracal update                 # updates {2}/Core from the compiler\n"
             "```\n",
             project.name,
@@ -160,6 +161,9 @@ namespace Caracal
         {
             if (mode.isDefault)
                 projectFile["modes"][mode.name]["default"] = true;
+
+            if (mode.test)
+                projectFile["modes"][mode.name]["test"] = true;
 
             projectFile["modes"][mode.name]["optimize"] = optimizationLevelToString(mode.optimizationLevel);
             projectFile["modes"][mode.name]["debugInfo"] = mode.debugInfo;

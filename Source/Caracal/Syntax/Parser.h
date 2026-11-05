@@ -42,6 +42,9 @@ namespace Caracal
         void parseTypeDefinitionStatement();
         void parseTypeFieldDeclaration(u32 subtreeStart);
         void parseMethodDefinitionStatement();
+        [[nodiscard]] bool tryParseTestStatement(StatementScope scope);
+        void parseTestDefinitionStatement();
+        void parseTestBody();
         void parseIfStatement(StatementScope scope);
         void parseWhileStatement(StatementScope scope);
         void parseBreakStatement();
@@ -64,6 +67,7 @@ namespace Caracal
         void parseArgumentList(StatementScope scope);
         void parseNumberLiteral();
         void parseStringLiteral();
+        void parseAnnotationExpressionDefault();
         void parseArrayLiteralExpression(StatementScope scope);
         void buildAnnotationNode(StatementScope scope);
         void flushDanglingAnnotations();

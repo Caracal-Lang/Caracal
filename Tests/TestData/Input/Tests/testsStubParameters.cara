@@ -1,0 +1,8 @@
+def __caracal_tests_stub(count: i32, total: ref i32)
+{
+}
+
+test "adds count to total"
+{
+    total = total %+ count;
+}

@@ -1,0 +1,62 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readsLocal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: Assert
+                }
+            }
+            Right: {
+                NumberLiteral: 7
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: Assert
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: undefined
+    Name: "a local named Assert"
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: Assert
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: Assert
+                }
+            }
+        }
+    }
+}

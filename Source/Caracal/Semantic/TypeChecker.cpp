@@ -14,8 +14,10 @@
 #include <Caracal/Syntax/StringEscapes.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 #include <Caracal/Syntax/UnaryOperatorKind.h>
+#include <Caracal/Text/AsciiName.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 #include <optional>
 #include <span>
@@ -558,6 +560,21 @@ namespace Caracal
         return NodeSpans::callArgumentsLocation(unit.nodeBuffer, context.tokenBuffer(unit.fileId), callIndex, argumentNodes);
     }
 
+    // __caracal_test_<file name>_<test name>
+    [[nodiscard]] static std::string TestFunctionBaseName(const std::filesystem::path& filePath, std::string_view testName)
+    {
+        auto name = std::string(TestFunctionNamePrefix);
+        const auto stem = filePath.stem().u8string();
+        name.append(stem.begin(), stem.end());
+        if (!stem.empty() && !testName.empty())
+        {
+            name.push_back('_');
+        }
+        name += testName;
+        replaceNonAsciiCharacters(name);
+        return name;
+    }
+
     TypeChecker::TypeChecker(
         CompilationContext& compilationContext,
         bool isPreludePass,
@@ -609,14 +626,17 @@ namespace Caracal
         collectMethodDeclarations();
 
         typeCheckFunctionSignatures();
+        copyTestsStubParameters();
         typeCheckTypeSignatures();
         typeCheckEnumDefinitions();
         typeCheckGlobalConstants();
         typeCheckTypeFieldDefinitions();
         typeCheckFunctionDefinitions();
+        typeCheckTestDefinitions();
         typeCheckTypeMethodDefinitions();
 
         checkUninitializedInitConstants();
+        typeCheckTestsStub();
 
         if (!m_isPreludePass)
         {
@@ -685,6 +705,11 @@ namespace Caracal
                     collectFunctionDeclaration(unit, index);
                     break;
                 }
+                case NodeKind::TestDefinitionStatement:
+                {
+                    collectTestDeclaration(unit, index);
+                    break;
+                }
                 default:
                 {
                     break;
@@ -724,6 +749,27 @@ namespace Caracal
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
         m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
+        if (functionName == TestsStubName)
+        {
+            m_testsStubDeclaration = NodeIndex{ unit.fileId, index };
+        }
+    }
+
+    void TypeChecker::collectTestDeclaration(const CompilationUnit& unit, u32 index)
+    {
+        const auto baseName = TestFunctionBaseName(unit.source->filePath, escapedStringContent(unit, index));
+
+        // we need to append a number in case the name is already in use
+        auto functionName = baseName;
+        for (auto suffix = 1; m_module.tryGetFunctionTypeByName(functionName) != Type::Undefined(); ++suffix)
+        {
+            functionName = baseName + "_" + std::to_string(suffix);
+        }
+
+        auto& functionDefinition = m_module.createFunction(functionName, std::vector<Parameter>(), std::vector<Type>());
+        functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
+        m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
+        m_testDeclarations.push_back(NodeIndex{ unit.fileId, index });
     }
 
     void TypeChecker::reportDuplicateTypeDeclaration(const CompilationUnit& unit, u32 index, std::string_view name, Type existingType)
@@ -1160,6 +1206,69 @@ namespace Caracal
         return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
     }
 
+    ValueRef TypeChecker::emitSourceTextDefault(const CompilationUnit& unit, size_t parameterIndex, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset)
+    {
+        auto sourceNode = parameters[parameterIndex].defaultValueNode();
+        // only earlier parameters are allowed
+        auto searchEnd = parameterIndex;
+        while (unitFor(sourceNode).nodeBuffer.kind(sourceNode.index) == NodeKind::SourceTextDefault)
+        {
+            const auto namedParameter = nameOf(unitFor(sourceNode), sourceNode.index);
+            auto namedIndex = parameterOffset;
+            while (namedIndex < searchEnd && parameters[namedIndex].name() != namedParameter)
+            {
+                ++namedIndex;
+            }
+            if (namedIndex >= searchEnd)
+            {
+                return ValueRef{};
+            }
+
+            const auto argumentNode = m_orderedSlotStack[orderedStart + namedIndex - parameterOffset];
+            if (argumentNode == UnboundArgumentSlot)
+            {
+                return ValueRef{};
+            }
+
+            if (argumentNode == DefaultBoundArgumentSlot)
+            {
+                sourceNode = parameters[namedIndex].defaultValueNode();
+            }
+            else
+            {
+                sourceNode = NodeIndex{ unit.fileId, argumentNode };
+            }
+            searchEnd = namedIndex;
+        }
+
+        const auto& sourceUnit = unitFor(sourceNode);
+        const auto location = ExpressionSourceLocation(m_compilationContext, sourceUnit, sourceNode.index);
+        const auto text = std::string_view(sourceUnit.source->text).substr(location.startIndex, location.endIndex - location.startIndex);
+        const auto stringType = m_module.wellKnown().string;
+        const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
+        m_emitter.emitStringLiteralIntoAddress(temp, text);
+        return m_emitter.emitLoad(temp, stringType);
+    }
+
+    ValueRef TypeChecker::emitSourceLocationDefault(const CompilationUnit& unit, u32 callIndex)
+    {
+        const auto locationType = m_module.wellKnown().sourceLocation;
+        const auto temp = m_emitter.allocateTempAggregateSlot("temp", locationType);
+
+        const auto filePathField = m_module.getTypeDefinition(locationType).tryGetFieldByName("filePath");
+        const auto filePathAddress = m_emitter.emitFieldAddress(temp, locationType, filePathField.index(), filePathField.type());
+        const auto path = unit.source->filePath.generic_u8string();
+        m_emitter.emitStringLiteralIntoAddress(filePathAddress, std::string_view(reinterpret_cast<const char*>(path.data()), path.size()));
+
+        const auto lineField = m_module.getTypeDefinition(locationType).tryGetFieldByName("line");
+        const auto lineAddress = m_emitter.emitFieldAddress(temp, locationType, lineField.index(), lineField.type());
+        const auto callStart = ExpressionSourceLocation(m_compilationContext, unit, callIndex).startIndex;
+        const auto line = unit.source->lineColumnAt(callStart).line;
+        m_emitter.emitStoreValue(m_emitter.emitConstant(ConstantValue::FromI32(line), lineField.type()), lineAddress, lineField.type());
+
+        return m_emitter.emitLoad(temp, locationType);
+    }
+
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
     {
         const auto defaultType = m_module.typeOfNode(defaultNode);
@@ -1570,6 +1679,20 @@ namespace Caracal
         return recordType(unit, index, arrayType);
     }
 
+    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters)
+    {
+        const auto namedParameter = nameOf(unit, defaultIndex);
+        for (const auto& parameter : earlierParameters)
+        {
+            if (parameter.name() == namedParameter)
+            {
+                return;
+            }
+        }
+
+        m_diagnostics.addSourceTextMustReferToEarlierParameterError(unit.source, nameLocation(unit, defaultIndex), std::string(namedParameter));
+    }
+
     std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index)
     {
         std::vector<Parameter> parameters{};
@@ -1627,6 +1750,10 @@ namespace Caracal
                             formatTypeName(m_module, parameterType),
                             formatTypeName(m_module, defaultType));
                     }
+                }
+                if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
+                {
+                    typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, parameters);
                 }
                 seenDefault = true;
             }
@@ -2163,8 +2290,71 @@ namespace Caracal
         CARACAL_ZONE_NAMED("check.functionDefinitions");
         for (const auto declaration : m_functionDeclarations)
         {
+            if (declaration == m_testsStubDeclaration)
+            {
+                continue;
+            }
+
             const auto& unit = unitFor(declaration);
             typeCheckFunctionDefinitionStatement(unit, declaration.index);
+        }
+    }
+
+    void TypeChecker::copyTestsStubParameters()
+    {
+        if (m_testsStubDeclaration.index == InvalidNodeIndex)
+        {
+            return;
+        }
+
+        const auto parameters = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration)).parameters();
+        for (const auto declaration : m_testDeclarations)
+        {
+            m_module.getFunctionDefinition(m_module.typeOfNode(declaration)).setParameters(parameters);
+        }
+    }
+
+    void TypeChecker::typeCheckTestsStub()
+    {
+        if (m_testsStubDeclaration.index == InvalidNodeIndex)
+        {
+            if (m_options.emitsTests && !m_testDeclarations.empty())
+            {
+                const auto firstTest = m_testDeclarations.front();
+                const auto& firstTestUnit = unitFor(firstTest);
+                m_diagnostics.addTestsStubMissingError(firstTestUnit.source, ExpressionSourceLocation(m_compilationContext, firstTestUnit, firstTest.index));
+            }
+            return;
+        }
+
+        CARACAL_ZONE_NAMED("check.testsStub");
+        const auto& unit = unitFor(m_testsStubDeclaration);
+        const auto index = m_testsStubDeclaration.index;
+        const auto& functionDefinition = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration));
+        const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
+        const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
+        pushScope(ScopeKind::Function);
+
+        m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, functionLayout.body));
+        m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
+        bindParameters(unit, functionLayout.parameters, functionDefinition, true);
+        if (m_options.emitsTests)
+        {
+            emitTestsStubBody();
+        }
+        m_emitter.endFunction();
+
+        // we dont emit unused parameter warnings for tests
+        popScope(false);
+    }
+
+    void TypeChecker::typeCheckTestDefinitions()
+    {
+        CARACAL_ZONE_NAMED("check.testDefinitions");
+        for (const auto declaration : m_testDeclarations)
+        {
+            const auto& unit = unitFor(declaration);
+            typeCheckTestDefinitionStatement(unit, declaration.index);
         }
     }
 
@@ -3496,7 +3686,6 @@ namespace Caracal
         }
 
         auto& functionDefinition = m_module.getFunctionDefinition(functionType);
-        const auto& parameters = functionDefinition.parameters();
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
 
         // the extern annotation is read before the body is emitted
@@ -3514,21 +3703,7 @@ namespace Caracal
             m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
         }
 
-        NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, m_childrenScratch);
-        for (size_t i = 0; i < parameters.size(); ++i)
-        {
-            auto location = std::optional<SourceLocation>{};
-            if (i < m_childrenScratch.size())
-            {
-                location = NodeSpans::parameterLocation(unit.nodeBuffer, tokens, m_childrenScratch[i]);
-            }
-            const auto nameId = internName(parameters[i].name());
-            addVariableBinding(nameId, parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
-            if (emitBody)
-            {
-                m_emitter.emitParameter(nameId, static_cast<i32>(i), parameters[i]);
-            }
-        }
+        bindParameters(unit, functionLayout.parameters, functionDefinition, emitBody);
 
         const auto& returnTypes = functionDefinition.returnTypes();
         if (returnTypes.size() == 1)
@@ -3574,6 +3749,125 @@ namespace Caracal
         }
 
         popScope(!isExtern);
+    }
+
+    void TypeChecker::bindParameters(const CompilationUnit& unit, u32 parametersNode, const FunctionDefinition& functionDefinition, bool emitBody)
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const auto& parameters = functionDefinition.parameters();
+        m_childrenScratch.clear();
+        if (parametersNode != InvalidNodeIndex)
+        {
+            NodeLayout::collectChildren(unit.nodeBuffer, parametersNode, m_childrenScratch);
+        }
+        for (size_t i = 0; i < parameters.size(); ++i)
+        {
+            auto location = std::optional<SourceLocation>{};
+            if (i < m_childrenScratch.size())
+            {
+                location = NodeSpans::parameterLocation(unit.nodeBuffer, tokens, m_childrenScratch[i]);
+            }
+            const auto nameId = internName(parameters[i].name());
+            addVariableBinding(nameId, parameters[i].type(), location, unit.source, VariableBindingKind::Parameter);
+            if (emitBody)
+            {
+                m_emitter.emitParameter(nameId, static_cast<i32>(i), parameters[i]);
+            }
+        }
+    }
+
+    void TypeChecker::emitTestsStubBody()
+    {
+        CARACAL_ZONE_NAMED("check.testsStubBody");
+        const auto stringType = m_module.wellKnown().string;
+
+        const auto& stubParameters = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration)).parameters();
+        auto testArguments = std::vector<ValueRef>{};
+        for (const auto& parameter : stubParameters)
+        {
+            const auto nameId = internName(parameter.name());
+            if (parameter.type().isReference())
+            {
+                testArguments.push_back(m_emitter.addressOfLocal(nameId));
+            }
+            else
+            {
+                testArguments.push_back(m_emitter.readLocal(nameId));
+            }
+        }
+
+        auto beginTestType = Type::Undefined();
+        auto endTestType = Type::Undefined();
+        auto receiver = ValueRef{};
+        if (!stubParameters.empty() && stubParameters.front().type().toBaseType().kind() == TypeKind::Type)
+        {
+            const auto& receiverDefinition = m_module.getTypeDefinition(stubParameters.front().type().toBaseType());
+            beginTestType = receiverDefinition.tryGetMethodTypeByName(TestBeginMethodName);
+            endTestType = receiverDefinition.tryGetMethodTypeByName(TestEndMethodName);
+            receiver = m_emitter.addressOfLocal(internName(stubParameters.front().name()));
+        }
+
+        for (const auto declaration : m_testDeclarations)
+        {
+            if (!emitsTestsOf(unitFor(declaration)))
+            {
+                continue;
+            }
+
+            if (beginTestType != Type::Undefined())
+            {
+                // Test.beginTest("name") before test
+                m_module.markPreludeTypeRequired(stringType);
+                const auto temp = m_emitter.allocateTempAggregateSlot("temp", stringType);
+                m_emitter.emitStringLiteralIntoAddress(temp, escapedStringContent(unitFor(declaration), declaration.index));
+                const ValueRef beginTestArguments[] = { receiver, m_emitter.emitLoad(temp, stringType) };
+                static_cast<void>(m_emitter.emitCall(beginTestType.id(), beginTestArguments, Type::Void()));
+            }
+
+            static_cast<void>(m_emitter.emitCall(m_module.typeOfNode(declaration).id(), testArguments, Type::Void()));
+
+            if (endTestType != Type::Undefined())
+            {
+                // Test.endTest() after test
+                const ValueRef endTestArguments[] = { receiver };
+                static_cast<void>(m_emitter.emitCall(endTestType.id(), endTestArguments, Type::Void()));
+            }
+        }
+    }
+
+    bool TypeChecker::emitsTestsOf(const CompilationUnit& unit) const noexcept
+    {
+        return m_options.emitsTests && unit.runsItsTests;
+    }
+
+    void TypeChecker::typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index)
+    {
+        CARACAL_ZONE_NAMED("check.testBody");
+        const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
+        pushScope(ScopeKind::Function);
+
+        const auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
+        const auto testLayout = NodeLayout::testDefinition(index);
+        const auto emitsTest = emitsTestsOf(unit);
+
+        if (emitsTest)
+        {
+            m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, testLayout.body));
+            m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
+        }
+        // the parameters come from the stub and have no source location, so no unused warning
+        bindParameters(unit, InvalidNodeIndex, functionDefinition, emitsTest);
+
+        m_currentFunctionName = functionDefinition.fullName();
+        typeCheckBlockNode(unit, testLayout.body);
+        m_currentFunctionName.clear();
+
+        if (emitsTest)
+        {
+            m_emitter.endFunction();
+        }
+        popScope(true);
     }
 
     void TypeChecker::typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index)
@@ -4127,6 +4421,23 @@ namespace Caracal
     {
         switch (unit.nodeBuffer.kind(index))
         {
+            case NodeKind::SourceTextDefault:
+            {
+                m_module.markPreludeTypeRequired(m_module.wellKnown().string);
+                return CheckedValue{ recordType(unit, index, m_module.wellKnown().string) };
+            }
+            case NodeKind::SourceLocationDefault:
+            {
+                const auto locationType = m_module.wellKnown().sourceLocation;
+                if (locationType == Type::Undefined())
+                {
+                    m_diagnostics.addPreludeTypeMissingError("SourceLocation");
+                    return Type::Undefined();
+                }
+
+                m_module.markPreludeTypeRequired(locationType);
+                return CheckedValue{ recordType(unit, index, locationType) };
+            }
             case NodeKind::StringLiteral:
             {
                 auto literalType = m_module.wellKnown().string;
@@ -5603,15 +5914,27 @@ namespace Caracal
                     if (parameter.hasDefaultNode())
                     {
                         const auto defaultNode = parameter.defaultValueNode();
-                        emittedDefault = m_emitter.emitDefaultArgument(
-                            defaultNode.fileId,
-                            defaultNode.index,
-                            m_module.typeOfNode(defaultNode).toValue(),
-                            parameter.type().toValue());
-                        if (emittedDefault.id() < 0)
+                        const auto defaultKind = unitFor(defaultNode).nodeBuffer.kind(defaultNode.index);
+                        if (defaultKind == NodeKind::SourceTextDefault)
                         {
-                            // a non-scalar default has no fold, its expression emits here
-                            emittedDefault = emitDefaultArgumentExpression(defaultNode, parameter.type());
+                            emittedDefault = emitSourceTextDefault(unit, i + parameterOffset, checkedParameters, orderedStart, parameterOffset);
+                        }
+                        else if (defaultKind == NodeKind::SourceLocationDefault)
+                        {
+                            emittedDefault = emitSourceLocationDefault(unit, callIndex);
+                        }
+                        else
+                        {
+                            emittedDefault = m_emitter.emitDefaultArgument(
+                                defaultNode.fileId,
+                                defaultNode.index,
+                                m_module.typeOfNode(defaultNode).toValue(),
+                                parameter.type().toValue());
+                            if (emittedDefault.id() < 0)
+                            {
+                                // a non-scalar default has no fold, its expression emits here
+                                emittedDefault = emitDefaultArgumentExpression(defaultNode, parameter.type());
+                            }
                         }
                     }
                     if (emittedDefault.id() < 0)

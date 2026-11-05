@@ -1,0 +1,14 @@
+type Box
+{
+    def measure(value: i32, text: string = #sourceText(this))
+    {
+        _ = value;
+        _ = text;
+    }
+}
+
+def caller()
+{
+    box := Box.new();
+    box.measure(1);
+}

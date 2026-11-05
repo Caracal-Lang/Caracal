@@ -1,0 +1,9 @@
+def show(text: string = #sourceText(text))
+{
+    _ = text;
+}
+
+def caller()
+{
+    show();
+}

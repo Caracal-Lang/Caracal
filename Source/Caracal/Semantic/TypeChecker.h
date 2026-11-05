@@ -99,6 +99,7 @@ namespace Caracal
         void collectDeclarations();
         void collectUnitDeclarations(CompilationUnit& unit);
         void collectFunctionDeclaration(const CompilationUnit& unit, u32 index);
+        void collectTestDeclaration(const CompilationUnit& unit, u32 index);
         void collectEnumDeclaration(const CompilationUnit& unit, u32 index);
         void collectTypeDeclaration(const CompilationUnit& unit, u32 index);
         void collectBuiltinTypeDeclaration(const CompilationUnit& unit, u32 index);
@@ -122,6 +123,8 @@ namespace Caracal
         [[nodiscard]] Type typeCheckTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index);
+        [[nodiscard]] bool emitsTestsOf(const CompilationUnit& unit) const noexcept;
+        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters);
         [[nodiscard]] std::vector<Type> typeCheckReturnTypesNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] i32 convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex);
         void pushScope(ScopeKind kind);
@@ -140,6 +143,9 @@ namespace Caracal
         void typeCheckEnumDefinitions();
         void typeCheckTypeFieldDefinitions();
         void typeCheckFunctionDefinitions();
+        void typeCheckTestDefinitions();
+        void typeCheckTestsStub();
+        void copyTestsStubParameters();
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
         void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
@@ -149,6 +155,9 @@ namespace Caracal
         void typeCheckExpressionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void bindParameters(const CompilationUnit& unit, u32 parametersNode, const FunctionDefinition& functionDefinition, bool emitBody);
+        void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void emitTestsStubBody();
         void typeCheckEnumDefinitionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckTypeFieldDeclaration(const CompilationUnit& unit, u32 index, TypeDefinition& typeDefinition, i32 fieldIndex);
         void typeCheckMethodDefinitionStatement(const CompilationUnit& unit, u32 index);
@@ -215,6 +224,8 @@ namespace Caracal
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
         [[nodiscard]] ValueRef emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType);
+        [[nodiscard]] ValueRef emitSourceTextDefault(const CompilationUnit& unit, size_t parameterIndex, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset);
+        [[nodiscard]] ValueRef emitSourceLocationDefault(const CompilationUnit& unit, u32 callIndex);
         [[nodiscard]] ValueRef materializeValue(const CheckedValue& checked);
         [[nodiscard]] ValueRef dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType);
 
@@ -228,6 +239,8 @@ namespace Caracal
         std::vector<CompilationUnit*> m_units;
         std::vector<NodeIndex> m_globalConstantDeclarations;
         std::vector<NodeIndex> m_functionDeclarations;
+        std::vector<NodeIndex> m_testDeclarations;
+        NodeIndex m_testsStubDeclaration{};
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
 

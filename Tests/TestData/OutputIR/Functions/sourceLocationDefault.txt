@@ -1,0 +1,119 @@
+type SourceLocation
+    filePath: string
+    line: i32
+
+type string
+    const _bytes: [u8; _]
+
+type Box
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define where(%0: SourceLocation "place") i32
+block entry(0):
+    %0 = parameter 0 : SourceLocation "place"
+    %slot0 = allocate_local : SourceLocation "place"
+    %1 = address_of %slot0 : ref SourceLocation
+    store_value %0, %1 : SourceLocation
+    %2 = address_of_field %1.1 : ref i32 "line"
+    %3 = load_value %2 : i32
+    return %3
+
+define callers() void
+block entry(0):
+    %slot0 = allocate_local : SourceLocation "temp"
+    %slot1 = allocate_local : SourceLocation "constructed"
+    %slot2 = allocate_local : string "temp"
+    %slot3 = allocate_local : Box "box"
+    %slot4 = allocate_local : SourceLocation "temp"
+    %0 = address_of %slot0 : ref SourceLocation
+    %1 = address_of_field %0.0 : ref string "filePath"
+    %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
+    %3 = const "\0" : cstring
+    %4 = address_of_field %2.0 : ref u8 "data"
+    store_value %3, %4 : ref u8
+    %5 = const 0 : i32
+    %6 = address_of_field %2.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 0 : i32
+    %8 = address_of_field %2.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = address_of_field %0.1 : ref i32 "line"
+    %10 = const 16 : i32
+    store_value %10, %9 : i32
+    %11 = load_value %0 : SourceLocation
+    %12 = call where(%11) : i32
+    %13 = address_of %slot1 : ref SourceLocation
+    %14 = address_of %slot2 : ref string
+    %15 = address_of_field %14.0 : ref [u8; _] "_bytes"
+    %16 = const "written\0" : cstring
+    %17 = address_of_field %15.0 : ref u8 "data"
+    store_value %16, %17 : ref u8
+    %18 = const 7 : i32
+    %19 = address_of_field %15.1 : ref i32 "length"
+    store_value %18, %19 : i32
+    %20 = const 7 : i32
+    %21 = address_of_field %15.2 : ref i32 "capacity"
+    store_value %20, %21 : i32
+    %22 = load_value %14 : string
+    %23 = const 1 : i32
+    call SourceLocation.new(%13, %22, %23)
+    %24 = load_value %13 : SourceLocation
+    %25 = call where(%24) : i32
+    %26 = address_of %slot3 : ref Box
+    call Box.new(%26)
+    %27 = address_of %slot4 : ref SourceLocation
+    %28 = address_of_field %27.0 : ref string "filePath"
+    %29 = address_of_field %28.0 : ref [u8; _] "_bytes"
+    %30 = const "\0" : cstring
+    %31 = address_of_field %29.0 : ref u8 "data"
+    store_value %30, %31 : ref u8
+    %32 = const 0 : i32
+    %33 = address_of_field %29.1 : ref i32 "length"
+    store_value %32, %33 : i32
+    %34 = const 0 : i32
+    %35 = address_of_field %29.2 : ref i32 "capacity"
+    store_value %34, %35 : i32
+    %36 = address_of_field %27.1 : ref i32 "line"
+    %37 = const 19 : i32
+    store_value %37, %36 : i32
+    %38 = load_value %27 : SourceLocation
+    %39 = call Box.measure(%26, %38) : i32
+    return
+
+define Box.measure(%0: ref Box ".this", %1: SourceLocation "place") i32
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = parameter 1 : SourceLocation "place"
+    %slot0 = allocate_local : SourceLocation "place"
+    %2 = address_of %slot0 : ref SourceLocation
+    store_value %1, %2 : SourceLocation
+    %3 = address_of_field %2.1 : ref i32 "line"
+    %4 = load_value %3 : i32
+    return %4
+
+define Box.new(%0: ref Box ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    return
+
+define SourceLocation.new(%0: ref SourceLocation ".this", %1: string "filePath", %2: i32 "line") void
+block entry(0):
+    %0 = parameter 0 : ref SourceLocation ".this"
+    %1 = parameter 1 : string "filePath"
+    %slot0 = allocate_local : string "filePath"
+    %2 = address_of %slot0 : ref string
+    store_value %1, %2 : string
+    %3 = parameter 2 : i32 "line"
+    %4 = load_value %2 : string
+    %5 = address_of_field %0.0 : ref string "filePath"
+    store_value %4, %5 : string
+    %6 = address_of_field %0.1 : ref i32 "line"
+    store_value %3, %6 : i32
+    return

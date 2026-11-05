@@ -1,0 +1,9 @@
+def __caracal_tests_stub(Assert: i32)
+{
+}
+
+test "a local named Assert"
+{
+    Assert := 1;
+    _ = Assert;
+}

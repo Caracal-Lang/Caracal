@@ -44,6 +44,7 @@ std::string stringify(TokenKind kind)
         { TokenKind::Identifier,        std::string_view("Identifier") },
         { TokenKind::PrivateIdentifier, std::string_view("PrivateIdentifier") },
         { TokenKind::InitKeyword,       std::string_view("InitKeyword") },
+        { TokenKind::TestKeyword,       std::string_view("TestKeyword") },
         { TokenKind::NewKeyword,        std::string_view("NewKeyword") },
         { TokenKind::Number,            std::string_view("Number") },
         { TokenKind::String,            std::string_view("String") },

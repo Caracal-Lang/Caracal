@@ -49,6 +49,14 @@ namespace Caracal
                 return "P0015";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "P0016";
+            case DiagnosticKind::P0017_TestNotAtTopLevel:
+                return "P0017";
+            case DiagnosticKind::P0018_TestWithParameters:
+                return "P0018";
+            case DiagnosticKind::P0019_TestNameNotInQuotes:
+                return "P0019";
+            case DiagnosticKind::P0020_UnknownAnnotationExpression:
+                return "P0020";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:
@@ -63,6 +71,8 @@ namespace Caracal
                 return "T0005";
             case DiagnosticKind::T0006_ConflictingEnumAnnotations:
                 return "T0006";
+            case DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter:
+                return "T0101";
 
             // Unknown symbol and member access diagnostics
             case DiagnosticKind::T0007_UnknownName:
@@ -257,6 +267,8 @@ namespace Caracal
                 return "T0095";
             case DiagnosticKind::T0096_FieldAccessMissingDot:
                 return "T0096";
+            case DiagnosticKind::T0102_TestsStubMissing:
+                return "T0102";
             case DiagnosticKind::T0097_PreludeTypeMissing:
                 return "T0097";
             case DiagnosticKind::T0098_PreludeCFunctionMissing:
@@ -316,6 +328,14 @@ namespace Caracal
                 return "Expected an array length";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "Plain arithmetic operators are reserved until checked arithmetic exists";
+            case DiagnosticKind::P0017_TestNotAtTopLevel:
+                return "Tests can only be declared at the top level";
+            case DiagnosticKind::P0018_TestWithParameters:
+                return "Tests cannot have parameters";
+            case DiagnosticKind::P0019_TestNameNotInQuotes:
+                return "A test needs a name in quotes";
+            case DiagnosticKind::P0020_UnknownAnnotationExpression:
+                return "Unknown annotation expression";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:
@@ -330,6 +350,8 @@ namespace Caracal
                 return "Annotation argument type mismatch";
             case DiagnosticKind::T0006_ConflictingEnumAnnotations:
                 return "Conflicting enum annotations";
+            case DiagnosticKind::T0101_SourceTextMustReferToEarlierParameter:
+                return "#sourceText must refer to an earlier parameter";
 
             // Unknown symbol and member access diagnostics
             case DiagnosticKind::T0007_UnknownName:
@@ -524,6 +546,8 @@ namespace Caracal
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
                 return "Private methods cannot be called from outside their type";
+            case DiagnosticKind::T0102_TestsStubMissing:
+                return "The test stub is missing";
             case DiagnosticKind::T0097_PreludeTypeMissing:
                 return "Prelude does not declare a type the compiler needs";
             case DiagnosticKind::T0098_PreludeCFunctionMissing:

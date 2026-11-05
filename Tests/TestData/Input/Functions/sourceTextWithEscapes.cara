@@ -1,0 +1,10 @@
+def describe(condition: bool, text: string = #sourceText(condition)) string
+{
+    _ = condition;
+    return text;
+}
+
+def caller(path: string) string
+{
+    return describe(path == "a\\b\n\"c\"");
+}

@@ -1,0 +1,4 @@
+test "has parameters"(value: i32)
+{
+    _ = value;
+}

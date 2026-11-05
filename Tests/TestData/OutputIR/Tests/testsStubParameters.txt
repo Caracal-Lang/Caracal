@@ -1,0 +1,13 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define __caracal_tests_stub(%0: i32 "count", %1: ref i32 "total") void
+block entry(0):
+    %0 = parameter 0 : i32 "count"
+    %1 = parameter 1 : ref i32 "total"
+    return

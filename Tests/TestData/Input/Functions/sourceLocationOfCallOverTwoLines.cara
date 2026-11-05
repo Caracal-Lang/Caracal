@@ -1,0 +1,11 @@
+def where(value: i32, place: SourceLocation = #sourceLocation) i32
+{
+    _ = value;
+    return place.line;
+}
+
+def caller() i32
+{
+    return where(
+        1);
+}

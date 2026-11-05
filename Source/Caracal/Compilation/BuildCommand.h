@@ -18,9 +18,11 @@ namespace Caracal
         std::filesystem::path projectConstantsPath;
         std::filesystem::path preludeDirectory;
         std::vector<std::filesystem::path> libraryDirectories;
+        std::vector<std::filesystem::path> testedLibraryDirectories;
         TypeCheckerOptions typeCheckerOptions;
         OptimizationLevel optimizationLevel = OptimizationLevel::None;
         bool debugInfo = false;
+        bool runsTests = false;
         DiagnosticOptions diagnosticOptions;
         PrintOptions printOptions;
         std::filesystem::path objectFilePath;

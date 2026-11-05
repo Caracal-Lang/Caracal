@@ -1,0 +1,88 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: square
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+                Operation: MultiplicationWrapping
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: () -> void
+    Name: "square of two"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32) -> i32
+                    NameExpression: {
+                        Type: (i32) -> i32
+                        Name: square
+                    }
+                    ArgumentsNode(1): {
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: () -> void
+    Name: "square of three"
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32) -> i32
+                    NameExpression: {
+                        Type: (i32) -> i32
+                        Name: square
+                    }
+                    ArgumentsNode(1): {
+                        NumberLiteral: 3
+                    }
+                }
+            }
+        }
+    }
+}

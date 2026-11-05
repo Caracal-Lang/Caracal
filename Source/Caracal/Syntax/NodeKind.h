@@ -23,6 +23,7 @@ namespace Caracal
         EnumDefinitionStatement,
         TypeDefinitionStatement,
         MethodDefinitionStatement,
+        TestDefinitionStatement,
         IfStatement,
         TrailingIfStatement,
         WhileStatement,
@@ -43,6 +44,8 @@ namespace Caracal
         BoolLiteral,
         NumberLiteral,
         StringLiteral,
+        SourceTextDefault,
+        SourceLocationDefault,
         ArrayLiteral,
 
         AnnotationNode,
