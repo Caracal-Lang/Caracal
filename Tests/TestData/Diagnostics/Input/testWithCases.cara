@@ -1,0 +1,9 @@
+def cases() i32
+{
+    return 1;
+}
+
+test "has cases" with cases()
+{
+    _ = 1;
+}

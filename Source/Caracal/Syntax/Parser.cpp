@@ -262,9 +262,8 @@ namespace Caracal
             }
             case TokenKind::TestKeyword:
             {
-                if (current.kind == TokenKind::TestKeyword && scope == StatementScope::Global && nextToken().kind == TokenKind::String)
+                if (current.kind == TokenKind::TestKeyword && tryParseTestStatement(scope))
                 {
-                    parseTestDefinitionStatement();
                     return;
                 }
                 [[fallthrough]];
@@ -604,6 +603,39 @@ namespace Caracal
         append(NodeKind::MethodDefinitionStatement, tokenIndexOf(keyword), subtreeStart);
     }
 
+    bool Parser::tryParseTestStatement(StatementScope scope)
+    {
+        const auto& testToken = currentToken();
+        const auto nextKind = nextToken().kind;
+        if (nextKind == TokenKind::String)
+        {
+            if (scope != StatementScope::Global)
+            {
+                m_diagnostics.addTestNotAtTopLevelError(m_tokens.source(), m_tokens.getSourceLocation(testToken));
+            }
+            parseTestDefinitionStatement();
+            return true;
+        }
+
+        if (scope != StatementScope::Global || nextKind == TokenKind::Colon)
+        {
+            return false;
+        }
+
+        m_diagnostics.addTestNameNotInQuotesError(m_tokens.source(), m_tokens.getSourceLocation(testToken));
+        flushDanglingAnnotations();
+        advanceCurrentIndex();
+        if (nextKind != TokenKind::OpenBrace && nextKind != TokenKind::EndOfFile)
+        {
+            advanceCurrentIndex();
+        }
+        if (currentToken().kind == TokenKind::OpenBrace)
+        {
+            parseTestBody();
+        }
+        return true;
+    }
+
     void Parser::parseTestDefinitionStatement()
     {
         flushDanglingAnnotations();
@@ -612,15 +644,39 @@ namespace Caracal
         static_cast<void>(advanceOnMatch(TokenKind::TestKeyword));
         auto nameToken = advanceOnMatch(TokenKind::String);
 
+        if (currentToken().kind == TokenKind::OpenParenthesis)
         {
-            const auto bodyStart = m_nodeBuffer.nodeCount();
-            auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
-            parseStatements(StatementScope::Function);
-            static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
-            append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
+            m_diagnostics.addTestWithParametersError(m_tokens.source(), m_tokens.getSourceLocation(currentToken()));
+            skipUntil({ TokenKind::CloseParenthesis });
+            if (currentToken().kind == TokenKind::CloseParenthesis)
+            {
+                advanceCurrentIndex();
+            }
         }
 
+        parseTestBody();
         append(NodeKind::TestDefinitionStatement, tokenIndexOf(nameToken), subtreeStart);
+    }
+
+    void Parser::parseTestBody()
+    {
+        const auto bodyStart = m_nodeBuffer.nodeCount();
+        const auto hasOpenBrace = currentToken().kind == TokenKind::OpenBrace;
+        auto openBracket = advanceOnMatch(TokenKind::OpenBrace);
+        if (!hasOpenBrace)
+        {
+            skipUntil({ TokenKind::OpenBrace });
+            if (currentToken().kind != TokenKind::OpenBrace)
+            {
+                append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
+                return;
+            }
+            advanceCurrentIndex();
+        }
+
+        parseStatements(StatementScope::Function);
+        static_cast<void>(advanceOnMatch(TokenKind::CloseBrace));
+        append(NodeKind::BlockNode, tokenIndexOf(openBracket), bodyStart);
     }
 
     void Parser::parseIfStatement(StatementScope scope)

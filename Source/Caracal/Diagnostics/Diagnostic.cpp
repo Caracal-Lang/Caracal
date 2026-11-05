@@ -49,6 +49,12 @@ namespace Caracal
                 return "P0015";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "P0016";
+            case DiagnosticKind::P0017_TestNotAtTopLevel:
+                return "P0017";
+            case DiagnosticKind::P0018_TestWithParameters:
+                return "P0018";
+            case DiagnosticKind::P0019_TestNameNotInQuotes:
+                return "P0019";
             case DiagnosticKind::P0020_UnknownAnnotationExpression:
                 return "P0020";
 
@@ -322,6 +328,12 @@ namespace Caracal
                 return "Expected an array length";
             case DiagnosticKind::P0016_ReservedOperator:
                 return "Plain arithmetic operators are reserved until checked arithmetic exists";
+            case DiagnosticKind::P0017_TestNotAtTopLevel:
+                return "Tests can only be declared at the top level";
+            case DiagnosticKind::P0018_TestWithParameters:
+                return "Tests cannot have parameters";
+            case DiagnosticKind::P0019_TestNameNotInQuotes:
+                return "A test needs a name in quotes";
             case DiagnosticKind::P0020_UnknownAnnotationExpression:
                 return "Unknown annotation expression";
 

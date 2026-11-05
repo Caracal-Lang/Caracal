@@ -29,6 +29,9 @@ namespace Caracal
         P0014_PrivateFreeFunction,
         P0015_ExpectedArrayLength,
         P0016_ReservedOperator,
+        P0017_TestNotAtTopLevel,
+        P0018_TestWithParameters,
+        P0019_TestNameNotInQuotes,
         P0020_UnknownAnnotationExpression,
 
         // Annotation diagnostics

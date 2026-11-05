@@ -1,0 +1,10 @@
+ Error P0018 Tests cannot have parameters
+    ,-[Diagnostics/Input/testWithParameters.cara:1:22]
+  1 | test "has parameters"(value: i32)
+    .                      -
+    .                      `-- A test cannot have a parameter list
+  2 | {
+  3 |     _ = value;
+  4 | }
+    `----
+  Fix: Remove the parameter list.

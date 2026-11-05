@@ -1,0 +1,4 @@
+test "returns a value"
+{
+    return 5;
+}

@@ -484,6 +484,45 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addTestNotAtTopLevelError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0017_TestNotAtTopLevel,
+            source,
+            location,
+            "Move this test out of the function or type.");
+        diagnostic.addPrimaryLabel(location, "This test is not at the top level");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestWithParametersError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0018_TestWithParameters,
+            source,
+            location,
+            "Remove the parameter list.");
+        diagnostic.addPrimaryLabel(location, "A test cannot have a parameter list");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTestNameNotInQuotesError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0019_TestNameNotInQuotes,
+            source,
+            location,
+            "Write the name in quotes, for example test \"adds two numbers\" { }.");
+        diagnostic.addPrimaryLabel(location, "This test has no name in quotes");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location)
     {
         auto diagnostic = Diagnostic(

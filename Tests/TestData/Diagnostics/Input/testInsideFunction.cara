@@ -1,0 +1,7 @@
+def caller()
+{
+    test "inside"
+    {
+        _ = 1;
+    }
+}

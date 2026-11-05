@@ -1,0 +1,11 @@
+ Error T0020 Return type mismatch
+    ,-[Diagnostics/Input/returnValueInTest.cara:3:12]
+  1 | test "returns a value"
+  2 | {
+  3 |     return 5;
+    .            -
+    .            `-- Cannot return 'i32' from a function with return type 'void'
+  4 | }
+  5 | 
+    `----
+  Fix: Remove the returned value from this return statement.
