@@ -1,0 +1,23 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def addTo(total: ref i32, value: i32)
+{
+    total = total %+ value;
+}
+
+def stuff(value: i32, text: string = #sourceText(value), place: SourceLocation = #sourceLocation) i32
+{
+    _ = text;
+    return place.line %+ value;
+}
+
+test "statement kinds"
+{
+    total := 0;
+    addTo(ref total, 1);
+    point := Point.new(1);
+    _ = stuff(total %+ point.x);
+}

@@ -10,16 +10,4 @@ entry:
   ret i32 %multiply
 }
 
-; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @__caracal_test_square_of_two() local_unnamed_addr #0 {
-entry:
-  ret void
-}
-
-; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @__caracal_test_square_of_three() local_unnamed_addr #0 {
-entry:
-  ret void
-}
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

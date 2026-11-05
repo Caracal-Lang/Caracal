@@ -171,7 +171,7 @@ static void DebugInfoFileTests(
     if (!std::filesystem::exists(outputFilePath))
         CaraTest::skip();// ("Out file missing");
 
-    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true } };
+    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .recordsSourceLocations = true, .emitsTests = true } };
     Caracal::Module module{};
     const auto sourceFilePath = inputFilePath.lexically_relative(TestDataDirectory());
     CompileFixtureToModule(inputFilePath, compilationContext, module, sourceFilePath);

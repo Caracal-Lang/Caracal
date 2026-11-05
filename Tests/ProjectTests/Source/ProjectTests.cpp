@@ -1273,6 +1273,8 @@ static void BuildCommandForTestModeRunsTests()
     CaraTest::isTrue(testCommand.has_value());
     CaraTest::isFalse(debugCommand->runsTests);
     CaraTest::isTrue(testCommand->runsTests);
+    CaraTest::isFalse(debugCommand->typeCheckerOptions.emitsTests);
+    CaraTest::isTrue(testCommand->typeCheckerOptions.emitsTests);
     CaraTest::isTrue(ConstantValue<bool>(debugCommand->projectConstants, "__caracal_run_tests") == false);
     CaraTest::isTrue(ConstantValue<bool>(testCommand->projectConstants, "__caracal_run_tests") == true);
 }
@@ -1284,6 +1286,7 @@ static void BuildCommandForFileRunsNoTests()
     const auto buildCommand = Caracal::createFileBuildCommand(workingDirectory / "main.cara", CreationDay);
 
     CaraTest::isFalse(buildCommand.runsTests);
+    CaraTest::isFalse(buildCommand.typeCheckerOptions.emitsTests);
     CaraTest::isTrue(ConstantValue<bool>(buildCommand.projectConstants, "__caracal_run_tests") == false);
 }
 

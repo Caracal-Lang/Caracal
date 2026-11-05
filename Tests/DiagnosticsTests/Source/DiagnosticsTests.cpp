@@ -58,6 +58,16 @@ namespace
         return DiagnosticsDataDirectory() / "OutputBuiltin";
     }
 
+    std::filesystem::path DiagnosticsTestBuildInputDirectory()
+    {
+        return DiagnosticsDataDirectory() / "InputTestBuild";
+    }
+
+    std::filesystem::path DiagnosticsTestBuildOutputDirectory()
+    {
+        return DiagnosticsDataDirectory() / "OutputTestBuild";
+    }
+
     std::filesystem::path DiagnosticsPreludeInputDirectory()
     {
         return DiagnosticsDataDirectory() / "InputPrelude";
@@ -94,10 +104,10 @@ namespace
         .enableUnicode = false
     };
 
-    std::string RenderDiagnosticsForSource(const std::string& input, const std::filesystem::path& filePath, bool withPrelude)
+    std::string RenderDiagnosticsForSource(const std::string& input, const std::filesystem::path& filePath, bool withPrelude, bool emitsTests)
     {
         Caracal::DiagnosticsBag diagnostics;
-        Caracal::CompilationContext compilationContext;
+        Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .emitsTests = emitsTests } };
         compilationContext.addSource(input, MakeRepositoryRelativePath(filePath), Caracal::UnitOrigin::User);
         Caracal::lexAndParse(compilationContext, diagnostics);
 
@@ -120,13 +130,13 @@ namespace
         return {};
     }
 
-    std::string RenderDiagnosticsForFile(const std::filesystem::path& inputFilePath, bool withPrelude)
+    std::string RenderDiagnosticsForFile(const std::filesystem::path& inputFilePath, bool withPrelude, bool emitsTests = false)
     {
         const auto input = Caracal::File::readText(inputFilePath);
         if (!input.has_value())
             throw std::runtime_error("Could not read input file: " + inputFilePath.string());
 
-        return RenderDiagnosticsForSource(input.value(), inputFilePath, withPrelude);
+        return RenderDiagnosticsForSource(input.value(), inputFilePath, withPrelude, emitsTests);
     }
 
     std::string RenderDiagnosticsForPrelude(const std::filesystem::path& inputFilePath)
@@ -168,6 +178,25 @@ namespace
             CaraTest::skip();
 
         const auto output = RenderDiagnosticsForFile(inputFilePath, true);
+        if (output.empty())
+            CaraTest::fail();
+
+        CaraTest::equalsFile(outputFilePath, output);
+    }
+
+    static void TestBuildFileTests(
+        const std::string& fileName,
+        const std::filesystem::path& inputFilePath,
+        const std::filesystem::path& outputFilePath)
+    {
+        static_cast<void>(fileName);
+
+        if (!std::filesystem::exists(inputFilePath))
+            CaraTest::fail();
+        if (!std::filesystem::exists(outputFilePath))
+            CaraTest::skip();
+
+        const auto output = RenderDiagnosticsForFile(inputFilePath, true, true);
         if (output.empty())
             CaraTest::fail();
 
@@ -247,6 +276,11 @@ namespace
         return CollectFileTestData(DiagnosticsInputDirectory(), DiagnosticsOutputDirectory());
     }
 
+    static std::vector<DiagnosticsTestData> TestBuildFileTests_Data()
+    {
+        return CollectFileTestData(DiagnosticsTestBuildInputDirectory(), DiagnosticsTestBuildOutputDirectory());
+    }
+
     static std::vector<DiagnosticsTestData> BuiltinFileTests_Data()
     {
         return CollectFileTestData(DiagnosticsBuiltinInputDirectory(), DiagnosticsBuiltinOutputDirectory());
@@ -261,6 +295,7 @@ namespace
 static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
+    CaraTest::addTest("TestBuildFileTests", TestBuildFileTests, TestBuildFileTests_Data),
     CaraTest::addTest("BuiltinFileTests", BuiltinFileTests, BuiltinFileTests_Data),
     CaraTest::addTest("PreludeFileTests", PreludeFileTests, PreludeFileTests_Data),
 };

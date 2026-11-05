@@ -2318,6 +2318,12 @@ namespace Caracal
     {
         if (m_testsStubDeclaration.index == InvalidNodeIndex)
         {
+            if (m_options.emitsTests && !m_testDeclarations.empty())
+            {
+                const auto firstTest = m_testDeclarations.front();
+                const auto& firstTestUnit = unitFor(firstTest);
+                m_diagnostics.addTestsStubMissingError(firstTestUnit.source, ExpressionSourceLocation(m_compilationContext, firstTestUnit, firstTest.index));
+            }
             return;
         }
 
@@ -2332,7 +2338,10 @@ namespace Caracal
         m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, functionLayout.body));
         m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
         bindParameters(unit, functionLayout.parameters, functionDefinition, true);
-        emitTestsStubBody();
+        if (m_options.emitsTests)
+        {
+            emitTestsStubBody();
+        }
         m_emitter.endFunction();
 
         // we dont emit unused parameter warnings for tests
@@ -3831,16 +3840,22 @@ namespace Caracal
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         const auto testLayout = NodeLayout::testDefinition(index);
 
-        m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, testLayout.body));
-        m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
+        if (m_options.emitsTests)
+        {
+            m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, testLayout.body));
+            m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
+        }
         // the parameters come from the stub and have no source location, so no unused warning
-        bindParameters(unit, InvalidNodeIndex, functionDefinition, true);
+        bindParameters(unit, InvalidNodeIndex, functionDefinition, m_options.emitsTests);
 
         m_currentFunctionName = functionDefinition.fullName();
         typeCheckBlockNode(unit, testLayout.body);
         m_currentFunctionName.clear();
 
-        m_emitter.endFunction();
+        if (m_options.emitsTests)
+        {
+            m_emitter.endFunction();
+        }
         popScope(true);
     }
 

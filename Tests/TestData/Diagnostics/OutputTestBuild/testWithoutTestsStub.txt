@@ -1,0 +1,10 @@
+ Error T0102 The test stub is missing
+    ,-[Diagnostics/InputTestBuild/testWithoutTestsStub.cara:1:6]
+  1 | test "cannot run"
+    .      ------------
+    .            `-- This test cannot run without the test stub
+  2 | {
+  3 |     _ = 1;
+  4 | }
+    `----
+  Fix: Declare __caracal_tests_stub in Core, or try running caracal update.

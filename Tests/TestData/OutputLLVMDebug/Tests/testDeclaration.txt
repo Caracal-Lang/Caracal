@@ -16,9 +16,3 @@ entry:
   %add = add i32 %0, %1
   ret i32 %add
 }
-
-define void @__caracal_test_add_test() {
-entry:
-  %call = call i32 @add(i32 2, i32 2)
-  ret void
-}

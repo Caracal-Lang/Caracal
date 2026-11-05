@@ -165,6 +165,9 @@ namespace Caracal
         T0083_BitwiseMethodOnNonIntegerType,
         T0089_UnsupportedFloatBits,
 
+        // Test diagnostics
+        T0102_TestsStubMissing,
+
         // Prelude diagnostics
         T0097_PreludeTypeMissing,
         T0098_PreludeCFunctionMissing,

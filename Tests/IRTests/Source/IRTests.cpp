@@ -133,7 +133,7 @@ static void TestBuildFileTests(
 
     const auto repositoryDirectory = std::filesystem::path(__FILE__).parent_path() / "../../..";
     Caracal::DiagnosticsBag diagnostics;
-    Caracal::CompilationContext compilationContext;
+    Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .emitsTests = true } };
     compilationContext.addSource("__caracal_run_tests : bool : true;\n", "ProjectConstants.cara", Caracal::UnitOrigin::Project);
     for (const auto* coreFileName : { "Entrypoint.cara", "Print.cara", "TestRun.cara" })
     {

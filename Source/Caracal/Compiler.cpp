@@ -508,7 +508,7 @@ namespace Caracal
             .projectConstantsPath = std::move(projectConstantsPath),
             .preludeDirectory = std::move(preludeDirectory),
             .libraryDirectories = std::move(libraryDirectories),
-            .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo },
+            .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo, .emitsTests = runsTests },
             .optimizationLevel = optimizationLevel,
             .debugInfo = debugInfo,
             .runsTests = runsTests,

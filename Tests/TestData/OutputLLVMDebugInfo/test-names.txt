@@ -49,6 +49,15 @@ entry:
   ret void, !dbg !25
 }
 
+define void @__caracal_tests_stub() !dbg !26 {
+entry:
+  call void @__caracal_test_test_names_adds_two(), !dbg !27
+  call void @__caracal_test_test_names_adds_two_1(), !dbg !27
+  call void @__caracal_test_test_names_adds__3___3(), !dbg !27
+  call void @__caracal_test_test_names_Gr____e(), !dbg !27
+  ret void, !dbg !27
+}
+
 !llvm.dbg.cu = !{!0}
 !llvm.module.flags = !{!2, !3}
 
@@ -78,3 +87,5 @@ entry:
 !23 = distinct !DISubprogram(name: "__caracal_test_test_names_Gr____e", scope: !1, file: !1, line: 18, type: !14, scopeLine: 18, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
 !24 = !DILocation(line: 20, scope: !23)
 !25 = !DILocation(line: 18, scope: !23)
+!26 = distinct !DISubprogram(name: "__caracal_tests_stub", scope: !1, file: !1, line: 23, type: !14, scopeLine: 23, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0)
+!27 = !DILocation(line: 23, scope: !26)

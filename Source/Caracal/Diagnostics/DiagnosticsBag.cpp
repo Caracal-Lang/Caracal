@@ -2187,6 +2187,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0102_TestsStubMissing,
+            source,
+            location,
+            "Declare __caracal_tests_stub in Core, or try running caracal update.");
+        diagnostic.addPrimaryLabel(location, "This test cannot run without the test stub");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addPreludeTypeMissingError(const std::string& typeName)
     {
         m_diagnostics.emplace_back(

@@ -10,7 +10,3 @@ define readsLocal() i32
 block entry(0):
     %0 = const 7 : i32
     return %0
-
-define __caracal_test_a_local_named_Assert() void
-block entry(0):
-    return

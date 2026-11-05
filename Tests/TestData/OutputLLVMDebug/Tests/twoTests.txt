@@ -16,15 +16,3 @@ entry:
   %multiply = mul i32 %0, %0
   ret i32 %multiply
 }
-
-define void @__caracal_test_square_of_two() {
-entry:
-  %call = call i32 @square(i32 2)
-  ret void
-}
-
-define void @__caracal_test_square_of_three() {
-entry:
-  %call = call i32 @square(i32 3)
-  ret void
-}

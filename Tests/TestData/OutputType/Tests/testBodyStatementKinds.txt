@@ -1,0 +1,284 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (ref i32, i32) -> void
+    Name: addTo
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: total
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: total
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: ref i32
+                            Name: total
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: value
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (i32, string, SourceLocation) -> i32
+    Name: stuff
+    ParametersNode(3): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: text
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+            DefaultValue: {
+                SourceTextDefault: value
+            }
+        }
+        ParameterNode: {
+            Name: place
+            TypeNameNode: {
+                Type: SourceLocation
+                Lexeme: SourceLocation
+            }
+            DefaultValue: {
+                SourceLocationDefault: sourceLocation
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: string
+                    Name: text
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: SourceLocation
+                                Name: place
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: line
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}
+TestDefinitionStatement: {
+    Type: () -> void
+    Name: "statement kinds"
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        ExpressionStatement: {
+            FunctionCallExpression: {
+                Type: void
+                Function type: (ref i32, i32) -> void
+                NameExpression: {
+                    Type: (ref i32, i32) -> void
+                    Name: addTo
+                }
+                ArgumentsNode(2): {
+                    UnaryExpression: {
+                        Type: ref i32
+                        Operation: ReferenceOf
+                        Expression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                    }
+                    NumberLiteral: 1
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: point
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Point
+                    Left: {
+                        NameExpression: {
+                            Type: Point
+                            Name: Point
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref Point, i32) -> void
+                            NameExpression: {
+                                Type: (ref Point, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32, string, SourceLocation) -> i32
+                    NameExpression: {
+                        Type: (i32, string, SourceLocation) -> i32
+                        Name: stuff
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: total
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: Point
+                                            Name: point
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: x
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

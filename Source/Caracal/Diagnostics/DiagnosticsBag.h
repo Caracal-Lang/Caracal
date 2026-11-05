@@ -164,6 +164,7 @@ namespace Caracal
         void addUnusedLocalConstantWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
 
         // Prelude diagnostics
+        void addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addPreludeTypeMissingError(const std::string& typeName);
         void addPreludeCFunctionMissingError(const std::string& symbolName, const std::string& signature);
         void addPreludeCFunctionMismatchError(const std::string& functionName, const std::string& signature);

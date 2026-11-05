@@ -10,14 +10,4 @@ define __caracal_tests_stub(%0: i32 "count", %1: ref i32 "total") void
 block entry(0):
     %0 = parameter 0 : i32 "count"
     %1 = parameter 1 : ref i32 "total"
-    call __caracal_test_adds_count_to_total(%0, %1)
-    return
-
-define __caracal_test_adds_count_to_total(%0: i32 "count", %1: ref i32 "total") void
-block entry(0):
-    %0 = parameter 0 : i32 "count"
-    %1 = parameter 1 : ref i32 "total"
-    %2 = load_value %1 : i32
-    %3 = add %2, %0 : i32
-    store_value %3, %1 : i32
     return

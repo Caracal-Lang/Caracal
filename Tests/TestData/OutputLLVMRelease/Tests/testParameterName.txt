@@ -9,10 +9,4 @@ entry:
   ret i32 7
 }
 
-; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @__caracal_test_a_local_named_Assert() local_unnamed_addr #0 {
-entry:
-  ret void
-}
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
