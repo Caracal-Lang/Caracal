@@ -89,6 +89,10 @@
 					"match": "\\bdef\\b"
 				},
 				{
+					"name": "storage.type.function.caracal",
+					"match": "\\btest\\b(?=\\s*\")"
+				},
+				{
 					"name": "storage.type.caracal",
 					"match": "\\b(type|enum)\\b"
 				},

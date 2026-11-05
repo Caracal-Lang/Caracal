@@ -59,6 +59,7 @@ namespace Caracal
             "caracal build                  # builds into {1}/Debug\n"
             "caracal run                    # builds and runs\n"
             "caracal build -mode Release    # builds into {1}/Release\n"
+            "caracal test                   # builds and runs the tests\n"
             "caracal update                 # updates {2}/Core from the compiler\n"
             "```\n",
             project.name,

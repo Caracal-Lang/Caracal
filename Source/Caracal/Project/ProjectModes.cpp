@@ -108,7 +108,7 @@ namespace Caracal
             }
         }
 
-        return { std::nullopt, "No mode in caracal.json has \"test\": true, the project has " + ModeNames(project) };
+        return { std::nullopt, "No mode in caracal.json has \"test\": true, add one, the project has " + ModeNames(project) };
     }
 
     ListedLibrariesResult findListedLibraries(const Project& project, const TestSelection& testSelection)

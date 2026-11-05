@@ -1169,7 +1169,7 @@ static void FindingTestModeWhenNoModeRunsTestsListsTheModes()
     const auto result = Caracal::findProjectTestMode(project);
 
     CaraTest::isFalse(result.mode.has_value());
-    CaraTest::areEqual(std::string("No mode in caracal.json has \"test\": true, the project has Debug and Release"), result.error);
+    CaraTest::areEqual(std::string("No mode in caracal.json has \"test\": true, add one, the project has Debug and Release"), result.error);
 }
 
 static void CreatingBuildCommandForUnknownModeFails()
