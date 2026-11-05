@@ -1,0 +1,4 @@
+test "core"
+{
+    Assert.isTrue(2 == 2);
+}

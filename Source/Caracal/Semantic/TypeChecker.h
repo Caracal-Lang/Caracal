@@ -123,6 +123,7 @@ namespace Caracal
         [[nodiscard]] Type typeCheckTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index);
+        [[nodiscard]] bool emitsTestsOf(const CompilationUnit& unit) const noexcept;
         void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters);
         [[nodiscard]] std::vector<Type> typeCheckReturnTypesNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] i32 convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex);

@@ -29,6 +29,7 @@
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
+#include <algorithm>
 #include <format>
 #include <iostream>
 
@@ -155,6 +156,8 @@ namespace Caracal
         Caracal::DiagnosticsBag diagnostics;
         for (const auto& libraryDirectory : buildCommand.libraryDirectories)
         {
+            const auto& testedDirectories = buildCommand.testedLibraryDirectories;
+            const auto runsItsTests = std::find(testedDirectories.begin(), testedDirectories.end(), libraryDirectory) != testedDirectories.end();
             for (const auto& caraFilePath : CollectCaraFiles(libraryDirectory))
             {
                 auto content = Caracal::File::readText(caraFilePath);
@@ -164,7 +167,7 @@ namespace Caracal
                     continue;
                 }
 
-                compilationContext.addSource(std::move(content.value()), caraFilePath, Caracal::UnitOrigin::Core);
+                compilationContext.addSource(std::move(content.value()), caraFilePath, Caracal::UnitOrigin::Core, runsItsTests);
             }
         }
 
@@ -493,6 +496,7 @@ namespace Caracal
         std::filesystem::path projectConstantsPath,
         std::filesystem::path preludeDirectory,
         std::vector<std::filesystem::path> libraryDirectories,
+        std::vector<std::filesystem::path> testedLibraryDirectories,
         std::filesystem::path objectFilePath,
         std::filesystem::path executablePath,
         OptimizationLevel optimizationLevel,
@@ -508,6 +512,7 @@ namespace Caracal
             .projectConstantsPath = std::move(projectConstantsPath),
             .preludeDirectory = std::move(preludeDirectory),
             .libraryDirectories = std::move(libraryDirectories),
+            .testedLibraryDirectories = std::move(testedLibraryDirectories),
             .typeCheckerOptions = TypeCheckerOptions{ .recordsSourceLocations = debugInfo, .emitsTests = runsTests },
             .optimizationLevel = optimizationLevel,
             .debugInfo = debugInfo,
@@ -558,6 +563,7 @@ namespace Caracal
             temporaryDirectory / "ProjectConstants.cara",
             ResolvePreludeDirectory(),
             { ResolveCoreDirectory() },
+            {},
             temporaryDirectory / (inputFileName + ".o"),
             inputFileName + ".exe",
             OptimizationLevel::None,
@@ -582,7 +588,8 @@ namespace Caracal
         const Project& project,
         std::optional<std::string_view> modeName,
         const DiagnosticOptions& diagnosticOptions,
-        bool shouldRunAfterBuild)
+        bool shouldRunAfterBuild,
+        const TestSelection& testSelection)
     {
         const auto modeResult = findProjectMode(project, modeName);
         if (!modeResult.mode.has_value())
@@ -612,23 +619,6 @@ namespace Caracal
         auto projectConstants = CompilerConstants(project.name, project.version, mode.name, mode.test);
         const auto modeConstants = projectConstantsForMode(project, mode);
         projectConstants.insert(projectConstants.end(), modeConstants.begin(), modeConstants.end());
-        if (project.dependencies.empty())
-        {
-            return CreateBuildCommand(
-                std::move(sources.sourceFiles),
-                std::move(projectConstants),
-                std::move(projectConstantsPath),
-                ResolvePreludeDirectory(),
-                { ResolveCoreDirectory() },
-                std::move(objectFilePath),
-                std::move(executablePath),
-                mode.optimizationLevel,
-                mode.debugInfo,
-                mode.test,
-                diagnosticOptions,
-                {},
-                shouldRunAfterBuild);
-        }
 
         const auto librariesDirectory = project.rootDirectory / folders.libraries;
         std::filesystem::path preludeDirectory{};
@@ -644,8 +634,32 @@ namespace Caracal
             libraryDirectories.push_back(librariesDirectory / dependency.path);
         }
 
+        if (project.dependencies.empty())
+            libraryDirectories.push_back(ResolveCoreDirectory());
+
         if (preludeDirectory.empty())
             preludeDirectory = ResolvePreludeDirectory();
+
+        std::vector<std::filesystem::path> testedLibraryDirectories{};
+        if (mode.test)
+        {
+            const auto listedLibraries = findListedLibraries(project, testSelection);
+            if (!listedLibraries.error.empty())
+            {
+                std::cout << listedLibraries.error << "\n";
+                return std::nullopt;
+            }
+
+            if (testSelection.allLibraries)
+            {
+                testedLibraryDirectories = libraryDirectories;
+            }
+
+            for (const auto& dependencyPath : listedLibraries.dependencyPaths)
+            {
+                testedLibraryDirectories.push_back(librariesDirectory / dependencyPath);
+            }
+        }
 
         return CreateBuildCommand(
             std::move(sources.sourceFiles),
@@ -653,6 +667,7 @@ namespace Caracal
             std::move(projectConstantsPath),
             std::move(preludeDirectory),
             std::move(libraryDirectories),
+            std::move(testedLibraryDirectories),
             std::move(objectFilePath),
             std::move(executablePath),
             mode.optimizationLevel,
@@ -691,6 +706,7 @@ namespace Caracal
 
     int testProject(
         const Project& project,
+        const TestSelection& testSelection,
         const DiagnosticOptions& diagnosticOptions)
     {
         CARACAL_ZONE_NAMED("testProject");
@@ -701,7 +717,7 @@ namespace Caracal
             return 1;
         }
 
-        const auto buildCommand = createProjectBuildCommand(project, modeResult.mode->name, diagnosticOptions, true);
+        const auto buildCommand = createProjectBuildCommand(project, modeResult.mode->name, diagnosticOptions, true, testSelection);
         if (!buildCommand.has_value())
             return 1;
 

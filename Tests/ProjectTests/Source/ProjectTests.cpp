@@ -65,6 +65,7 @@ static Caracal::ProjectResult LoadProjectText(const std::string& scratchName, co
     const auto workingDirectory = EmptyScratchDirectory(scratchName);
     std::filesystem::create_directories(workingDirectory / "Libraries" / "Prelude");
     std::filesystem::create_directories(workingDirectory / "Libraries" / "Core");
+    std::filesystem::create_directories(workingDirectory / "Libraries" / "Json");
     Caracal::File::writeText(
         workingDirectory / "caracal.json",
         "{ \"name\": \"Hello\", \"type\": \"exe\", \"version\": \"2026.10.20\"" + fields + " }\n");
@@ -1279,6 +1280,74 @@ static void BuildCommandForTestModeRunsTests()
     CaraTest::isTrue(ConstantValue<bool>(testCommand->projectConstants, "__caracal_run_tests") == true);
 }
 
+static const std::string LibrariesAndTestModeFields = R"(, "dependencies": [ { "path": "Prelude", "prelude": true }, { "path": "Core" }, { "path": "Json" } ], "modes": { "Debug": {}, "Test": { "test": true } })";
+
+// sorted file names of the tested library directories, "Core Json"
+static std::string TestedLibraries(const std::string& scratchName, const std::string& modeName, const Caracal::TestSelection& testSelection)
+{
+    const auto result = LoadProjectText(scratchName, LibrariesAndTestModeFields);
+    CaraTest::areEqual(std::string(), result.error);
+    const auto& project = result.project.value();
+    Caracal::File::writeText(project.rootDirectory / "main.cara", "");
+
+    const auto buildCommand = Caracal::createProjectBuildCommand(project, modeName, {}, false, testSelection);
+    CaraTest::isTrue(buildCommand.has_value());
+
+    std::vector<std::string> names{};
+    for (const auto& directory : buildCommand->testedLibraryDirectories)
+    {
+        names.push_back(directory.filename().string());
+    }
+    std::sort(names.begin(), names.end());
+
+    std::string joined{};
+    for (const auto& name : names)
+    {
+        if (!joined.empty())
+        {
+            joined += " ";
+        }
+        joined += name;
+    }
+    return joined;
+}
+
+static void TestModeSelectsNoLibrariesByDefault()
+{
+    CaraTest::areEqual(std::string(), TestedLibraries("TestedLibrariesDefault", "Test", {}));
+}
+
+static void TestModeWithAllSelectsEveryLibrary()
+{
+    CaraTest::areEqual(std::string("Core Json"), TestedLibraries("TestedLibrariesAll", "Test", { .allLibraries = true }));
+}
+
+static void TestModeWithListSelectsTheListedLibraries()
+{
+    CaraTest::areEqual(std::string("Json"), TestedLibraries("TestedLibrariesList", "Test", { .libraries = { "Json" } }));
+}
+
+static void ListedLibraryThatIsNotADependencyIsAnError()
+{
+    const auto result = LoadProjectText("ListedLibraryUnknown", LibrariesAndTestModeFields);
+    const auto listed = Caracal::findListedLibraries(result.project.value(), { .libraries = { "Nope" } });
+    CaraTest::areEqual(std::string("\"Nope\" is not a library in caracal.json, the project has Core and Json"), listed.error);
+}
+
+static void ListedPreludeIsAnError()
+{
+    const auto result = LoadProjectText("ListedLibraryPrelude", LibrariesAndTestModeFields);
+    const auto listed = Caracal::findListedLibraries(result.project.value(), { .libraries = { "Prelude" } });
+    CaraTest::areEqual(std::string("\"Prelude\" is not a library in caracal.json, the project has Core and Json"), listed.error);
+}
+
+static void AllAndListTogetherIsAnError()
+{
+    const auto result = LoadProjectText("ListedLibraryAndAll", LibrariesAndTestModeFields);
+    const auto listed = Caracal::findListedLibraries(result.project.value(), { .allLibraries = true, .libraries = { "Core" } });
+    CaraTest::areEqual(std::string("Use -all or -libs, not both"), listed.error);
+}
+
 static void BuildCommandForFileRunsNoTests()
 {
     const auto workingDirectory = EmptyScratchDirectory("FileBuildCommandRunsNoTests");
@@ -1292,79 +1361,85 @@ static void BuildCommandForFileRunsNoTests()
 
 static auto tests =
 {
-    CaraTest::addTest("creating a project with a name uses that name", CreatingProjectWithNameUsesThatName),
-    CaraTest::addTest("creating a project copies the compiler's core into libraries", CreatingProjectCopiesCompilerCoreIntoLibraries),
-    CaraTest::addTest("creating a project without core next to the compiler creates nothing", CreatingProjectWithoutCoreNextToCompilerCreatesNothing),
-    CaraTest::addTest("creating a project without a name uses the name of the current folder", CreatingProjectWithoutNameUsesNameOfCurrentFolder),
-    CaraTest::addTest("creating a project in a folder with a caracal.json changes nothing", CreatingProjectInFolderWithCaracalJsonChangesNothing),
-    CaraTest::addTest("creating a project keeps the files it finds", CreatingProjectKeepsTheFilesItFinds),
-    CaraTest::addTest("creating a project inside a repository omits the .editorconfig root", CreatingProjectInsideRepositoryOmitsEditorConfigRoot),
-    CaraTest::addTest("creating a project with a name that cannot be a file name creates no folder", CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder),
-    CaraTest::addTest("finding a repository finds a .git folder in a parent folder", FindingRepositoryFindsGitFolderInParentFolder),
-    CaraTest::addTest("finding a repository finds a .git file", FindingRepositoryFindsGitFile),
-    CaraTest::addTest("finding a repository without one finds nothing", FindingRepositoryWithoutOneFindsNothing),
-    CaraTest::addTest("initializing a repository inside another creates no .git", InitializingRepositoryInsideAnotherCreatesNoGit),
-    CaraTest::addTest("initializing a repository creates a .git folder", InitializingRepositoryCreatesGitFolder),
-    CaraTest::addTest("finding a project does not look in the parent folder", FindingProjectDoesNotLookInParentFolder),
-    CaraTest::addTest("finding a project from a path to a .json file loads that file", FindingProjectFromPathToJsonFileLoadsThatFile),
-    CaraTest::addTest("loading a caracal.json with a name that cannot be a file name fails", LoadingCaracalJsonWithNameThatCannotBeFileNameFails),
-    CaraTest::addTest("loading a caracal.json without a type, version or modes fails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
-    CaraTest::addTest("loading a caracal.json with a version that is not a string fails", LoadingCaracalJsonWithVersionThatIsNotStringFails),
-    CaraTest::addTest("loading a caracal.json fills in the folders it leaves out", LoadingCaracalJsonFillsInFoldersItLeavesOut),
-    CaraTest::addTest("loading a caracal.json with a folder outside the project fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderOutsideProjectFails_Data),
-    CaraTest::addTest("loading a caracal.json with two folders that are the same fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails_Data),
-    CaraTest::addTest("loading a caracal.json with a folder inside another fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderInsideAnotherFails_Data),
-    CaraTest::addTest("loading a caracal.json with folders of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
-    CaraTest::addTest("loading a caracal.json reads its modes", LoadingCaracalJsonReadsItsModes),
-    CaraTest::addTest("loading a caracal.json with modes of the wrong form fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
-    CaraTest::addTest("loading a caracal.json reads a mode's debug information", LoadingCaracalJsonReadsModesDebugInformation),
-    CaraTest::addTest("loading a caracal.json with debug information that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
-    CaraTest::addTest("loading a caracal.json with two test modes or a test setting that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoTestModesOrTestThatIsNotTrueOrFalseFails_Data),
-    CaraTest::addTest("loading a caracal.json with an output that is not one folder fails",LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
-    CaraTest::addTest("loading a caracal.json with two modes in one folder fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
-    CaraTest::addTest("loading a caracal.json with two default modes or a default that is not true or false fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
-    CaraTest::addTest("loading a caracal.json with constants that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data),
-    CaraTest::addTest("loading a caracal.json with mode constants that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModeConstantsThatCannotWorkFails_Data),
-    CaraTest::addTest("loading a caracal.json keeps dependency order and the prelude flag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
-    CaraTest::addTest("loading a caracal.json with dependencies but no prelude succeeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
-    CaraTest::addTest("loading a caracal.json without dependencies uses the compiler's libraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
-    CaraTest::addTest("loading a caracal.json with dependencies that cannot work fails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDependenciesThatCannotWorkFails_Data),
-    CaraTest::addTest("loading a caracal.json that is not valid JSON reports the line and column", LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn),
-    CaraTest::addTest("collecting sources skips a nested project", CollectingSourcesSkipsNestedProject),
-    CaraTest::addTest("collecting sources skips the project's Temp and Output folders", CollectingSourcesSkipsProjectTempAndOutputFolders),
-    CaraTest::addTest("collecting sources sorts them by relative path", CollectingSourcesSortsThemByRelativePath),
-    CaraTest::addTest("collecting sources skips the folders from caracal.json", CollectingSourcesSkipsFoldersFromCaracalJson),
-    CaraTest::addTest("creating a build command uses the temp and output folders from caracal.json", CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson),
-    CaraTest::addTest("creating a build command uses the project's prelude and libraries", CreatingBuildCommandUsesProjectPreludeAndLibraries),
-    CaraTest::addTest("creating a build command without a prelude uses the compiler's prelude", CreatingBuildCommandWithoutPreludeUsesCompilerPrelude),
-    CaraTest::addTest("updating a project restores, removes and adds core files", UpdatingProjectRestoresRemovesAndAddsCoreFiles),
-    CaraTest::addTest("updating a current project changes nothing", UpdatingCurrentProjectChangesNothing),
-    CaraTest::addTest("updating a project with -dry lists the changes and makes none", UpdatingProjectWithDryListsChangesAndMakesNone),
-    CaraTest::addTest("updating a project leaves its own files alone", UpdatingProjectLeavesItsOwnFilesAlone),
-    CaraTest::addTest("updating a project without a core copy changes nothing", UpdatingProjectWithoutCoreCopyChangesNothing),
-    CaraTest::addTest("updating a project without core next to the compiler fails", UpdatingProjectWithoutCoreNextToCompilerFails),
-    CaraTest::addTest("finding a mode the project does not have lists its modes", FindingModeTheProjectDoesNotHaveListsItsModes),
-    CaraTest::addTest("finding a mode without a name when no mode is the default lists the modes", FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes),
-    CaraTest::addTest("finding the test mode uses the mode that runs tests", FindingTestModeUsesModeThatRunsTests),
-    CaraTest::addTest("finding the test mode when no mode runs tests lists the modes", FindingTestModeWhenNoModeRunsTestsListsTheModes),
-    CaraTest::addTest("creating a build command for debug builds into the mode's folders", CreatingBuildCommandForDebugBuildsIntoTheModesFolders),
-    CaraTest::addTest("creating a build command for a mode without output uses its name", CreatingBuildCommandForModeWithoutOutputUsesModesName),
-    CaraTest::addTest("creating a build command without a mode uses the default mode", CreatingBuildCommandWithoutModeUsesDefaultMode),
-    CaraTest::addTest("creating a build command for an unknown mode fails", CreatingBuildCommandForUnknownModeFails),
-    CaraTest::addTest("a build command for a project adds its name as a constant", BuildCommandForProjectAddsItsNameAsConstant),
-    CaraTest::addTest("a build command for a project adds its version as a constant", BuildCommandForProjectAddsItsVersionAsConstant),
-    CaraTest::addTest("a build command for a project adds its constants", BuildCommandForProjectAddsItsConstants),
-    CaraTest::addTest("a build command for a project writes every type", BuildCommandForProjectWritesEveryType, BuildCommandForProjectWritesEveryType_Data),
-    CaraTest::addTest("an f32 constant reads back unchanged", F32ConstantsReadBackUnchanged, F32ConstantsReadBackUnchanged_Data),
-    CaraTest::addTest("an f64 constant reads back unchanged", F64ConstantsReadBackUnchanged, F64ConstantsReadBackUnchanged_Data),
-    CaraTest::addTest("a build command for a mode uses the mode's constant values", BuildCommandForModeUsesModesConstantValues),
-    CaraTest::addTest("a build command for a project adds its mode name as a constant", BuildCommandForProjectAddsItsModeNameAsConstant),
-    CaraTest::addTest("a build command for a test mode runs tests", BuildCommandForTestModeRunsTests),
-    CaraTest::addTest("a build command for a file runs no tests", BuildCommandForFileRunsNoTests),
-    CaraTest::addTest("creating a build command without dependencies uses the compiler's libraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
-    CaraTest::addTest("checking a project name rejects names Windows cannot use as a file name", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
-    CaraTest::addTest("checking a project name accepts names Windows can use as a file name", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
-    CaraTest::addTest("a mode with debug information builds with debug information", ModeWithDebugInformationBuildsWithDebugInformation),
-    CaraTest::addTest("a mode with debug information records source locations", ModeWithDebugInformationRecordsSourceLocations),
-    CaraTest::addTest("a mode without debug information records no source locations", ModeWithoutDebugInformationRecordsNoSourceLocations),
+    CaraTest::addTest("CreatingProjectWithNameUsesThatName", CreatingProjectWithNameUsesThatName),
+    CaraTest::addTest("CreatingProjectCopiesCompilerCoreIntoLibraries", CreatingProjectCopiesCompilerCoreIntoLibraries),
+    CaraTest::addTest("CreatingProjectWithoutCoreNextToCompilerCreatesNothing", CreatingProjectWithoutCoreNextToCompilerCreatesNothing),
+    CaraTest::addTest("CreatingProjectWithoutNameUsesNameOfCurrentFolder", CreatingProjectWithoutNameUsesNameOfCurrentFolder),
+    CaraTest::addTest("CreatingProjectInFolderWithCaracalJsonChangesNothing", CreatingProjectInFolderWithCaracalJsonChangesNothing),
+    CaraTest::addTest("CreatingProjectKeepsTheFilesItFinds", CreatingProjectKeepsTheFilesItFinds),
+    CaraTest::addTest("CreatingProjectInsideRepositoryOmitsEditorConfigRoot", CreatingProjectInsideRepositoryOmitsEditorConfigRoot),
+    CaraTest::addTest("CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder", CreatingProjectWithNameThatCannotBeFileNameCreatesNoFolder),
+    CaraTest::addTest("FindingRepositoryFindsGitFolderInParentFolder", FindingRepositoryFindsGitFolderInParentFolder),
+    CaraTest::addTest("FindingRepositoryFindsGitFile", FindingRepositoryFindsGitFile),
+    CaraTest::addTest("FindingRepositoryWithoutOneFindsNothing", FindingRepositoryWithoutOneFindsNothing),
+    CaraTest::addTest("InitializingRepositoryInsideAnotherCreatesNoGit", InitializingRepositoryInsideAnotherCreatesNoGit),
+    CaraTest::addTest("InitializingRepositoryCreatesGitFolder", InitializingRepositoryCreatesGitFolder),
+    CaraTest::addTest("FindingProjectDoesNotLookInParentFolder", FindingProjectDoesNotLookInParentFolder),
+    CaraTest::addTest("FindingProjectFromPathToJsonFileLoadsThatFile", FindingProjectFromPathToJsonFileLoadsThatFile),
+    CaraTest::addTest("LoadingCaracalJsonWithNameThatCannotBeFileNameFails", LoadingCaracalJsonWithNameThatCannotBeFileNameFails),
+    CaraTest::addTest("LoadingCaracalJsonWithoutRequiredFieldFails", LoadingCaracalJsonWithoutRequiredFieldFails, LoadingCaracalJsonWithoutRequiredFieldFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithVersionThatIsNotStringFails", LoadingCaracalJsonWithVersionThatIsNotStringFails),
+    CaraTest::addTest("LoadingCaracalJsonFillsInFoldersItLeavesOut", LoadingCaracalJsonFillsInFoldersItLeavesOut),
+    CaraTest::addTest("LoadingCaracalJsonWithFolderOutsideProjectFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderOutsideProjectFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoFoldersThatAreTheSameFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithFolderInsideAnotherFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFolderInsideAnotherFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithFoldersOfWrongFormFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithFoldersOfWrongFormFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonReadsItsModes", LoadingCaracalJsonReadsItsModes),
+    CaraTest::addTest("LoadingCaracalJsonWithModesOfWrongFormFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModesOfWrongFormFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonReadsModesDebugInformation", LoadingCaracalJsonReadsModesDebugInformation),
+    CaraTest::addTest("LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDebugInformationThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithTwoTestModesOrTestThatIsNotTrueOrFalseFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoTestModesOrTestThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithOutputThatIsNotOneFolderFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithOutputThatIsNotOneFolderFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithTwoModesInOneFolderFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoModesInOneFolderFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithTwoDefaultModesOrDefaultThatIsNotTrueOrFalseFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithConstantsThatCannotWorkFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithConstantsThatCannotWorkFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonWithModeConstantsThatCannotWorkFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithModeConstantsThatCannotWorkFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag", LoadingCaracalJsonKeepsDependencyOrderAndPreludeFlag),
+    CaraTest::addTest("LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds", LoadingCaracalJsonWithDependenciesButNoPreludeSucceeds),
+    CaraTest::addTest("LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries", LoadingCaracalJsonWithoutDependenciesUsesCompilerLibraries),
+    CaraTest::addTest("LoadingCaracalJsonWithDependenciesThatCannotWorkFails", LoadingCaracalJsonThatCannotWorkFails, LoadingCaracalJsonWithDependenciesThatCannotWorkFails_Data),
+    CaraTest::addTest("LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn", LoadingCaracalJsonThatIsNotValidJsonReportsLineAndColumn),
+    CaraTest::addTest("CollectingSourcesSkipsNestedProject", CollectingSourcesSkipsNestedProject),
+    CaraTest::addTest("CollectingSourcesSkipsProjectTempAndOutputFolders", CollectingSourcesSkipsProjectTempAndOutputFolders),
+    CaraTest::addTest("CollectingSourcesSortsThemByRelativePath", CollectingSourcesSortsThemByRelativePath),
+    CaraTest::addTest("CollectingSourcesSkipsFoldersFromCaracalJson", CollectingSourcesSkipsFoldersFromCaracalJson),
+    CaraTest::addTest("CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson", CreatingBuildCommandUsesTempAndOutputFoldersFromCaracalJson),
+    CaraTest::addTest("CreatingBuildCommandUsesProjectPreludeAndLibraries", CreatingBuildCommandUsesProjectPreludeAndLibraries),
+    CaraTest::addTest("CreatingBuildCommandWithoutPreludeUsesCompilerPrelude", CreatingBuildCommandWithoutPreludeUsesCompilerPrelude),
+    CaraTest::addTest("UpdatingProjectRestoresRemovesAndAddsCoreFiles", UpdatingProjectRestoresRemovesAndAddsCoreFiles),
+    CaraTest::addTest("UpdatingCurrentProjectChangesNothing", UpdatingCurrentProjectChangesNothing),
+    CaraTest::addTest("UpdatingProjectWithDryListsChangesAndMakesNone", UpdatingProjectWithDryListsChangesAndMakesNone),
+    CaraTest::addTest("UpdatingProjectLeavesItsOwnFilesAlone", UpdatingProjectLeavesItsOwnFilesAlone),
+    CaraTest::addTest("UpdatingProjectWithoutCoreCopyChangesNothing", UpdatingProjectWithoutCoreCopyChangesNothing),
+    CaraTest::addTest("UpdatingProjectWithoutCoreNextToCompilerFails", UpdatingProjectWithoutCoreNextToCompilerFails),
+    CaraTest::addTest("FindingModeTheProjectDoesNotHaveListsItsModes", FindingModeTheProjectDoesNotHaveListsItsModes),
+    CaraTest::addTest("FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes", FindingModeWithoutNameWhenNoModeIsDefaultListsTheModes),
+    CaraTest::addTest("FindingTestModeUsesModeThatRunsTests", FindingTestModeUsesModeThatRunsTests),
+    CaraTest::addTest("FindingTestModeWhenNoModeRunsTestsListsTheModes", FindingTestModeWhenNoModeRunsTestsListsTheModes),
+    CaraTest::addTest("CreatingBuildCommandForDebugBuildsIntoTheModesFolders", CreatingBuildCommandForDebugBuildsIntoTheModesFolders),
+    CaraTest::addTest("CreatingBuildCommandForModeWithoutOutputUsesModesName", CreatingBuildCommandForModeWithoutOutputUsesModesName),
+    CaraTest::addTest("CreatingBuildCommandWithoutModeUsesDefaultMode", CreatingBuildCommandWithoutModeUsesDefaultMode),
+    CaraTest::addTest("CreatingBuildCommandForUnknownModeFails", CreatingBuildCommandForUnknownModeFails),
+    CaraTest::addTest("BuildCommandForProjectAddsItsNameAsConstant", BuildCommandForProjectAddsItsNameAsConstant),
+    CaraTest::addTest("BuildCommandForProjectAddsItsVersionAsConstant", BuildCommandForProjectAddsItsVersionAsConstant),
+    CaraTest::addTest("BuildCommandForProjectAddsItsConstants", BuildCommandForProjectAddsItsConstants),
+    CaraTest::addTest("BuildCommandForProjectWritesEveryType", BuildCommandForProjectWritesEveryType, BuildCommandForProjectWritesEveryType_Data),
+    CaraTest::addTest("F32ConstantsReadBackUnchanged", F32ConstantsReadBackUnchanged, F32ConstantsReadBackUnchanged_Data),
+    CaraTest::addTest("F64ConstantsReadBackUnchanged", F64ConstantsReadBackUnchanged, F64ConstantsReadBackUnchanged_Data),
+    CaraTest::addTest("BuildCommandForModeUsesModesConstantValues", BuildCommandForModeUsesModesConstantValues),
+    CaraTest::addTest("BuildCommandForProjectAddsItsModeNameAsConstant", BuildCommandForProjectAddsItsModeNameAsConstant),
+    CaraTest::addTest("BuildCommandForTestModeRunsTests", BuildCommandForTestModeRunsTests),
+    CaraTest::addTest("BuildCommandForFileRunsNoTests", BuildCommandForFileRunsNoTests),
+    CaraTest::addTest("TestModeSelectsNoLibrariesByDefault", TestModeSelectsNoLibrariesByDefault),
+    CaraTest::addTest("TestModeWithAllSelectsEveryLibrary", TestModeWithAllSelectsEveryLibrary),
+    CaraTest::addTest("TestModeWithListSelectsTheListedLibraries", TestModeWithListSelectsTheListedLibraries),
+    CaraTest::addTest("ListedLibraryThatIsNotADependencyIsAnError", ListedLibraryThatIsNotADependencyIsAnError),
+    CaraTest::addTest("ListedPreludeIsAnError", ListedPreludeIsAnError),
+    CaraTest::addTest("AllAndListTogetherIsAnError", AllAndListTogetherIsAnError),
+    CaraTest::addTest("CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries", CreatingBuildCommandWithoutDependenciesUsesCompilerLibraries),
+    CaraTest::addTest("CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName", CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName, CheckingProjectNameRejectsNamesWindowsCannotUseAsFileName_Data),
+    CaraTest::addTest("CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName", CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName, CheckingProjectNameAcceptsNamesWindowsCanUseAsFileName_Data),
+    CaraTest::addTest("ModeWithDebugInformationBuildsWithDebugInformation", ModeWithDebugInformationBuildsWithDebugInformation),
+    CaraTest::addTest("ModeWithDebugInformationRecordsSourceLocations", ModeWithDebugInformationRecordsSourceLocations),
+    CaraTest::addTest("ModeWithoutDebugInformationRecordsNoSourceLocations", ModeWithoutDebugInformationRecordsNoSourceLocations),
 };

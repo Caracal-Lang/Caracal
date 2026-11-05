@@ -22,6 +22,40 @@ namespace Caracal
         return names;
     }
 
+    static std::string LibraryNames(const Project& project)
+    {
+        std::vector<std::string> libraries{};
+        for (const auto& dependency : project.dependencies)
+        {
+            if (!dependency.isPrelude)
+            {
+                libraries.push_back(dependency.path.generic_string());
+            }
+        }
+
+        if (libraries.empty())
+        {
+            return "no libraries";
+        }
+
+        std::string names{};
+        for (size_t index = 0; index < libraries.size(); ++index)
+        {
+            if (index > 0 && index + 1 == libraries.size())
+            {
+                names += " and ";
+            }
+            else if (index > 0)
+            {
+                names += ", ";
+            }
+
+            names += libraries[index];
+        }
+
+        return names;
+    }
+
     std::vector<ProjectMode> defaultProjectModes()
     {
         return {
@@ -75,5 +109,35 @@ namespace Caracal
         }
 
         return { std::nullopt, "No mode in caracal.json has \"test\": true, the project has " + ModeNames(project) };
+    }
+
+    ListedLibrariesResult findListedLibraries(const Project& project, const TestSelection& testSelection)
+    {
+        if (testSelection.allLibraries && !testSelection.libraries.empty())
+        {
+            return { {}, "Use -all or -libs, not both" };
+        }
+
+        ListedLibrariesResult result{};
+        for (const auto& library : testSelection.libraries)
+        {
+            auto isDependency = false;
+            for (const auto& dependency : project.dependencies)
+            {
+                if (!dependency.isPrelude && dependency.path.generic_string() == library)
+                {
+                    result.dependencyPaths.push_back(dependency.path);
+                    isDependency = true;
+                    break;
+                }
+            }
+
+            if (!isDependency)
+            {
+                return { {}, "\"" + library + "\" is not a library in caracal.json, the project has " + LibraryNames(project) };
+            }
+        }
+
+        return result;
     }
 }

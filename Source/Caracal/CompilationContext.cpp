@@ -15,7 +15,8 @@ namespace Caracal
     void CompilationContext::addSource(
         std::string content,
         const std::filesystem::path& path,
-        UnitOrigin origin)
+        UnitOrigin origin,
+        bool runsItsTests)
     {
         if (m_units.size() > std::numeric_limits<u16>::max())
         {
@@ -25,6 +26,7 @@ namespace Caracal
 
         m_units.push_back({
             .origin = origin,
+            .runsItsTests = origin == UnitOrigin::User || runsItsTests,
             .fileId = static_cast<u16>(m_units.size()),
             .source = std::make_shared<SourceText>(std::move(content), path),
         });

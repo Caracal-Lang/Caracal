@@ -28,6 +28,7 @@ namespace Caracal
     struct CompilationUnit
     {
         UnitOrigin origin = UnitOrigin::User;
+        bool runsItsTests = true;
         u16 fileId = 0;
         bool wasProcessed = false;
         SourceTextSharedPtr source;
@@ -44,7 +45,8 @@ namespace Caracal
         void addSource(
             std::string content,
             const std::filesystem::path& path,
-            UnitOrigin origin);
+            UnitOrigin origin,
+            bool runsItsTests = false);
 
         [[nodiscard]] const TypeCheckerOptions& options() const noexcept;
         [[nodiscard]] SemanticContext& semanticContext() noexcept;

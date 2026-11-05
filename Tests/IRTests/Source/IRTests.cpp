@@ -117,20 +117,15 @@ static std::vector<std::tuple<std::string, std::filesystem::path, std::filesyste
     return data;
 }
 
-static void TestBuildFileTests(
-    const std::string& /*fileName*/,
-    const std::filesystem::path& inputFilePath,
-    const std::filesystem::path& outputFilePath)
+struct TestBuildSource
 {
-    if (!std::filesystem::exists(inputFilePath))
-        CaraTest::fail();
-    if (!std::filesystem::exists(outputFilePath))
-        CaraTest::skip();
+    std::filesystem::path filePath;
+    Caracal::UnitOrigin origin;
+    bool runsItsTests;
+};
 
-    auto input = Caracal::File::readText(inputFilePath);
-    if (!input.has_value())
-        CaraTest::fail();
-
+static void CheckTestBuild(const std::vector<TestBuildSource>& sources, const std::filesystem::path& outputFilePath)
+{
     const auto repositoryDirectory = std::filesystem::path(__FILE__).parent_path() / "../../..";
     Caracal::DiagnosticsBag diagnostics;
     Caracal::CompilationContext compilationContext{ Caracal::TypeCheckerOptions{ .emitsTests = true } };
@@ -143,7 +138,14 @@ static void TestBuildFileTests(
 
         compilationContext.addSource(std::move(coreSource.value()), std::filesystem::path("Core") / coreFileName, Caracal::UnitOrigin::Core);
     }
-    compilationContext.addSource(std::move(input.value()), std::filesystem::path{}, Caracal::UnitOrigin::User);
+    for (const auto& source : sources)
+    {
+        auto input = Caracal::File::readText(source.filePath);
+        if (!input.has_value())
+            CaraTest::fail();
+
+        compilationContext.addSource(std::move(input.value()), std::filesystem::path{}, source.origin, source.runsItsTests);
+    }
     Caracal::lexAndParse(compilationContext, diagnostics);
     if (!Caracal::loadPrelude(compilationContext, repositoryDirectory / "Prelude", diagnostics))
     {
@@ -161,6 +163,32 @@ static void TestBuildFileTests(
 
     Caracal::IRPrinter printer{ module };
     CaraTest::equalsFile(outputFilePath, printer.prettyPrint());
+}
+
+static void TestBuildFileTests(
+    const std::string& /*fileName*/,
+    const std::filesystem::path& inputFilePath,
+    const std::filesystem::path& outputFilePath)
+{
+    if (!std::filesystem::exists(inputFilePath))
+        CaraTest::fail();
+    if (!std::filesystem::exists(outputFilePath))
+        CaraTest::skip();
+
+    CheckTestBuild({ { inputFilePath, Caracal::UnitOrigin::User, true } }, outputFilePath);
+}
+
+static void OnlyTheSelectedLibraryRunsItsTests()
+{
+    const auto testDataDirectory = std::filesystem::path(__FILE__).parent_path() / "../../TestData";
+    const auto inputDirectory = testDataDirectory / "InputTestBuild" / "libraryTests";
+    CheckTestBuild(
+        {
+            { inputDirectory / "core.cara", Caracal::UnitOrigin::Core, false },
+            { inputDirectory / "json.cara", Caracal::UnitOrigin::Core, true },
+            { inputDirectory / "main.cara", Caracal::UnitOrigin::User, true },
+        },
+        testDataDirectory / "OutputIRTestBuild" / "libraryTestsOfOneLibrary.txt");
 }
 
 static std::vector<std::tuple<std::string, std::filesystem::path, std::filesystem::path>> TestBuildFileTests_Data()
@@ -209,5 +237,6 @@ static auto tests =
 {
     CaraTest::addTest("FileTests", FileTests, FileTests_Data),
     CaraTest::addTest("TestBuildFileTests", TestBuildFileTests, TestBuildFileTests_Data),
+    CaraTest::addTest("OnlyTheSelectedLibraryRunsItsTests", OnlyTheSelectedLibraryRunsItsTests),
     CaraTest::addTest("PrologueAllocationKeepsBothSourceLines", PrologueAllocationKeepsBothSourceLines),
 };

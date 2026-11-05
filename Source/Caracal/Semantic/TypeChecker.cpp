@@ -3809,6 +3809,11 @@ namespace Caracal
 
         for (const auto declaration : m_testDeclarations)
         {
+            if (!emitsTestsOf(unitFor(declaration)))
+            {
+                continue;
+            }
+
             if (beginTestType != Type::Undefined())
             {
                 // Test.beginTest("name") before test
@@ -3830,6 +3835,11 @@ namespace Caracal
         }
     }
 
+    bool TypeChecker::emitsTestsOf(const CompilationUnit& unit) const noexcept
+    {
+        return m_options.emitsTests && unit.runsItsTests;
+    }
+
     void TypeChecker::typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index)
     {
         CARACAL_ZONE_NAMED("check.testBody");
@@ -3839,20 +3849,21 @@ namespace Caracal
         const auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         const auto testLayout = NodeLayout::testDefinition(index);
+        const auto emitsTest = emitsTestsOf(unit);
 
-        if (m_options.emitsTests)
+        if (emitsTest)
         {
             m_emitter.setAddressTakenLocals(collectAddressTakenNameIds(unit, testLayout.body));
             m_emitter.beginFunction(functionDefinition, nameLine(unit, index));
         }
         // the parameters come from the stub and have no source location, so no unused warning
-        bindParameters(unit, InvalidNodeIndex, functionDefinition, m_options.emitsTests);
+        bindParameters(unit, InvalidNodeIndex, functionDefinition, emitsTest);
 
         m_currentFunctionName = functionDefinition.fullName();
         typeCheckBlockNode(unit, testLayout.body);
         m_currentFunctionName.clear();
 
-        if (m_options.emitsTests)
+        if (emitsTest)
         {
             m_emitter.endFunction();
         }
