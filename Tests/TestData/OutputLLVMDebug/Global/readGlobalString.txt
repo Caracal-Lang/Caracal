@@ -41,6 +41,3 @@ entry:
   %load = load i32, ptr %length, align 4
   ret i32 %load
 }
-
-; uselistorder directives
-uselistorder ptr @string.length, { 1, 0 }

@@ -249,10 +249,6 @@ while.body:                                       ; preds = %while.condition
 
 while.continuation:                               ; preds = %while.condition
   ret i32 %phi14
-
-; uselistorder directives
-  uselistorder i32 %phi9, { 1, 0 }
-  uselistorder i32 %phi11, { 1, 0 }
 }
 
 define i32 @string.runeLengthAt(ptr nonnull %0, i32 %1) {
@@ -293,9 +289,3 @@ entry:
   %load = load i32, ptr %length, align 4
   ret i32 %load
 }
-
-; uselistorder directives
-uselistorder ptr @string.runeCount, { 2, 1, 0 }
-uselistorder ptr @string.runeAt, { 3, 2, 1, 0 }
-uselistorder ptr @string.runeLengthAt, { 5, 4, 3, 2, 1, 0 }
-uselistorder ptr @string.length, { 2, 1, 0 }

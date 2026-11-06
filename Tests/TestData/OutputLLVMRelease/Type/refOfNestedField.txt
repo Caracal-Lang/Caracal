@@ -29,9 +29,6 @@ entry:
   %load14.fca.2.0.1.insert = insertvalue %Holder %load14.fca.2.0.0.insert, i32 4, 2, 0, 1
   %load14.fca.2.0.2.insert = insertvalue %Holder %load14.fca.2.0.1.insert, i32 4, 2, 0, 2
   ret %Holder %load14.fca.2.0.2.insert
-
-; uselistorder directives
-  uselistorder ptr %copy.i, { 1, 0 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: readwrite)
@@ -98,9 +95,6 @@ entry:
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #7
-
-; uselistorder directives
-uselistorder ptr @calloc, { 1, 0, 2 }
 
 attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
 attributes #1 = { mustprogress nofree nounwind willreturn memory(readwrite, argmem: none) }

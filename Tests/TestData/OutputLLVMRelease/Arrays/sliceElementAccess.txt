@@ -58,18 +58,6 @@ while.body:                                       ; preds = %while.body.preheade
 while.continuation:                               ; preds = %while.body, %middle.block, %entry
   %phi1.lcssa = phi i32 [ 0, %entry ], [ %6, %middle.block ], [ %add, %while.body ]
   ret i32 %phi1.lcssa
-
-; uselistorder directives
-  uselistorder ptr %phi2.fca.0.extract, { 1, 0 }
-  uselistorder i64 %wide.trip.count, { 2, 1, 0 }
-  uselistorder i64 %n.vec, { 0, 2, 1 }
-  uselistorder ptr %1, { 1, 0 }
-  uselistorder i64 %index.next, { 1, 0 }
-  uselistorder i32 %6, { 1, 0 }
-  uselistorder label %while.body.preheader, { 1, 0 }
-  uselistorder label %while.body, { 1, 0 }
-  uselistorder i64 %indvars.iv, { 1, 0 }
-  uselistorder i64 %indvars.iv.next, { 1, 0 }
 }
 
 ; Function Attrs: nocallback nofree nosync nounwind speculatable willreturn memory(none)

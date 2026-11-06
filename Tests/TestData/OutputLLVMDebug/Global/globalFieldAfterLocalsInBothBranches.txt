@@ -55,6 +55,3 @@ entry:
   call void @Point.new(ptr @origin, i32 5)
   ret void
 }
-
-; uselistorder directives
-uselistorder ptr @Point.new, { 0, 2, 1 }

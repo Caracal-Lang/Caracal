@@ -24,8 +24,5 @@ entry:
   ret void
 }
 
-; uselistorder directives
-uselistorder ptr @p, { 1, 0 }
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }
 attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }

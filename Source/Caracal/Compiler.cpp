@@ -740,7 +740,7 @@ namespace Caracal
 
         std::string irOutput;
         llvm::raw_string_ostream irStream(irOutput);
-        llvmModule->print(irStream, nullptr, true, true);
+        llvmModule->print(irStream, nullptr, false, true);
         irStream.flush();
 
         return std::make_pair(true, irOutput);

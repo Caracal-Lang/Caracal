@@ -128,9 +128,6 @@ while.body:                                       ; preds = %while.condition
 
 while.continuation:                               ; preds = %while.condition
   ret i32 %phi2
-
-; uselistorder directives
-  uselistorder { ptr, i32 } %phi, { 1, 0 }
 }
 
 define i32 @Counter.tally({ ptr, i32 } %0) {
@@ -146,7 +143,3 @@ define void @Counter.new(ptr nonnull %0) {
 entry:
   ret void
 }
-
-; uselistorder directives
-uselistorder ptr @Counter.count, { 1, 0 }
-uselistorder ptr @Counter.tally, { 1, 0 }

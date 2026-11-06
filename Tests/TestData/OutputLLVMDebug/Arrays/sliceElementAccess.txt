@@ -39,7 +39,4 @@ while.body:                                       ; preds = %while.condition
 
 while.continuation:                               ; preds = %while.condition
   ret i32 %phi1
-
-; uselistorder directives
-  uselistorder { ptr, i32 } %phi2, { 1, 2, 0 }
 }

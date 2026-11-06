@@ -44,10 +44,6 @@ while.body:                                       ; preds = %while.body, %while.
   %exitcond.not = icmp ne i64 %indvars.iv.next, %wide.trip.count
   %or.cond.not = select i1 %not_equal17.not, i1 %exitcond.not, i1 false
   br i1 %or.cond.not, label %while.body, label %common.ret
-
-; uselistorder directives
-  uselistorder i1 %not_equal17.not, { 1, 0 }
-  uselistorder i64 %indvars.iv.next, { 1, 0 }
 }
 
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

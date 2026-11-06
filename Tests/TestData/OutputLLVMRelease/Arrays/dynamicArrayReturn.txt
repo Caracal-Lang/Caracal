@@ -17,9 +17,6 @@ entry:
   %load.fca.1.insert = insertvalue { ptr, i32, i32 } %load.fca.0.insert, i32 2, 1
   %load.fca.2.insert = insertvalue { ptr, i32, i32 } %load.fca.1.insert, i32 8, 2
   ret { ptr, i32, i32 } %load.fca.2.insert
-
-; uselistorder directives
-  uselistorder ptr %call, { 2, 0, 1 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)

@@ -32,9 +32,6 @@ entry:
   %capacity5 = getelementptr inbounds nuw i8, ptr %0, i64 28
   store i32 8, ptr %capacity5, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %call, { 1, 0, 2 }
 }
 
 attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }

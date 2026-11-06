@@ -37,9 +37,6 @@ entry:
   %.repack6 = getelementptr inbounds nuw i8, ptr %0, i64 12
   store i32 %.fca.2.extract, ptr %.repack6, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn memory(readwrite, argmem: none)
@@ -56,16 +53,10 @@ entry:
   store i32 2, ptr getelementptr inbounds nuw (i8, ptr @origin, i64 8), align 8
   store i32 8, ptr getelementptr inbounds nuw (i8, ptr @origin, i64 12), align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %copy.i, { 1, 0 }
 }
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #4
-
-; uselistorder directives
-uselistorder ptr @origin, { 1, 2, 0, 3 }
 
 attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
 attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }

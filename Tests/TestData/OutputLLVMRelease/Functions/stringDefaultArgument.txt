@@ -38,9 +38,6 @@ entry:
   %.elt4 = extractvalue { ptr, i32, i32 } %2, 2
   store i32 %.elt4, ptr %.repack3, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)

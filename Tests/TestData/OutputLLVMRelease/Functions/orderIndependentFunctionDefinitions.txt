@@ -19,7 +19,4 @@ entry:
   ret ptr @0
 }
 
-; uselistorder directives
-uselistorder ptr @0, { 1, 0 }
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

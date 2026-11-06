@@ -110,9 +110,6 @@ entry:
   ret void, !dbg !64
 }
 
-; uselistorder directives
-uselistorder ptr @Point.new, { 1, 0 }
-
 !llvm.dbg.cu = !{!0}
 !llvm.module.flags = !{!2, !3}
 

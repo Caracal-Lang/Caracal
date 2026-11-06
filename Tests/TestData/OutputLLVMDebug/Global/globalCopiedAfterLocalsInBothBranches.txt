@@ -81,6 +81,3 @@ entry:
   %call1 = call i32 @globalCopiedAfterLocalsInBothBranches(i1 false)
   ret i32 %call1
 }
-
-; uselistorder directives
-uselistorder ptr @numbers, { 0, 2, 3, 1 }

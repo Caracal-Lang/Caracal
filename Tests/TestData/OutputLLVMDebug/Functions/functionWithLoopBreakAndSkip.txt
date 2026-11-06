@@ -42,8 +42,4 @@ if.continuation2:                                 ; preds = %if.continuation
 
 while.continuation:                               ; preds = %if.true1, %while.condition
   ret i32 %phi3
-
-; uselistorder directives
-  uselistorder i32 %phi3, { 1, 2, 0 }
-  uselistorder i32 %add, { 2, 3, 4, 1, 0 }
 }

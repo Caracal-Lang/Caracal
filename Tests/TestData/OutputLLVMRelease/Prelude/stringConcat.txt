@@ -122,12 +122,6 @@ while.condition.preheader.i.i75:                  ; preds = %while.condition.i.i
   %not_equal17.not.i.not.i83 = icmp eq i8 %load11.i.i80, 120
   %spec.select = select i1 %not_equal17.not.i.not.i83, i32 42, i32 4
   br label %common.ret
-
-; uselistorder directives
-  uselistorder ptr %s, { 3, 0, 1, 2 }
-  uselistorder ptr %temp25, { 3, 0, 1, 2 }
-  uselistorder label %common.ret, { 11, 0, 12, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13 }
-  uselistorder %string %call38, { 1, 0 }
 }
 
 ; Function Attrs: nounwind
@@ -213,25 +207,6 @@ while.continuation3:                              ; preds = %while.body2, %while
   %load51.fca.0.1.insert = insertvalue %string %load51.fca.0.0.insert, i32 %joined.sroa.6.1.lcssa, 0, 1
   %load51.fca.0.2.insert = insertvalue %string %load51.fca.0.1.insert, i32 %joined.sroa.6.1.lcssa, 0, 2
   ret %string %load51.fca.0.2.insert
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 0 }
-  uselistorder ptr %call, { 1, 0 }
-  uselistorder i32 %joined.sroa.6.0.lcssa, { 1, 0 }
-  uselistorder ptr %joined.sroa.0.0.lcssa, { 1, 0 }
-  uselistorder label %while.body, { 1, 0 }
-  uselistorder i64 %indvars.iv, { 3, 1, 0, 2 }
-  uselistorder i32 %joined.sroa.12.057, { 1, 0 }
-  uselistorder i32 %new_capacity, { 2, 0, 1 }
-  uselistorder ptr %grown, { 2, 0, 1 }
-  uselistorder label %while.body2, { 1, 0 }
-  uselistorder i64 %indvars.iv74, { 1, 0 }
-  uselistorder i32 %joined.sroa.6.165, { 1, 2, 0 }
-  uselistorder i32 %joined.sroa.12.164, { 1, 0 }
-  uselistorder i32 %new_capacity35, { 1, 0 }
-  uselistorder ptr %grown38, { 0, 2, 1 }
-  uselistorder i32 %joined.sroa.6.1.lcssa, { 1, 2, 0 }
-  uselistorder i64 %widened49, { 1, 0, 2 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
@@ -275,10 +250,6 @@ while.body.i:                                     ; preds = %while.body.i, %whil
 string.equals.exit:                               ; preds = %while.body.i, %entry, %while.condition.preheader.i
   %2 = phi i1 [ true, %entry ], [ false, %while.condition.preheader.i ], [ %not_equal17.not.i.not, %while.body.i ]
   ret i1 %2
-
-; uselistorder directives
-  uselistorder i64 %indvars.iv.next.i, { 1, 0 }
-  uselistorder label %string.equals.exit, { 0, 2, 1 }
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
@@ -296,9 +267,6 @@ entry:
   %.repack5 = getelementptr inbounds nuw i8, ptr %0, i64 12
   store i32 %.fca.1.extract, ptr %.repack5, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
@@ -334,10 +302,6 @@ while.body:                                       ; preds = %while.body, %while.
   %exitcond.not = icmp ne i64 %indvars.iv.next, %wide.trip.count
   %or.cond.not = select i1 %not_equal17.not, i1 %exitcond.not, i1 false
   br i1 %or.cond.not, label %while.body, label %common.ret
-
-; uselistorder directives
-  uselistorder i1 %not_equal17.not, { 1, 0 }
-  uselistorder i64 %indvars.iv.next, { 1, 0 }
 }
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
@@ -345,10 +309,6 @@ declare void @llvm.memmove.p0.p0.i64(ptr writeonly captures(none) %0, ptr readon
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
 declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #7
-
-; uselistorder directives
-uselistorder ptr @calloc, { 1, 0, 2, 3 }
-uselistorder ptr @string.concat, { 1, 0 }
 
 attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
 attributes #1 = { mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite) "alloc-family"="malloc" }

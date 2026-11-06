@@ -23,12 +23,6 @@ entry:
   %2 = insertvalue { ptr, i32, i32 } %1, i32 %load.unpack6, 1
   %array_copy = insertvalue { ptr, i32, i32 } %2, i32 %load.unpack8, 2
   ret { ptr, i32, i32 } %array_copy
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
-  uselistorder i32 %load.unpack6, { 1, 0 }
-  uselistorder i32 %load.unpack8, { 1, 0 }
-  uselistorder ptr %copy, { 1, 0 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)

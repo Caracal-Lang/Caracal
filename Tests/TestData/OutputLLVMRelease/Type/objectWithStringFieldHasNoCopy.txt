@@ -26,9 +26,6 @@ entry:
   %size = getelementptr inbounds nuw i8, ptr %0, i64 16
   store i32 %2, ptr %size, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 0, 2, 3, 1 }
 }
 
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

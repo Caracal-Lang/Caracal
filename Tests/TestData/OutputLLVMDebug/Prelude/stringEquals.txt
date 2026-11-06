@@ -166,6 +166,3 @@ entry:
   %2 = xor i1 %call, true
   ret i1 %2
 }
-
-; uselistorder directives
-uselistorder ptr @string.new, { 2, 1, 0 }

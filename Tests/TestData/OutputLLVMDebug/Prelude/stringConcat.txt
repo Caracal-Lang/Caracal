@@ -365,7 +365,3 @@ if.continuation2:                                 ; preds = %while.body
 while.continuation:                               ; preds = %while.condition
   ret i1 true
 }
-
-; uselistorder directives
-uselistorder ptr @string.concat, { 2, 1, 0 }
-uselistorder ptr @string.notEquals, { 2, 1, 0 }

@@ -135,17 +135,6 @@ while.continuation:                               ; preds = %string.runeLengthAt
   %not_equal59.not = icmp eq i32 %add58, 7
   %. = select i1 %not_equal59.not, i32 42, i32 14
   br label %common.ret
-
-; uselistorder directives
-  uselistorder i32 %phi15.i, { 1, 0 }
-  uselistorder i32 %add.i, { 1, 0 }
-  uselistorder ptr %mixed, { 3, 4, 0, 1, 2 }
-  uselistorder ptr %euro, { 3, 0, 1, 2 }
-  uselistorder i32 %phi15.i80, { 1, 0 }
-  uselistorder i32 %add.i92, { 1, 0 }
-  uselistorder label %while.body, { 1, 0 }
-  uselistorder label %string.runeLengthAt.exit154, { 2, 1, 0 }
-  uselistorder i32 %add, { 1, 0 }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
@@ -188,11 +177,6 @@ string.runeLengthAt.exit:                         ; preds = %while.body, %if.con
 while.continuation:                               ; preds = %string.runeLengthAt.exit, %entry
   %phi.lcssa = phi i32 [ 0, %entry ], [ %add2, %string.runeLengthAt.exit ]
   ret i32 %phi.lcssa
-
-; uselistorder directives
-  uselistorder i32 %load, { 1, 0 }
-  uselistorder label %while.body, { 1, 0 }
-  uselistorder label %string.runeLengthAt.exit, { 2, 1, 0 }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
@@ -274,16 +258,6 @@ while.body:                                       ; preds = %while.body, %if.con
   %niter.next.1 = add i64 %niter, 2
   %niter.ncmp.1 = icmp eq i64 %niter.next.1, %unroll_iter
   br i1 %niter.ncmp.1, label %common.ret.loopexit.unr-lcssa.loopexit, label %while.body
-
-; uselistorder directives
-  uselistorder i32 %1, { 3, 1, 0, 2 }
-  uselistorder ptr %load, { 0, 2, 1, 3 }
-  uselistorder i8 %load5, { 2, 1, 0, 3 }
-  uselistorder i1 %less_than6.i, { 1, 0, 2 }
-  uselistorder i32 %bit_and, { 1, 0 }
-  uselistorder i64 %indvars.iv, { 1, 0, 2 }
-  uselistorder i32 %bit_or.1, { 1, 0, 2 }
-  uselistorder i64 %niter.next.1, { 1, 0 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
@@ -308,9 +282,6 @@ if.continuation2:                                 ; preds = %if.continuation
   %less_than7 = icmp samesign ult i8 %load5, -16
   %. = select i1 %less_than7, i32 3, i32 4
   br label %common.ret
-
-; uselistorder directives
-  uselistorder i8 %load5, { 1, 2, 0 }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
@@ -320,9 +291,6 @@ entry:
   %load = load i32, ptr %length, align 4
   ret i32 %load
 }
-
-; uselistorder directives
-uselistorder ptr @string.runeAt, { 2, 1, 0 }
 
 attributes #0 = { nofree norecurse nosync nounwind memory(read, inaccessiblemem: none) }
 attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }

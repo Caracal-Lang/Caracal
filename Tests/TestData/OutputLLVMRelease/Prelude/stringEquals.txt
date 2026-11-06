@@ -24,10 +24,6 @@ while.body.preheader.i:
   %or.cond = icmp eq i16 %0, %1
   %common.ret.op = select i1 %or.cond, i32 42, i32 2
   ret i32 %common.ret.op
-
-; uselistorder directives
-  uselistorder ptr %call, { 0, 2, 1 }
-  uselistorder ptr %call6, { 0, 2, 1 }
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
@@ -45,9 +41,6 @@ entry:
   %.repack5 = getelementptr inbounds nuw i8, ptr %0, i64 12
   store i32 %.fca.1.extract, ptr %.repack5, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
@@ -83,10 +76,6 @@ while.body:                                       ; preds = %while.body, %while.
   %exitcond.not = icmp ne i64 %indvars.iv.next, %wide.trip.count
   %or.cond.not = select i1 %not_equal17.not, i1 %exitcond.not, i1 false
   br i1 %or.cond.not, label %while.body, label %common.ret
-
-; uselistorder directives
-  uselistorder i1 %not_equal17.not, { 1, 0 }
-  uselistorder i64 %indvars.iv.next, { 1, 0 }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
@@ -122,10 +111,6 @@ while.body.i:                                     ; preds = %while.body.i, %whil
 string.equals.exit:                               ; preds = %while.body.i, %entry, %while.condition.preheader.i
   %2 = phi i1 [ true, %entry ], [ false, %while.condition.preheader.i ], [ %not_equal17.not.i.not, %while.body.i ]
   ret i1 %2
-
-; uselistorder directives
-  uselistorder i64 %indvars.iv.next.i, { 1, 0 }
-  uselistorder label %string.equals.exit, { 0, 2, 1 }
 }
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)

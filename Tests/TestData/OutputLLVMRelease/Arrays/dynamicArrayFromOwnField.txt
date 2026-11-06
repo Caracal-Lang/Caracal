@@ -43,9 +43,6 @@ entry:
   %.repack6 = getelementptr inbounds nuw i8, ptr %0, i64 12
   store i32 %.fca.2.extract, ptr %.repack6, align 4
   ret void
-
-; uselistorder directives
-  uselistorder ptr %0, { 1, 2, 0 }
 }
 
 ; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)

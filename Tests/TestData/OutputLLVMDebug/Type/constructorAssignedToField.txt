@@ -48,6 +48,3 @@ entry:
   store %Inner %load, ptr %inner1, align 4
   ret void
 }
-
-; uselistorder directives
-uselistorder ptr @Inner.new, { 1, 0 }

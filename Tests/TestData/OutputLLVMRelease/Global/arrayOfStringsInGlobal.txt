@@ -38,10 +38,6 @@ entry:
   ret void
 }
 
-; uselistorder directives
-uselistorder ptr @names, { 0, 1, 5, 2, 4, 3 }
-uselistorder ptr getelementptr inbounds nuw (i8, ptr @names, i64 8), { 1, 0 }
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none) }
 attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
 attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }

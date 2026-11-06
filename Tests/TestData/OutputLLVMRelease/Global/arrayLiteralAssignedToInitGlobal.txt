@@ -13,7 +13,4 @@ entry:
   ret i32 4
 }
 
-; uselistorder directives
-uselistorder ptr @numbers, { 1, 0 }
-
 attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(write, argmem: none, inaccessiblemem: none) }

@@ -213,7 +213,3 @@ if.continuation2:                                 ; preds = %while.body
 while.continuation:                               ; preds = %while.condition
   ret i1 true
 }
-
-; uselistorder directives
-uselistorder ptr @string.length, { 1, 0 }
-uselistorder ptr @string.equals, { 1, 0 }

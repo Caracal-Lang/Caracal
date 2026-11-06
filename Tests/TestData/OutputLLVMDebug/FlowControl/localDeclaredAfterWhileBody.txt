@@ -27,7 +27,4 @@ while.body:                                       ; preds = %while.condition
 
 while.continuation:                               ; preds = %while.condition
   ret i32 5
-
-; uselistorder directives
-  uselistorder i32 %phi, { 1, 0 }
 }

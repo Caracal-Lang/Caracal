@@ -111,6 +111,3 @@ entry:
   store { ptr, i32, i32 } %array_copy, ptr %items, align 8
   ret void
 }
-
-; uselistorder directives
-uselistorder ptr @Holder.new, { 1, 0 }

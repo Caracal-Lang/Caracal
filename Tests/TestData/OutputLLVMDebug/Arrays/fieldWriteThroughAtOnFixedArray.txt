@@ -46,6 +46,3 @@ entry:
   store i32 %1, ptr %x, align 4
   ret void
 }
-
-; uselistorder directives
-uselistorder ptr @Point.new, { 1, 0 }
