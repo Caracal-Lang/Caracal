@@ -1,0 +1,57 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Pair = type { i32, i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @first() {
+entry:
+  ret i32 1
+}
+
+define i32 @second() {
+entry:
+  ret i32 2
+}
+
+define i32 @constructorArgumentsInSourceOrder() {
+entry:
+  %constructed = alloca %Pair, align 8
+  %temp = alloca %Pair, align 8
+  %call = call i32 @first()
+  %call1 = call i32 @second()
+  call void @Pair.new(ptr %constructed, i32 %call, i32 %call1)
+  %load = load %Pair, ptr %constructed, align 4
+  store %Pair %load, ptr %temp, align 4
+  %call2 = call i32 @Pair.value(ptr %temp)
+  ret i32 %call2
+}
+
+define i32 @Pair.value(ptr nonnull %0) {
+entry:
+  %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
+  %load = load i32, ptr %left, align 4
+  %multiply = mul i32 %load, 10
+  %right = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 1
+  %load1 = load i32, ptr %right, align 4
+  %add = add i32 %multiply, %load1
+  ret i32 %add
+}
+
+define void @Pair.new(ptr nonnull %0, i32 %1, i32 %2) {
+entry:
+  %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %left, align 4
+  %right = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 1
+  store i32 %2, ptr %right, align 4
+  ret void
+}

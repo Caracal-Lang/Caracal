@@ -1,0 +1,266 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Pair
+    Name: Pair
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: left
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: right
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: left
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: left
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: right
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: right
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Pair) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: value
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    MemberAccessExpression: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: left
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NumberLiteral: 10
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: right
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: constructorInConstructorArgument
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: Pair
+            Left: {
+                NameExpression: {
+                    Type: Pair
+                    Name: pair
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Pair
+                    Left: {
+                        NameExpression: {
+                            Type: Pair
+                            Name: Pair
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Pair
+                            Function type: (ref Pair, i32, i32) -> void
+                            NameExpression: {
+                                Type: (ref Pair, i32, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(2): {
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        BinaryExpression: {
+                                            Type: Point
+                                            Left: {
+                                                NameExpression: {
+                                                    Type: Point
+                                                    Name: Point
+                                                }
+                                            }
+                                            Operation: ConstructorCall
+                                            Right: {
+                                                FunctionCallExpression: {
+                                                    Type: Point
+                                                    Function type: (ref Point, i32) -> void
+                                                    NameExpression: {
+                                                        Type: (ref Point, i32) -> void
+                                                        Name: new
+                                                    }
+                                                    ArgumentsNode(1): {
+                                                        NumberLiteral: 7
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: x
+                                        }
+                                    }
+                                }
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: Pair
+                                        Name: pair
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: left
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 10
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: Pair
+                                Name: pair
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: right
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,14 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def newObjectInWhileCondition() i32
+{
+    count := 0;
+    while count < Point.new(2).x
+    {
+        count = count %+ 1;
+    }
+    return count;
+}

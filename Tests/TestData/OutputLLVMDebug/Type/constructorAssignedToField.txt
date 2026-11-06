@@ -1,0 +1,53 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Inner = type { i32 }
+%Holder = type { %Inner }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @constructorAssignedToField() {
+entry:
+  %start = alloca %Inner, align 8
+  %holder = alloca %Holder, align 8
+  %constructed = alloca %Inner, align 8
+  call void @Inner.new(ptr %start, i32 1)
+  %load = load %Inner, ptr %start, align 4
+  call void @Holder.new(ptr %holder, %Inner %load)
+  call void @Inner.new(ptr %constructed, i32 9)
+  %load1 = load %Inner, ptr %constructed, align 4
+  %inner = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
+  store %Inner %load1, ptr %inner, align 4
+  %inner2 = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
+  %size = getelementptr inbounds nuw %Inner, ptr %inner2, i32 0, i32 0
+  %load3 = load i32, ptr %size, align 4
+  ret i32 %load3
+}
+
+define void @Inner.new(ptr nonnull %0, i32 %1) {
+entry:
+  %size = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %size, align 4
+  ret void
+}
+
+define void @Holder.new(ptr nonnull %0, %Inner %1) {
+entry:
+  %inner = alloca %Inner, align 8
+  store %Inner %1, ptr %inner, align 4
+  %load = load %Inner, ptr %inner, align 4
+  %inner1 = getelementptr inbounds nuw %Holder, ptr %0, i32 0, i32 0
+  store %Inner %load, ptr %inner1, align 4
+  ret void
+}
+
+; uselistorder directives
+uselistorder ptr @Inner.new, { 1, 0 }

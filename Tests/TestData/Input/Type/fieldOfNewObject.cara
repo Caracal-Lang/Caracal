@@ -1,0 +1,9 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def fieldOfNewObject() i32
+{
+    return Point.new(7).x;
+}

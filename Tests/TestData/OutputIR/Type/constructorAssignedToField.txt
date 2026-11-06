@@ -1,0 +1,55 @@
+type Inner
+    size: i32
+
+type Holder
+    inner: Inner
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define constructorAssignedToField() i32
+block entry(0):
+    %slot0 = allocate_local : Inner "start"
+    %slot1 = allocate_local : Holder "holder"
+    %slot2 = allocate_local : Inner "constructed"
+    %0 = address_of %slot0 : ref Inner
+    %1 = const 1 : i32
+    call Inner.new(%0, %1)
+    %2 = address_of %slot1 : ref Holder
+    %3 = load_value %0 : Inner
+    call Holder.new(%2, %3)
+    %4 = address_of %slot2 : ref Inner
+    %5 = const 9 : i32
+    call Inner.new(%4, %5)
+    %6 = load_value %4 : Inner
+    %7 = address_of_field %2.0 : ref Inner "inner"
+    store_value %6, %7 : Inner
+    %8 = address_of_field %2.0 : ref Inner "inner"
+    %9 = address_of_field %8.0 : ref i32 "size"
+    %10 = load_value %9 : i32
+    return %10
+
+define Inner.new(%0: ref Inner ".this", %1: i32 "size") void
+block entry(0):
+    %0 = parameter 0 : ref Inner ".this"
+    %1 = parameter 1 : i32 "size"
+    %2 = address_of_field %0.0 : ref i32 "size"
+    store_value %1, %2 : i32
+    return
+
+define Holder.new(%0: ref Holder ".this", %1: Inner "inner") void
+block entry(0):
+    %0 = parameter 0 : ref Holder ".this"
+    %1 = parameter 1 : Inner "inner"
+    %slot0 = allocate_local : Inner "inner"
+    %2 = address_of %slot0 : ref Inner
+    store_value %1, %2 : Inner
+    %3 = load_value %2 : Inner
+    %4 = address_of_field %0.0 : ref Inner "inner"
+    store_value %3, %4 : Inner
+    return

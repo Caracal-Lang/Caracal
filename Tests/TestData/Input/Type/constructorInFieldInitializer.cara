@@ -1,0 +1,15 @@
+type Inner(size: i32)
+{
+    size := size
+}
+
+type Box
+{
+    inner := Inner.new(3)
+}
+
+def constructorInFieldInitializer() i32
+{
+    box := Box.new();
+    return box.inner.size;
+}

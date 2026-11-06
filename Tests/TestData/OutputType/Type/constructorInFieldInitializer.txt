@@ -1,0 +1,148 @@
+TypeDefinitionStatement: {
+    Type: Inner
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Inner
+                    Left: {
+                        NameExpression: {
+                            Type: Inner
+                            Name: Inner
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Inner
+                            Function type: (ref Inner, i32) -> void
+                            NameExpression: {
+                                Type: (ref Inner, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 3
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: constructorInFieldInitializer
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box) -> void
+                            NameExpression: {
+                                Type: (ref Box) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Box
+                                Name: box
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

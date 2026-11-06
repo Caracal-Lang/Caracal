@@ -1,0 +1,21 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+type Pair(left: i32, right: i32)
+{
+    left := left
+    right := right
+
+    def value() i32
+    {
+        return .left %* 10 %+ .right;
+    }
+}
+
+def constructorInConstructorArgument() i32
+{
+    pair := Pair.new(Point.new(7).x, 2);
+    return pair.left %* 10 %+ pair.right;
+}

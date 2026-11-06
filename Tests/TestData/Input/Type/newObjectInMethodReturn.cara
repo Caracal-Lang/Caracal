@@ -1,0 +1,18 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+type Maker
+{
+    def make() i32
+    {
+        return Point.new(3).x;
+    }
+}
+
+def newObjectInMethodReturn() i32
+{
+    maker := Maker.new();
+    return maker.make();
+}

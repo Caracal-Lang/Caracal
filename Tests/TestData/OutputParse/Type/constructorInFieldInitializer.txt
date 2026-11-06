@@ -1,0 +1,148 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: size
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Box
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: inner
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Inner
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 3
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: constructorInFieldInitializer
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: box
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

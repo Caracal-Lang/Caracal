@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+type Box(point: Point)
+{
+    point := point
+}
+
+origin :: Box.new(Point.new(5));
+
+def constructorArgumentInGlobal() i32
+{
+    return origin.point.x;
+}

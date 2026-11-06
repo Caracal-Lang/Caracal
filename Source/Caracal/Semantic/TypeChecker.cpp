@@ -1915,6 +1915,13 @@ namespace Caracal
         return type;
     }
 
+    void TypeChecker::pushConstructorDestination(const CompilationUnit& unit, u32 constructorExpression, ValueRef address, bool loadResult)
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, constructorExpression);
+        const auto call = NodeLayout::binary(unit.nodeBuffer, stripped).right;
+        m_constructorDestinations.push_back(ConstructorDestination{ NodeIndex{ unit.fileId, call }, address, loadResult });
+    }
+
     ValueRef TypeChecker::memberReceiverAddress(const CompilationUnit& unit, u32 leftIndex)
     {
         const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, leftIndex);
@@ -2276,6 +2283,7 @@ namespace Caracal
         for (const auto declaration : m_globalConstantDeclarations)
         {
             const auto& unit = unitFor(declaration);
+            const auto failedBeforeGlobal = m_emitter.emissionFailed();
             if (unit.nodeBuffer.kind(declaration.index) == NodeKind::InitConstantDeclaration)
             {
                 typeCheckInitConstantDeclaration(unit, declaration.index);
@@ -2284,6 +2292,7 @@ namespace Caracal
             {
                 typeCheckConstantDeclaration(unit, declaration.index);
             }
+            recordLoweringFailure(unit, declaration.index, failedBeforeGlobal);
         }
     }
 
@@ -2974,7 +2983,7 @@ namespace Caracal
                     aggregateType);
                 if (constructedType != Type::Undefined() && constantAggregateDestination.id() >= 0)
                 {
-                    m_constructorDestinations.push_back(ConstructorDestination{ constantAggregateDestination, false });
+                    pushConstructorDestination(unit, strippedInitializer, constantAggregateDestination, false);
                     pushedConstantConstruction = true;
                 }
             }
@@ -3004,7 +3013,7 @@ namespace Caracal
                     const auto destination = m_emitter.beginGlobalInitConstruction(nameOf(unit, declarationLayout.left), constructedType);
                     if (destination.id() >= 0)
                     {
-                        m_constructorDestinations.push_back(ConstructorDestination{ destination, false });
+                        pushConstructorDestination(unit, declarationLayout.right, destination, false);
                         pushedGlobalConstruction = true;
                     }
                 }
@@ -3275,7 +3284,7 @@ namespace Caracal
                     aggregateType);
                 if (constructedType != Type::Undefined() && aggregateDestination.id() >= 0)
                 {
-                    m_constructorDestinations.push_back(ConstructorDestination{ aggregateDestination, false });
+                    pushConstructorDestination(unit, strippedInitializer, aggregateDestination, false);
                     pushedConstructorDestination = true;
                 }
             }
@@ -3593,7 +3602,7 @@ namespace Caracal
                 const auto destination = m_emitter.localOrGlobalAddress(nameIdOf(unit, assignmentLayout.target), nameOf(unit, assignmentLayout.target));
                 if (destination.id() >= 0)
                 {
-                    m_constructorDestinations.push_back(ConstructorDestination{ destination, false });
+                    pushConstructorDestination(unit, assignmentLayout.value, destination, false);
                     pushedAssignmentConstruction = true;
                 }
             }
@@ -4340,7 +4349,7 @@ namespace Caracal
                     const auto destination = m_emitter.allocateTempAggregateSlot("constructed", constructedType);
                     if (destination.id() >= 0)
                     {
-                        m_constructorDestinations.push_back(ConstructorDestination{ destination, true });
+                        pushConstructorDestination(unit, value.child, destination, true);
                         pushedTempDestination = true;
                     }
                 }
@@ -5689,7 +5698,7 @@ namespace Caracal
                     const auto destination = m_emitter.allocateTempAggregateSlot("constructed", constructedType);
                     if (destination.id() >= 0)
                     {
-                        m_constructorDestinations.push_back(ConstructorDestination{ destination, true });
+                        pushConstructorDestination(unit, argumentValue, destination, true);
                         pushedTempDestination = true;
                     }
                 }
@@ -5896,6 +5905,7 @@ namespace Caracal
                 || calleeKind == FunctionType::SynthesizedConstructor);
 
         auto receiverAddress = ValueRef{};
+        auto loadConstructedObject = false;
         const auto needsReceiver = calleeKind == FunctionType::PublicMethod
             || calleeKind == FunctionType::PrivateMethod
             || calleeKind == FunctionType::SynthesizedConstructor;
@@ -5912,9 +5922,15 @@ namespace Caracal
             }
             else if (calleeKind == FunctionType::SynthesizedConstructor)
             {
-                if (!m_constructorDestinations.empty())
+                if (!m_constructorDestinations.empty() && m_constructorDestinations.back().call == NodeIndex{ unit.fileId, callIndex })
                 {
                     receiverAddress = m_constructorDestinations.back().address;
+                    loadConstructedObject = m_constructorDestinations.back().loadResult;
+                }
+                else
+                {
+                    receiverAddress = m_emitter.allocateTempAggregateSlot("constructed", checkedDefinition.parentType());
+                    loadConstructedObject = true;
                 }
             }
             else
@@ -6189,11 +6205,9 @@ namespace Caracal
                 emittedCallValue = m_emitter.emitCall(functionType.id(), callArguments, callReturnType);
             }
 
-            if (calleeKind == FunctionType::SynthesizedConstructor
-                && !m_constructorDestinations.empty()
-                && m_constructorDestinations.back().loadResult)
+            if (loadConstructedObject)
             {
-                emittedCallValue = m_emitter.emitLoad(m_constructorDestinations.back().address, checkedDefinition.parentType());
+                emittedCallValue = m_emitter.emitLoad(receiverAddress, checkedDefinition.parentType());
             }
         }
 

@@ -1,0 +1,10 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def constructorAsStatement() i32
+{
+    Point.new(7);
+    return 0;
+}

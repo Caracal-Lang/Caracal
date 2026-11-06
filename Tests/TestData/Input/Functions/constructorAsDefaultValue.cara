@@ -1,0 +1,14 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def readPoint(point: Point = Point.new(6)) i32
+{
+    return point.x;
+}
+
+def constructorAsDefaultValue() i32
+{
+    return readPoint();
+}

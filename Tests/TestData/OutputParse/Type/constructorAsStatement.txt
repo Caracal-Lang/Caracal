@@ -1,0 +1,73 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: constructorAsStatement
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: Point
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: new
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 7
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 0
+        }
+    }
+}

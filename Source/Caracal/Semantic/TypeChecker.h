@@ -92,6 +92,7 @@ namespace Caracal
 
         struct ConstructorDestination
         {
+            NodeIndex call;
             ValueRef address;
             bool loadResult = false;
         };
@@ -182,6 +183,7 @@ namespace Caracal
         [[nodiscard]] bool typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context, ValueRef& emittedCallValue, std::optional<FoldValue>& emittedCallFold, std::optional<ValueRef> implicitArgument = std::nullopt);
 
         [[nodiscard]] Type tryResolveConstructedType(const CompilationUnit& unit, u32 strippedIndex);
+        void pushConstructorDestination(const CompilationUnit& unit, u32 constructorExpression, ValueRef address, bool loadResult);
         [[nodiscard]] ValueRef memberReceiverAddress(const CompilationUnit& unit, u32 leftIndex);
         [[nodiscard]] ValueRef addressOfExpression(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type resolveAggregateInitializerType(const CompilationUnit& unit, Type declaredType, u32 strippedInitializer, Type constructedType, bool& initializerWantsAddress);

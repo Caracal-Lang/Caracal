@@ -1,0 +1,25 @@
+type Pair(left: i32, right: i32)
+{
+    left := left
+    right := right
+
+    def value() i32
+    {
+        return .left %* 10 %+ .right;
+    }
+}
+
+def first() i32
+{
+    return 1;
+}
+
+def second() i32
+{
+    return 2;
+}
+
+def constructorArgumentsInSourceOrder() i32
+{
+    return Pair.new(first(), second()).value();
+}

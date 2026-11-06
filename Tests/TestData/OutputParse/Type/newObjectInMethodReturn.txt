@@ -1,0 +1,163 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Maker
+    BlockNode(1): {
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: make
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: undefined
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: Point
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 3
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: x
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: newObjectInMethodReturn
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: maker
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: maker
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: make
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

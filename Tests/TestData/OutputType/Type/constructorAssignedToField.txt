@@ -1,0 +1,221 @@
+TypeDefinitionStatement: {
+    Type: Inner
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Holder
+    Name: Holder
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: inner
+            TypeNameNode: {
+                Type: Inner
+                Lexeme: Inner
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: constructorAssignedToField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Inner
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: start
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Inner
+                    Left: {
+                        NameExpression: {
+                            Type: Inner
+                            Name: Inner
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Inner
+                            Function type: (ref Inner, i32) -> void
+                            NameExpression: {
+                                Type: (ref Inner, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Holder
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Holder
+                    Left: {
+                        NameExpression: {
+                            Type: Holder
+                            Name: Holder
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Holder
+                            Function type: (ref Holder, Inner) -> void
+                            NameExpression: {
+                                Type: (ref Holder, Inner) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NameExpression: {
+                                    Type: Inner
+                                    Name: start
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: Inner
+                    Left: {
+                        NameExpression: {
+                            Type: Holder
+                            Name: holder
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: Inner
+                            Name: inner
+                        }
+                    }
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Inner
+                    Left: {
+                        NameExpression: {
+                            Type: Inner
+                            Name: Inner
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Inner
+                            Function type: (ref Inner, i32) -> void
+                            NameExpression: {
+                                Type: (ref Inner, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 9
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Holder
+                                Name: holder
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

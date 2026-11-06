@@ -1,0 +1,42 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Box = type { %Inner }
+%Inner = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @constructorInFieldInitializer() {
+entry:
+  %box = alloca %Box, align 8
+  call void @Box.new(ptr %box)
+  %inner = getelementptr inbounds nuw %Box, ptr %box, i32 0, i32 0
+  %size = getelementptr inbounds nuw %Inner, ptr %inner, i32 0, i32 0
+  %load = load i32, ptr %size, align 4
+  ret i32 %load
+}
+
+define void @Inner.new(ptr nonnull %0, i32 %1) {
+entry:
+  %size = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %size, align 4
+  ret void
+}
+
+define void @Box.new(ptr nonnull %0) {
+entry:
+  %constructed = alloca %Inner, align 8
+  call void @Inner.new(ptr %constructed, i32 3)
+  %load = load %Inner, ptr %constructed, align 4
+  %inner = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
+  store %Inner %load, ptr %inner, align 4
+  ret void
+}

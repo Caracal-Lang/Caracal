@@ -1,0 +1,17 @@
+type Inner(size: i32)
+{
+    size := size
+}
+
+type Holder(inner: Inner)
+{
+    inner := inner
+}
+
+def constructorAssignedToField() i32
+{
+    start := Inner.new(1);
+    holder := Holder.new(start);
+    holder.inner = Inner.new(9);
+    return holder.inner.size;
+}

@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def constructorInLoopBody() i32
+{
+    total := 0;
+    count := 0;
+    while count < 3
+    {
+        total = total %+ Point.new(2).x;
+        count = count %+ 1;
+    }
+    return total;
+}

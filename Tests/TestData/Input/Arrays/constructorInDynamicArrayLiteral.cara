@@ -1,0 +1,10 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def constructorInDynamicArrayLiteral() i32
+{
+    points := [Point.new(1), Point.new(2), ...];
+    return points.at(1).x;
+}

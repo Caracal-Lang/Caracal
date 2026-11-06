@@ -1,0 +1,122 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readPoint
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: point
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: Point
+            }
+            DefaultValue: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Point
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 6
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: point
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: constructorAsDefaultValue
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: readPoint
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}
