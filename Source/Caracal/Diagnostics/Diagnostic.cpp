@@ -259,6 +259,8 @@ namespace Caracal
                 return "T0089";
             case DiagnosticKind::T0084_GlobalConstantNotComputable:
                 return "T0084";
+            case DiagnosticKind::T0109_GlobalConstantDynamicArray:
+                return "T0109";
             case DiagnosticKind::T0085_ReferenceOrSliceField:
                 return "T0085";
             case DiagnosticKind::T0086_ReferenceOrSliceArrayElement:
@@ -544,6 +546,8 @@ namespace Caracal
                 return "Global constant initializers cannot call functions";
             case DiagnosticKind::T0084_GlobalConstantNotComputable:
                 return "Global constant initializers must be computable at compile time";
+            case DiagnosticKind::T0109_GlobalConstantDynamicArray:
+                return "A global constant cannot be a dynamic array";
             case DiagnosticKind::T0085_ReferenceOrSliceField:
                 return "Fields cannot store references or slices";
             case DiagnosticKind::T0086_ReferenceOrSliceArrayElement:

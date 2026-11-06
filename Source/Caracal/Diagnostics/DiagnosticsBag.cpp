@@ -1982,6 +1982,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addGlobalConstantDynamicArrayError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0109_GlobalConstantDynamicArray,
+            source,
+            location,
+            "Use a fixed array. You can also use ':: init'.");
+        diagnostic.addPrimaryLabel(location, "This value makes '" + name + "' a dynamic array.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addGlobalConstantNotComputableError(
         const SourceTextSharedPtr& source,
         const SourceLocation& location,

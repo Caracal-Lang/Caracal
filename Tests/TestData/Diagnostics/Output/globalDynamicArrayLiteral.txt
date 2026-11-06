@@ -1,0 +1,10 @@
+ Error T0109 A global constant cannot be a dynamic array
+    ,-[Diagnostics/Input/globalDynamicArrayLiteral.cara:1:12]
+  1 | numbers :: [5, 6, ...];
+    .            -----------
+    .                 `-- This value makes 'numbers' a dynamic array.
+  2 | 
+  3 | def main() i32
+  4 | {
+    `----
+  Fix: Use a fixed array. You can also use ':: init'.

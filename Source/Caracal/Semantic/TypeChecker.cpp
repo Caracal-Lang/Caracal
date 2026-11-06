@@ -3348,6 +3348,13 @@ namespace Caracal
                     NodeSpans::expressionLocation(unit.nodeBuffer, tokens, declarationLayout.right),
                     std::string(name));
             }
+            else if (isGlobalConstant && !rightType.isReference() && rightType.kind() == TypeKind::DynamicArray)
+            {
+                m_diagnostics.addGlobalConstantDynamicArrayError(
+                    unit.source,
+                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, declarationLayout.right),
+                    std::string(name));
+            }
 
             if (isGlobalConstant && m_sawUnfoldedBitwiseCall)
             {

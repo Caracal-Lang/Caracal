@@ -1,0 +1,6 @@
+numbers : [i32; _] : [5, 6, ...];
+
+def main() i32
+{
+    return 0;
+}
