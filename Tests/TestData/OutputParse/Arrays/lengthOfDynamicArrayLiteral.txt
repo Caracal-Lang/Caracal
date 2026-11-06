@@ -1,0 +1,36 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: lengthOfDynamicArrayLiteral
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    ArrayLiteral(3): {
+                        Type: undefined
+                        Dynamic: true
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                        NumberLiteral: 3
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}

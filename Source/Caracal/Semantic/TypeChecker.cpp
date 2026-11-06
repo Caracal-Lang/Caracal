@@ -1283,7 +1283,7 @@ namespace Caracal
         auto context = ExpressionContext{};
         context.contextualNumberType = contextualTypeForExpectedType(parameterType);
         const auto checkedDefault = typeCheckExpression(defaultUnit, defaultNode.index, context);
-        const auto defaultValue = materializeValue(checkedDefault);
+        const auto defaultValue = materializeAssignedValue(defaultUnit, defaultNode.index, checkedDefault);
         if (defaultValue.id() < 0)
         {
             return ValueRef{};
@@ -1939,6 +1939,28 @@ namespace Caracal
         return m_emitter.localOrGlobalAddress(nameId, nameOf(unit, stripped));
     }
 
+    ValueRef TypeChecker::arrayReceiverAddress(const CompilationUnit& unit, u32 leftIndex, const CheckedValue& checkedLeft, Type receiverType)
+    {
+        auto address = memberReceiverAddress(unit, leftIndex);
+        if (address.id() < 0 && memberLeftYieldsAddress(unit, leftIndex))
+        {
+            // the receiver was checked in address context, its value already is the address
+            address = checkedLeft.value;
+        }
+        if (address.id() >= 0)
+        {
+            return address;
+        }
+
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, leftIndex);
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral)
+        {
+            return emitArrayLiteralToTempSlot(unit, stripped, receiverType);
+        }
+
+        return m_emitter.spillToTempSlot(materializeValue(checkedLeft), receiverType);
+    }
+
     std::string TypeChecker::escapedStringContent(const CompilationUnit& unit, u32 literalIndex)
     {
         const auto lexeme = nameOf(unit, literalIndex);
@@ -2132,6 +2154,26 @@ namespace Caracal
             }
             m_emitter.emitStoreValue(elementValue, elementAddress, elementType);
         }
+    }
+
+    ValueRef TypeChecker::emitArrayLiteralToTempSlot(const CompilationUnit& unit, u32 literalIndex, Type arrayType)
+    {
+        const auto temp = m_emitter.allocateTempAggregateSlot("temp", arrayType);
+        emitCapturedArrayLiteral(unit, literalIndex, temp, arrayType);
+        return temp;
+    }
+
+    ValueRef TypeChecker::materializeAssignedValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue)
+    {
+        // an array literal has no value until its elements are written to a slot
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, valueIndex);
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral)
+        {
+            const auto type = checkedValue.type.toValue();
+            return m_emitter.emitLoad(emitArrayLiteralToTempSlot(unit, stripped, type), type);
+        }
+
+        return materializeValue(checkedValue);
     }
 
     std::optional<ConstantValue> TypeChecker::tryBuildAggregateConstant(const CompilationUnit& unit, u32 literalIndex)
@@ -3680,7 +3722,7 @@ namespace Caracal
         // a constructor right side already stored through the target's address
         if (!pushedAssignmentConstruction && leftKind == NodeKind::NameExpression)
         {
-            auto assignedValue = m_emitter.emitWidened(materializeValue(checkedRight), rightType.toValue(), leftType.toValue());
+            auto assignedValue = m_emitter.emitWidened(materializeAssignedValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
             if (dynamicAssignmentCopy)
             {
                 const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
@@ -3702,7 +3744,7 @@ namespace Caracal
         {
             // a field assignment emits the value before the field's address
             // nested fields like a.b.c resolve their address recursively
-            const auto assignedValue = m_emitter.emitWidened(materializeValue(checkedRight), rightType.toValue(), leftType.toValue());
+            const auto assignedValue = m_emitter.emitWidened(materializeAssignedValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
             const auto targetAddress = addressOfExpression(unit, assignmentLayout.target);
             if (targetAddress.id() < 0)
             {
@@ -4396,9 +4438,7 @@ namespace Caracal
                 && (type.kind() == TypeKind::FixedArray || type.kind() == TypeKind::DynamicArray))
             {
                 // a literal materializes in a temp slot and returns that
-                const auto destination = m_emitter.allocateTempAggregateSlot("temp", type);
-                emitCapturedArrayLiteral(unit, strippedReturn, destination, type);
-                checkedValue.value = m_emitter.emitLoad(destination, type);
+                checkedValue.value = m_emitter.emitLoad(emitArrayLiteralToTempSlot(unit, strippedReturn, type), type);
             }
 
             m_emitter.emitReturnValue(m_emitter.emitWidened(materializeValue(checkedValue), type.toValue(), declaredReturnType.toValue()));
@@ -5019,19 +5059,7 @@ namespace Caracal
                             }
                         }
 
-                        auto arrayReceiver = memberReceiverAddress(unit, binaryLayout.left);
-                        if (arrayReceiver.id() < 0)
-                        {
-                            if (memberLeftYieldsAddress(unit, binaryLayout.left))
-                            {
-                                // the receiver was checked in address context, its value already is the address
-                                arrayReceiver = checkedLeft.value;
-                            }
-                            else
-                            {
-                                arrayReceiver = m_emitter.spillToTempSlot(materializeValue(checkedLeft), leftType.toValue());
-                            }
-                        }
+                        const auto arrayReceiver = arrayReceiverAddress(unit, binaryLayout.left, checkedLeft, receiverType);
                         return finishResolvedMethodCall(unit, index, binaryLayout.right, nameExpressionIndex, methodType, context, arrayReceiver);
                     }
                     else if (buffer.kind(binaryLayout.right) == NodeKind::NameExpression)
@@ -5053,15 +5081,7 @@ namespace Caracal
                             else if (!context.wantsAddress)
                             {
                                 // slice and dynamic lengths load from the descriptor
-                                auto receiverAddress = memberReceiverAddress(unit, binaryLayout.left);
-                                if (receiverAddress.id() < 0 && memberLeftYieldsAddress(unit, binaryLayout.left))
-                                {
-                                    receiverAddress = checkedLeft.value;
-                                }
-                                if (receiverAddress.id() < 0)
-                                {
-                                    receiverAddress = m_emitter.spillToTempSlot(materializeValue(checkedLeft), receiverType);
-                                }
+                                const auto receiverAddress = arrayReceiverAddress(unit, binaryLayout.left, checkedLeft, receiverType);
                                 if (receiverAddress.id() >= 0)
                                 {
                                     const auto lengthAddress = m_emitter.emitFieldAddress(receiverAddress, receiverType, 1, lengthType);
@@ -6041,9 +6061,7 @@ namespace Caracal
                     if (unit.nodeBuffer.kind(strippedArgument) == NodeKind::ArrayLiteral
                         && (argumentType.kind() == TypeKind::FixedArray || argumentType.kind() == TypeKind::DynamicArray))
                     {
-                        const auto temp = m_emitter.allocateTempAggregateSlot("temp", argumentType);
-                        emitCapturedArrayLiteral(unit, strippedArgument, temp, argumentType);
-                        const auto loaded = m_emitter.emitLoad(temp, argumentType);
+                        const auto loaded = m_emitter.emitLoad(emitArrayLiteralToTempSlot(unit, strippedArgument, argumentType), argumentType);
                         if (loaded.id() < 0)
                         {
                             canEmitCall = false;
@@ -6340,6 +6358,8 @@ namespace Caracal
         {
             auto elementContext = context;
             elementContext.contextualNumberType = contextualElementType;
+            elementContext.wantsAddress = false;
+            elementContext.receiverPosition = false;
             auto& capturedElements = m_arrayLiteralElements[ArrayLiteralKey(unit.fileId, index)];
             capturedElements.clear();
             for (auto position = childrenStart; position < childrenEnd; ++position)

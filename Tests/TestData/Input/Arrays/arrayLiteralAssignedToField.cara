@@ -1,0 +1,11 @@
+type Holder(items: [i32; 2])
+{
+    items := items
+}
+
+def arrayLiteralAssignedToField() i32
+{
+    holder := Holder.new([1, 2]);
+    holder.items = [3, 4];
+    return holder.items.at(1);
+}

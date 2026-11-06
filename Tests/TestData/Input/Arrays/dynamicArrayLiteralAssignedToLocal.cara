@@ -1,0 +1,6 @@
+def dynamicArrayLiteralAssignedToLocal() i32
+{
+    numbers := [1, 2, ...];
+    numbers = [3, 4, ...];
+    return numbers.at(1);
+}

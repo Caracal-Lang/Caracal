@@ -1,0 +1,11 @@
+type Box(values: [i32; _] = [1, 2, ...])
+{
+    values := values
+}
+
+origin :: Box.new();
+
+def dynamicArrayLiteralDefaultInGlobal() i32
+{
+    return origin.values.at(1);
+}

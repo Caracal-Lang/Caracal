@@ -185,6 +185,7 @@ namespace Caracal
         [[nodiscard]] Type tryResolveConstructedType(const CompilationUnit& unit, u32 strippedIndex);
         void pushConstructorDestination(const CompilationUnit& unit, u32 constructorExpression, ValueRef address, bool loadResult);
         [[nodiscard]] ValueRef memberReceiverAddress(const CompilationUnit& unit, u32 leftIndex);
+        [[nodiscard]] ValueRef arrayReceiverAddress(const CompilationUnit& unit, u32 leftIndex, const CheckedValue& checkedLeft, Type receiverType);
         [[nodiscard]] ValueRef addressOfExpression(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type resolveAggregateInitializerType(const CompilationUnit& unit, Type declaredType, u32 strippedInitializer, Type constructedType, bool& initializerWantsAddress);
         void emitLocalBinding(const CompilationUnit& unit, u32 nameId, std::string_view name, Type bindingType, Type rightType, u32 strippedRight, const CheckedValue& checkedRight, bool referencesConstant, ValueRef aggregateDestination, bool constructorFilled);
@@ -194,6 +195,8 @@ namespace Caracal
         void reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex);
         void reportUnaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index);
         void emitCapturedArrayLiteral(const CompilationUnit& unit, u32 literalIndex, ValueRef destination, Type arrayType);
+        [[nodiscard]] ValueRef emitArrayLiteralToTempSlot(const CompilationUnit& unit, u32 literalIndex, Type arrayType);
+        [[nodiscard]] ValueRef materializeAssignedValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue);
         [[nodiscard]] std::optional<ConstantValue> tryBuildAggregateConstant(const CompilationUnit& unit, u32 literalIndex);
         [[nodiscard]] CheckedValue typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] CheckedValue typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);

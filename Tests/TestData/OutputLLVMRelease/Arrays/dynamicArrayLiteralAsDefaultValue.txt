@@ -1,0 +1,22 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define i32 @read({ ptr, i32, i32 } %0) local_unnamed_addr #0 {
+entry:
+  %.fca.0.extract = extractvalue { ptr, i32, i32 } %0, 0
+  %element = getelementptr i8, ptr %.fca.0.extract, i64 4
+  %load1 = load i32, ptr %element, align 4
+  ret i32 %load1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef i32 @dynamicArrayLiteralAsDefaultValue() local_unnamed_addr #1 {
+entry:
+  ret i32 2
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #1 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

@@ -836,7 +836,7 @@ namespace Caracal
 
     void IREmitter::emitLocalAssignment(u32 nameId, ValueRef value)
     {
-        if (!canEmit() || value.id() < 0)
+        if (!canEmitWith({ value }))
         {
             return;
         }
@@ -1604,7 +1604,7 @@ namespace Caracal
 
     void IREmitter::emitGlobalAssignment(std::string_view name, ValueRef value)
     {
-        if (value.id() < 0)
+        if (!canEmitWith({ value }))
         {
             return;
         }

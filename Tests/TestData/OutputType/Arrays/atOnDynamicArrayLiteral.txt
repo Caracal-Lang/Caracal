@@ -1,0 +1,43 @@
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: atOnDynamicArrayLiteral
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    ArrayLiteral(3): {
+                        Type: [i32; _]
+                        Dynamic: true
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                        NumberLiteral: 3
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; _], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; _], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

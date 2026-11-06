@@ -1,0 +1,7 @@
+numbers :: init [i32; 2];
+
+def main() i32
+{
+    numbers = [3, 4];
+    return numbers.at(1);
+}

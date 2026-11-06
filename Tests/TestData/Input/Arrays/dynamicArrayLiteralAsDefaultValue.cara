@@ -1,0 +1,9 @@
+def read(values: [i32; _] = [1, 2, ...]) i32
+{
+    return values.at(1);
+}
+
+def dynamicArrayLiteralAsDefaultValue() i32
+{
+    return read();
+}

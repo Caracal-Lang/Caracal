@@ -1,0 +1,10 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def atOnArrayLiteralWithFieldElement() i32
+{
+    point := Point.new(5);
+    return [point.x, 2].at(0);
+}
