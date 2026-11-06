@@ -1,0 +1,10 @@
+ Error T0105 An enum cannot use this base type
+    ,-[Diagnostics/Input/enumSliceBaseType.cara:1:12]
+  1 | enum Bad : [i32]
+    .            -----
+    .              `-- An enum cannot use '[i32]' as its base type.
+  2 | {
+  3 |     First
+  4 | }
+    `----
+  Fix: Use an integer, bool, float or cstring type.

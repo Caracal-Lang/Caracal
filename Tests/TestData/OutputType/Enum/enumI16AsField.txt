@@ -1,0 +1,167 @@
+EnumDefinitionStatement: {
+    Type: Values(i16)
+    Name: Values
+    TypeNameNode: {
+        Type: i16
+        Lexeme: i16
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: B
+            Value: 1
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: color
+            TypeNameNode: {
+                Type: Values(i16)
+                Lexeme: Values
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Values(i16)
+                    Name: color
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Values(i16)
+                    Name: color
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumI16AsField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box, Values) -> void
+                            NameExpression: {
+                                Type: (ref Box, Values) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: Values(i16)
+                                    Left: {
+                                        NameExpression: {
+                                            Type: Values(i16)
+                                            Name: Values
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: Values(i16)
+                                            Name: B
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(i16)
+                            Left: {
+                                NameExpression: {
+                                    Type: Box
+                                    Name: box
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(i16)
+                                    Name: color
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Values(i16)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(i16)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(i16)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

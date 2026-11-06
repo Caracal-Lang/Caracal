@@ -1,0 +1,15 @@
+def number() i32
+{
+    return 1;
+}
+
+enum Bad : i32
+{
+    One :: number()
+}
+
+def main() i32
+{
+    _ = Bad.One;
+    return 0;
+}

@@ -1,0 +1,12 @@
+ Error T0062 Constant expression overflows its type
+    ,-[Diagnostics/Input/enumNegativeValueOnUnsigned.cara:3:10]
+  1 | enum Bad : u8
+  2 | {
+  3 |     A :: -1
+    .          --
+    .           `-- This constant expression does not fit in 'u8'.
+  4 | }
+  5 | 
+  6 | def main() i32
+    `----
+  Fix: Use a wider type, or values that fit in 'u8'.

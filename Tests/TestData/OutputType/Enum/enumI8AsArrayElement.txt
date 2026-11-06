@@ -1,0 +1,141 @@
+EnumDefinitionStatement: {
+    Type: Values(i8)
+    Name: Values
+    TypeNameNode: {
+        Type: i8
+        Lexeme: i8
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: B
+            Value: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumI8AsArrayElement
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: [Values; 2]
+            Left: {
+                NameExpression: {
+                    Type: [Values; 2]
+                    Name: values
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [Values; 2]
+                    BinaryExpression: {
+                        Type: Values(i8)
+                        Left: {
+                            NameExpression: {
+                                Type: Values(i8)
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Values(i8)
+                                Name: A
+                            }
+                        }
+                    }
+                    BinaryExpression: {
+                        Type: Values(i8)
+                        Left: {
+                            NameExpression: {
+                                Type: Values(i8)
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Values(i8)
+                                Name: B
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(i8)
+                            Left: {
+                                NameExpression: {
+                                    Type: [Values; 2]
+                                    Name: values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: Values(i8)
+                                    Function type: (ref [Values; 2], i32) -> Values
+                                    NameExpression: {
+                                        Type: (ref [Values; 2], i32) -> Values
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Values(i8)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(i8)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(i8)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

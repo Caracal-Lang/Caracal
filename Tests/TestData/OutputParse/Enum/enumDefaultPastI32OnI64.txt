@@ -1,0 +1,76 @@
+EnumDefinitionStatement: {
+    Type: undefined
+    Name: Values
+    TypeNameNode: {
+        Type: undefined
+        Lexeme: i64
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            NumberLiteral: 2147483647
+        }
+        EnumFieldDeclaration: {
+            Name: B
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: enumDefaultPastI32OnI64
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 2147483648
+                        TypeNameNode: {
+                            Type: undefined
+                            Lexeme: i64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}

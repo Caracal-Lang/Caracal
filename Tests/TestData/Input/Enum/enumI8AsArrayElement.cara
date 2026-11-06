@@ -1,0 +1,15 @@
+enum Values : i8
+{
+    A
+    B
+}
+
+def enumI8AsArrayElement() i32
+{
+    values := [Values.A, Values.B];
+    if values.at(1) == Values.B
+    {
+        return 7;
+    }
+    return 3;
+}

@@ -10,7 +10,7 @@ namespace Caracal
     {
     }
 
-    EnumField::EnumField(std::string_view name, i32 value, SourceLocation location)
+    EnumField::EnumField(std::string_view name, i64 value, SourceLocation location)
         : m_name{ name }
         , m_value{ value }
         , m_hasConstantValue{ true }

@@ -1,0 +1,21 @@
+enum Values : u64
+{
+    A
+    B
+}
+
+type Box(color: Values)
+{
+    color := color
+}
+
+box :: Box.new(Values.B);
+
+def enumU64InGlobalObject() i32
+{
+    if box.color == Values.B
+    {
+        return 7;
+    }
+    return 3;
+}

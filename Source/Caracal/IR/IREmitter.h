@@ -163,7 +163,7 @@ namespace Caracal
 
         void recordEnumFieldConstant(i32 enumTypeId, std::string fieldName, ConstantValue constant, std::optional<FoldValue> folded);
         [[nodiscard]] const EnumFieldConstant* tryGetEnumFieldConstant(i32 enumTypeId, const std::string& fieldName) const;
-        [[nodiscard]] std::optional<ConstantValue> makeEnumConstantValue(Type baseType, i32 value) const;
+        [[nodiscard]] std::optional<ConstantValue> makeEnumConstantValue(Type baseType, i64 value) const;
         [[nodiscard]] ValueRef emitEnumMemberConstant(Type enumType, const std::string& enumName, const std::string& fieldName, const ConstantValue& underlying);
 
         void finishModule();

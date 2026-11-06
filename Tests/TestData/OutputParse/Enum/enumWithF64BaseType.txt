@@ -1,0 +1,95 @@
+EnumDefinitionStatement: {
+    Type: undefined
+    Name: Values
+    TypeNameNode: {
+        Type: undefined
+        Lexeme: f64
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: One
+        }
+        EnumFieldDeclaration: {
+            Name: Two
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: read
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: Values
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 7
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: enumWithF64BaseType
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: read
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: Two
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

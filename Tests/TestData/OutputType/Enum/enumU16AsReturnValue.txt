@@ -1,0 +1,115 @@
+EnumDefinitionStatement: {
+    Type: Values(u16)
+    Name: Values
+    TypeNameNode: {
+        Type: u16
+        Lexeme: u16
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: B
+            Value: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> Values
+    Name: make
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: Values(u16)
+            Lexeme: Values
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: Values(u16)
+            BinaryExpression: {
+                Type: Values(u16)
+                Left: {
+                    NameExpression: {
+                        Type: Values(u16)
+                        Name: Values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: Values(u16)
+                        Name: B
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumU16AsReturnValue
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        FunctionCallExpression: {
+                            Type: Values(u16)
+                            Function type: () -> Values
+                            NameExpression: {
+                                Type: () -> Values
+                                Name: make
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Values(u16)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(u16)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u16)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

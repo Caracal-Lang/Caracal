@@ -1,0 +1,165 @@
+EnumDefinitionStatement: {
+    Type: undefined
+    Name: Values
+    TypeNameNode: {
+        Type: undefined
+        Lexeme: i16
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+        }
+        EnumFieldDeclaration: {
+            Name: B
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: color
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: Values
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: color
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: color
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: enumI16AsField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: box
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Box
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: Values
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: B
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: box
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: color
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}

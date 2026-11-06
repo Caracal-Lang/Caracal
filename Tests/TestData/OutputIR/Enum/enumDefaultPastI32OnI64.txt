@@ -1,0 +1,24 @@
+enum Values : i64
+    A = 2147483647
+    B = 2147483648
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define enumDefaultPastI32OnI64() i32
+block entry(0):
+    %0 = const Values.B (= 2147483648) : Values
+    %1 = const 2147483648 : i64
+    %2 = equal %0, %1 : bool
+    branch if %2, if.true(1), if.continuation(2)
+block if.true(1):
+    %3 = const 7 : i32
+    return %3
+block if.continuation(2):
+    %4 = const 3 : i32
+    return %4

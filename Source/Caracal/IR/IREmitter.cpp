@@ -1649,7 +1649,46 @@ namespace Caracal
         return &found->second;
     }
 
-    std::optional<ConstantValue> IREmitter::makeEnumConstantValue(Type baseType, i32 value) const
+    [[nodiscard]] static ConstantValue::LiteralData EnumIntegerLiteral(const BuiltinTypeDescription& description, i64 value) noexcept
+    {
+        switch (description.bits)
+        {
+            case 8:
+            {
+                if (description.isSigned)
+                {
+                    return static_cast<i8>(value);
+                }
+                return static_cast<u8>(value);
+            }
+            case 16:
+            {
+                if (description.isSigned)
+                {
+                    return static_cast<i16>(value);
+                }
+                return static_cast<u16>(value);
+            }
+            case 64:
+            {
+                if (description.isSigned)
+                {
+                    return value;
+                }
+                return static_cast<u64>(value);
+            }
+            default:
+            {
+                if (description.isSigned)
+                {
+                    return static_cast<i32>(value);
+                }
+                return static_cast<u32>(value);
+            }
+        }
+    }
+
+    std::optional<ConstantValue> IREmitter::makeEnumConstantValue(Type baseType, i64 value) const
     {
         const auto* description = m_semanticContext.tryGetBuiltinTypeDescription(baseType);
         if (description == nullptr)
@@ -1665,15 +1704,15 @@ namespace Caracal
             }
             case BuiltinTypeKind::Int:
             {
-                if (!description->isSigned && description->bits <= 8)
-                {
-                    return ConstantValue::FromU8(static_cast<u8>(value));
-                }
-
-                return ConstantValue::FromI32(value);
+                return ConstantValue::FromLiteralData(EnumIntegerLiteral(*description, value));
             }
             case BuiltinTypeKind::Float:
             {
+                if (description->bits == 64)
+                {
+                    return ConstantValue::FromF64(static_cast<f64>(value));
+                }
+
                 return ConstantValue::FromF32(static_cast<f32>(value));
             }
             case BuiltinTypeKind::Pointer:

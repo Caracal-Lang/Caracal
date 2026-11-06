@@ -125,6 +125,10 @@ namespace Caracal
         void addArithmeticOperandTypeMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& operatorName, const std::string& leftTypeName, const std::string& rightTypeName);
         void addComparisonOperandTypeMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& operatorName, const std::string& leftTypeName, const std::string& rightTypeName);
         void addEnumFieldValueTypeMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& expectedTypeName, const std::string& actualTypeName);
+        void addNonConstantEnumValueError(const SourceTextSharedPtr& source, const SourceLocation& location, bool callsFunction);
+        void addEnumBaseTypeCannotBeBuiltError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeName);
+        void addEnumFieldWithoutValueError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& fieldName);
+        void addEnumValueDoesNotFitError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& fieldName, const std::string& valueText, const std::string& typeName);
         void addArrayElementTypeMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& expectedTypeName, const std::string& actualTypeName);
         void addArrayLengthMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& expectedTypeName, i32 expectedLength, i32 actualLength);
 

@@ -1,0 +1,13 @@
+enum Values : u64
+{
+    A :: 18446744073709551615
+}
+
+def enumWithU64TopValue() i32
+{
+    if Values.A == 18446744073709551615'u64
+    {
+        return 7;
+    }
+    return 3;
+}

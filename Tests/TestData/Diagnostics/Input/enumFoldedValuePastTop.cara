@@ -1,0 +1,9 @@
+enum Bad : i8
+{
+    A :: 100 %+ 100
+}
+
+def main() i32
+{
+    return 0;
+}

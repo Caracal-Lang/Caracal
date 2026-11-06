@@ -194,7 +194,8 @@ namespace Caracal
         [[nodiscard]] bool assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const;
         [[nodiscard]] ValueRef emitAssignmentTargetAddress(const CompilationUnit& unit, u32 targetIndex);
         void reportWriteToConstantReceiver(const CompilationUnit& unit, u32 receiverIndex, u32 targetIndex);
-        void recordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue);
+        [[nodiscard]] bool tryRecordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue);
+        [[nodiscard]] bool canBeEnumBaseType(Type type) const noexcept;
         [[nodiscard]] std::string escapedStringContent(const CompilationUnit& unit, u32 literalIndex);
         void reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex);
         void reportUnaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index);

@@ -1,0 +1,16 @@
+enum Values : f64
+{
+    One
+    Two
+}
+
+def read(value: Values) i32
+{
+    _ = value;
+    return 7;
+}
+
+def enumWithF64BaseType() i32
+{
+    return read(Values.Two);
+}

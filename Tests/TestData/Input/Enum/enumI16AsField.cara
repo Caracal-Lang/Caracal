@@ -1,0 +1,20 @@
+enum Values : i16
+{
+    A
+    B
+}
+
+type Box(color: Values)
+{
+    color := color
+}
+
+def enumI16AsField() i32
+{
+    box := Box.new(Values.B);
+    if box.color == Values.B
+    {
+        return 7;
+    }
+    return 3;
+}

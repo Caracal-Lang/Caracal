@@ -1,0 +1,19 @@
+enum Values : i16
+{
+    One
+    Two
+}
+
+def read(value: Values) i32
+{
+    if value == Values.Two
+    {
+        return 7;
+    }
+    return 0;
+}
+
+def enumWithI16BaseType() i32
+{
+    return read(Values.Two);
+}

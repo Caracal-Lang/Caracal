@@ -1,0 +1,9 @@
+enum Bad : [i32]
+{
+    First
+}
+
+def main() i32
+{
+    return 0;
+}

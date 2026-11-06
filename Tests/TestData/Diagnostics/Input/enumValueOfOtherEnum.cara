@@ -1,0 +1,14 @@
+enum Other : i32
+{
+    First :: 5
+}
+
+enum Bad
+{
+    One :: Other.First
+}
+
+def main() i32
+{
+    return 0;
+}

@@ -1,0 +1,10 @@
+enum Names : cstring
+{
+    First :: "a"
+    Second
+}
+
+def main() i32
+{
+    return 0;
+}

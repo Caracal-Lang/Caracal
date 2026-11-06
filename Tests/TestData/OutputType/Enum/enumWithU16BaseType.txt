@@ -1,0 +1,126 @@
+EnumDefinitionStatement: {
+    Type: Values(u16)
+    Name: Values
+    TypeNameNode: {
+        Type: u16
+        Lexeme: u16
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: One
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: Two
+            Value: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (Values) -> i32
+    Name: read
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: Values(u16)
+                Lexeme: Values
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: Values(u16)
+                            Name: value
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Values(u16)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(u16)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u16)
+                                    Name: Two
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumWithU16BaseType
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (Values) -> i32
+                NameExpression: {
+                    Type: (Values) -> i32
+                    Name: read
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: Values(u16)
+                        Left: {
+                            NameExpression: {
+                                Type: Values(u16)
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Values(u16)
+                                Name: Two
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

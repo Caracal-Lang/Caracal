@@ -1,0 +1,13 @@
+ Error T0108 This enum value does not fit in the base type
+     ,-[Diagnostics/Input/flagEnumPastTopOfU8.cara:12:5]
+   9 |     F5
+  10 |     F6
+  11 |     F7
+  12 |     F8
+     .     --
+     .      `-- The value of 'F8' is 256. This value does not fit in 'u8'.
+  13 | }
+  14 | 
+  15 | def main() i32
+     `----
+  Fix: Give this field a value that fits. You can also use a larger base type.

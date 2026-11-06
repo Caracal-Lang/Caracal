@@ -1,0 +1,13 @@
+ Error T0108 This enum value does not fit in the base type
+    ,-[Diagnostics/Input/enumStepPastTopOfU8.cara:6:5]
+  3 | {
+  4 |     A
+  5 |     B
+  6 |     C
+    .     -
+    .     `-- The value of 'C' is 400. This value does not fit in 'u8'.
+  7 | }
+  8 | 
+  9 | def main() i32
+    `----
+  Fix: Give this field a value that fits. You can also use a larger base type.

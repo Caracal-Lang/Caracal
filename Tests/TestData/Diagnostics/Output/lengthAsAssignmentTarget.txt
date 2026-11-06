@@ -5,7 +5,7 @@
   3 |     numbers := [1, 2, ...];
   4 |     numbers.length = 5;
     .     --------------
-    .            `-- This is a value, it has no place to store the assignment.
+    .            `-- This value has no place to store the assignment.
   5 |     return numbers.length;
   6 | }
   7 | 

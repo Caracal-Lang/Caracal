@@ -1,0 +1,55 @@
+enum Values : i64
+    F0 = 1
+    F1 = 2
+    F2 = 4
+    F3 = 8
+    F4 = 16
+    F5 = 32
+    F6 = 64
+    F7 = 128
+    F8 = 256
+    F9 = 512
+    F10 = 1024
+    F11 = 2048
+    F12 = 4096
+    F13 = 8192
+    F14 = 16384
+    F15 = 32768
+    F16 = 65536
+    F17 = 131072
+    F18 = 262144
+    F19 = 524288
+    F20 = 1048576
+    F21 = 2097152
+    F22 = 4194304
+    F23 = 8388608
+    F24 = 16777216
+    F25 = 33554432
+    F26 = 67108864
+    F27 = 134217728
+    F28 = 268435456
+    F29 = 536870912
+    F30 = 1073741824
+    F31 = 2147483648
+    F32 = 4294967296
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define flagEnumPastI32OnI64() i32
+block entry(0):
+    %0 = const Values.F32 (= 4294967296) : Values
+    %1 = const 4294967296 : i64
+    %2 = equal %0, %1 : bool
+    branch if %2, if.true(1), if.continuation(2)
+block if.true(1):
+    %3 = const 7 : i32
+    return %3
+block if.continuation(2):
+    %4 = const 3 : i32
+    return %4

@@ -426,43 +426,86 @@ namespace Caracal
         return std::nullopt;
     }
 
-    [[nodiscard]] static std::optional<i32> TryConvertEnumFieldLiteralValue(
-        const SemanticContext& module,
-        std::string_view lexeme,
-        Type literalType)
+    [[nodiscard]] static std::optional<i64> TryGetFoldedEnumInteger(const FoldValue& folded)
     {
-        const auto* description = module.tryGetBuiltinTypeDescription(literalType);
-        if (description == nullptr
-            || (description->kind != BuiltinTypeKind::Int && description->kind != BuiltinTypeKind::Float))
-        {
-            return std::nullopt;
-        }
-
-        const auto parsedValue = tryParseNumberLiteralValue(lexeme, literalType, module);
-        if (!parsedValue.has_value())
-        {
-            return std::nullopt;
-        }
-
-        return std::visit([](const auto value) -> std::optional<i32>
+        return std::visit([](const auto value) -> std::optional<i64>
             {
                 using Payload = std::decay_t<decltype(value)>;
-                if constexpr (std::is_integral_v<Payload> && !std::is_same_v<Payload, bool>)
+                if constexpr (std::is_same_v<Payload, u64>)
                 {
-                    // the EnumDefinition stores field values as i32
-                    if (static_cast<i64>(value) < std::numeric_limits<i32>::min()
-                        || static_cast<i64>(value) > std::numeric_limits<i32>::max())
+                    if (value > static_cast<u64>(std::numeric_limits<i64>::max()))
                     {
                         return std::nullopt;
                     }
 
-                    return static_cast<i32>(value);
+                    return static_cast<i64>(value);
+                }
+                else if constexpr (std::is_integral_v<Payload> && !std::is_same_v<Payload, bool>)
+                {
+                    return static_cast<i64>(value);
                 }
                 else
                 {
                     return std::nullopt;
                 }
-            }, parsedValue.value());
+            }, folded);
+    }
+
+    [[nodiscard]] static std::optional<i64> TryAddEnumStep(std::optional<i64> value, i64 step) noexcept
+    {
+        if (!value.has_value()
+            || (step > 0 && value.value() > std::numeric_limits<i64>::max() - step)
+            || (step < 0 && value.value() < std::numeric_limits<i64>::min() - step))
+        {
+            return std::nullopt;
+        }
+
+        return value.value() + step;
+    }
+
+    [[nodiscard]] static bool IsIntegerType(const SemanticContext& module, Type type) noexcept
+    {
+        const auto* description = module.tryGetBuiltinTypeDescription(type);
+        return description != nullptr && description->kind == BuiltinTypeKind::Int;
+    }
+
+    // the bits of a value, without the sign
+    [[nodiscard]] static i32 EnumValueBits(const BuiltinTypeDescription& description) noexcept
+    {
+        if (description.isSigned)
+        {
+            return description.bits - 1;
+        }
+
+        return description.bits;
+    }
+
+    [[nodiscard]] static bool EnumValueFits(const SemanticContext& module, Type baseType, i64 value) noexcept
+    {
+        if (!IsIntegerType(module, baseType))
+        {
+            return true;
+        }
+
+        const auto& description = *module.tryGetBuiltinTypeDescription(baseType);
+        if (description.bits >= 64)
+        {
+            return description.isSigned || value >= 0;
+        }
+
+        const auto top = (i64{ 1 } << EnumValueBits(description)) - 1;
+        if (description.isSigned)
+        {
+            return value >= -top - 1 && value <= top;
+        }
+
+        return value >= 0 && value <= top;
+    }
+
+    [[nodiscard]] static bool EnumFlagFits(const SemanticContext& module, Type baseType, size_t flagIndex) noexcept
+    {
+        return !IsIntegerType(module, baseType)
+            || flagIndex < static_cast<size_t>(EnumValueBits(*module.tryGetBuiltinTypeDescription(baseType)));
     }
 
     [[nodiscard]] static UnaryOperatorKind ConvertToUnaryOperator(TokenKind kind) noexcept
@@ -2224,7 +2267,7 @@ namespace Caracal
 
     ValueRef TypeChecker::materializeExpressionValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue)
     {
-        // an array literal has no value until its elements are written to a slot
+        // an array literal has no value until the emitter writes its elements to a slot
         const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, valueIndex);
         const auto type = checkedValue.type.toValue();
         if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral
@@ -4029,21 +4072,25 @@ namespace Caracal
         std::vector<u32> annotations;
         NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, index, annotations);
         validateEnumAnnotation(unit, index, annotations, isFlag, stepValue);
-        auto currentFieldValue = 0;
-        if (isFlag)
-        {
-            currentFieldValue = 1;
-        }
+        auto currentFieldValue = std::optional<i64>{ 0 };
+        auto flagIndex = size_t{ 0 };
         const auto step = stepValue.value_or(1);
 
         std::vector<u32> children;
         NodeLayout::collectChildren(unit.nodeBuffer, index, children);
         auto firstField = size_t{ 0 };
-        if (!children.empty() && unit.nodeBuffer.kind(children.front()) == NodeKind::TypeNameNode)
+        if (!children.empty() && unit.nodeBuffer.kind(children.front()) != NodeKind::EnumFieldDeclaration)
         {
             baseType = typeCheckTypeNameNode(unit, children.front());
             enumDefinition.setBaseType(baseType);
             firstField = 1;
+            if (baseType != Type::Undefined() && !canBeEnumBaseType(baseType))
+            {
+                m_diagnostics.addEnumBaseTypeCannotBeBuiltError(
+                    unit.source,
+                    ExpressionSourceLocation(m_compilationContext, unit, children.front()),
+                    formatTypeName(m_module, baseType));
+            }
         }
 
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
@@ -4073,16 +4120,29 @@ namespace Caracal
                         std::string(fieldName));
                 }
 
-                enumDefinition.addField(fieldName, currentFieldValue, fieldLocation);
+                // EnumIntegerLiteral casts the value back to u64, so bit 63 is safe in an i64
+                auto flagValue = i64{ 0 };
+                if (flagIndex < 64)
+                {
+                    flagValue = static_cast<i64>(u64{ 1 } << flagIndex);
+                }
+                auto flagBaseType = baseType;
+                if (flagBaseType == Type::Undefined())
+                {
+                    flagBaseType = defaultBaseType;
+                }
+                if (!EnumFlagFits(m_module, flagBaseType, flagIndex))
+                {
+                    auto flagValueText = "2^" + std::to_string(flagIndex);
+                    if (flagIndex < 64)
+                    {
+                        flagValueText = std::to_string(u64{ 1 } << flagIndex);
+                    }
+                    m_diagnostics.addEnumValueDoesNotFitError(unit.source, fieldLocation, std::string(fieldName), flagValueText, formatTypeName(m_module, flagBaseType));
+                }
 
-                if (currentFieldValue == 0)
-                {
-                    currentFieldValue = 1;
-                }
-                else
-                {
-                    currentFieldValue *= 2;
-                }
+                enumDefinition.addField(fieldName, flagValue, fieldLocation);
+                ++flagIndex;
             }
             else if (valueExpression.hasChild)
             {
@@ -4098,17 +4158,26 @@ namespace Caracal
                     contextualType = m_module.wellKnown().cstring;
                 }
 
+                const auto diagnosticsBeforeValue = m_diagnostics.diagnostics().size();
                 auto checkedFieldValue = CheckedValue{ Type::Undefined() };
                 {
                     auto context = ExpressionContext{};
                     context.contextualNumberType = contextualType;
                     checkedFieldValue = typeCheckExpression(unit, expression, context);
                 }
+                const auto valueHasError = m_diagnostics.diagnostics().size() != diagnosticsBeforeValue;
                 const auto fieldValueType = checkedFieldValue.type;
                 if (baseType == Type::Undefined())
                 {
                     baseType = fieldValueType;
                     enumDefinition.setBaseType(baseType);
+                    if (baseType != Type::Undefined() && !canBeEnumBaseType(baseType))
+                    {
+                        m_diagnostics.addEnumBaseTypeCannotBeBuiltError(
+                            unit.source,
+                            NodeSpans::expressionLocation(unit.nodeBuffer, tokens, expression),
+                            formatTypeName(m_module, baseType));
+                    }
                 }
                 else if (fieldValueType != baseType)
                 {
@@ -4122,30 +4191,55 @@ namespace Caracal
                     }
                 }
 
-                if (unit.nodeBuffer.kind(expression) == NodeKind::NumberLiteral)
+                auto integerValue = std::optional<i64>{};
+                if (checkedFieldValue.folded.has_value())
                 {
-                    const auto value = TryConvertEnumFieldLiteralValue(m_module, nameOf(unit, expression), fieldValueType);
-                    if (value.has_value())
-                    {
-                        enumDefinition.addField(fieldName, value.value(), fieldLocation);
-                        currentFieldValue = value.value() + step;
-                    }
-                    else
-                    {
-                        enumDefinition.addField(fieldName, fieldLocation);
-                        recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
-                    }
+                    integerValue = TryGetFoldedEnumInteger(checkedFieldValue.folded.value());
+                }
+
+                if (checkedFieldValue.folded.has_value() && IsIntegerType(m_module, baseType))
+                {
+                    currentFieldValue = TryAddEnumStep(integerValue, step);
+                }
+
+                if (integerValue.has_value() && unit.nodeBuffer.kind(expression) == NodeKind::NumberLiteral)
+                {
+                    enumDefinition.addField(fieldName, integerValue.value(), fieldLocation);
                 }
                 else
                 {
                     enumDefinition.addField(fieldName, fieldLocation);
-                    recordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue);
+                    if (!tryRecordExpressionEnumFieldConstant(unit, enumType, fieldName, expression, checkedFieldValue)
+                        && !valueHasError
+                        && fieldValueType == baseType
+                        && canBeEnumBaseType(baseType))
+                    {
+                        m_diagnostics.addNonConstantEnumValueError(
+                            unit.source,
+                            NodeSpans::expressionLocation(unit.nodeBuffer, tokens, expression),
+                            ContainsRuntimeCall(m_module, unit, tokens, expression));
+                    }
                 }
             }
             else
             {
-                enumDefinition.addField(fieldName, currentFieldValue, fieldLocation);
-                currentFieldValue += step;
+                auto fieldBaseType = baseType;
+                if (fieldBaseType == Type::Undefined())
+                {
+                    fieldBaseType = defaultBaseType;
+                }
+                if (!currentFieldValue.has_value())
+                {
+                    // currentFieldValue is empty when the next value does not fit an i64
+                    m_diagnostics.addEnumValueDoesNotFitError(unit.source, fieldLocation, std::string(fieldName), std::string{}, formatTypeName(m_module, fieldBaseType));
+                }
+                else if (!EnumValueFits(m_module, fieldBaseType, currentFieldValue.value()))
+                {
+                    m_diagnostics.addEnumValueDoesNotFitError(unit.source, fieldLocation, std::string(fieldName), std::to_string(currentFieldValue.value()), formatTypeName(m_module, fieldBaseType));
+                }
+
+                enumDefinition.addField(fieldName, currentFieldValue.value_or(0), fieldLocation);
+                currentFieldValue = TryAddEnumStep(currentFieldValue, step);
             }
         }
 
@@ -4153,14 +4247,36 @@ namespace Caracal
         {
             enumDefinition.setBaseType(defaultBaseType);
         }
+
+        if (enumDefinition.baseType() == m_module.wellKnown().cstring)
+        {
+            for (const auto& field : enumDefinition.fields())
+            {
+                if (field.hasConstantValue())
+                {
+                    m_diagnostics.addEnumFieldWithoutValueError(unit.source, field.location(), std::string(field.name()));
+                }
+            }
+        }
     }
 
-    void TypeChecker::recordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue)
+    bool TypeChecker::canBeEnumBaseType(Type type) const noexcept
+    {
+        if (type == m_module.wellKnown().cstring)
+        {
+            return true;
+        }
+
+        const auto* description = m_module.tryGetBuiltinTypeDescription(type);
+        return type.isBaseType() && description != nullptr && description->kind != BuiltinTypeKind::Pointer;
+    }
+
+    bool TypeChecker::tryRecordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue)
     {
         if (checkedFieldValue.folded.has_value())
         {
             m_emitter.recordEnumFieldConstant(enumType.id(), std::string(fieldName), IREmitter::constantFromFold(checkedFieldValue.folded.value()), checkedFieldValue.folded);
-            return;
+            return true;
         }
 
         // cstring valued fields store their literal bytes
@@ -4169,7 +4285,10 @@ namespace Caracal
             && checkedFieldValue.type == m_module.wellKnown().cstring)
         {
             m_emitter.recordEnumFieldConstant(enumType.id(), std::string(fieldName), ConstantValue::FromString(escapedStringContent(unit, stripped)), std::nullopt);
+            return true;
         }
+
+        return false;
     }
 
     void TypeChecker::typeCheckTypeFieldDeclaration(const CompilationUnit& unit, u32 index, TypeDefinition& typeDefinition, i32 fieldIndex)

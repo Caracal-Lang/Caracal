@@ -1,0 +1,13 @@
+ Error T0107 This enum field needs a value
+    ,-[Diagnostics/Input/cstringEnumFieldWithoutValue.cara:4:5]
+  1 | enum Names : cstring
+  2 | {
+  3 |     First :: "a"
+  4 |     Second
+    .     ------
+    .        `-- A cstring enum has no default value for 'Second'.
+  5 | }
+  6 | 
+  7 | def main() i32
+    `----
+  Fix: Give this field a string literal.

@@ -33,7 +33,7 @@ namespace Caracal
         m_fields.emplace_back(name, location);
     }
 
-    void EnumDefinition::addField(std::string_view name, i32 value, SourceLocation location) noexcept
+    void EnumDefinition::addField(std::string_view name, i64 value, SourceLocation location) noexcept
     {
         m_fieldIndices.emplace(std::string(name), m_fields.size());
         m_fields.emplace_back(name, value, location);

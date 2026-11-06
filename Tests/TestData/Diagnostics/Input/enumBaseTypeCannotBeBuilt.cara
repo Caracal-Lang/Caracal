@@ -1,0 +1,9 @@
+enum Pointers : rawptr
+{
+    First
+}
+
+def main() i32
+{
+    return 0;
+}

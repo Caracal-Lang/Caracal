@@ -1,0 +1,14 @@
+enum Values : i32
+{
+    A :: 2 %+ 3
+    B
+}
+
+def enumDefaultAfterFoldedValue() i32
+{
+    if Values.B == 6
+    {
+        return 7;
+    }
+    return 3;
+}

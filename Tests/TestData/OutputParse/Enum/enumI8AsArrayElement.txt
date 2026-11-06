@@ -1,0 +1,139 @@
+EnumDefinitionStatement: {
+    Type: undefined
+    Name: Values
+    TypeNameNode: {
+        Type: undefined
+        Lexeme: i8
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+        }
+        EnumFieldDeclaration: {
+            Name: B
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: enumI8AsArrayElement
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: undefined
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: A
+                            }
+                        }
+                    }
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: Values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: B
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: undefined
+                                    Function type: undefined
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}

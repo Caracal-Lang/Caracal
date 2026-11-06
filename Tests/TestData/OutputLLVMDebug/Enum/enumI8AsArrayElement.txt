@@ -1,0 +1,31 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @enumI8AsArrayElement() {
+entry:
+  %values = alloca [2 x i8], align 1
+  %element = getelementptr [2 x i8], ptr %values, i32 0, i32 0
+  store i8 0, ptr %element, align 1
+  %element1 = getelementptr [2 x i8], ptr %values, i32 0, i32 1
+  store i8 1, ptr %element1, align 1
+  %element2 = getelementptr [2 x i8], ptr %values, i32 0, i32 1
+  %load = load i8, ptr %element2, align 1
+  %equal = icmp eq i8 %load, 1
+  br i1 %equal, label %if.true, label %if.continuation
+
+if.true:                                          ; preds = %entry
+  ret i32 7
+
+if.continuation:                                  ; preds = %entry
+  ret i32 3
+}

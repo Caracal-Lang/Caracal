@@ -1,0 +1,78 @@
+EnumDefinitionStatement: {
+    Type: Values(i64)
+    Name: Values
+    TypeNameNode: {
+        Type: i64
+        Lexeme: i64
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            NumberLiteral: 5000000000
+            Value: 5000000000
+        }
+        EnumFieldDeclaration: {
+            Name: B
+            Value: 5000000001
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumDefaultAfterLargeValue
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(i64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(i64)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(i64)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 5000000001
+                        TypeNameNode: {
+                            Type: i64
+                            Lexeme: i64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

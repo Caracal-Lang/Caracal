@@ -123,6 +123,14 @@ namespace Caracal
                 return "T0026";
             case DiagnosticKind::T0027_EnumFieldValueTypeMismatch:
                 return "T0027";
+            case DiagnosticKind::T0104_NonConstantEnumValue:
+                return "T0104";
+            case DiagnosticKind::T0105_EnumBaseTypeCannotBeBuilt:
+                return "T0105";
+            case DiagnosticKind::T0107_EnumFieldWithoutValue:
+                return "T0107";
+            case DiagnosticKind::T0108_EnumValueDoesNotFit:
+                return "T0108";
 
             // Declaration-shape and reference diagnostics
             case DiagnosticKind::T0028_NonExternVariadicFunction:
@@ -404,6 +412,14 @@ namespace Caracal
                 return "Arithmetic operand type mismatch";
             case DiagnosticKind::T0026_ComparisonOperandTypeMismatch:
                 return "Comparison operand type mismatch";
+            case DiagnosticKind::T0104_NonConstantEnumValue:
+                return "An enum value must be a constant";
+            case DiagnosticKind::T0105_EnumBaseTypeCannotBeBuilt:
+                return "An enum cannot use this base type";
+            case DiagnosticKind::T0107_EnumFieldWithoutValue:
+                return "This enum field needs a value";
+            case DiagnosticKind::T0108_EnumValueDoesNotFit:
+                return "This enum value does not fit in the base type";
             case DiagnosticKind::T0027_EnumFieldValueTypeMismatch:
                 return "Enum field value type mismatch";
             case DiagnosticKind::T0078_ArrayElementTypeMismatch:

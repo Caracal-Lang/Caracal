@@ -1,0 +1,14 @@
+enum Values : i64
+{
+    A :: 5000000000
+    B
+}
+
+def enumDefaultAfterLargeValue() i32
+{
+    if Values.B == 5000000001'i64
+    {
+        return 7;
+    }
+    return 3;
+}

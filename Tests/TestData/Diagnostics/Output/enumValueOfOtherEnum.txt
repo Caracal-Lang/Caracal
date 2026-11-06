@@ -1,0 +1,13 @@
+ Error T0105 An enum cannot use this base type
+     ,-[Diagnostics/Input/enumValueOfOtherEnum.cara:8:12]
+   5 | 
+   6 | enum Bad
+   7 | {
+   8 |     One :: Other.First
+     .            -----------
+     .                 `-- An enum cannot use 'Other' as its base type.
+   9 | }
+  10 | 
+  11 | def main() i32
+     `----
+  Fix: Use an integer, bool, float or cstring type.

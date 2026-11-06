@@ -871,7 +871,7 @@ namespace Caracal
             source,
             location,
             "Assign to a variable or remove the assignment.");
-        diagnostic.addPrimaryLabel(location, "This is a value, it has no place to store the assignment.");
+        diagnostic.addPrimaryLabel(location, "This value has no place to store the assignment.");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }
@@ -1637,6 +1637,72 @@ namespace Caracal
             location,
             "Use a value of the enum base type for this field.");
         diagnostic.addPrimaryLabel(location, "Enum base type is '" + expectedTypeName + "', but this field's initializer has type '" + actualTypeName + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addNonConstantEnumValueError(const SourceTextSharedPtr& source, const SourceLocation& location, bool callsFunction)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0104_NonConstantEnumValue,
+            source,
+            location,
+            "Use a literal or an expression of literals.");
+        if (callsFunction)
+        {
+            diagnostic.addPrimaryLabel(location, "An enum value cannot contain a function call.");
+        }
+        else
+        {
+            diagnostic.addPrimaryLabel(location, "The compiler cannot calculate this value at compile time.");
+        }
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addEnumBaseTypeCannotBeBuiltError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0105_EnumBaseTypeCannotBeBuilt,
+            source,
+            location,
+            "Use an integer, bool, float or cstring type.");
+        diagnostic.addPrimaryLabel(location, "An enum cannot use '" + typeName + "' as its base type.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addEnumFieldWithoutValueError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& fieldName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0107_EnumFieldWithoutValue,
+            source,
+            location,
+            "Give this field a string literal.");
+        diagnostic.addPrimaryLabel(location, "A cstring enum has no default value for '" + fieldName + "'.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addEnumValueDoesNotFitError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& fieldName, const std::string& valueText, const std::string& typeName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0108_EnumValueDoesNotFit,
+            source,
+            location,
+            "Give this field a value that fits. You can also use a larger base type.");
+        if (valueText.empty())
+        {
+            diagnostic.addPrimaryLabel(location, "The value of '" + fieldName + "' does not fit in '" + typeName + "'.");
+        }
+        else
+        {
+            diagnostic.addPrimaryLabel(location, "The value of '" + fieldName + "' is " + valueText + ". This value does not fit in '" + typeName + "'.");
+        }
 
         m_diagnostics.push_back(std::move(diagnostic));
     }

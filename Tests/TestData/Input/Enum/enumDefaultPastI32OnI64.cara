@@ -1,0 +1,14 @@
+enum Values : i64
+{
+    A :: 2147483647
+    B
+}
+
+def enumDefaultPastI32OnI64() i32
+{
+    if Values.B == 2147483648'i64
+    {
+        return 7;
+    }
+    return 3;
+}

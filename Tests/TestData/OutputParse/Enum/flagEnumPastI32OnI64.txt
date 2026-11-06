@@ -1,0 +1,171 @@
+EnumDefinitionStatement: {
+    Type: undefined
+    Name: Values
+    Annotation: {
+        Name: flag
+    }
+    TypeNameNode: {
+        Type: undefined
+        Lexeme: i64
+    }
+    FieldNodes(33): {
+        EnumFieldDeclaration: {
+            Name: F0
+        }
+        EnumFieldDeclaration: {
+            Name: F1
+        }
+        EnumFieldDeclaration: {
+            Name: F2
+        }
+        EnumFieldDeclaration: {
+            Name: F3
+        }
+        EnumFieldDeclaration: {
+            Name: F4
+        }
+        EnumFieldDeclaration: {
+            Name: F5
+        }
+        EnumFieldDeclaration: {
+            Name: F6
+        }
+        EnumFieldDeclaration: {
+            Name: F7
+        }
+        EnumFieldDeclaration: {
+            Name: F8
+        }
+        EnumFieldDeclaration: {
+            Name: F9
+        }
+        EnumFieldDeclaration: {
+            Name: F10
+        }
+        EnumFieldDeclaration: {
+            Name: F11
+        }
+        EnumFieldDeclaration: {
+            Name: F12
+        }
+        EnumFieldDeclaration: {
+            Name: F13
+        }
+        EnumFieldDeclaration: {
+            Name: F14
+        }
+        EnumFieldDeclaration: {
+            Name: F15
+        }
+        EnumFieldDeclaration: {
+            Name: F16
+        }
+        EnumFieldDeclaration: {
+            Name: F17
+        }
+        EnumFieldDeclaration: {
+            Name: F18
+        }
+        EnumFieldDeclaration: {
+            Name: F19
+        }
+        EnumFieldDeclaration: {
+            Name: F20
+        }
+        EnumFieldDeclaration: {
+            Name: F21
+        }
+        EnumFieldDeclaration: {
+            Name: F22
+        }
+        EnumFieldDeclaration: {
+            Name: F23
+        }
+        EnumFieldDeclaration: {
+            Name: F24
+        }
+        EnumFieldDeclaration: {
+            Name: F25
+        }
+        EnumFieldDeclaration: {
+            Name: F26
+        }
+        EnumFieldDeclaration: {
+            Name: F27
+        }
+        EnumFieldDeclaration: {
+            Name: F28
+        }
+        EnumFieldDeclaration: {
+            Name: F29
+        }
+        EnumFieldDeclaration: {
+            Name: F30
+        }
+        EnumFieldDeclaration: {
+            Name: F31
+        }
+        EnumFieldDeclaration: {
+            Name: F32
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: flagEnumPastI32OnI64
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: F32
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 4294967296
+                        TypeNameNode: {
+                            Type: undefined
+                            Lexeme: i64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}

@@ -1,0 +1,13 @@
+ Error T0104 An enum value must be a constant
+     ,-[Diagnostics/Input/nonConstantEnumValueInUse.cara:8:12]
+   5 | 
+   6 | enum Bad : i32
+   7 | {
+   8 |     One :: number()
+     .            --------
+     .                `-- An enum value cannot contain a function call.
+   9 | }
+  10 | 
+  11 | def main() i32
+     `----
+  Fix: Use a literal or an expression of literals.

@@ -1,0 +1,204 @@
+EnumDefinitionStatement: {
+    Type: Values(i64)
+    Name: Values
+    Annotation: {
+        Name: flag
+    }
+    TypeNameNode: {
+        Type: i64
+        Lexeme: i64
+    }
+    FieldNodes(33): {
+        EnumFieldDeclaration: {
+            Name: F0
+            Value: 1
+        }
+        EnumFieldDeclaration: {
+            Name: F1
+            Value: 2
+        }
+        EnumFieldDeclaration: {
+            Name: F2
+            Value: 4
+        }
+        EnumFieldDeclaration: {
+            Name: F3
+            Value: 8
+        }
+        EnumFieldDeclaration: {
+            Name: F4
+            Value: 16
+        }
+        EnumFieldDeclaration: {
+            Name: F5
+            Value: 32
+        }
+        EnumFieldDeclaration: {
+            Name: F6
+            Value: 64
+        }
+        EnumFieldDeclaration: {
+            Name: F7
+            Value: 128
+        }
+        EnumFieldDeclaration: {
+            Name: F8
+            Value: 256
+        }
+        EnumFieldDeclaration: {
+            Name: F9
+            Value: 512
+        }
+        EnumFieldDeclaration: {
+            Name: F10
+            Value: 1024
+        }
+        EnumFieldDeclaration: {
+            Name: F11
+            Value: 2048
+        }
+        EnumFieldDeclaration: {
+            Name: F12
+            Value: 4096
+        }
+        EnumFieldDeclaration: {
+            Name: F13
+            Value: 8192
+        }
+        EnumFieldDeclaration: {
+            Name: F14
+            Value: 16384
+        }
+        EnumFieldDeclaration: {
+            Name: F15
+            Value: 32768
+        }
+        EnumFieldDeclaration: {
+            Name: F16
+            Value: 65536
+        }
+        EnumFieldDeclaration: {
+            Name: F17
+            Value: 131072
+        }
+        EnumFieldDeclaration: {
+            Name: F18
+            Value: 262144
+        }
+        EnumFieldDeclaration: {
+            Name: F19
+            Value: 524288
+        }
+        EnumFieldDeclaration: {
+            Name: F20
+            Value: 1048576
+        }
+        EnumFieldDeclaration: {
+            Name: F21
+            Value: 2097152
+        }
+        EnumFieldDeclaration: {
+            Name: F22
+            Value: 4194304
+        }
+        EnumFieldDeclaration: {
+            Name: F23
+            Value: 8388608
+        }
+        EnumFieldDeclaration: {
+            Name: F24
+            Value: 16777216
+        }
+        EnumFieldDeclaration: {
+            Name: F25
+            Value: 33554432
+        }
+        EnumFieldDeclaration: {
+            Name: F26
+            Value: 67108864
+        }
+        EnumFieldDeclaration: {
+            Name: F27
+            Value: 134217728
+        }
+        EnumFieldDeclaration: {
+            Name: F28
+            Value: 268435456
+        }
+        EnumFieldDeclaration: {
+            Name: F29
+            Value: 536870912
+        }
+        EnumFieldDeclaration: {
+            Name: F30
+            Value: 1073741824
+        }
+        EnumFieldDeclaration: {
+            Name: F31
+            Value: 2147483648
+        }
+        EnumFieldDeclaration: {
+            Name: F32
+            Value: 4294967296
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: flagEnumPastI32OnI64
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(i64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(i64)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(i64)
+                                    Name: F32
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 4294967296
+                        TypeNameNode: {
+                            Type: i64
+                            Lexeme: i64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

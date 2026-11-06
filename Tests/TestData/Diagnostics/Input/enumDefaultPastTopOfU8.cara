@@ -1,0 +1,10 @@
+enum Bad : u8
+{
+    A :: 255
+    B
+}
+
+def main() i32
+{
+    return 0;
+}

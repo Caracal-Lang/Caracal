@@ -1,0 +1,167 @@
+EnumDefinitionStatement: {
+    Type: Values(u64)
+    Name: Values
+    TypeNameNode: {
+        Type: u64
+        Lexeme: u64
+    }
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: A
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: B
+            Value: 1
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: color
+            TypeNameNode: {
+                Type: Values(u64)
+                Lexeme: Values
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Values(u64)
+                    Name: color
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Values(u64)
+                    Name: color
+                }
+            }
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: Box
+    Left: {
+        NameExpression: {
+            Type: Box
+            Name: box
+        }
+    }
+    Right: {
+        BinaryExpression: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: Box
+                }
+            }
+            Operation: ConstructorCall
+            Right: {
+                FunctionCallExpression: {
+                    Type: Box
+                    Function type: (ref Box, Values) -> void
+                    NameExpression: {
+                        Type: (ref Box, Values) -> void
+                        Name: new
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: Values(u64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumU64InGlobalObject
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(u64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Box
+                                    Name: box
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: color
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Values(u64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: B
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

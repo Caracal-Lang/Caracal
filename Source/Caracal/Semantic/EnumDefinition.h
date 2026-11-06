@@ -34,7 +34,7 @@ namespace Caracal
 
         void setBaseType(Type baseType) noexcept { m_baseType = baseType; }
         void addField(std::string_view name, SourceLocation location) noexcept;
-        void addField(std::string_view name, i32 value, SourceLocation location) noexcept;
+        void addField(std::string_view name, i64 value, SourceLocation location) noexcept;
 
     private:
         Type m_type;

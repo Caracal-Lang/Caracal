@@ -1,0 +1,46 @@
+enum Values : u64
+    A = 0
+    B = 1
+
+type Box
+    color: Values
+
+global box : Box
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define enumU64InGlobalObject() i32
+block entry(0):
+    %0 = address_of_global @box : ref Box
+    %1 = address_of_field %0.0 : ref Values "color"
+    %2 = load_value %1 : Values
+    %3 = const Values.B (= 1) : Values
+    %4 = equal %2, %3 : bool
+    branch if %4, if.true(1), if.continuation(2)
+block if.true(1):
+    %5 = const 7 : i32
+    return %5
+block if.continuation(2):
+    %6 = const 3 : i32
+    return %6
+
+define Box.new(%0: ref Box ".this", %1: Values "color") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = parameter 1 : Values "color"
+    %2 = address_of_field %0.0 : ref Values "color"
+    store_value %1, %2 : Values
+    return
+
+define .global_init() void
+block entry(0):
+    %0 = address_of_global @box : ref Box
+    %1 = const Values.B (= 1) : Values
+    call Box.new(%0, %1)
+    return

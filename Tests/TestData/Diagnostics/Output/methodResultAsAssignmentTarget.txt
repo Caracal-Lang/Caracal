@@ -5,7 +5,7 @@
   13 |     point := Point.new(1);
   14 |     point.plus(1) = 5;
      .     -------------
-     .           `-- This is a value, it has no place to store the assignment.
+     .           `-- This value has no place to store the assignment.
   15 |     return point.x;
   16 | }
   17 | 

@@ -1,0 +1,12 @@
+ Error T0104 An enum value must be a constant
+    ,-[Diagnostics/Input/nonConstantEnumValueWithoutCall.cara:3:12]
+  1 | enum Bad : bool
+  2 | {
+  3 |     One :: "a" == "b"
+    .            ----------
+    .                 `-- The compiler cannot calculate this value at compile time.
+  4 | }
+  5 | 
+  6 | def main() i32
+    `----
+  Fix: Use a literal or an expression of literals.

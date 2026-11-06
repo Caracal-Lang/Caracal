@@ -1,0 +1,36 @@
+enum Values : i8
+    A = 0
+    B = 1
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define enumI8AsArrayElement() i32
+block entry(0):
+    %slot0 = allocate_local : [Values; 2] "values"
+    %0 = const Values.A (= 0) : Values
+    %1 = const Values.B (= 1) : Values
+    %2 = address_of %slot0 : ref [Values; 2]
+    %3 = const 0 : i32
+    %4 = element_address %2[%3] : Values
+    store_value %0, %4 : Values
+    %5 = const 1 : i32
+    %6 = element_address %2[%5] : Values
+    store_value %1, %6 : Values
+    %7 = const 1 : i32
+    %8 = element_address %2[%7] : Values
+    %9 = load_value %8 : Values
+    %10 = const Values.B (= 1) : Values
+    %11 = equal %9, %10 : bool
+    branch if %11, if.true(1), if.continuation(2)
+block if.true(1):
+    %12 = const 7 : i32
+    return %12
+block if.continuation(2):
+    %13 = const 3 : i32
+    return %13

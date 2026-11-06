@@ -1,0 +1,12 @@
+#step(200)
+enum Bad : u8
+{
+    A
+    B
+    C
+}
+
+def main() i32
+{
+    return 0;
+}

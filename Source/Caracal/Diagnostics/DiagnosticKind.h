@@ -78,6 +78,10 @@ namespace Caracal
         T0025_ArithmeticOperandTypeMismatch,
         T0026_ComparisonOperandTypeMismatch,
         T0027_EnumFieldValueTypeMismatch,
+        T0104_NonConstantEnumValue,
+        T0105_EnumBaseTypeCannotBeBuilt,
+        T0107_EnumFieldWithoutValue,
+        T0108_EnumValueDoesNotFit,
         T0078_ArrayElementTypeMismatch,
         T0080_ArrayLengthMismatch,
 

@@ -1,0 +1,73 @@
+EnumDefinitionStatement: {
+    Type: Values(u64)
+    Name: Values
+    TypeNameNode: {
+        Type: u64
+        Lexeme: u64
+    }
+    FieldNodes(1): {
+        EnumFieldDeclaration: {
+            Name: A
+            NumberLiteral: 18446744073709551615
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumWithU64TopValue
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Values(u64)
+                            Left: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: Values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Values(u64)
+                                    Name: A
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 18446744073709551615
+                        TypeNameNode: {
+                            Type: u64
+                            Lexeme: u64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

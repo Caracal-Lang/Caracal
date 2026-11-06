@@ -1,0 +1,19 @@
+enum Values : u16
+{
+    A
+    B
+}
+
+def make() Values
+{
+    return Values.B;
+}
+
+def enumU16AsReturnValue() i32
+{
+    if make() == Values.B
+    {
+        return 7;
+    }
+    return 3;
+}
