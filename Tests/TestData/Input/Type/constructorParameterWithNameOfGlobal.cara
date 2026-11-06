@@ -1,0 +1,11 @@
+type Point(a: i32)
+{
+    a := a
+}
+
+a :: Point.new(5);
+
+def constructorParameterWithNameOfGlobal() i32
+{
+    return a.a;
+}

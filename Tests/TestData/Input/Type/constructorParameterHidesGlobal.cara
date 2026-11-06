@@ -1,0 +1,11 @@
+value :: 100;
+
+type Box(value: i32)
+{
+    size := value
+}
+
+def constructorParameterHidesGlobal() i32
+{
+    return Box.new(5).size;
+}

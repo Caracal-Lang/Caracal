@@ -1976,8 +1976,8 @@ namespace Caracal
             DiagnosticKind::T0082_GlobalConstantWithCall,
             source,
             location,
-            "Initialize '" + name + "' with a constant expression or a constructor call.");
-        diagnostic.addPrimaryLabel(location, "This initializer calls a function, which cannot run before the program starts");
+            "Use ':: init' for '" + name + "'. Assign the value in 'main'.");
+        diagnostic.addPrimaryLabel(location, "A global constant can only contain constants and constructor calls.");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }

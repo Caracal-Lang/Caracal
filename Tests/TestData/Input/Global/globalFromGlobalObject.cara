@@ -1,0 +1,12 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+origin :: Point.new(5);
+other :: origin;
+
+def globalFromGlobalObject() i32
+{
+    return other.x;
+}

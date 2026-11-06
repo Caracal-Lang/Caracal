@@ -1,0 +1,41 @@
+enum Color : i32
+    Red = 5
+
+global colors : [Color; 2]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define arrayOfEnumValuesInGlobal() i32
+block entry(0):
+    %0 = address_of_global @colors : ref [Color; 2]
+    %1 = const 1 : i32
+    %2 = element_address %0[%1] : Color
+    %3 = load_value %2 : Color
+    %4 = const Color.Red (= 5) : Color
+    %5 = equal %3, %4 : bool
+    branch if %5, if.true(1), if.continuation(2)
+block if.true(1):
+    %6 = const 5 : i32
+    return %6
+block if.continuation(2):
+    %7 = const 3 : i32
+    return %7
+
+define .global_init() void
+block entry(0):
+    %0 = const Color.Red (= 5) : Color
+    %1 = const Color.Red (= 5) : Color
+    %2 = address_of_global @colors : ref [Color; 2]
+    %3 = const 0 : i32
+    %4 = element_address %2[%3] : Color
+    store_value %0, %4 : Color
+    %5 = const 1 : i32
+    %6 = element_address %2[%5] : Color
+    store_value %1, %6 : Color
+    return

@@ -1,0 +1,12 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+limit :: 5;
+origin :: Point.new(limit);
+
+def constantNameInGlobalConstructor() i32
+{
+    return origin.x;
+}

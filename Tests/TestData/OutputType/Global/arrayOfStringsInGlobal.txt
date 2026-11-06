@@ -1,0 +1,83 @@
+ConstantDeclaration: {
+    Type: [string; 2]
+    Left: {
+        NameExpression: {
+            Type: [string; 2]
+            Name: names
+        }
+    }
+    Right: {
+        ArrayLiteral(2): {
+            Type: [string; 2]
+            StringLiteral: "abc"
+            StringLiteral: "d"
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: arrayOfStringsInGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            BinaryExpression: {
+                                Type: string
+                                Left: {
+                                    NameExpression: {
+                                        Type: [string; 2]
+                                        Name: names
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: string
+                                        Function type: (ref [string; 2], i32) -> string
+                                        NameExpression: {
+                                            Type: (ref [string; 2], i32) -> string
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref string) -> i32
+                                NameExpression: {
+                                    Type: (ref string) -> i32
+                                    Name: length
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+}

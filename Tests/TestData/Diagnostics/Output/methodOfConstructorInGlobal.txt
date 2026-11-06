@@ -1,0 +1,13 @@
+ Error T0082 Global constant initializers cannot call functions
+     ,-[Diagnostics/Input/methodOfConstructorInGlobal.cara:11:10]
+   8 |     }
+   9 | }
+  10 | 
+  11 | total :: Point.new(7).plus(1);
+     .          --------------------
+     .                    `-- A global constant can only contain constants and constructor calls.
+  12 | 
+  13 | def main() i32
+  14 | {
+     `----
+  Fix: Use ':: init' for 'total'. Assign the value in 'main'.

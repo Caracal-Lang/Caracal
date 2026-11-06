@@ -38,6 +38,12 @@ namespace Caracal
         [[nodiscard]] bool typeCheck();
 
     private:
+        struct TypeVisit
+        {
+            Type type;
+            const TypeVisit* parent;
+        };
+
         struct ExpressionContext
         {
             std::optional<Type> contextualNumberType;
@@ -191,10 +197,11 @@ namespace Caracal
         void emitLocalBinding(const CompilationUnit& unit, u32 nameId, std::string_view name, Type bindingType, Type rightType, u32 strippedRight, const CheckedValue& checkedRight, bool referencesConstant, ValueRef aggregateDestination, bool constructorFilled);
         [[nodiscard]] bool memberLeftYieldsAddress(const CompilationUnit& unit, u32 leftIndex);
         [[nodiscard]] bool isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const;
+        [[nodiscard]] bool initializerNeedsGlobalInit(const CompilationUnit& unit, u32 index);
         [[nodiscard]] bool returnedNameNeedsCopy(const CompilationUnit& unit, u32 index, Type type) const;
         [[nodiscard]] bool expressionIsAddressable(const CompilationUnit& unit, u32 index) const;
-        [[nodiscard]] bool typeHasDynamicArrayField(Type type) const;
-        void emitDynamicArrayFieldCopies(ValueRef address, Type type);
+        [[nodiscard]] bool typeHasDynamicArrayField(Type type, const TypeVisit* parent = nullptr) const;
+        void emitDynamicArrayFieldCopies(ValueRef address, Type type, const TypeVisit* parent = nullptr);
         [[nodiscard]] ValueRef emitCopyOfValue(ValueRef value, Type type);
         [[nodiscard]] ValueRef copyValueIfNeeded(const CompilationUnit& unit, u32 index, ValueRef value, Type type);
         [[nodiscard]] bool assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const;

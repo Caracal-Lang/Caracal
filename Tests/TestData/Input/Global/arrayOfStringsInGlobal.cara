@@ -1,0 +1,6 @@
+names :: ["abc", "d"];
+
+def arrayOfStringsInGlobal() i32
+{
+    return names.at(0).length() %+ 2;
+}

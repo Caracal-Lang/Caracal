@@ -5,7 +5,7 @@
   5 | 
   6 | g :: make();
     .      ------
-    .         `-- This initializer calls a function, which cannot run before the program starts
+    .         `-- A global constant can only contain constants and constructor calls.
   7 | 
     `----
-  Fix: Initialize 'g' with a constant expression or a constructor call.
+  Fix: Use ':: init' for 'g'. Assign the value in 'main'.

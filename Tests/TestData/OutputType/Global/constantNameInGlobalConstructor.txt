@@ -1,0 +1,112 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: limit
+        }
+    }
+    Right: {
+        NumberLiteral: 5
+    }
+}
+ConstantDeclaration: {
+    Type: Point
+    Left: {
+        NameExpression: {
+            Type: Point
+            Name: origin
+        }
+    }
+    Right: {
+        BinaryExpression: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: Point
+                }
+            }
+            Operation: ConstructorCall
+            Right: {
+                FunctionCallExpression: {
+                    Type: Point
+                    Function type: (ref Point, i32) -> void
+                    NameExpression: {
+                        Type: (ref Point, i32) -> void
+                        Name: new
+                    }
+                    ArgumentsNode(1): {
+                        NameExpression: {
+                            Type: i32
+                            Name: limit
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: constantNameInGlobalConstructor
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Point
+                        Name: origin
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}

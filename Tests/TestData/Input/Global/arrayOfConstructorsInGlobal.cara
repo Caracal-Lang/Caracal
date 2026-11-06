@@ -1,0 +1,11 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+origin :: [Point.new(5), Point.new(6)];
+
+def arrayOfConstructorsInGlobal() i32
+{
+    return origin.at(1).x;
+}

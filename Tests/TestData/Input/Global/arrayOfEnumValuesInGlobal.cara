@@ -1,0 +1,15 @@
+enum Color : i32
+{
+    Red :: 5
+}
+
+colors :: [Color.Red, Color.Red];
+
+def arrayOfEnumValuesInGlobal() i32
+{
+    if colors.at(1) == Color.Red
+    {
+        return 5;
+    }
+    return 3;
+}

@@ -1,0 +1,94 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: value
+        }
+    }
+    Right: {
+        NumberLiteral: 100
+    }
+}
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: constructorParameterHidesGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Box
+                        Left: {
+                            NameExpression: {
+                                Type: Box
+                                Name: Box
+                            }
+                        }
+                        Operation: ConstructorCall
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: Box
+                                Function type: (ref Box, i32) -> void
+                                NameExpression: {
+                                    Type: (ref Box, i32) -> void
+                                    Name: new
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 5
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

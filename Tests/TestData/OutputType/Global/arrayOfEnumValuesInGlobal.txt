@@ -1,0 +1,138 @@
+EnumDefinitionStatement: {
+    Type: Color(i32)
+    Name: Color
+    TypeNameNode: {
+        Type: i32
+        Lexeme: i32
+    }
+    FieldNodes(1): {
+        EnumFieldDeclaration: {
+            Name: Red
+            NumberLiteral: 5
+            Value: 5
+        }
+    }
+}
+ConstantDeclaration: {
+    Type: [Color; 2]
+    Left: {
+        NameExpression: {
+            Type: [Color; 2]
+            Name: colors
+        }
+    }
+    Right: {
+        ArrayLiteral(2): {
+            Type: [Color; 2]
+            BinaryExpression: {
+                Type: Color(i32)
+                Left: {
+                    NameExpression: {
+                        Type: Color(i32)
+                        Name: Color
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: Color(i32)
+                        Name: Red
+                    }
+                }
+            }
+            BinaryExpression: {
+                Type: Color(i32)
+                Left: {
+                    NameExpression: {
+                        Type: Color(i32)
+                        Name: Color
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: Color(i32)
+                        Name: Red
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: arrayOfEnumValuesInGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        BinaryExpression: {
+                            Type: Color(i32)
+                            Left: {
+                                NameExpression: {
+                                    Type: [Color; 2]
+                                    Name: colors
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: Color(i32)
+                                    Function type: (ref [Color; 2], i32) -> Color
+                                    NameExpression: {
+                                        Type: (ref [Color; 2], i32) -> Color
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Color(i32)
+                            Left: {
+                                NameExpression: {
+                                    Type: Color(i32)
+                                    Name: Color
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Color(i32)
+                                    Name: Red
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 5
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}

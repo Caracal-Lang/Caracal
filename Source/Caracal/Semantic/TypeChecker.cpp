@@ -244,6 +244,59 @@ namespace Caracal
         SemanticContext& module,
         const CompilationUnit& unit,
         const TokenBuffer& tokens,
+        u32 index);
+
+    // a global constant can only contain constants and constructor calls
+    [[nodiscard]] static bool InitializerCallsFunction(
+        SemanticContext& module,
+        const CompilationUnit& unit,
+        const TokenBuffer& tokens,
+        u32 index)
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral)
+        {
+            std::vector<u32> elements;
+            NodeLayout::collectChildren(unit.nodeBuffer, stripped, elements);
+            for (const auto element : elements)
+            {
+                if (InitializerCallsFunction(module, unit, tokens, element))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (!IsConstructorCallExpression(module, unit, tokens, stripped))
+        {
+            return ContainsRuntimeCall(module, unit, tokens, stripped);
+        }
+
+        std::vector<u32> arguments;
+        NodeLayout::collectChildren(unit.nodeBuffer, NodeLayout::binary(unit.nodeBuffer, stripped).right, arguments);
+        for (size_t argumentIndex = 1; argumentIndex < arguments.size(); ++argumentIndex)
+        {
+            auto valueIndex = arguments[argumentIndex];
+            if (unit.nodeBuffer.kind(valueIndex) == NodeKind::NamedArgument)
+            {
+                valueIndex = NodeLayout::namedArgumentValue(valueIndex);
+            }
+
+            if (InitializerCallsFunction(module, unit, tokens, valueIndex))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [[nodiscard]] static bool IsConstructorCallExpression(
+        SemanticContext& module,
+        const CompilationUnit& unit,
+        const TokenBuffer& tokens,
         u32 index)
     {
         const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
@@ -1832,7 +1885,9 @@ namespace Caracal
                 nameId = nameIdOf(unit, parameterIndex);
             }
 
-            if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
+            // a parameter can have the name of a global
+            const auto* existing = tryGetBinding(nameId);
+            if (existing == nullptr || existing->scopeIndex != static_cast<u32>(m_scopeFrames.size() - 1))
             {
                 addVariableBinding(nameId, m_module.typeOfNode(NodeIndex{ unit.fileId, parameterIndex }), nameLocation(unit, parameterIndex), unit.source, VariableBindingKind::Parameter);
             }
@@ -2044,6 +2099,50 @@ namespace Caracal
         return false;
     }
 
+    bool TypeChecker::initializerNeedsGlobalInit(const CompilationUnit& unit, u32 index)
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
+        switch (unit.nodeBuffer.kind(stripped))
+        {
+            case NodeKind::NumberLiteral:
+            case NodeKind::BoolLiteral:
+            case NodeKind::UnaryExpression:
+            {
+                return false;
+            }
+            case NodeKind::NameExpression:
+            {
+                // limit :: 5 has a constant value
+                // origin :: Point.new(5) has no constant value
+                const auto* binding = tryGetBinding(nameIdOf(unit, stripped));
+                return binding != nullptr && !binding->folded.has_value();
+            }
+            case NodeKind::ArrayLiteral:
+            {
+                std::vector<u32> elements;
+                NodeLayout::collectChildren(unit.nodeBuffer, stripped, elements);
+                for (const auto element : elements)
+                {
+                    if (initializerNeedsGlobalInit(unit, element))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            case NodeKind::BinaryExpression:
+            {
+                // 2 %+ 3 can fold, Point.new(5) and Color.Red cannot
+                return unit.nodeBuffer.isMemberAccessBinary(m_compilationContext.tokenBuffer(unit.fileId), stripped);
+            }
+            default:
+            {
+                return true;
+            }
+        }
+    }
+
     bool TypeChecker::isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const
     {
         const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, callIndex) });
@@ -2108,12 +2207,12 @@ namespace Caracal
         return expressionIsAddressable(unit, layout.left);
     }
 
-    bool TypeChecker::typeHasDynamicArrayField(Type type) const
+    bool TypeChecker::typeHasDynamicArrayField(Type type, const TypeVisit* parent) const
     {
         const auto valueType = type.toValue();
         if (valueType.kind() == TypeKind::FixedArray)
         {
-            return typeHasDynamicArrayField(m_module.getArrayElementType(valueType));
+            return typeHasDynamicArrayField(m_module.getArrayElementType(valueType), parent);
         }
 
         if (valueType.kind() != TypeKind::Type)
@@ -2121,10 +2220,20 @@ namespace Caracal
             return false;
         }
 
+        // a type can contain itself by value if the program has an error
+        for (auto* visit = parent; visit != nullptr; visit = visit->parent)
+        {
+            if (visit->type == valueType)
+            {
+                return false;
+            }
+        }
+
         // nothing can write through a constant field
+        const auto current = TypeVisit{ valueType, parent };
         for (const auto& field : m_module.getTypeDefinition(valueType).fields())
         {
-            if (!field.isConstant() && (field.type().toValue().kind() == TypeKind::DynamicArray || typeHasDynamicArrayField(field.type())))
+            if (!field.isConstant() && (field.type().toValue().kind() == TypeKind::DynamicArray || typeHasDynamicArrayField(field.type(), &current)))
             {
                 return true;
             }
@@ -2133,7 +2242,7 @@ namespace Caracal
         return false;
     }
 
-    void TypeChecker::emitDynamicArrayFieldCopies(ValueRef address, Type type)
+    void TypeChecker::emitDynamicArrayFieldCopies(ValueRef address, Type type, const TypeVisit* parent)
     {
         const auto valueType = type.toValue();
         if (valueType.kind() == TypeKind::FixedArray)
@@ -2142,11 +2251,20 @@ namespace Caracal
             for (auto position = 0; position < m_module.getArrayLength(valueType); ++position)
             {
                 const auto index = m_emitter.emitConstant(ConstantValue::FromI32(position), m_module.wellKnown().i32);
-                emitDynamicArrayFieldCopies(m_emitter.emitElementAddress(address, valueType, index, elementType), elementType);
+                emitDynamicArrayFieldCopies(m_emitter.emitElementAddress(address, valueType, index, elementType), elementType, parent);
             }
             return;
         }
 
+        for (auto* visit = parent; visit != nullptr; visit = visit->parent)
+        {
+            if (visit->type == valueType)
+            {
+                return;
+            }
+        }
+
+        const auto current = TypeVisit{ valueType, parent };
         for (const auto& field : m_module.getTypeDefinition(valueType).fields())
         {
             if (field.isConstant())
@@ -2159,9 +2277,9 @@ namespace Caracal
                 const auto fieldAddress = m_emitter.emitFieldAddress(address, valueType, field.index(), field.type());
                 m_emitter.emitStoreValue(m_emitter.emitArrayCopy(fieldAddress, field.type().toValue()), fieldAddress, field.type());
             }
-            else if (typeHasDynamicArrayField(field.type()))
+            else if (typeHasDynamicArrayField(field.type(), &current))
             {
-                emitDynamicArrayFieldCopies(m_emitter.emitFieldAddress(address, valueType, field.index(), field.type()), field.type());
+                emitDynamicArrayFieldCopies(m_emitter.emitFieldAddress(address, valueType, field.index(), field.type()), field.type(), &current);
             }
         }
     }
@@ -3290,6 +3408,13 @@ namespace Caracal
                         pushedGlobalConstruction = true;
                     }
                 }
+                else if (const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, declarationLayout.right);
+                    (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral || unit.nodeBuffer.kind(stripped) == NodeKind::NameExpression)
+                    && initializerNeedsGlobalInit(unit, stripped))
+                {
+                    m_emitter.resumeGlobalInitEffects();
+                    resumedGlobalInit = true;
+                }
             }
         }
 
@@ -3340,8 +3465,7 @@ namespace Caracal
             }
 
             if (isGlobalConstant
-                && ContainsRuntimeCall(m_module, unit, tokens, declarationLayout.right)
-                && !IsConstructorCallExpression(m_module, unit, tokens, declarationLayout.right))
+                && InitializerCallsFunction(m_module, unit, tokens, declarationLayout.right))
             {
                 m_diagnostics.addGlobalConstantWithCallError(
                     unit.source,
@@ -3415,6 +3539,19 @@ namespace Caracal
                                 {
                                     m_emitter.emitGlobalConstant(name, rightType, aggregate.value());
                                 }
+                                else if (rightType != Type::Undefined())
+                                {
+                                    // the elements were checked in .global_init and write to the global here
+                                    emitCapturedArrayLiteral(unit, strippedRight, m_emitter.beginGlobalInitConstruction(name, rightType), rightType);
+                                    m_emitter.suspendGlobalInit();
+                                }
+                            }
+                            else if (strippedKind == NodeKind::NameExpression && rightType != Type::Undefined())
+                            {
+                                // v :: o with a global object, the value was read in .global_init
+                                const auto destination = m_emitter.beginGlobalInitConstruction(name, rightType);
+                                m_emitter.emitStoreValue(checkedRight.value, destination, rightType);
+                                m_emitter.suspendGlobalInit();
                             }
                             else if (strippedKind == NodeKind::BinaryExpression
                                 && rightType.kind() == TypeKind::Enum
@@ -5734,7 +5871,7 @@ namespace Caracal
             {
                 result.folded = binding->folded;
             }
-            if (binding->scopeIndex == 0 && !currentScopeIsGlobal())
+            if (binding->scopeIndex == 0)
             {
                 result.value = m_emitter.readGlobal(nameOf(unit, index));
             }

@@ -1,0 +1,12 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+first :: Point.new(5);
+points :: [first, first];
+
+def arrayOfGlobalObjectsInGlobal() i32
+{
+    return points.at(1).x;
+}
