@@ -144,11 +144,16 @@ namespace Caracal
         [[nodiscard]] u32 nameIdOf(const CompilationUnit& unit, u32 index) const noexcept;
         void addVariableBinding(u32 nameId, Type type, std::optional<SourceLocation> location, const SourceTextSharedPtr& source, VariableBindingKind kind, bool referencesConstant = false);
         [[nodiscard]] const LexicalBinding* tryGetBinding(u32 nameId) const noexcept;
+        [[nodiscard]] const LexicalBinding* tryGetConflictingBinding(u32 nameId) const noexcept;
+        [[nodiscard]] ValueRef addressOfName(const CompilationUnit& unit, u32 nameNode);
+        [[nodiscard]] bool nameIsInitConstant(const CompilationUnit& unit, u32 nameNode) const;
         [[nodiscard]] LexicalBinding* tryGetBindingMutable(u32 nameId) noexcept;
 
         void typeCheckGlobalConstants();
         void typeCheckEnumDefinitions();
         void typeCheckTypeFieldDefinitions();
+        void reportTypesThatContainThemselves();
+        void reportFieldsThatContainTheirType(const TypeDefinition& definition, const TypeVisit* parent, std::unordered_set<i32>& finishedTypes);
         void typeCheckFunctionDefinitions();
         void typeCheckTestDefinitions();
         void typeCheckTestsStub();
@@ -175,6 +180,7 @@ namespace Caracal
         void typeCheckWhileStatement(const CompilationUnit& unit, u32 index);
         void typeCheckReturnStatement(const CompilationUnit& unit, u32 index);
         void typeCheckBlockNode(const CompilationUnit& unit, u32 index);
+        void typeCheckStatementInNewScope(const CompilationUnit& unit, u32 index);
         [[nodiscard]] bool receiverChainIsConstant(const CompilationUnit& unit, u32 expressionIndex, std::string& rootName, bool& referencesConstant);
 
         [[nodiscard]] CheckedValue typeCheckExpression(const CompilationUnit& unit, u32 index, const ExpressionContext& context);

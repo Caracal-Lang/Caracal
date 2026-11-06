@@ -1,0 +1,9 @@
+type A
+{
+    b := B.new()
+}
+
+type B
+{
+    a := A.new()
+}

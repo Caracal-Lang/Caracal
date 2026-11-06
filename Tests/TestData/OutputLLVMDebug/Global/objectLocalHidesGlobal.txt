@@ -1,0 +1,52 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32 }
+
+@origin = global %Point zeroinitializer
+@llvm.global_ctors = appending global [1 x { i32, ptr, ptr }] [{ i32, ptr, ptr } { i32 65535, ptr @.global_init, ptr null }]
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @objectLocalHidesGlobal() {
+entry:
+  %origin = alloca %Point, align 8
+  %load = load i32, ptr @origin, align 4
+  %add = add i32 %load, 1
+  call void @Point.new(ptr %origin, i32 %add)
+  %call = call i32 @Point.plus(ptr %origin, i32 1)
+  %x = getelementptr inbounds nuw %Point, ptr %origin, i32 0, i32 0
+  store i32 %call, ptr %x, align 4
+  %x1 = getelementptr inbounds nuw %Point, ptr %origin, i32 0, i32 0
+  %load2 = load i32, ptr %x1, align 4
+  ret i32 %load2
+}
+
+define i32 @Point.plus(ptr nonnull %0, i32 %1) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  %load = load i32, ptr %x, align 4
+  %add = add i32 %load, %1
+  ret i32 %add
+}
+
+define void @Point.new(ptr nonnull %0, i32 %1) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %x, align 4
+  ret void
+}
+
+define void @.global_init() {
+entry:
+  call void @Point.new(ptr @origin, i32 5)
+  ret void
+}

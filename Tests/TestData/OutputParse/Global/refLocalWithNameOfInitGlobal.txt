@@ -1,0 +1,155 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: shared
+        }
+    }
+    InitType: {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+            Ref: true
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: refLocalWithNameOfInitGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: first
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: second
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: shared
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: undefined
+                    Operation: ReferenceOf
+                    Expression: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: first
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: shared
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: second
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: first
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: limit
+                }
+            }
+            Right: {
+                NumberLiteral: 9
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: shared
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: undefined
+                    Operation: ReferenceOf
+                    Expression: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: limit
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: refLocalWithNameOfInitGlobal
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

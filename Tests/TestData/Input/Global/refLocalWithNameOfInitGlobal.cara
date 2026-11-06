@@ -1,0 +1,17 @@
+shared :: init ref i32;
+
+def refLocalWithNameOfInitGlobal() i32
+{
+    first := 1;
+    second := 5;
+    shared := ref first;
+    shared = second;
+    return first;
+}
+
+def main() i32
+{
+    limit := 9;
+    shared = ref limit;
+    return refLocalWithNameOfInitGlobal();
+}

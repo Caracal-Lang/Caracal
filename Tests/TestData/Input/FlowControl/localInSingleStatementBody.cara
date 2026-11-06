@@ -1,0 +1,6 @@
+def localInSingleStatementBody(condition: bool) i32
+{
+    if condition value := 1;
+    value := 5;
+    return value;
+}

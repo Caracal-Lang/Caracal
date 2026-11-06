@@ -1,0 +1,13 @@
+ Error T0057 Assignment to constant
+     ,-[Diagnostics/Input/writeToGlobalAfterLocalInBlock.cara:10:5]
+   7 |         number := 7;
+   8 |         _ = number;
+   9 |     }
+  10 |     number = 1;
+     .     ------
+     .        `-- 'number' is a constant and cannot be reassigned.
+  11 |     return number;
+  12 | }
+  13 | 
+     `----
+  Fix: Declare 'number' as a variable if it needs to change, or remove the assignment.

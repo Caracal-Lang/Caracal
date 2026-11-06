@@ -1,0 +1,9 @@
+def localInStandaloneBlock() i32
+{
+    {
+        value := 1;
+        _ = value;
+    }
+    value := 5;
+    return value;
+}

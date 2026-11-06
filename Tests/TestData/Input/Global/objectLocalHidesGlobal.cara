@@ -1,0 +1,18 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+origin :: Point.new(5);
+
+def objectLocalHidesGlobal() i32
+{
+    origin := Point.new(origin.x %+ 1);
+    origin.x = origin.plus(1);
+    return origin.x;
+}

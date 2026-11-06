@@ -1,0 +1,8 @@
+def unusedLocalInBlock(condition: bool) i32
+{
+    if condition
+    {
+        value := 1;
+    }
+    return 0;
+}

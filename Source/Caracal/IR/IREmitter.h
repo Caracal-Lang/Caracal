@@ -145,6 +145,7 @@ namespace Caracal
         void emitGlobalReference(std::string_view name, Type type, std::string_view targetName);
         void emitConstructedGlobal(std::string_view name, Type type);
         [[nodiscard]] ValueRef emitGlobalAddress(std::string_view name);
+        void removeLocal(u32 nameId);
         [[nodiscard]] ValueRef readGlobal(std::string_view name);
         void emitGlobalAssignment(std::string_view name, ValueRef value);
         void emitGlobalReferenceInitialization(std::string_view name, ValueRef targetAddress);
@@ -159,7 +160,6 @@ namespace Caracal
 
         void recordDefaultArgumentFold(u16 fileId, u32 defaultNode, FoldValue value);
         [[nodiscard]] ValueRef emitDefaultArgument(u16 fileId, u32 defaultNode, Type defaultType, Type parameterType);
-        [[nodiscard]] ValueRef localOrGlobalAddress(u32 nameId, std::string_view name);
 
         void recordEnumFieldConstant(i32 enumTypeId, std::string fieldName, ConstantValue constant, std::optional<FoldValue> folded);
         [[nodiscard]] const EnumFieldConstant* tryGetEnumFieldConstant(i32 enumTypeId, const std::string& fieldName) const;

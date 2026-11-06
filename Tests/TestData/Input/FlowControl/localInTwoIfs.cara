@@ -1,0 +1,15 @@
+def localInTwoIfs(condition: bool) i32
+{
+    total := 0;
+    if condition
+    {
+        value := 2;
+        total = total %+ value;
+    }
+    if condition
+    {
+        value := 3;
+        total = total %+ value;
+    }
+    return total;
+}

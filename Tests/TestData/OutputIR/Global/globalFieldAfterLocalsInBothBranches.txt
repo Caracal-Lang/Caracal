@@ -1,0 +1,58 @@
+type Point
+    x: i32
+
+global origin : Point
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define globalFieldAfterLocalsInBothBranches(%0: bool "condition") i32
+block entry(0):
+    %0 = parameter 0 : bool "condition"
+    branch if %0, if.true(1), if.false(2)
+block if.true(1):
+    %slot0 = allocate_local : Point "origin"
+    %1 = address_of %slot0 : ref Point
+    %2 = const 1 : i32
+    call Point.new(%1, %2)
+    jump if.continuation(3)
+block if.false(2):
+    %slot1 = allocate_local : Point "origin"
+    %5 = address_of %slot1 : ref Point
+    %6 = const 2 : i32
+    call Point.new(%5, %6)
+    jump if.continuation(3)
+block if.continuation(3):
+    %9 = address_of_global @origin : ref Point
+    %10 = address_of_field %9.0 : ref i32 "x"
+    %11 = load_value %10 : i32
+    return %11
+
+define Point.plus(%0: ref Point ".this", %1: i32 "value") i32
+block entry(0):
+    %0 = parameter 0 : ref Point ".this"
+    %1 = parameter 1 : i32 "value"
+    %2 = address_of_field %0.0 : ref i32 "x"
+    %3 = load_value %2 : i32
+    %4 = add %3, %1 : i32
+    return %4
+
+define Point.new(%0: ref Point ".this", %1: i32 "x") void
+block entry(0):
+    %0 = parameter 0 : ref Point ".this"
+    %1 = parameter 1 : i32 "x"
+    %2 = address_of_field %0.0 : ref i32 "x"
+    store_value %1, %2 : i32
+    return
+
+define .global_init() void
+block entry(0):
+    %0 = address_of_global @origin : ref Point
+    %1 = const 5 : i32
+    call Point.new(%0, %1)
+    return

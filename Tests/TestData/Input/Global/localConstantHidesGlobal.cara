@@ -1,0 +1,7 @@
+number :: 5;
+
+def localConstantHidesGlobal() i32
+{
+    number :: 7;
+    return number;
+}

@@ -1,0 +1,14 @@
+value :: init i32;
+
+def parameterWithNameOfInitGlobal(value: ref i32)
+{
+    value = 5;
+}
+
+def main() i32
+{
+    value = 9;
+    number := 1;
+    parameterWithNameOfInitGlobal(ref number);
+    return number;
+}

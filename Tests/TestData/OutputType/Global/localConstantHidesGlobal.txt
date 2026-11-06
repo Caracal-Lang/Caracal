@@ -1,0 +1,45 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: number
+        }
+    }
+    Right: {
+        NumberLiteral: 5
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: localConstantHidesGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        ConstantDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: number
+                }
+            }
+            Right: {
+                NumberLiteral: 7
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: number
+            }
+        }
+    }
+}

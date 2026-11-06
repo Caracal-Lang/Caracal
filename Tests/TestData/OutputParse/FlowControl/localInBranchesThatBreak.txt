@@ -1,0 +1,127 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: localInBranchesThatBreak
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        WhileStatement: {
+            Condition: {
+                BoolLiteral: true
+            }
+            True: {
+                BlockNode(1): {
+                    IfStatement: {
+                        Condition: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: condition
+                            }
+                        }
+                        True: {
+                            BlockNode(3): {
+                                VariableDeclaration: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: total
+                                        }
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                BreakStatement
+                            }
+                        }
+                        False: {
+                            BlockNode(4): {
+                                VariableDeclaration: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 5.0
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: total
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 5
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        Discard: _
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                BreakStatement
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: total
+            }
+        }
+    }
+}

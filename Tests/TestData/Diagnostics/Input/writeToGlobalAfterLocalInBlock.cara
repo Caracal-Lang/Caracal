@@ -1,0 +1,12 @@
+number :: 5;
+
+def writeToGlobalAfterLocalInBlock(condition: bool) i32
+{
+    if condition
+    {
+        number := 7;
+        _ = number;
+    }
+    number = 1;
+    return number;
+}

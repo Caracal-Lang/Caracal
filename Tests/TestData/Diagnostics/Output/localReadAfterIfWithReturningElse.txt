@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+     ,-[Diagnostics/Input/localReadAfterIfWithReturningElse.cara:12:12]
+   9 |     {
+  10 |         return 0;
+  11 |     }
+  12 |     return value;
+     .            -----
+     .              `-- Unknown name 'value'
+  13 | }
+  14 | 
+     `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.

@@ -1,0 +1,58 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: localInStandaloneBlock
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        BlockNode(2): {
+            VariableDeclaration: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: value
+                    }
+                }
+                Right: {
+                    NumberLiteral: 1
+                }
+            }
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: value
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: value
+            }
+        }
+    }
+}

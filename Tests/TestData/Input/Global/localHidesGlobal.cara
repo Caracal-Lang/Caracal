@@ -1,0 +1,8 @@
+number :: 5;
+
+def localHidesGlobal() i32
+{
+    number := 7;
+    number = number %+ 1;
+    return number;
+}

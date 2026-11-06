@@ -1,0 +1,9 @@
+def localWrittenAfterBlock(condition: bool)
+{
+    if condition
+    {
+        value := 1;
+        _ = value;
+    }
+    value = 2;
+}

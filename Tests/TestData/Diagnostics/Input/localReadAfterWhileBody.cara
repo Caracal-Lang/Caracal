@@ -1,0 +1,10 @@
+def localReadAfterWhileBody(count: i32) i32
+{
+    index := 0;
+    while index < count
+    {
+        value := 1;
+        index = index %+ value;
+    }
+    return value;
+}

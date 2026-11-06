@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+     ,-[Diagnostics/Input/localReadAfterWhileBody.cara:9:12]
+   6 |         value := 1;
+   7 |         index = index %+ value;
+   8 |     }
+   9 |     return value;
+     .            -----
+     .              `-- Unknown name 'value'
+  10 | }
+  11 | 
+     `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.

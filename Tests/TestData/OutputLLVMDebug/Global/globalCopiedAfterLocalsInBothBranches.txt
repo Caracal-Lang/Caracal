@@ -1,0 +1,86 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@numbers = global { ptr, i32, i32 } zeroinitializer
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @globalCopiedAfterLocalsInBothBranches(i1 %0) {
+entry:
+  %numbers = alloca { ptr, i32, i32 }, align 8
+  %numbers1 = alloca { ptr, i32, i32 }, align 8
+  %copy = alloca { ptr, i32, i32 }, align 8
+  br i1 %0, label %if.true, label %if.false
+
+if.true:                                          ; preds = %entry
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 1
+  store i32 1, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 1, ptr %element, align 4
+  br label %if.continuation
+
+if.false:                                         ; preds = %entry
+  %call2 = call ptr @calloc(i64 8, i64 4)
+  %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers1, i32 0, i32 0
+  store ptr %call2, ptr %data3, align 8
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers1, i32 0, i32 1
+  store i32 1, ptr %length4, align 4
+  %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers1, i32 0, i32 2
+  store i32 8, ptr %capacity5, align 4
+  %element6 = getelementptr i32, ptr %call2, i32 0
+  store i32 2, ptr %element6, align 4
+  br label %if.continuation
+
+if.continuation:                                  ; preds = %if.false, %if.true
+  %load = load ptr, ptr @numbers, align 8
+  %load7 = load i32, ptr getelementptr inbounds nuw ({ ptr, i32, i32 }, ptr @numbers, i32 0, i32 1), align 4
+  %load8 = load i32, ptr getelementptr inbounds nuw ({ ptr, i32, i32 }, ptr @numbers, i32 0, i32 2), align 4
+  %widened = sext i32 %load8 to i64
+  %copy9 = call ptr @calloc(i64 %widened, i64 4)
+  %widened10 = sext i32 %load7 to i64
+  %bytes = mul i64 %widened10, 4
+  %copied = call ptr @memmove(ptr %copy9, ptr %load, i64 %bytes)
+  %1 = insertvalue { ptr, i32, i32 } poison, ptr %copy9, 0
+  %2 = insertvalue { ptr, i32, i32 } %1, i32 %load7, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %2, i32 %load8, 2
+  store { ptr, i32, i32 } %array_copy, ptr %copy, align 8
+  %data11 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %copy, i32 0, i32 0
+  %load12 = load ptr, ptr %data11, align 8
+  %element13 = getelementptr i32, ptr %load12, i32 0
+  %load14 = load i32, ptr %element13, align 4
+  ret i32 %load14
+}
+
+define i32 @main() {
+entry:
+  %temp = alloca { ptr, i32, i32 }, align 8
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  store i32 1, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 5, ptr %element, align 4
+  %load = load { ptr, i32, i32 }, ptr %temp, align 8
+  store { ptr, i32, i32 } %load, ptr @numbers, align 8
+  %call1 = call i32 @globalCopiedAfterLocalsInBothBranches(i1 false)
+  ret i32 %call1
+}
+
+; uselistorder directives
+uselistorder ptr @numbers, { 0, 2, 3, 1 }

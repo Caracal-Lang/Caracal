@@ -1,0 +1,235 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: numbers
+        }
+    }
+    InitType: {
+        ArrayTypeNameNode: {
+            Type: undefined
+            Lexeme: [i32; _]
+            Kind: Dynamic
+            DataType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: globalCopiedAfterLocalsInBothBranches
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: undefined
+                    Name: condition
+                }
+            }
+            True: {
+                BlockNode(2): {
+                    VariableDeclaration: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: numbers
+                            }
+                        }
+                        Right: {
+                            ArrayLiteral(1): {
+                                Type: undefined
+                                Dynamic: true
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            Discard: _
+                        }
+                        Right: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: numbers
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            False: {
+                BlockNode(2): {
+                    VariableDeclaration: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: numbers
+                            }
+                        }
+                        Right: {
+                            ArrayLiteral(1): {
+                                Type: undefined
+                                Dynamic: true
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            Discard: _
+                        }
+                        Right: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: numbers
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: copy
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: numbers
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: copy
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(1): {
+                    Type: undefined
+                    Dynamic: true
+                    NumberLiteral: 5
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: globalCopiedAfterLocalsInBothBranches
+                }
+                ArgumentsNode(1): {
+                    BoolLiteral: false
+                }
+            }
+        }
+    }
+}

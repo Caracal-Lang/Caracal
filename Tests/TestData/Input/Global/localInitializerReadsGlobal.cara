@@ -1,0 +1,7 @@
+number :: 5;
+
+def localInitializerReadsGlobal() i32
+{
+    number := number %+ 2;
+    return number;
+}

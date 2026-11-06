@@ -1,0 +1,57 @@
+ConstantDeclaration: {
+    Type: i32
+    Left: {
+        NameExpression: {
+            Type: i32
+            Name: number
+        }
+    }
+    Right: {
+        NumberLiteral: 5
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: localInitializerReadsGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: number
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: i32
+                            Name: number
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: number
+            }
+        }
+    }
+}

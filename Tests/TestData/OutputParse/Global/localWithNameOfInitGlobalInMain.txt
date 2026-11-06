@@ -1,0 +1,129 @@
+ConstantDeclaration: {
+    Type: undefined
+    Left: {
+        NameExpression: {
+            Type: undefined
+            Name: value
+        }
+    }
+    InitType: {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: readValue
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: value
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 5
+                    }
+                }
+            }
+            True: {
+                BlockNode(3): {
+                    VariableDeclaration: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: value
+                            }
+                        }
+                        Right: {
+                            NumberLiteral: 1
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: value
+                            }
+                        }
+                        Right: {
+                            NumberLiteral: 2
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            Discard: _
+                        }
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: value
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: readValue
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

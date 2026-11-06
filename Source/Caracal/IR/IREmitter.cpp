@@ -504,6 +504,11 @@ namespace Caracal
         m_locals.set(nameId, LocalState{ address, refType, LocalStorageKind::Address });
     }
 
+    void IREmitter::removeLocal(u32 nameId)
+    {
+        m_locals.remove(nameId);
+    }
+
     ValueRef IREmitter::addressOfLocal(u32 nameId)
     {
         if (!canEmit())
@@ -1789,17 +1794,6 @@ namespace Caracal
 
         const auto defaultValue = emitFoldedConstant(fold->second, defaultType);
         return emitWidened(defaultValue, defaultType, parameterType);
-    }
-
-    ValueRef IREmitter::localOrGlobalAddress(u32 nameId, std::string_view name)
-    {
-        const auto address = addressOfLocal(nameId);
-        if (address.id() >= 0)
-        {
-            return address;
-        }
-
-        return emitGlobalAddress(name);
     }
 
     void IREmitter::registerExternDefinition(const FunctionDefinition& definition)

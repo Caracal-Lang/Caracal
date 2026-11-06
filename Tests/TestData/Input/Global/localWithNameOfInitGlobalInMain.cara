@@ -1,0 +1,18 @@
+value :: init i32;
+
+def readValue() i32
+{
+    return value;
+}
+
+def main() i32
+{
+    value = 5;
+    if value == 5
+    {
+        value := 1;
+        value = 2;
+        _ = value;
+    }
+    return readValue();
+}

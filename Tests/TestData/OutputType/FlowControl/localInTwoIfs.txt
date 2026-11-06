@@ -1,0 +1,140 @@
+FunctionDefinitionStatement: {
+    Type: (bool) -> i32
+    Name: localInTwoIfs
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: condition
+                }
+            }
+            True: {
+                BlockNode(2): {
+                    VariableDeclaration: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                        Right: {
+                            NumberLiteral: 2
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: total
+                                    }
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: condition
+                }
+            }
+            True: {
+                BlockNode(2): {
+                    VariableDeclaration: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                        Right: {
+                            NumberLiteral: 3
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: total
+                                    }
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: total
+            }
+        }
+    }
+}

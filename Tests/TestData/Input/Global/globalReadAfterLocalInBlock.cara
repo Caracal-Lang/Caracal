@@ -1,0 +1,11 @@
+number :: 5;
+
+def globalReadAfterLocalInBlock(condition: bool) i32
+{
+    if condition
+    {
+        number := 7;
+        _ = number;
+    }
+    return number;
+}

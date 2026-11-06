@@ -261,6 +261,8 @@ namespace Caracal
                 return "T0084";
             case DiagnosticKind::T0109_GlobalConstantDynamicArray:
                 return "T0109";
+            case DiagnosticKind::T0110_TypeContainsItself:
+                return "T0110";
             case DiagnosticKind::T0085_ReferenceOrSliceField:
                 return "T0085";
             case DiagnosticKind::T0086_ReferenceOrSliceArrayElement:
@@ -550,6 +552,8 @@ namespace Caracal
                 return "A global constant cannot be a dynamic array";
             case DiagnosticKind::T0085_ReferenceOrSliceField:
                 return "Fields cannot store references or slices";
+            case DiagnosticKind::T0110_TypeContainsItself:
+                return "A type cannot contain itself";
             case DiagnosticKind::T0086_ReferenceOrSliceArrayElement:
                 return "Arrays cannot store references or slices";
             case DiagnosticKind::T0090_MethodRequiresDynamicArray:

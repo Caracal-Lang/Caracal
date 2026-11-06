@@ -1,0 +1,13 @@
+type Box
+{
+    value : i32 = 40
+
+    def Box.get(condition: bool) i32
+    {
+        if condition
+        {
+            return .value;
+        }
+        return 0;
+    }
+}

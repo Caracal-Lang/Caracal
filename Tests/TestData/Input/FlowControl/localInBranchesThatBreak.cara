@@ -1,0 +1,21 @@
+def localInBranchesThatBreak(condition: bool) i32
+{
+    total := 0;
+    while true
+    {
+        if condition
+        {
+            value := 1;
+            total = value;
+            break;
+        }
+        else
+        {
+            value := 5.0;
+            total = 5;
+            _ = value;
+            break;
+        }
+    }
+    return total;
+}

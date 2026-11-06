@@ -1,0 +1,24 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define localInNestedBlocks(%0: bool "condition") i32
+block entry(0):
+    %0 = parameter 0 : bool "condition"
+    branch if %0, if.true(1), if.continuation(2)
+block if.true(1):
+    branch if %0, if.true(3), if.false(4)
+block if.true(3):
+    jump if.continuation(5)
+block if.false(4):
+    jump if.continuation(5)
+block if.continuation(5):
+    %3 = const 5 : i32
+    return %3
+block if.continuation(2):
+    %4 = const 0 : i32
+    return %4

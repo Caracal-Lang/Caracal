@@ -1,0 +1,31 @@
+global value : i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define readValue() i32
+block entry(0):
+    %0 = address_of_global @value : ref i32
+    %1 = load_value %0 : i32
+    return %1
+
+define main() i32
+block entry(0):
+    %0 = const 5 : i32
+    %1 = address_of_global @value : ref i32
+    store_value %0, %1 : i32
+    %2 = address_of_global @value : ref i32
+    %3 = load_value %2 : i32
+    %4 = const 5 : i32
+    %5 = equal %3, %4 : bool
+    branch if %5, if.true(1), if.continuation(2)
+block if.true(1):
+    jump if.continuation(2)
+block if.continuation(2):
+    %8 = call readValue() : i32
+    return %8

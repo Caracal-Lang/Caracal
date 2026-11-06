@@ -727,6 +727,7 @@ namespace Caracal
         typeCheckEnumDefinitions();
         typeCheckGlobalConstants();
         typeCheckTypeFieldDefinitions();
+        reportTypesThatContainThemselves();
         typeCheckFunctionDefinitions();
         typeCheckTestDefinitions();
         typeCheckTypeMethodDefinitions();
@@ -1288,20 +1289,19 @@ namespace Caracal
 
     ValueRef TypeChecker::dynamicArraySourceAddress(const CompilationUnit& unit, u32 nameNode, Type arrayType)
     {
-        const auto nameId = nameIdOf(unit, nameNode);
-        const auto address = m_emitter.addressOfLocal(nameId);
+        const auto address = addressOfName(unit, nameNode);
         if (address.id() >= 0)
         {
             return address;
         }
 
-        const auto value = m_emitter.peekLocal(nameId);
+        const auto value = m_emitter.peekLocal(nameIdOf(unit, nameNode));
         if (value.id() >= 0)
         {
             return m_emitter.spillToTempSlot(value, arrayType);
         }
 
-        return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
+        return ValueRef{};
     }
 
     ValueRef TypeChecker::emitSourceTextDefault(const CompilationUnit& unit, size_t parameterIndex, const std::vector<Parameter>& parameters, size_t orderedStart, size_t parameterOffset)
@@ -2028,13 +2028,7 @@ namespace Caracal
             return ValueRef{};
         }
 
-        const auto nameId = nameIdOf(unit, stripped);
-        if (tryGetBinding(nameId) == nullptr)
-        {
-            return ValueRef{};
-        }
-
-        return m_emitter.localOrGlobalAddress(nameId, nameOf(unit, stripped));
+        return addressOfName(unit, stripped);
     }
 
     ValueRef TypeChecker::arrayReceiverAddress(const CompilationUnit& unit, u32 leftIndex, const CheckedValue& checkedLeft, Type receiverType)
@@ -2394,13 +2388,7 @@ namespace Caracal
         {
             case NodeKind::NameExpression:
             {
-                const auto nameId = nameIdOf(unit, stripped);
-                if (tryGetBinding(nameId) == nullptr)
-                {
-                    return ValueRef{};
-                }
-
-                return m_emitter.localOrGlobalAddress(nameId, nameOf(unit, stripped));
+                return addressOfName(unit, stripped);
             }
             case NodeKind::MemberAccessExpression:
             {
@@ -2585,6 +2573,40 @@ namespace Caracal
         return &m_bindingsByName[nameId].back();
     }
 
+    const TypeChecker::LexicalBinding* TypeChecker::tryGetConflictingBinding(u32 nameId) const noexcept
+    {
+        const auto* existing = tryGetBinding(nameId);
+        if (existing != nullptr && existing->scopeIndex == 0 && !currentScopeIsGlobal())
+        {
+            return nullptr;
+        }
+
+        return existing;
+    }
+
+    ValueRef TypeChecker::addressOfName(const CompilationUnit& unit, u32 nameNode)
+    {
+        const auto nameId = nameIdOf(unit, nameNode);
+        const auto* binding = tryGetBinding(nameId);
+        if (binding == nullptr)
+        {
+            return ValueRef{};
+        }
+
+        if (binding->scopeIndex == 0)
+        {
+            return m_emitter.emitGlobalAddress(nameOf(unit, nameNode));
+        }
+
+        return m_emitter.addressOfLocal(nameId);
+    }
+
+    bool TypeChecker::nameIsInitConstant(const CompilationUnit& unit, u32 nameNode) const
+    {
+        const auto* binding = tryGetBinding(nameIdOf(unit, nameNode));
+        return binding != nullptr && binding->scopeIndex == 0 && m_initConstants.contains(std::string(nameOf(unit, nameNode)));
+    }
+
     TypeChecker::LexicalBinding* TypeChecker::tryGetBindingMutable(u32 nameId) noexcept
     {
         if (nameId >= m_bindingsByName.size() || m_bindingsByName[nameId].empty())
@@ -2765,6 +2787,73 @@ namespace Caracal
         {
             const auto& unit = unitFor(declaration);
             typeCheckEnumDefinitionStatement(unit, declaration.index);
+        }
+    }
+
+    void TypeChecker::reportTypesThatContainThemselves()
+    {
+        std::unordered_set<i32> finishedTypes;
+        for (const auto& definition : m_module.typeDefinitions())
+        {
+            if (!finishedTypes.contains(definition.type().id()))
+            {
+                reportFieldsThatContainTheirType(definition, nullptr, finishedTypes);
+            }
+        }
+    }
+
+    // type A { b := B.new() } with type B { a := A.new() } reports only a
+    void TypeChecker::reportFieldsThatContainTheirType(const TypeDefinition& definition, const TypeVisit* parent, std::unordered_set<i32>& finishedTypes)
+    {
+        const auto current = TypeVisit{ definition.type(), parent };
+        auto hasTypeField = false;
+        for (const auto& field : definition.fields())
+        {
+            auto fieldType = field.type();
+            while (fieldType.kind() == TypeKind::FixedArray && !fieldType.isReference())
+            {
+                fieldType = m_module.getArrayElementType(fieldType);
+            }
+
+            // a dynamic array keeps its elements in a buffer
+            if (fieldType.kind() != TypeKind::Type || fieldType.isReference() || finishedTypes.contains(fieldType.id()))
+            {
+                continue;
+            }
+
+            hasTypeField = true;
+            auto closesPath = false;
+            for (auto* visit = &current; visit != nullptr; visit = visit->parent)
+            {
+                if (visit->type == fieldType)
+                {
+                    closesPath = true;
+                    break;
+                }
+            }
+
+            if (!closesPath)
+            {
+                reportFieldsThatContainTheirType(m_module.getTypeDefinition(fieldType), &current, finishedTypes);
+                continue;
+            }
+
+            const auto location = TypeFieldLocation(m_compilationContext, definition, field);
+            if (location.has_value())
+            {
+                m_diagnostics.addTypeContainsItselfError(
+                    unitFor(definition.definitionNode()).source,
+                    location.value(),
+                    field.name(),
+                    definition.name(),
+                    formatTypeName(m_module, fieldType));
+            }
+        }
+
+        // a second visit of a type with no type field does nothing
+        if (hasTypeField)
+        {
+            finishedTypes.insert(definition.type().id());
         }
     }
 
@@ -3074,7 +3163,7 @@ namespace Caracal
             }
             case NodeKind::BlockNode:
             {
-                typeCheckBlockNode(unit, index);
+                typeCheckStatementInNewScope(unit, index);
                 break;
             }
             case NodeKind::BreakStatement:
@@ -3498,7 +3587,7 @@ namespace Caracal
             }
 
             const auto nameId = nameIdOf(unit, declarationLayout.left);
-            if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
+            if (const auto* existing = tryGetConflictingBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, bindingType, nameLocation(unit, declarationLayout.left), unit.source, VariableBindingKind::LocalConstant);
                 if (auto* newBinding = tryGetBindingMutable(nameId); newBinding != nullptr)
@@ -3642,7 +3731,7 @@ namespace Caracal
             }
 
             const auto nameId = nameIdOf(unit, initLayout.left);
-            if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
+            if (const auto* existing = tryGetConflictingBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, declaredType, nameLocation(unit, initLayout.left), unit.source, VariableBindingKind::LocalConstant);
 
@@ -3796,7 +3885,7 @@ namespace Caracal
             }
 
             const auto nameId = nameIdOf(unit, declarationLayout.left);
-            if (const auto* existing = tryGetBinding(nameId); existing == nullptr)
+            if (const auto* existing = tryGetConflictingBinding(nameId); existing == nullptr)
             {
                 addVariableBinding(nameId, bindingType, nameLocation(unit, declarationLayout.left), unit.source, VariableBindingKind::LocalVariable, referencesConstant);
                 emitLocalBinding(unit, nameId, name, bindingType, rightType, strippedRight, checkedRight, referencesConstant, aggregateDestination, pushedConstructorDestination);
@@ -3925,13 +4014,12 @@ namespace Caracal
 
         // global init constants are only allowed to be assigned once in caracalMain/main
         const auto leftKind = unit.nodeBuffer.kind(assignmentLayout.target);
-        const auto initializesReferenceGlobal = targetIsReference
-            && leftKind == NodeKind::NameExpression
-            && m_initConstants.contains(std::string(nameOf(unit, assignmentLayout.target)));
+        const auto targetIsInitConstant = leftKind == NodeKind::NameExpression && nameIsInitConstant(unit, assignmentLayout.target);
+        const auto initializesReferenceGlobal = targetIsReference && targetIsInitConstant;
         if (leftKind == NodeKind::NameExpression)
         {
             const auto targetName = std::string(nameOf(unit, assignmentLayout.target));
-            if (m_initConstants.contains(targetName))
+            if (targetIsInitConstant)
             {
                 const auto location = nameLocation(unit, assignmentLayout.target);
                 if (!IsInitConstantAssignmentSite(m_currentFunctionName))
@@ -4011,7 +4099,7 @@ namespace Caracal
             const auto constructedType = tryResolveConstructedType(unit, NodeLayout::stripGroupings(unit.nodeBuffer, assignmentLayout.value));
             if (constructedType != Type::Undefined())
             {
-                const auto destination = m_emitter.localOrGlobalAddress(nameIdOf(unit, assignmentLayout.target), nameOf(unit, assignmentLayout.target));
+                const auto destination = addressOfName(unit, assignmentLayout.target);
                 if (destination.id() >= 0)
                 {
                     pushConstructorDestination(unit, assignmentLayout.value, destination, false);
@@ -4098,7 +4186,7 @@ namespace Caracal
         auto assignedValue = m_emitter.emitWidened(materializeExpressionValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
         if (dynamicAssignmentCopy)
         {
-            const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
+            const auto sourceAddress = addressOfName(unit, strippedAssignedValue);
             assignedValue = m_emitter.emitArrayCopy(sourceAddress, leftType.toValue());
         }
         else
@@ -4778,12 +4866,12 @@ namespace Caracal
         }
 
         auto ifFrame = m_emitter.beginIf(materializeValue(checkedCondition), ifLayout.hasFalse);
-        typeCheckStatement(unit, ifLayout.trueStatement);
+        typeCheckStatementInNewScope(unit, ifLayout.trueStatement);
         m_emitter.endIfThen(ifFrame);
 
         if (ifLayout.hasFalse)
         {
-            typeCheckStatement(unit, ifLayout.falseStatement);
+            typeCheckStatementInNewScope(unit, ifLayout.falseStatement);
         }
         m_emitter.endIf(ifFrame);
     }
@@ -4826,7 +4914,7 @@ namespace Caracal
         }
 
         m_emitter.beginWhileBody(whileFrame, materializeValue(checkedCondition));
-        typeCheckStatement(unit, whileLayout.body);
+        typeCheckStatementInNewScope(unit, whileLayout.body);
         m_emitter.endWhile(whileFrame);
     }
 
@@ -4919,6 +5007,27 @@ namespace Caracal
                     formatTypeName(m_module, Type::Void()));
             }
         }
+    }
+
+    void TypeChecker::typeCheckStatementInNewScope(const CompilationUnit& unit, u32 index)
+    {
+        pushScope(currentScopeKind());
+        if (unit.nodeBuffer.kind(index) == NodeKind::BlockNode)
+        {
+            typeCheckBlockNode(unit, index);
+        }
+        else
+        {
+            typeCheckStatement(unit, index);
+        }
+
+        // endIf merges the branches after this removal
+        // a local of both branches otherwise gets a phi
+        for (auto position = static_cast<size_t>(m_scopeFrames.back().boundNamesStart); position < m_boundNames.size(); ++position)
+        {
+            m_emitter.removeLocal(m_boundNames[position]);
+        }
+        popScope(true);
     }
 
     void TypeChecker::typeCheckBlockNode(const CompilationUnit& unit, u32 index)
@@ -5864,7 +5973,10 @@ namespace Caracal
             {
                 // a local without a slot returns its value, the consumer can spill it
                 // a local with a slot returns nothing, the consumer takes the address from the node
-                result.value = m_emitter.peekLocal(nameId);
+                if (binding->scopeIndex != 0)
+                {
+                    result.value = m_emitter.peekLocal(nameId);
+                }
                 return result;
             }
             if (binding->kind == VariableBindingKind::LocalConstant)
@@ -6541,11 +6653,7 @@ namespace Caracal
                     const auto strippedArgument = NodeLayout::stripGroupings(unit.nodeBuffer, argumentNode);
                     if (unit.nodeBuffer.kind(strippedArgument) == NodeKind::NameExpression)
                     {
-                        auto sourceAddress = m_emitter.addressOfLocal(nameIdOf(unit, strippedArgument));
-                        if (sourceAddress.id() < 0)
-                        {
-                            sourceAddress = m_emitter.emitGlobalAddress(nameOf(unit, strippedArgument));
-                        }
+                        const auto sourceAddress = addressOfName(unit, strippedArgument);
                         const auto copied = m_emitter.emitArrayCopy(sourceAddress, parameter.type().toValue());
                         if (copied.id() < 0)
                         {

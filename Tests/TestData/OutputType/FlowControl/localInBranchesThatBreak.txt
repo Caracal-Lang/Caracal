@@ -1,0 +1,127 @@
+FunctionDefinitionStatement: {
+    Type: (bool) -> i32
+    Name: localInBranchesThatBreak
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        WhileStatement: {
+            Condition: {
+                BoolLiteral: true
+            }
+            True: {
+                BlockNode(1): {
+                    IfStatement: {
+                        Condition: {
+                            NameExpression: {
+                                Type: bool
+                                Name: condition
+                            }
+                        }
+                        True: {
+                            BlockNode(3): {
+                                VariableDeclaration: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: total
+                                        }
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                BreakStatement
+                            }
+                        }
+                        False: {
+                            BlockNode(4): {
+                                VariableDeclaration: {
+                                    Type: f32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: f32
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 5.0
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: total
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 5
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        Discard: _
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: f32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                BreakStatement
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: total
+            }
+        }
+    }
+}

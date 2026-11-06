@@ -63,6 +63,15 @@ namespace Caracal
             m_entries.insert(entry, Entry{ nameId, state });
         }
 
+        void remove(u32 nameId)
+        {
+            const auto entry = lowerBound(nameId);
+            if (entry != m_entries.end() && entry->first == nameId)
+            {
+                m_entries.erase(entry);
+            }
+        }
+
         void reserve(size_t count) { m_entries.reserve(count); }
         void append(u32 nameId, LocalState state) { m_entries.emplace_back(nameId, state); }
 

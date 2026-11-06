@@ -1,0 +1,14 @@
+ Error T0035 Duplicate variable declaration
+    ,-[Diagnostics/Input/localWithNameOfParameter.cara:3:5]
+  1 | def localWithNameOfParameter(value: i32) i32
+    .                              ----------
+    .                                   `-- Previous variable declaration is here.
+  2 | {
+  3 |     value := 1;
+    .     -----
+    .       `-- Variable 'value' is already declared
+  4 |     return value;
+  5 | }
+  6 | 
+    `----
+  Fix: Rename this variable, or remove the duplicate declaration.

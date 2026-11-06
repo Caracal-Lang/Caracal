@@ -1,0 +1,11 @@
+ Error T0110 A type cannot contain itself
+    ,-[Diagnostics/Input/typeContainsItselfInDeclaredField.cara:3:5]
+  1 | type P
+  2 | {
+  3 |     next : P = P.new()
+    .     ----
+    .       `-- 'next' makes 'P' contain itself.
+  4 | }
+  5 | 
+    `----
+  Fix: Use a dynamic array, such as '[P; _]'.

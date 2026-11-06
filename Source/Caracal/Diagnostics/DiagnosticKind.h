@@ -97,6 +97,7 @@ namespace Caracal
         T0084_GlobalConstantNotComputable,
         T0109_GlobalConstantDynamicArray,
         T0085_ReferenceOrSliceField,
+        T0110_TypeContainsItself,
         T0086_ReferenceOrSliceArrayElement,
         T0090_MethodRequiresDynamicArray,
         T0091_DynamicArrayElement,

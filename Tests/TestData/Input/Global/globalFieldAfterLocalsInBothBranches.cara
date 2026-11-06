@@ -1,0 +1,26 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+origin :: Point.new(5);
+
+def globalFieldAfterLocalsInBothBranches(condition: bool) i32
+{
+    if condition
+    {
+        origin := Point.new(1);
+        _ = origin.x;
+    }
+    else
+    {
+        origin := Point.new(2);
+        _ = origin.x;
+    }
+    return origin.x;
+}

@@ -1,0 +1,13 @@
+ Error T0093 Member access is not allowed in static methods
+     ,-[Diagnostics/Input/memberAccessInBlockOfStaticMethod.cara:9:20]
+   6 |     {
+   7 |         if condition
+   8 |         {
+   9 |             return .value;
+     .                    ------
+     .                       `-- 'Box.get' is static and has no instance
+  10 |         }
+  11 |         return 0;
+  12 |     }
+     `----
+  Fix: Make 'Box.get' an instance method if it needs member access.

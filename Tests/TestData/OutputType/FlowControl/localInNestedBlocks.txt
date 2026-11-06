@@ -1,0 +1,118 @@
+FunctionDefinitionStatement: {
+    Type: (bool) -> i32
+    Name: localInNestedBlocks
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: condition
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: condition
+                }
+            }
+            True: {
+                BlockNode(3): {
+                    IfStatement: {
+                        Condition: {
+                            NameExpression: {
+                                Type: bool
+                                Name: condition
+                            }
+                        }
+                        True: {
+                            BlockNode(2): {
+                                VariableDeclaration: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        Discard: _
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        False: {
+                            BlockNode(2): {
+                                VariableDeclaration: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                    Right: {
+                                        NumberLiteral: 2
+                                    }
+                                }
+                                AssignmentStatement: {
+                                    Left: {
+                                        Discard: _
+                                    }
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    VariableDeclaration: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                        Right: {
+                            NumberLiteral: 5
+                        }
+                    }
+                    ReturnStatement: {
+                        Type: i32
+                        NameExpression: {
+                            Type: i32
+                            Name: value
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}

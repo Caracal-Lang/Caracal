@@ -1,0 +1,13 @@
+ Warning T0042 Unused local variable
+    ,-[Diagnostics/Input/unusedLocalInBlock.cara:5:9]
+  2 | {
+  3 |     if condition
+  4 |     {
+  5 |         value := 1;
+    .         -----
+    .           `-- Local variable 'value' is never used
+  6 |     }
+  7 |     return 0;
+  8 | }
+    `----
+  Fix: Remove this variable, rename it to '_', or use its value.

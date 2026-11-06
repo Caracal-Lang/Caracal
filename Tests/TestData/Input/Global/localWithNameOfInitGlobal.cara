@@ -1,0 +1,14 @@
+value :: init i32;
+
+def localWithNameOfInitGlobal() i32
+{
+    value := 1;
+    value = 5;
+    return value;
+}
+
+def main() i32
+{
+    value = 9;
+    return localWithNameOfInitGlobal();
+}

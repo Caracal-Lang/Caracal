@@ -1,0 +1,15 @@
+def localInBothBranches(condition: bool) i32
+{
+    total := 0;
+    if condition
+    {
+        value := 1;
+        total = value;
+    }
+    else
+    {
+        value := 5;
+        total = value;
+    }
+    return total;
+}

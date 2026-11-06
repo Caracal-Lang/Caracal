@@ -1995,6 +1995,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addTypeContainsItselfError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& fieldName, const std::string& typeName, const std::string& fieldTypeName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0110_TypeContainsItself,
+            source,
+            location,
+            "Use a dynamic array, such as '[" + fieldTypeName + "; _]'.");
+        diagnostic.addPrimaryLabel(location, "'" + fieldName + "' makes '" + typeName + "' contain itself.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addGlobalConstantNotComputableError(
         const SourceTextSharedPtr& source,
         const SourceLocation& location,

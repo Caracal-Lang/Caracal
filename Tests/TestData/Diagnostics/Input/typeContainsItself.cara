@@ -1,0 +1,4 @@
+type P
+{
+    next := P.new()
+}

@@ -1,0 +1,25 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+def localsOfDifferentTypesInBothBranches(condition: bool) i32
+{
+    total := 0;
+    if condition
+    {
+        value := 1;
+        total = value;
+    }
+    else
+    {
+        value := Point.new(5);
+        total = value.x;
+    }
+    return total;
+}

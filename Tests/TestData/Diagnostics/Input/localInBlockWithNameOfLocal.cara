@@ -1,0 +1,9 @@
+def localInBlockWithNameOfLocal() i32
+{
+    value := 1;
+    if value == 1
+    {
+        value := 2;
+    }
+    return value;
+}
