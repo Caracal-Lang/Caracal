@@ -1,0 +1,11 @@
+type Items(items: [i32; _])
+{
+    items := items
+}
+
+def main() i32
+{
+    holder :: Items.new([1, 2, ...]);
+    holder.items.at(0) = 5;
+    return holder.items.at(0);
+}

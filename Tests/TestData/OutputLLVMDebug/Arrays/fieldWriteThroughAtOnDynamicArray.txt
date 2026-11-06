@@ -1,0 +1,64 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @fieldWriteThroughAtOnDynamicArray() {
+entry:
+  %constructed = alloca %Point, align 8
+  %constructed1 = alloca %Point, align 8
+  %points = alloca { ptr, i32, i32 }, align 8
+  call void @Point.new(ptr %constructed, i32 1)
+  %load = load %Point, ptr %constructed, align 4
+  call void @Point.new(ptr %constructed1, i32 1)
+  %load2 = load %Point, ptr %constructed1, align 4
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 1
+  store i32 2, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr %Point, ptr %call, i32 0
+  store %Point %load, ptr %element, align 4
+  %element3 = getelementptr %Point, ptr %call, i32 1
+  store %Point %load2, ptr %element3, align 4
+  %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 0
+  %load5 = load ptr, ptr %data4, align 8
+  %element6 = getelementptr %Point, ptr %load5, i32 0
+  %x = getelementptr inbounds nuw %Point, ptr %element6, i32 0, i32 0
+  store i32 10, ptr %x, align 4
+  %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 0
+  %load8 = load ptr, ptr %data7, align 8
+  %element9 = getelementptr %Point, ptr %load8, i32 0
+  %x10 = getelementptr inbounds nuw %Point, ptr %element9, i32 0, i32 0
+  %load11 = load i32, ptr %x10, align 4
+  %multiply = mul i32 %load11, 100
+  %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 0
+  %load13 = load ptr, ptr %data12, align 8
+  %element14 = getelementptr %Point, ptr %load13, i32 1
+  %x15 = getelementptr inbounds nuw %Point, ptr %element14, i32 0, i32 0
+  %load16 = load i32, ptr %x15, align 4
+  %add = add i32 %multiply, %load16
+  ret i32 %add
+}
+
+define void @Point.new(ptr nonnull %0, i32 %1) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %x, align 4
+  ret void
+}
+
+; uselistorder directives
+uselistorder ptr @Point.new, { 1, 0 }

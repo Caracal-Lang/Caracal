@@ -1,0 +1,13 @@
+ Error T0106 Assignment to a value that is not a variable
+     ,-[Diagnostics/Input/methodResultAsAssignmentTarget.cara:14:5]
+  11 | def main() i32
+  12 | {
+  13 |     point := Point.new(1);
+  14 |     point.plus(1) = 5;
+     .     -------------
+     .           `-- This is a value, it has no place to store the assignment.
+  15 |     return point.x;
+  16 | }
+  17 | 
+     `----
+  Fix: Assign to a variable or remove the assignment.

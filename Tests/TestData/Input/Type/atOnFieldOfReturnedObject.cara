@@ -1,0 +1,14 @@
+type Box(values: [i32; 2])
+{
+    values := values
+}
+
+def makeBox() Box
+{
+    return Box.new([1, 2]);
+}
+
+def atOnFieldOfReturnedObject() i32
+{
+    return makeBox().values.at(1);
+}

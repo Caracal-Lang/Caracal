@@ -1,0 +1,17 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def counted(counter: ref i32) Point
+{
+    counter = counter %+ 1;
+    return Point.new(1);
+}
+
+def callInAssignmentTargetRunsOnce() i32
+{
+    counter := 0;
+    counted(ref counter).x = 5;
+    return counter;
+}

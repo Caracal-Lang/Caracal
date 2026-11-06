@@ -1,0 +1,13 @@
+ Error T0057 Assignment to constant
+     ,-[Diagnostics/Input/elementWriteThroughFieldOfConstant.cara:9:5]
+   6 | def main() i32
+   7 | {
+   8 |     holder :: Items.new([1, 2, ...]);
+   9 |     holder.items.at(0) = 5;
+     .     ------------------
+     .              `-- 'holder' is a constant and cannot be reassigned.
+  10 |     return holder.items.at(0);
+  11 | }
+  12 | 
+     `----
+  Fix: Declare 'holder' as a variable if it needs to change, or remove the assignment.

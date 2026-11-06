@@ -1,0 +1,13 @@
+def touch(counter: ref i32) i32
+{
+    counter = counter %+ 1;
+    return counter;
+}
+
+def elementWriteIndexRunsOnce() i32
+{
+    counter := 0;
+    numbers := [1, 2, 3];
+    numbers.at(touch(ref counter)) = 9;
+    return counter %* 10 %+ numbers.at(1);
+}

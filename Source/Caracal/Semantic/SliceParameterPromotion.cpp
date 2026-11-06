@@ -290,6 +290,23 @@ namespace Caracal
         }
     }
 
+    static bool AssignmentTargetStartsWithName(
+        const CompilationContext& context,
+        const CompilationUnit& unit,
+        u32 target,
+        const std::string& name)
+    {
+        const auto& buffer = unit.nodeBuffer;
+        const auto& tokens = context.tokenBuffer(unit.fileId);
+        auto current = NodeLayout::stripGroupings(buffer, target);
+        while (buffer.kind(current) == NodeKind::BinaryExpression && buffer.isMemberAccessBinary(tokens, current))
+        {
+            current = NodeLayout::stripGroupings(buffer, NodeLayout::binary(buffer, current).left);
+        }
+
+        return buffer.kind(current) == NodeKind::NameExpression && context.getLexeme(unit.fileId, buffer.mainToken(current)) == name;
+    }
+
     static void AnalyzeSliceParameterUsesInStatement(
         const CompilationContext& context,
         const CompilationUnit& unit,
@@ -325,6 +342,10 @@ namespace Caracal
             case NodeKind::AssignmentStatement:
             {
                 const auto assignmentLayout = NodeLayout::assignment(buffer, index);
+                if (AssignmentTargetStartsWithName(context, unit, assignmentLayout.target, name))
+                {
+                    usage.promotable = false;
+                }
                 AnalyzeSliceParameterUsesInExpression(context, unit, assignmentLayout.target, name, enclosingParameters, module, usage);
                 AnalyzeSliceParameterUsesInExpression(context, unit, assignmentLayout.value, name, enclosingParameters, module, usage);
                 return;

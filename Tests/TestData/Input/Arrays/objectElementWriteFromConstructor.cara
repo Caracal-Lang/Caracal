@@ -1,0 +1,11 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def objectElementWriteFromConstructor() i32
+{
+    points := [Point.new(1), Point.new(2)];
+    points.at(0) = Point.new(9);
+    return points.at(0).x %* 10 %+ points.at(1).x;
+}

@@ -1,0 +1,49 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define pick(%0: bool "value") i32
+block entry(0):
+    %0 = parameter 0 : bool "value"
+    branch if %0, if.true(1), if.continuation(2)
+block if.true(1):
+    %1 = const 1 : i32
+    return %1
+block if.continuation(2):
+    %2 = const 0 : i32
+    return %2
+
+define elementWriteIndexWithShortCircuit() i32
+block entry(0):
+    %slot0 = allocate_local : [i32; 3] "numbers"
+    %0 = const true : bool
+    %1 = address_of %slot0 : ref [i32; 3]
+    %2 = const 0 : i32
+    %3 = element_address %1[%2] : i32
+    %4 = const 1 : i32
+    store_value %4, %3 : i32
+    %5 = const 1 : i32
+    %6 = element_address %1[%5] : i32
+    %7 = const 2 : i32
+    store_value %7, %6 : i32
+    %8 = const 2 : i32
+    %9 = element_address %1[%8] : i32
+    %10 = const 3 : i32
+    store_value %10, %9 : i32
+    %11 = const 9 : i32
+    branch if %0, and.rhs(1), and.merge(2)
+block and.rhs(1):
+    jump and.merge(2)
+block and.merge(2):
+    %12 = phi [entry(0): %0], [and.rhs(1): %0] : bool
+    %13 = call pick(%12) : i32
+    %14 = element_address %1[%13] : i32
+    store_value %11, %14 : i32
+    %15 = const 1 : i32
+    %16 = element_address %1[%15] : i32
+    %17 = load_value %16 : i32
+    return %17

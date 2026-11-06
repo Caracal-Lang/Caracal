@@ -56,6 +56,12 @@ namespace Caracal
         };
 
     public:
+        struct EmissionPosition
+        {
+            FunctionBuilder* builder = nullptr;
+            u32 blockIndex = 0;
+        };
+
         struct EnumFieldConstant
         {
             ConstantValue constant;
@@ -145,6 +151,8 @@ namespace Caracal
         [[nodiscard]] ValueRef beginGlobalInitConstruction(std::string_view name, Type type);
         void resumeGlobalInitEffects();
         void suspendGlobalInit();
+        [[nodiscard]] EmissionPosition suspendEmission() noexcept;
+        void resumeEmission(EmissionPosition position) noexcept;
 
         void recordExternDefinition(Type functionType);
         void recordCalledPreludeFunction(Type functionType);

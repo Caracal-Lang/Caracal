@@ -1,0 +1,13 @@
+ Error T0087 Mutating method call on constant
+    ,-[Diagnostics/Input/setOnElementOfConstantArray.cara:4:5]
+  1 | def main() i32
+  2 | {
+  3 |     grid :: [[1, 2], [3, 4]];
+  4 |     grid.at(0).set(1, 5);
+    .     ----------
+    .          `-- 'grid' is a constant and cannot be modified.
+  5 |     return grid.at(0).at(1);
+  6 | }
+  7 | 
+    `----
+  Fix: Declare 'grid' as a variable if it needs to change, or remove the 'set' call.

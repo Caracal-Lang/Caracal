@@ -1,0 +1,191 @@
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> i32
+    Name: touch
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: counter
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: counter
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: ref i32
+                            Name: counter
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: ref i32
+                Name: counter
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: elementWriteIndexRunsOnce
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: counter
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        VariableDeclaration: {
+            Type: [i32; 3]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 3]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; 3]
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: [i32; 3]
+                            Name: numbers
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (ref [i32; 3], i32) -> i32
+                            NameExpression: {
+                                Type: (ref [i32; 3], i32) -> i32
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                FunctionCallExpression: {
+                                    Type: i32
+                                    Function type: (ref i32) -> i32
+                                    NameExpression: {
+                                        Type: (ref i32) -> i32
+                                        Name: touch
+                                    }
+                                    ArgumentsNode(1): {
+                                        UnaryExpression: {
+                                            Type: ref i32
+                                            Operation: ReferenceOf
+                                            Expression: {
+                                                NameExpression: {
+                                                    Type: i32
+                                                    Name: counter
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 9
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: counter
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 10
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: [i32; 3]
+                                Name: numbers
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref [i32; 3], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref [i32; 3], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

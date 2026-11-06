@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+def main() i32
+{
+    point := Point.new(1);
+    point.plus(1) = 5;
+    return point.x;
+}

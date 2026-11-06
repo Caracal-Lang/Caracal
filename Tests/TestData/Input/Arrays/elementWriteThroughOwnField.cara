@@ -1,0 +1,16 @@
+type Items(items: [i32; _])
+{
+    items := items
+
+    def setFirst()
+    {
+        .items.at(0) = 9;
+    }
+}
+
+def elementWriteThroughOwnField() i32
+{
+    holder := Items.new([5, 6, ...]);
+    holder.setFirst();
+    return holder.items.at(0);
+}

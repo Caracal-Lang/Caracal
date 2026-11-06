@@ -863,6 +863,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addAssignmentToNonVariableError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0106_AssignmentToNonVariable,
+            source,
+            location,
+            "Assign to a variable or remove the assignment.");
+        diagnostic.addPrimaryLabel(location, "This is a value, it has no place to store the assignment.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addUnreachableCodeWarning(const SourceTextSharedPtr& source, const SourceLocation& location)
     {
         auto diagnostic = Diagnostic(
@@ -2287,6 +2300,11 @@ namespace Caracal
     const std::vector<Diagnostic>& DiagnosticsBag::diagnostics() const
     {
         return m_diagnostics;
+    }
+
+    void DiagnosticsBag::removeDiagnosticsAfter(size_t count)
+    {
+        m_diagnostics.erase(m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count), m_diagnostics.end());
     }
 
     int DiagnosticsBag::errorCount() const noexcept

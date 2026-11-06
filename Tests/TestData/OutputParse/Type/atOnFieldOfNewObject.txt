@@ -1,0 +1,115 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: atOnFieldOfNewObject
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: Box
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            ArrayLiteral(2): {
+                                                Type: undefined
+                                                NumberLiteral: 1
+                                                NumberLiteral: 2
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: values
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

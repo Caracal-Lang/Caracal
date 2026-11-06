@@ -1,0 +1,6 @@
+def elementWriteThroughNestedAt() i32
+{
+    grid := [[1, 2], [3, 4]];
+    grid.at(1).at(0) = 9;
+    return grid.at(1).at(0) %* 100 %+ grid.at(0).at(0);
+}

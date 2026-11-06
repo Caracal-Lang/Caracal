@@ -1,0 +1,13 @@
+ Error T0057 Assignment to constant
+    ,-[Diagnostics/Input/elementWriteThroughAtOnConstantArray.cara:4:5]
+  1 | def main() i32
+  2 | {
+  3 |     numbers :: [1, 2];
+  4 |     numbers.at(0) = 5;
+    .     -------------
+    .           `-- 'numbers' is a constant and cannot be reassigned.
+  5 |     return numbers.at(0);
+  6 | }
+  7 | 
+    `----
+  Fix: Declare 'numbers' as a variable if it needs to change, or remove the assignment.

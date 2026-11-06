@@ -1,0 +1,144 @@
+FunctionDefinitionStatement: {
+    Type: ([i32]) -> void
+    Name: fill
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32]
+                Lexeme: [i32]
+                Kind: Slice
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(1): {
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: [i32]
+                            Name: values
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (ref [i32], i32) -> i32
+                            NameExpression: {
+                                Type: (ref [i32], i32) -> i32
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 0
+                            }
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: elementWriteThroughSliceParameter
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: [i32; 2]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; 2]
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        ExpressionStatement: {
+            FunctionCallExpression: {
+                Type: void
+                Function type: ([i32]) -> void
+                NameExpression: {
+                    Type: ([i32]) -> void
+                    Name: fill
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: [i32]
+                        Left: {
+                            NameExpression: {
+                                Type: [i32; 2]
+                                Name: numbers
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: [i32]
+                                Function type: (ref [i32; 2]) -> [i32]
+                                NameExpression: {
+                                    Type: (ref [i32; 2]) -> [i32]
+                                    Name: slice
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: [i32; 2]
+                        Name: numbers
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; 2], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; 2], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

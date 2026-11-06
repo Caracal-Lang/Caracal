@@ -1,0 +1,165 @@
+FunctionDefinitionStatement: {
+    Type: (bool) -> i32
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: value
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: elementWriteIndexWithShortCircuit
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: bool
+            Left: {
+                NameExpression: {
+                    Type: bool
+                    Name: flag
+                }
+            }
+            Right: {
+                BoolLiteral: true
+            }
+        }
+        VariableDeclaration: {
+            Type: [i32; 3]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 3]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; 3]
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: [i32; 3]
+                            Name: numbers
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (ref [i32; 3], i32) -> i32
+                            NameExpression: {
+                                Type: (ref [i32; 3], i32) -> i32
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                FunctionCallExpression: {
+                                    Type: i32
+                                    Function type: (bool) -> i32
+                                    NameExpression: {
+                                        Type: (bool) -> i32
+                                        Name: pick
+                                    }
+                                    ArgumentsNode(1): {
+                                        BinaryExpression: {
+                                            Type: bool
+                                            Left: {
+                                                NameExpression: {
+                                                    Type: bool
+                                                    Name: flag
+                                                }
+                                            }
+                                            Operation: LogicalAnd
+                                            Right: {
+                                                NameExpression: {
+                                                    Type: bool
+                                                    Name: flag
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 9
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: [i32; 3]
+                        Name: numbers
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; 3], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; 3], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

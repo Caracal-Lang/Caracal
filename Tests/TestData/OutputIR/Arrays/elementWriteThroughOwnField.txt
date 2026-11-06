@@ -1,0 +1,70 @@
+type Items
+    items: [i32; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define elementWriteThroughOwnField() i32
+block entry(0):
+    %slot0 = allocate_local : Items "holder"
+    %slot1 = allocate_local : [i32; _] "temp"
+    %0 = address_of %slot0 : ref Items
+    %1 = address_of %slot1 : ref [i32; _]
+    %2 = const 8 : i64
+    %3 = size_of i32 : i64
+    %4 = call C.calloc(%2, %3) : rawptr
+    %5 = address_of_field %1.0 : ref i32 "data"
+    store_value %4, %5 : ref i32
+    %6 = const 2 : i32
+    %7 = address_of_field %1.1 : ref i32 "length"
+    store_value %6, %7 : i32
+    %8 = const 8 : i32
+    %9 = address_of_field %1.2 : ref i32 "capacity"
+    store_value %8, %9 : i32
+    %10 = const 0 : i32
+    %11 = element_address %4[%10] : i32
+    %12 = const 5 : i32
+    store_value %12, %11 : i32
+    %13 = const 1 : i32
+    %14 = element_address %4[%13] : i32
+    %15 = const 6 : i32
+    store_value %15, %14 : i32
+    %16 = load_value %1 : [i32; _]
+    call Items.new(%0, %16)
+    call Items.setFirst(%0)
+    %17 = address_of_field %0.0 : ref [i32; _] "items"
+    %18 = const 0 : i32
+    %19 = address_of_field %17.0 : ref i32 "data"
+    %20 = load_value %19 : ref i32
+    %21 = element_address %20[%18] : i32
+    %22 = load_value %21 : i32
+    return %22
+
+define Items.setFirst(%0: ref Items ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Items ".this"
+    %1 = const 9 : i32
+    %2 = address_of_field %0.0 : ref [i32; _] "items"
+    %3 = const 0 : i32
+    %4 = address_of_field %2.0 : ref i32 "data"
+    %5 = load_value %4 : ref i32
+    %6 = element_address %5[%3] : i32
+    store_value %1, %6 : i32
+    return
+
+define Items.new(%0: ref Items ".this", %1: [i32; _] "items") void
+block entry(0):
+    %0 = parameter 0 : ref Items ".this"
+    %1 = parameter 1 : [i32; _] "items"
+    %slot0 = allocate_local : [i32; _] "temp"
+    %2 = address_of %slot0 : ref [i32; _]
+    store_value %1, %2 : [i32; _]
+    %3 = array_copy %2 : [i32; _]
+    %4 = address_of_field %0.0 : ref [i32; _] "items"
+    store_value %3, %4 : [i32; _]
+    return

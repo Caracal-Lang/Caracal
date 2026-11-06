@@ -1,0 +1,7 @@
+def main() i32
+{
+    text := "Hello";
+    view := text.slice();
+    view.at(0) = 74'u8;
+    return 0;
+}

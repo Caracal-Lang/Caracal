@@ -1,0 +1,173 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> Point
+    Name: counted
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: counter
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: Point
+            Lexeme: Point
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: counter
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: ref i32
+                            Name: counter
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: Point
+            BinaryExpression: {
+                Type: Point
+                Left: {
+                    NameExpression: {
+                        Type: Point
+                        Name: Point
+                    }
+                }
+                Operation: ConstructorCall
+                Right: {
+                    FunctionCallExpression: {
+                        Type: Point
+                        Function type: (ref Point, i32) -> void
+                        NameExpression: {
+                            Type: (ref Point, i32) -> void
+                            Name: new
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callInAssignmentTargetRunsOnce
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: counter
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref i32) -> Point
+                            NameExpression: {
+                                Type: (ref i32) -> Point
+                                Name: counted
+                            }
+                            ArgumentsNode(1): {
+                                UnaryExpression: {
+                                    Type: ref i32
+                                    Operation: ReferenceOf
+                                    Expression: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: counter
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: x
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: counter
+            }
+        }
+    }
+}

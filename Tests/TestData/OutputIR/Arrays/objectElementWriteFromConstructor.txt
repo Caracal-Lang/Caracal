@@ -1,0 +1,59 @@
+type Point
+    x: i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define objectElementWriteFromConstructor() i32
+block entry(0):
+    %slot0 = allocate_local : Point "constructed"
+    %slot1 = allocate_local : Point "constructed"
+    %slot2 = allocate_local : [Point; 2] "points"
+    %slot3 = allocate_local : Point "constructed"
+    %0 = address_of %slot0 : ref Point
+    %1 = const 1 : i32
+    call Point.new(%0, %1)
+    %2 = load_value %0 : Point
+    %3 = address_of %slot1 : ref Point
+    %4 = const 2 : i32
+    call Point.new(%3, %4)
+    %5 = load_value %3 : Point
+    %6 = address_of %slot2 : ref [Point; 2]
+    %7 = const 0 : i32
+    %8 = element_address %6[%7] : Point
+    store_value %2, %8 : Point
+    %9 = const 1 : i32
+    %10 = element_address %6[%9] : Point
+    store_value %5, %10 : Point
+    %11 = address_of %slot3 : ref Point
+    %12 = const 9 : i32
+    call Point.new(%11, %12)
+    %13 = load_value %11 : Point
+    %14 = const 0 : i32
+    %15 = element_address %6[%14] : Point
+    store_value %13, %15 : Point
+    %16 = const 0 : i32
+    %17 = element_address %6[%16] : Point
+    %18 = address_of_field %17.0 : ref i32 "x"
+    %19 = load_value %18 : i32
+    %20 = const 10 : i32
+    %21 = multiply %19, %20 : i32
+    %22 = const 1 : i32
+    %23 = element_address %6[%22] : Point
+    %24 = address_of_field %23.0 : ref i32 "x"
+    %25 = load_value %24 : i32
+    %26 = add %21, %25 : i32
+    return %26
+
+define Point.new(%0: ref Point ".this", %1: i32 "x") void
+block entry(0):
+    %0 = parameter 0 : ref Point ".this"
+    %1 = parameter 1 : i32 "x"
+    %2 = address_of_field %0.0 : ref i32 "x"
+    store_value %1, %2 : i32
+    return

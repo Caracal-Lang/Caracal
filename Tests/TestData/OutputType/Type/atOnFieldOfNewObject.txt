@@ -1,0 +1,115 @@
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32; 2]
+                Lexeme: [i32; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: values
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: values
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: atOnFieldOfNewObject
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; 2]
+                        Left: {
+                            BinaryExpression: {
+                                Type: Box
+                                Left: {
+                                    NameExpression: {
+                                        Type: Box
+                                        Name: Box
+                                    }
+                                }
+                                Operation: ConstructorCall
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: Box
+                                        Function type: (ref Box, [i32; 2]) -> void
+                                        NameExpression: {
+                                            Type: (ref Box, [i32; 2]) -> void
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            ArrayLiteral(2): {
+                                                Type: [i32; 2]
+                                                NumberLiteral: 1
+                                                NumberLiteral: 2
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; 2]
+                                Name: values
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; 2], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; 2], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

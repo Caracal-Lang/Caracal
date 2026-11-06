@@ -1,0 +1,7 @@
+def main() i32
+{
+    numbers :: [1, 2];
+    view := numbers.slice();
+    view.at(0) = 5;
+    return view.at(0);
+}

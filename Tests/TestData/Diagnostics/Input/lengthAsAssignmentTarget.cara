@@ -1,0 +1,6 @@
+def main() i32
+{
+    numbers := [1, 2, ...];
+    numbers.length = 5;
+    return numbers.length;
+}

@@ -1283,7 +1283,7 @@ namespace Caracal
         auto context = ExpressionContext{};
         context.contextualNumberType = contextualTypeForExpectedType(parameterType);
         const auto checkedDefault = typeCheckExpression(defaultUnit, defaultNode.index, context);
-        const auto defaultValue = materializeAssignedValue(defaultUnit, defaultNode.index, checkedDefault);
+        const auto defaultValue = materializeExpressionValue(defaultUnit, defaultNode.index, checkedDefault);
         if (defaultValue.id() < 0)
         {
             return ValueRef{};
@@ -1990,9 +1990,7 @@ namespace Caracal
         const auto strippedLayout = NodeLayout::binary(unit.nodeBuffer, stripped);
         if (unit.nodeBuffer.kind(strippedLayout.right) == NodeKind::FunctionCallExpression)
         {
-            const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedLayout.right) });
-            const auto* definition = m_module.tryGetFunctionDefinition(methodType);
-            return definition != nullptr && definition->intrinsicKind() == IntrinsicKind::ArrayAt;
+            return isArrayAtCall(unit, strippedLayout.right);
         }
 
         if (unit.nodeBuffer.kind(strippedLayout.right) == NodeKind::NameExpression)
@@ -2001,6 +1999,67 @@ namespace Caracal
         }
 
         return false;
+    }
+
+    bool TypeChecker::isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const
+    {
+        const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, callIndex) });
+        const auto* definition = m_module.tryGetFunctionDefinition(methodType);
+        return definition != nullptr && definition->intrinsicKind() == IntrinsicKind::ArrayAt;
+    }
+
+    void TypeChecker::reportWriteToConstantReceiver(const CompilationUnit& unit, u32 receiverIndex, u32 targetIndex)
+    {
+        auto rootName = std::string{};
+        auto rootReferencesConstant = false;
+        if (!receiverChainIsConstant(unit, receiverIndex, rootName, rootReferencesConstant))
+        {
+            return;
+        }
+
+        const auto location = NodeSpans::expressionLocation(unit.nodeBuffer, m_compilationContext.tokenBuffer(unit.fileId), targetIndex);
+        if (rootReferencesConstant)
+        {
+            m_diagnostics.addAssignmentThroughConstantReferenceError(unit.source, location, rootName);
+        }
+        else
+        {
+            m_diagnostics.addAssignmentToConstantError(unit.source, location, rootName);
+        }
+    }
+
+    bool TypeChecker::assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        auto current = NodeLayout::stripGroupings(unit.nodeBuffer, targetIndex);
+        while (unit.nodeBuffer.kind(current) == NodeKind::BinaryExpression && unit.nodeBuffer.isMemberAccessBinary(tokens, current))
+        {
+            const auto layout = NodeLayout::binary(unit.nodeBuffer, current);
+            if (unit.nodeBuffer.kind(layout.right) == NodeKind::FunctionCallExpression)
+            {
+                return true;
+            }
+
+            current = NodeLayout::stripGroupings(unit.nodeBuffer, layout.left);
+        }
+
+        return unit.nodeBuffer.kind(current) == NodeKind::FunctionCallExpression;
+    }
+
+    ValueRef TypeChecker::emitAssignmentTargetAddress(const CompilationUnit& unit, u32 targetIndex)
+    {
+        if (!assignmentTargetGoesThroughCall(unit, targetIndex))
+        {
+            return addressOfExpression(unit, targetIndex);
+        }
+
+        const auto diagnosticCount = m_diagnostics.diagnostics().size();
+        auto context = ExpressionContext{};
+        context.wantsAddress = true;
+        context.receiverPosition = true;
+        const auto address = typeCheckExpression(unit, targetIndex, context).value;
+        m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+        return address;
     }
 
     void TypeChecker::reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex)
@@ -2163,13 +2222,14 @@ namespace Caracal
         return temp;
     }
 
-    ValueRef TypeChecker::materializeAssignedValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue)
+    ValueRef TypeChecker::materializeExpressionValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue)
     {
         // an array literal has no value until its elements are written to a slot
         const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, valueIndex);
-        if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral)
+        const auto type = checkedValue.type.toValue();
+        if (unit.nodeBuffer.kind(stripped) == NodeKind::ArrayLiteral
+            && (type.kind() == TypeKind::FixedArray || type.kind() == TypeKind::DynamicArray))
         {
-            const auto type = checkedValue.type.toValue();
             return m_emitter.emitLoad(emitArrayLiteralToTempSlot(unit, stripped, type), type);
         }
 
@@ -3490,8 +3550,18 @@ namespace Caracal
         {
             const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
             const auto binaryLayout = NodeLayout::binary(unit.nodeBuffer, stripped);
-            if (!unit.nodeBuffer.isMemberAccessBinary(tokens, stripped)
-                || unit.nodeBuffer.kind(binaryLayout.right) != NodeKind::NameExpression)
+            if (!unit.nodeBuffer.isMemberAccessBinary(tokens, stripped))
+            {
+                return false;
+            }
+
+            if (unit.nodeBuffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression)
+            {
+                return isArrayAtCall(unit, binaryLayout.right)
+                    && receiverChainIsConstant(unit, binaryLayout.left, rootName, referencesConstant);
+            }
+
+            if (unit.nodeBuffer.kind(binaryLayout.right) != NodeKind::NameExpression)
             {
                 return false;
             }
@@ -3528,7 +3598,10 @@ namespace Caracal
 
         auto targetContext = ExpressionContext{};
         targetContext.wantsAddress = true;
+
+        const auto emissionPosition = m_emitter.suspendEmission();
         auto leftType = typeCheckExpression(unit, assignmentLayout.target, targetContext).type;
+        m_emitter.resumeEmission(emissionPosition);
         const auto targetIsReference = leftType.isReference();
         if (leftType.isReference())
         {
@@ -3574,55 +3647,37 @@ namespace Caracal
                     targetName);
             }
         }
-        else if (leftKind == NodeKind::BinaryExpression)
+        else if (leftKind == NodeKind::BinaryExpression
+            && unit.nodeBuffer.isMemberAccessBinary(tokens, assignmentLayout.target)
+            && leftType != Type::Undefined())
         {
             const auto memberLayout = NodeLayout::binary(unit.nodeBuffer, assignmentLayout.target);
-            if (unit.nodeBuffer.isMemberAccessBinary(tokens, assignmentLayout.target)
-                && unit.nodeBuffer.kind(memberLayout.right) == NodeKind::NameExpression)
+            const auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
+            const auto isField = unit.nodeBuffer.kind(memberLayout.right) == NodeKind::NameExpression && receiverType.kind() == TypeKind::Type;
+            const auto isElement = unit.nodeBuffer.kind(memberLayout.right) == NodeKind::FunctionCallExpression && isArrayAtCall(unit, memberLayout.right);
+            if (!isField && !isElement)
             {
-                auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, memberLayout.left });
-                if (receiverType.isReference())
-                {
-                    receiverType = receiverType.toValue();
-                }
-
-                if (receiverType.kind() == TypeKind::Type
-                    && m_module.typeOfNode(NodeIndex{ unit.fileId, assignmentLayout.target }) != Type::Undefined())
-                {
-                    auto& typeDefinition = m_module.getTypeDefinition(receiverType);
-                    const auto fieldName = std::string(nameOf(unit, memberLayout.right));
-                    const auto& fieldDefinition = typeDefinition.tryGetFieldByName(fieldName);
-                    if (fieldDefinition.type() != Type::Undefined() && fieldDefinition.isConstant())
-                    {
-                        m_diagnostics.addAssignmentToConstantError(
-                            unit.source,
-                            NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.target),
-                            fieldName);
-                    }
-                    else
-                    {
-                        // a constant receiver makes every field along the chain const
-                        auto rootName = std::string{};
-                        auto rootReferencesConstant = false;
-                        if (receiverChainIsConstant(unit, memberLayout.left, rootName, rootReferencesConstant))
-                        {
-                            if (rootReferencesConstant)
-                            {
-                                m_diagnostics.addAssignmentThroughConstantReferenceError(
-                                    unit.source,
-                                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.target),
-                                    rootName);
-                            }
-                            else
-                            {
-                                m_diagnostics.addAssignmentToConstantError(
-                                    unit.source,
-                                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.target),
-                                    rootName);
-                            }
-                        }
-                    }
-                }
+                // p.plus(1) = 5 or xs.length = 5
+                m_diagnostics.addAssignmentToNonVariableError(unit.source, NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.target));
+                leftType = Type::Undefined();
+            }
+            else if (isElement && m_module.isImmutableSlice(receiverType))
+            {
+                m_diagnostics.addMutatingMethodOnImmutableSliceError(
+                    unit.source,
+                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, memberLayout.left),
+                    "at");
+            }
+            else if (isField && m_module.getTypeDefinition(receiverType).tryGetFieldByName(nameOf(unit, memberLayout.right)).isConstant())
+            {
+                m_diagnostics.addAssignmentToConstantError(
+                    unit.source,
+                    NodeSpans::expressionLocation(unit.nodeBuffer, tokens, assignmentLayout.target),
+                    std::string(nameOf(unit, memberLayout.right)));
+            }
+            else
+            {
+                reportWriteToConstantReceiver(unit, memberLayout.left, assignmentLayout.target);
             }
         }
         // a dynamic array assigned from a name is deep copied through the name's address
@@ -3720,14 +3775,20 @@ namespace Caracal
         }
 
         // a constructor right side already stored through the target's address
-        if (!pushedAssignmentConstruction && leftKind == NodeKind::NameExpression)
+        if (pushedAssignmentConstruction)
         {
-            auto assignedValue = m_emitter.emitWidened(materializeAssignedValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
-            if (dynamicAssignmentCopy)
-            {
-                const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
-                assignedValue = m_emitter.emitArrayCopy(sourceAddress, leftType.toValue());
-            }
+            return;
+        }
+
+        auto assignedValue = m_emitter.emitWidened(materializeExpressionValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
+        if (dynamicAssignmentCopy)
+        {
+            const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
+            assignedValue = m_emitter.emitArrayCopy(sourceAddress, leftType.toValue());
+        }
+
+        if (leftKind == NodeKind::NameExpression)
+        {
             const auto* emitBinding = tryGetBinding(nameIdOf(unit, assignmentLayout.target));
             if (emitBinding != nullptr && emitBinding->scopeIndex == 0 && !currentScopeIsGlobal())
             {
@@ -3738,14 +3799,11 @@ namespace Caracal
                 m_emitter.emitLocalAssignment(nameIdOf(unit, assignmentLayout.target), assignedValue);
             }
         }
-        else if (!pushedAssignmentConstruction
-            && (leftKind == NodeKind::MemberAccessExpression
-                || (leftKind == NodeKind::BinaryExpression && unit.nodeBuffer.isMemberAccessBinary(tokens, assignmentLayout.target))))
+        else if (leftKind == NodeKind::MemberAccessExpression
+            || (leftKind == NodeKind::BinaryExpression && unit.nodeBuffer.isMemberAccessBinary(tokens, assignmentLayout.target)))
         {
-            // a field assignment emits the value before the field's address
             // nested fields like a.b.c resolve their address recursively
-            const auto assignedValue = m_emitter.emitWidened(materializeAssignedValue(unit, assignmentLayout.value, checkedRight), rightType.toValue(), leftType.toValue());
-            const auto targetAddress = addressOfExpression(unit, assignmentLayout.target);
+            const auto targetAddress = emitAssignmentTargetAddress(unit, assignmentLayout.target);
             if (targetAddress.id() < 0)
             {
                 m_emitter.recordEmissionFailure();
@@ -4433,15 +4491,7 @@ namespace Caracal
                 }
             }
 
-            const auto strippedReturn = NodeLayout::stripGroupings(unit.nodeBuffer, value.child);
-            if (unit.nodeBuffer.kind(strippedReturn) == NodeKind::ArrayLiteral
-                && (type.kind() == TypeKind::FixedArray || type.kind() == TypeKind::DynamicArray))
-            {
-                // a literal materializes in a temp slot and returns that
-                checkedValue.value = m_emitter.emitLoad(emitArrayLiteralToTempSlot(unit, strippedReturn, type), type);
-            }
-
-            m_emitter.emitReturnValue(m_emitter.emitWidened(materializeValue(checkedValue), type.toValue(), declaredReturnType.toValue()));
+            m_emitter.emitReturnValue(m_emitter.emitWidened(materializeExpressionValue(unit, value.child, checkedValue), type.toValue(), declaredReturnType.toValue()));
         }
         else
         {
@@ -4966,7 +5016,7 @@ namespace Caracal
                             {
                                 receiverAddress = checkedLeft.value;
                             }
-                            if (receiverAddress.id() < 0 && !context.wantsAddress)
+                            if (receiverAddress.id() < 0)
                             {
                                 // a temporary receiver spills so the field has an address
                                 receiverAddress = m_emitter.spillToTempSlot(materializeValue(checkedLeft), leftType.toValue());

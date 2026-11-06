@@ -1,0 +1,197 @@
+TypeDefinitionStatement: {
+    Type: Items
+    Name: Items
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: items
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Items) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: setFirst
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: [i32; _]
+                                        Name: items
+                                    }
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: i32
+                                    Function type: (ref [i32; _], i32) -> i32
+                                    NameExpression: {
+                                        Type: (ref [i32; _], i32) -> i32
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Right: {
+                        NumberLiteral: 9
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: elementWriteThroughOwnField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Items
+            Left: {
+                NameExpression: {
+                    Type: Items
+                    Name: holder
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Items
+                    Left: {
+                        NameExpression: {
+                            Type: Items
+                            Name: Items
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Items
+                            Function type: (ref Items, [i32; _]) -> void
+                            NameExpression: {
+                                Type: (ref Items, [i32; _]) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                ArrayLiteral(2): {
+                                    Type: [i32; _]
+                                    Dynamic: true
+                                    NumberLiteral: 5
+                                    NumberLiteral: 6
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Items
+                        Name: holder
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Items) -> void
+                        NameExpression: {
+                            Type: (ref Items) -> void
+                            Name: setFirst
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; _]
+                        Left: {
+                            NameExpression: {
+                                Type: Items
+                                Name: holder
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; _], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; _], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

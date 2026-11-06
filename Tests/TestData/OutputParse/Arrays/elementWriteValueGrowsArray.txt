@@ -1,0 +1,263 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: grow
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: items
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; _]
+                Ref: true
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: count
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        WhileStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: count
+                        }
+                    }
+                    Operation: LessThan
+                    Right: {
+                        NumberLiteral: 64
+                    }
+                }
+            }
+            True: {
+                BlockNode(2): {
+                    ExpressionStatement: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: items
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: undefined
+                                    Function type: undefined
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: add
+                                    }
+                                    ArgumentsNode(1): {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: count
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    AssignmentStatement: {
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: count
+                            }
+                        }
+                        Right: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: count
+                                    }
+                                }
+                                Operation: AdditionWrapping
+                                Right: {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 7
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: elementWriteValueGrowsArray
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: undefined
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: numbers
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 0
+                            }
+                        }
+                    }
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: undefined
+                    Function type: undefined
+                    NameExpression: {
+                        Type: undefined
+                        Name: grow
+                    }
+                    ArgumentsNode(1): {
+                        UnaryExpression: {
+                            Type: undefined
+                            Operation: ReferenceOf
+                            Expression: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: numbers
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: numbers
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 100
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: numbers
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

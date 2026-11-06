@@ -1,0 +1,53 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @objectElementWriteFromConstructor() {
+entry:
+  %constructed = alloca %Point, align 8
+  %constructed1 = alloca %Point, align 8
+  %points = alloca [2 x %Point], align 8
+  %constructed2 = alloca %Point, align 8
+  call void @Point.new(ptr %constructed, i32 1)
+  %load = load %Point, ptr %constructed, align 4
+  call void @Point.new(ptr %constructed1, i32 2)
+  %load3 = load %Point, ptr %constructed1, align 4
+  %element = getelementptr [2 x %Point], ptr %points, i32 0, i32 0
+  store %Point %load, ptr %element, align 4
+  %element4 = getelementptr [2 x %Point], ptr %points, i32 0, i32 1
+  store %Point %load3, ptr %element4, align 4
+  call void @Point.new(ptr %constructed2, i32 9)
+  %load5 = load %Point, ptr %constructed2, align 4
+  %element6 = getelementptr [2 x %Point], ptr %points, i32 0, i32 0
+  store %Point %load5, ptr %element6, align 4
+  %element7 = getelementptr [2 x %Point], ptr %points, i32 0, i32 0
+  %x = getelementptr inbounds nuw %Point, ptr %element7, i32 0, i32 0
+  %load8 = load i32, ptr %x, align 4
+  %multiply = mul i32 %load8, 10
+  %element9 = getelementptr [2 x %Point], ptr %points, i32 0, i32 1
+  %x10 = getelementptr inbounds nuw %Point, ptr %element9, i32 0, i32 0
+  %load11 = load i32, ptr %x10, align 4
+  %add = add i32 %multiply, %load11
+  ret i32 %add
+}
+
+define void @Point.new(ptr nonnull %0, i32 %1) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %x, align 4
+  ret void
+}
+
+; uselistorder directives
+uselistorder ptr @Point.new, { 2, 1, 0 }

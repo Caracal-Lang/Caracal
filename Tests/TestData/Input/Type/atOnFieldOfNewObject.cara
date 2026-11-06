@@ -1,0 +1,9 @@
+type Box(values: [i32; 2])
+{
+    values := values
+}
+
+def atOnFieldOfNewObject() i32
+{
+    return Box.new([1, 2]).values.at(1);
+}

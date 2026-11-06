@@ -1,0 +1,70 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define grow(%0: ref [i32; _] "items") i32
+block entry(0):
+    %0 = parameter 0 : ref [i32; _] "items"
+    %1 = const 0 : i32
+    jump while.condition(1)
+block while.condition(1):
+    %2 = phi [entry(0): %1], [while.body(2): %6] : i32
+    %3 = const 64 : i32
+    %4 = less_than %2, %3 : bool
+    branch if %4, while.body(2), while.continuation(3)
+block while.body(2):
+    array_add %0, %2 : [i32; _]
+    %5 = const 1 : i32
+    %6 = add %2, %5 : i32
+    jump while.condition(1)
+block while.continuation(3):
+    %7 = const 7 : i32
+    return %7
+
+define elementWriteValueGrowsArray() i32
+block entry(0):
+    %slot0 = allocate_local : [i32; _] "numbers"
+    %0 = address_of %slot0 : ref [i32; _]
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call C.calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 1 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
+    store_value %14, %13 : i32
+    %15 = call grow(%0) : i32
+    %16 = const 0 : i32
+    %17 = address_of_field %0.0 : ref i32 "data"
+    %18 = load_value %17 : ref i32
+    %19 = element_address %18[%16] : i32
+    store_value %15, %19 : i32
+    %20 = const 0 : i32
+    %21 = address_of_field %0.0 : ref i32 "data"
+    %22 = load_value %21 : ref i32
+    %23 = element_address %22[%20] : i32
+    %24 = load_value %23 : i32
+    %25 = const 100 : i32
+    %26 = multiply %24, %25 : i32
+    %27 = const 1 : i32
+    %28 = address_of_field %0.0 : ref i32 "data"
+    %29 = load_value %28 : ref i32
+    %30 = element_address %29[%27] : i32
+    %31 = load_value %30 : i32
+    %32 = add %26, %31 : i32
+    return %32

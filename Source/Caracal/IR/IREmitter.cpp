@@ -1545,6 +1545,20 @@ namespace Caracal
         m_currentBlockIndex = NoBlockIndex;
     }
 
+    IREmitter::EmissionPosition IREmitter::suspendEmission() noexcept
+    {
+        const auto position = EmissionPosition{ m_currentBuilder, m_currentBlockIndex };
+        m_currentBuilder = nullptr;
+        m_currentBlockIndex = NoBlockIndex;
+        return position;
+    }
+
+    void IREmitter::resumeEmission(EmissionPosition position) noexcept
+    {
+        m_currentBuilder = position.builder;
+        m_currentBlockIndex = position.blockIndex;
+    }
+
     ValueRef IREmitter::emitGlobalAddress(std::string_view name)
     {
         if (!canEmit())

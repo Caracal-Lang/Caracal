@@ -1,0 +1,13 @@
+ Error T0095 Immutable slices cannot be mutated
+    ,-[Diagnostics/Input/elementWriteThroughImmutableSlice.cara:5:5]
+  2 | {
+  3 |     text := "Hello";
+  4 |     view := text.slice();
+  5 |     view.at(0) = 74'u8;
+    .     ----
+    .       `-- 'at' mutates an immutable slice
+  6 |     return 0;
+  7 | }
+  8 | 
+    `----
+  Fix: Immutable slices provide read-only access. Copy the bytes into a new array to modify them.

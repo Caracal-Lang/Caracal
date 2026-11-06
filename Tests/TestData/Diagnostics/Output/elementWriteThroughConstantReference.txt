@@ -1,0 +1,13 @@
+ Error T0058 Assignment through reference to constant
+    ,-[Diagnostics/Input/elementWriteThroughConstantReference.cara:5:5]
+  2 | {
+  3 |     numbers :: [1, 2];
+  4 |     view := numbers.slice();
+  5 |     view.at(0) = 5;
+    .     ----------
+    .          `-- 'view' references a constant and cannot be written through.
+  6 |     return view.at(0);
+  7 | }
+  8 | 
+    `----
+  Fix: Reference a variable instead if it needs to change, or remove the assignment.

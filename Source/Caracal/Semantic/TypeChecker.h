@@ -190,13 +190,17 @@ namespace Caracal
         [[nodiscard]] Type resolveAggregateInitializerType(const CompilationUnit& unit, Type declaredType, u32 strippedInitializer, Type constructedType, bool& initializerWantsAddress);
         void emitLocalBinding(const CompilationUnit& unit, u32 nameId, std::string_view name, Type bindingType, Type rightType, u32 strippedRight, const CheckedValue& checkedRight, bool referencesConstant, ValueRef aggregateDestination, bool constructorFilled);
         [[nodiscard]] bool memberLeftYieldsAddress(const CompilationUnit& unit, u32 leftIndex);
+        [[nodiscard]] bool isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const;
+        [[nodiscard]] bool assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const;
+        [[nodiscard]] ValueRef emitAssignmentTargetAddress(const CompilationUnit& unit, u32 targetIndex);
+        void reportWriteToConstantReceiver(const CompilationUnit& unit, u32 receiverIndex, u32 targetIndex);
         void recordExpressionEnumFieldConstant(const CompilationUnit& unit, Type enumType, std::string_view fieldName, u32 expressionIndex, const CheckedValue& checkedFieldValue);
         [[nodiscard]] std::string escapedStringContent(const CompilationUnit& unit, u32 literalIndex);
         void reportBinaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index, u32 rightIndex);
         void reportUnaryFoldFailure(const CompilationUnit& unit, FoldResultKind kind, Type operandType, u32 index);
         void emitCapturedArrayLiteral(const CompilationUnit& unit, u32 literalIndex, ValueRef destination, Type arrayType);
         [[nodiscard]] ValueRef emitArrayLiteralToTempSlot(const CompilationUnit& unit, u32 literalIndex, Type arrayType);
-        [[nodiscard]] ValueRef materializeAssignedValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue);
+        [[nodiscard]] ValueRef materializeExpressionValue(const CompilationUnit& unit, u32 valueIndex, const CheckedValue& checkedValue);
         [[nodiscard]] std::optional<ConstantValue> tryBuildAggregateConstant(const CompilationUnit& unit, u32 literalIndex);
         [[nodiscard]] CheckedValue typeCheckNumberLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);
         [[nodiscard]] CheckedValue typeCheckArrayLiteral(const CompilationUnit& unit, u32 index, const ExpressionContext& context);

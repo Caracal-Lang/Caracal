@@ -1,0 +1,11 @@
+def fill(values: [i32])
+{
+    values.at(0) = 5;
+}
+
+def elementWriteThroughSliceParameter() i32
+{
+    numbers := [1, 2];
+    fill(numbers.slice());
+    return numbers.at(0);
+}

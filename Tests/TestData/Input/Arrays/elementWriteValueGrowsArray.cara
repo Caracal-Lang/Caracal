@@ -1,0 +1,17 @@
+def grow(items: ref [i32; _]) i32
+{
+    count := 0;
+    while count < 64
+    {
+        items.add(count);
+        count = count %+ 1;
+    }
+    return 7;
+}
+
+def elementWriteValueGrowsArray() i32
+{
+    numbers := [1, 2, ...];
+    numbers.at(0) = grow(ref numbers);
+    return numbers.at(0) %* 100 %+ numbers.at(1);
+}

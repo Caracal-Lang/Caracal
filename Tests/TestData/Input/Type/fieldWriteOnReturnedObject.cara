@@ -1,0 +1,15 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def makePoint(x: i32) Point
+{
+    return Point.new(x);
+}
+
+def fieldWriteOnReturnedObject() i32
+{
+    makePoint(1).x = 5;
+    return 7;
+}

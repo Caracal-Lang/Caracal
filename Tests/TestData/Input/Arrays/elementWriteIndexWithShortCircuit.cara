@@ -1,0 +1,16 @@
+def pick(value: bool) i32
+{
+    if value
+    {
+        return 1;
+    }
+    return 0;
+}
+
+def elementWriteIndexWithShortCircuit() i32
+{
+    flag := true;
+    numbers := [1, 2, 3];
+    numbers.at(pick(flag and flag)) = 9;
+    return numbers.at(1);
+}

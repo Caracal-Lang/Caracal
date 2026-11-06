@@ -1,0 +1,50 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define touch(%0: ref i32 "counter") i32
+block entry(0):
+    %0 = parameter 0 : ref i32 "counter"
+    %1 = load_value %0 : i32
+    %2 = const 1 : i32
+    %3 = add %1, %2 : i32
+    store_value %3, %0 : i32
+    %4 = load_value %0 : i32
+    return %4
+
+define elementWriteValueBeforeIndex() i32
+block entry(0):
+    %slot0 = allocate_local : i32 "counter"
+    %slot1 = allocate_local : [i32; 3] "numbers"
+    %0 = const 0 : i32
+    %1 = address_of %slot0 : ref i32
+    store_value %0, %1 : i32
+    %2 = address_of %slot1 : ref [i32; 3]
+    %3 = const 0 : i32
+    %4 = element_address %2[%3] : i32
+    %5 = const 0 : i32
+    store_value %5, %4 : i32
+    %6 = const 1 : i32
+    %7 = element_address %2[%6] : i32
+    %8 = const 0 : i32
+    store_value %8, %7 : i32
+    %9 = const 2 : i32
+    %10 = element_address %2[%9] : i32
+    %11 = const 0 : i32
+    store_value %11, %10 : i32
+    %12 = call touch(%1) : i32
+    %13 = call touch(%1) : i32
+    %14 = element_address %2[%13] : i32
+    store_value %12, %14 : i32
+    %15 = const 2 : i32
+    %16 = element_address %2[%15] : i32
+    %17 = load_value %16 : i32
+    %18 = const 10 : i32
+    %19 = multiply %17, %18 : i32
+    %20 = load_value %1 : i32
+    %21 = add %19, %20 : i32
+    return %21

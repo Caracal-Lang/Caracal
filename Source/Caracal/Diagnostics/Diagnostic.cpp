@@ -195,6 +195,8 @@ namespace Caracal
                 return "T0088";
             case DiagnosticKind::T0058_AssignmentThroughConstantReference:
                 return "T0058";
+            case DiagnosticKind::T0106_AssignmentToNonVariable:
+                return "T0106";
             case DiagnosticKind::T0059_UnreachableCode:
                 return "T0059";
             case DiagnosticKind::T0060_MissingReturn:
@@ -482,6 +484,8 @@ namespace Caracal
                 return "Mutating method call on reference to constant";
             case DiagnosticKind::T0058_AssignmentThroughConstantReference:
                 return "Assignment through reference to constant";
+            case DiagnosticKind::T0106_AssignmentToNonVariable:
+                return "Assignment to a value that is not a variable";
             case DiagnosticKind::T0059_UnreachableCode:
                 return "Unreachable code";
             case DiagnosticKind::T0060_MissingReturn:

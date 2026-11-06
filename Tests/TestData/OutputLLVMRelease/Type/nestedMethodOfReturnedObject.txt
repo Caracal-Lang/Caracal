@@ -1,0 +1,86 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Holder = type { %Inner, { ptr, i32, i32 } }
+%Inner = type { i32 }
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nofree nounwind willreturn memory(readwrite, argmem: none)
+define %Holder @makeHolder() local_unnamed_addr #1 {
+entry:
+  %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  store i32 5, ptr %call, align 4
+  %element2 = getelementptr i8, ptr %call, i64 4
+  store i32 6, ptr %element2, align 4
+  %copy.i = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  %0 = load i64, ptr %call, align 1
+  store i64 %0, ptr %copy.i, align 1
+  %load4.fca.1.0.insert = insertvalue %Holder { %Inner { i32 4 }, { ptr, i32, i32 } poison }, ptr %copy.i, 1, 0
+  %load4.fca.1.1.insert = insertvalue %Holder %load4.fca.1.0.insert, i32 2, 1, 1
+  %load4.fca.1.2.insert = insertvalue %Holder %load4.fca.1.1.insert, i32 8, 1, 2
+  ret %Holder %load4.fca.1.2.insert
+
+; uselistorder directives
+  uselistorder ptr %copy.i, { 1, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define noundef range(i32 0, -1) i32 @nestedMethodOfReturnedObject() local_unnamed_addr #2 {
+entry:
+  ret i32 8
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
+define range(i32 0, -1) i32 @Inner.twice(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
+entry:
+  %load = load i32, ptr %0, align 4
+  %multiply = shl i32 %load, 1
+  ret i32 %multiply
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
+define void @Inner.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #4 {
+entry:
+  store i32 %1, ptr %0, align 4
+  ret void
+}
+
+; Function Attrs: mustprogress nofree nounwind willreturn
+define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 4), (8, 24)) %0, %Inner %1, { ptr, i32, i32 } %2) local_unnamed_addr #5 {
+entry:
+  %3 = extractvalue %Inner %1, 0
+  store i32 %3, ptr %0, align 4
+  %.fca.0.extract = extractvalue { ptr, i32, i32 } %2, 0
+  %.fca.1.extract = extractvalue { ptr, i32, i32 } %2, 1
+  %.fca.2.extract = extractvalue { ptr, i32, i32 } %2, 2
+  %widened = sext i32 %.fca.2.extract to i64
+  %copy = tail call ptr @calloc(i64 %widened, i64 4)
+  %widened5 = sext i32 %.fca.1.extract to i64
+  %bytes = shl nsw i64 %widened5, 2
+  tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %copy, ptr align 1 %.fca.0.extract, i64 %bytes, i1 false)
+  %items = getelementptr inbounds nuw i8, ptr %0, i64 8
+  store ptr %copy, ptr %items, align 8
+  %items.repack7 = getelementptr inbounds nuw i8, ptr %0, i64 16
+  store i32 %.fca.1.extract, ptr %items.repack7, align 8
+  %items.repack9 = getelementptr inbounds nuw i8, ptr %0, i64 20
+  store i32 %.fca.2.extract, ptr %items.repack9, align 4
+  ret void
+}
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #6
+
+; uselistorder directives
+uselistorder ptr @calloc, { 1, 0, 2 }
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nofree nounwind willreturn memory(readwrite, argmem: none) }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }
+attributes #3 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read) }
+attributes #4 = { mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write) }
+attributes #5 = { mustprogress nofree nounwind willreturn }
+attributes #6 = { nocallback nofree nounwind willreturn memory(argmem: readwrite) }

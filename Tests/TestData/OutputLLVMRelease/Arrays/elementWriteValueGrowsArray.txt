@@ -1,0 +1,103 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite)
+declare noalias noundef ptr @realloc(ptr allocptr captures(none) %0, i64 noundef %1) local_unnamed_addr #1
+
+; Function Attrs: nounwind
+define noundef i32 @grow(ptr nonnull captures(none) %0) local_unnamed_addr #2 {
+entry:
+  %length = getelementptr inbounds nuw i8, ptr %0, i64 8
+  %capacity = getelementptr inbounds nuw i8, ptr %0, i64 12
+  %load.pre = load ptr, ptr %0, align 8
+  %load1.pre = load i32, ptr %length, align 4
+  %load2.pre = load i32, ptr %capacity, align 4
+  br label %while.body
+
+while.body:                                       ; preds = %entry, %while.body
+  %load2 = phi i32 [ %load2.pre, %entry ], [ %new_capacity, %while.body ]
+  %load1 = phi i32 [ %load1.pre, %entry ], [ %new_length, %while.body ]
+  %load = phi ptr [ %load.pre, %entry ], [ %grown, %while.body ]
+  %phi3 = phi i32 [ 0, %entry ], [ %add, %while.body ]
+  %is_full = icmp eq i32 %load1, %load2
+  %doubled = zext i1 %is_full to i32
+  %new_capacity = shl i32 %load2, %doubled
+  %widened = sext i32 %new_capacity to i64
+  %bytes = shl nsw i64 %widened, 2
+  %grown = tail call ptr @realloc(ptr %load, i64 %bytes)
+  store ptr %grown, ptr %0, align 8
+  store i32 %new_capacity, ptr %capacity, align 4
+  %1 = sext i32 %load1 to i64
+  %element = getelementptr i32, ptr %grown, i64 %1
+  store i32 %phi3, ptr %element, align 4
+  %new_length = add i32 %load1, 1
+  store i32 %new_length, ptr %length, align 4
+  %add = add nuw nsw i32 %phi3, 1
+  %exitcond.not = icmp eq i32 %add, 64
+  br i1 %exitcond.not, label %while.continuation, label %while.body
+
+while.continuation:                               ; preds = %while.body
+  ret i32 7
+
+; uselistorder directives
+  uselistorder ptr %0, { 3, 0, 1, 2 }
+  uselistorder ptr %length, { 1, 0 }
+  uselistorder ptr %capacity, { 1, 0 }
+  uselistorder label %while.body, { 1, 0 }
+  uselistorder i32 %load2, { 1, 0 }
+  uselistorder i32 %load1, { 1, 2, 0 }
+  uselistorder i32 %new_capacity, { 2, 1, 0 }
+  uselistorder ptr %grown, { 1, 2, 0 }
+  uselistorder i32 %new_length, { 1, 0 }
+}
+
+; Function Attrs: nounwind
+define i32 @elementWriteValueGrowsArray() local_unnamed_addr #2 {
+entry:
+  %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  store i32 1, ptr %call, align 4
+  %element1 = getelementptr i8, ptr %call, i64 4
+  store i32 2, ptr %element1, align 4
+  br label %while.body.i
+
+while.body.i:                                     ; preds = %while.body.i, %entry
+  %indvars.iv = phi i64 [ %indvars.iv.next, %while.body.i ], [ 2, %entry ]
+  %load2.i = phi i32 [ %new_capacity.i, %while.body.i ], [ 8, %entry ]
+  %load.i = phi ptr [ %grown.i, %while.body.i ], [ %call, %entry ]
+  %phi3.i = phi i32 [ %add.i, %while.body.i ], [ 0, %entry ]
+  %0 = zext i32 %load2.i to i64
+  %is_full.i = icmp eq i64 %indvars.iv, %0
+  %doubled.i = zext i1 %is_full.i to i32
+  %new_capacity.i = shl i32 %load2.i, %doubled.i
+  %widened.i = sext i32 %new_capacity.i to i64
+  %bytes.i = shl nsw i64 %widened.i, 2
+  %grown.i = tail call ptr @realloc(ptr nonnull %load.i, i64 %bytes.i)
+  %element.i = getelementptr i32, ptr %grown.i, i64 %indvars.iv
+  store i32 %phi3.i, ptr %element.i, align 4
+  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
+  %add.i = add nuw nsw i32 %phi3.i, 1
+  %exitcond.not.i = icmp eq i32 %add.i, 64
+  br i1 %exitcond.not.i, label %grow.exit, label %while.body.i
+
+grow.exit:                                        ; preds = %while.body.i
+  %element11 = getelementptr i8, ptr %grown.i, i64 4
+  %load12 = load i32, ptr %element11, align 4
+  %add = add i32 %load12, 700
+  ret i32 %add
+
+; uselistorder directives
+  uselistorder i64 %indvars.iv, { 2, 0, 1 }
+  uselistorder i32 %load2.i, { 1, 0 }
+  uselistorder i32 %new_capacity.i, { 1, 0 }
+  uselistorder ptr %grown.i, { 0, 2, 1 }
+  uselistorder i32 %add.i, { 1, 0 }
+}
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nounwind willreturn allockind("realloc") allocsize(1) memory(argmem: readwrite, inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #2 = { nounwind }

@@ -1,0 +1,13 @@
+ Error T0106 Assignment to a value that is not a variable
+    ,-[Diagnostics/Input/lengthAsAssignmentTarget.cara:4:5]
+  1 | def main() i32
+  2 | {
+  3 |     numbers := [1, 2, ...];
+  4 |     numbers.length = 5;
+    .     --------------
+    .            `-- This is a value, it has no place to store the assignment.
+  5 |     return numbers.length;
+  6 | }
+  7 | 
+    `----
+  Fix: Assign to a variable or remove the assignment.

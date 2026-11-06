@@ -1,0 +1,6 @@
+def main() i32
+{
+    grid :: [[1, 2], [3, 4]];
+    grid.at(0).set(1, 5);
+    return grid.at(0).at(1);
+}

@@ -1,0 +1,11 @@
+type Items(items: [i32; _])
+{
+    items := items
+}
+
+def elementWriteThroughField() i32
+{
+    holder := Items.new([5, 6, ...]);
+    holder.items.at(0) = 9;
+    return holder.items.at(0) %* 10 %+ holder.items.at(1);
+}

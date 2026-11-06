@@ -86,6 +86,7 @@ namespace Caracal
         void addInitReferenceWithoutRefError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& constantName);
         void addAssignmentToConstantError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& constantName);
         void addAssignmentThroughConstantReferenceError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& referenceName);
+        void addAssignmentToNonVariableError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addMutatingMethodOnConstantError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& constantName, const std::string& methodName);
         void addMutatingMethodThroughConstantReferenceError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& referenceName, const std::string& methodName);
         void addUnreachableCodeWarning(const SourceTextSharedPtr& source, const SourceLocation& location);
@@ -177,6 +178,7 @@ namespace Caracal
         void addPreludeCFunctionWithoutRequiredError(const std::string& functionName);
 
         const std::vector<Diagnostic>& diagnostics() const;
+        void removeDiagnosticsAfter(size_t count);
         [[nodiscard]] bool hasErrors() const noexcept;
         [[nodiscard]] bool hasWarnings() const noexcept;
         [[nodiscard]] int errorCount() const noexcept;
