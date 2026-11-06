@@ -643,6 +643,8 @@ namespace Caracal
             m_emitter.finishModule();
         }
 
+        reportLoweringFailure();
+
         if (m_emitter.emissionFailed() && !m_diagnostics.hasErrors())
         {
             return false;
@@ -2449,6 +2451,8 @@ namespace Caracal
                     continue;
                 }
 
+                const bool failedBeforeField = m_emitter.emissionFailed();
+
                 if (m_options.recordsSourceLocations)
                 {
                     const ScopedValue<SourceLine> sourceLineScope{ m_emitter.currentSourceLine(), statementLine(unit, bodyStatement) };
@@ -2458,6 +2462,8 @@ namespace Caracal
                 {
                     typeCheckTypeFieldDeclaration(unit, bodyStatement, typeDefinition, fieldIndex);
                 }
+
+                recordLoweringFailure(unit, bodyStatement, failedBeforeField);
                 ++fieldIndex;
             }
 
@@ -2571,14 +2577,42 @@ namespace Caracal
 
     void TypeChecker::typeCheckStatement(const CompilationUnit& unit, u32 index)
     {
+        const bool failedBeforeStatement = m_emitter.emissionFailed();
+
         if (!m_options.recordsSourceLocations || unit.nodeBuffer.kind(index) == NodeKind::BlockNode)
         {
             typeCheckStatementNode(unit, index);
+        }
+        else
+        {
+            const ScopedValue<SourceLine> sourceLineScope{ m_emitter.currentSourceLine(), statementLine(unit, index) };
+            typeCheckStatementNode(unit, index);
+        }
+
+        recordLoweringFailure(unit, index, failedBeforeStatement);
+    }
+
+    void TypeChecker::recordLoweringFailure(const CompilationUnit& unit, u32 index, bool failedBefore)
+    {
+        // only report the first lowering failed error
+        if (!failedBefore && m_emitter.emissionFailed() && !m_firstLoweringFailure.has_value())
+        {
+            m_firstLoweringFailure = NodeIndex{ unit.fileId, index };
+        }
+    }
+
+    void TypeChecker::reportLoweringFailure()
+    {
+        // only report the lowering failure if there are no other errors
+        if (!m_firstLoweringFailure.has_value() || m_diagnostics.hasErrors())
+        {
             return;
         }
 
-        const ScopedValue<SourceLine> sourceLineScope{ m_emitter.currentSourceLine(), statementLine(unit, index) };
-        typeCheckStatementNode(unit, index);
+        const auto index = m_firstLoweringFailure->index;
+        const auto& unit = unitFor(*m_firstLoweringFailure);
+        const auto location = NodeSpans::deadStatementLocation(unit.nodeBuffer, m_compilationContext.tokenBuffer(unit.fileId), index);
+        m_diagnostics.addStatementLoweringFailedError(unit.source, location.value_or(ExpressionSourceLocation(m_compilationContext, unit, index)));
     }
 
     void TypeChecker::typeCheckStatementNode(const CompilationUnit& unit, u32 index)
@@ -6079,7 +6113,6 @@ namespace Caracal
 
         if (!foldedCall.has_value() && !canEmitCall)
         {
-            // TODO add diagnostics for calls the emitter cannot lower
             m_emitter.recordEmissionFailure();
         }
 

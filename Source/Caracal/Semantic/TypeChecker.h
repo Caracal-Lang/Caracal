@@ -149,6 +149,8 @@ namespace Caracal
         void typeCheckTypeMethodDefinitions();
         void typeCheckStatement(const CompilationUnit& unit, u32 index);
         void typeCheckStatementNode(const CompilationUnit& unit, u32 index);
+        void recordLoweringFailure(const CompilationUnit& unit, u32 index, bool failedBefore);
+        void reportLoweringFailure();
         void typeCheckConstantDeclaration(const CompilationUnit& unit, u32 index);
         void typeCheckInitConstantDeclaration(const CompilationUnit& unit, u32 index);
         void typeCheckVariableDeclaration(const CompilationUnit& unit, u32 index);
@@ -241,6 +243,7 @@ namespace Caracal
         std::vector<NodeIndex> m_functionDeclarations;
         std::vector<NodeIndex> m_testDeclarations;
         NodeIndex m_testsStubDeclaration{};
+        std::optional<NodeIndex> m_firstLoweringFailure;
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
 

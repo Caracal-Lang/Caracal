@@ -166,6 +166,9 @@ namespace Caracal
         void addUnusedParameterWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
         void addUnusedLocalConstantWarning(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& name);
 
+        // Lowering diagnostics
+        void addStatementLoweringFailedError(const SourceTextSharedPtr& source, const SourceLocation& location);
+
         // Prelude diagnostics
         void addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addPreludeTypeMissingError(const std::string& typeName);

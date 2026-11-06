@@ -287,6 +287,7 @@ namespace Caracal
                 }
                 case NodeKind::ConstantDeclaration:
                 case NodeKind::VariableDeclaration:
+                case NodeKind::TypeFieldDeclaration:
                 {
                     return expressionLocation(buffer, tokens, NodeLayout::declaration(buffer, index).left);
                 }

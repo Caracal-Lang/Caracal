@@ -269,6 +269,8 @@ namespace Caracal
                 return "T0096";
             case DiagnosticKind::T0102_TestsStubMissing:
                 return "T0102";
+            case DiagnosticKind::T0103_StatementLoweringFailed:
+                return "T0103";
             case DiagnosticKind::T0097_PreludeTypeMissing:
                 return "T0097";
             case DiagnosticKind::T0098_PreludeCFunctionMissing:
@@ -548,6 +550,8 @@ namespace Caracal
                 return "Private methods cannot be called from outside their type";
             case DiagnosticKind::T0102_TestsStubMissing:
                 return "The test stub is missing";
+            case DiagnosticKind::T0103_StatementLoweringFailed:
+                return "The compiler could not lower this statement";
             case DiagnosticKind::T0097_PreludeTypeMissing:
                 return "Prelude does not declare a type the compiler needs";
             case DiagnosticKind::T0098_PreludeCFunctionMissing:

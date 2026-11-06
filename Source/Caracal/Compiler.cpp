@@ -204,7 +204,7 @@ namespace Caracal
         auto wasSuccessful = typeCheck(compilationContext, diagnostics, irModule);
         if (!wasSuccessful)
         {
-            if (diagnostics.diagnostics().empty())
+            if (!diagnostics.hasErrors())
             {
                 std::cout << "internal error: this program type checks but the compiler could not lower it\n";
             }

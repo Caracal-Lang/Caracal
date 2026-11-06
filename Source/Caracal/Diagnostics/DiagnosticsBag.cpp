@@ -2226,6 +2226,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addStatementLoweringFailedError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0103_StatementLoweringFailed,
+            source,
+            location,
+            "Write the statement as smaller statements.");
+        diagnostic.addPrimaryLabel(location, "The compiler could not generate code for this statement");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addTestsStubMissingError(const SourceTextSharedPtr& source, const SourceLocation& location)
     {
         auto diagnostic = Diagnostic(

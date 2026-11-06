@@ -171,6 +171,9 @@ namespace Caracal
         // Test diagnostics
         T0102_TestsStubMissing,
 
+        // Lowering diagnostics
+        T0103_StatementLoweringFailed,
+
         // Prelude diagnostics
         T0097_PreludeTypeMissing,
         T0098_PreludeCFunctionMissing,
