@@ -1,0 +1,180 @@
+ConstantDeclaration: {
+    Type: [i32; _]
+    Left: {
+        NameExpression: {
+            Type: [i32; _]
+            Name: numbers
+        }
+    }
+    InitType: {
+        ArrayTypeNameNode: {
+            Type: [i32; _]
+            Lexeme: [i32; _]
+            Kind: Dynamic
+            DataType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> [i32; _]
+    Name: readNumbers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        ArrayTypeNameNode: {
+            Type: [i32; _]
+            Lexeme: [i32; _]
+            Kind: Dynamic
+            DataType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: [i32; _]
+            NameExpression: {
+                Type: [i32; _]
+                Name: numbers
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: dynamicArrayReturnedFromInitGlobal
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: copy
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: [i32; _]
+                    Function type: () -> [i32; _]
+                    NameExpression: {
+                        Type: () -> [i32; _]
+                        Name: readNumbers
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: copy
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; _], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; _], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 0
+                            NumberLiteral: 9
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: numbers
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; _], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; _], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: () -> i32
+                NameExpression: {
+                    Type: () -> i32
+                    Name: dynamicArrayReturnedFromInitGlobal
+                }
+                ArgumentsNode(0): {
+                }
+            }
+        }
+    }
+}

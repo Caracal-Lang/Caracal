@@ -2071,6 +2071,132 @@ namespace Caracal
         }
     }
 
+    bool TypeChecker::returnedNameNeedsCopy(const CompilationUnit& unit, u32 index, Type type) const
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
+        const auto needsCopy = type.toValue().kind() == TypeKind::DynamicArray || typeHasDynamicArrayField(type);
+        if (!needsCopy || unit.nodeBuffer.kind(stripped) != NodeKind::NameExpression)
+        {
+            return false;
+        }
+
+        const auto* binding = tryGetBinding(nameIdOf(unit, stripped));
+        return binding != nullptr && (binding->scopeIndex == 0 || binding->type.isReference());
+    }
+
+    bool TypeChecker::expressionIsAddressable(const CompilationUnit& unit, u32 index) const
+    {
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, index);
+        const auto kind = unit.nodeBuffer.kind(stripped);
+        if (kind == NodeKind::NameExpression || kind == NodeKind::MemberAccessExpression)
+        {
+            return true;
+        }
+
+        if (kind != NodeKind::BinaryExpression || !unit.nodeBuffer.isMemberAccessBinary(tokens, stripped))
+        {
+            return false;
+        }
+
+        const auto layout = NodeLayout::binary(unit.nodeBuffer, stripped);
+        if (unit.nodeBuffer.kind(layout.right) == NodeKind::FunctionCallExpression && !isArrayAtCall(unit, layout.right))
+        {
+            return false;
+        }
+
+        return expressionIsAddressable(unit, layout.left);
+    }
+
+    bool TypeChecker::typeHasDynamicArrayField(Type type) const
+    {
+        const auto valueType = type.toValue();
+        if (valueType.kind() == TypeKind::FixedArray)
+        {
+            return typeHasDynamicArrayField(m_module.getArrayElementType(valueType));
+        }
+
+        if (valueType.kind() != TypeKind::Type)
+        {
+            return false;
+        }
+
+        // nothing can write through a constant field
+        for (const auto& field : m_module.getTypeDefinition(valueType).fields())
+        {
+            if (!field.isConstant() && (field.type().toValue().kind() == TypeKind::DynamicArray || typeHasDynamicArrayField(field.type())))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void TypeChecker::emitDynamicArrayFieldCopies(ValueRef address, Type type)
+    {
+        const auto valueType = type.toValue();
+        if (valueType.kind() == TypeKind::FixedArray)
+        {
+            const auto elementType = m_module.getArrayElementType(valueType);
+            for (auto position = 0; position < m_module.getArrayLength(valueType); ++position)
+            {
+                const auto index = m_emitter.emitConstant(ConstantValue::FromI32(position), m_module.wellKnown().i32);
+                emitDynamicArrayFieldCopies(m_emitter.emitElementAddress(address, valueType, index, elementType), elementType);
+            }
+            return;
+        }
+
+        for (const auto& field : m_module.getTypeDefinition(valueType).fields())
+        {
+            if (field.isConstant())
+            {
+                continue;
+            }
+
+            if (field.type().toValue().kind() == TypeKind::DynamicArray)
+            {
+                const auto fieldAddress = m_emitter.emitFieldAddress(address, valueType, field.index(), field.type());
+                m_emitter.emitStoreValue(m_emitter.emitArrayCopy(fieldAddress, field.type().toValue()), fieldAddress, field.type());
+            }
+            else if (typeHasDynamicArrayField(field.type()))
+            {
+                emitDynamicArrayFieldCopies(m_emitter.emitFieldAddress(address, valueType, field.index(), field.type()), field.type());
+            }
+        }
+    }
+
+    ValueRef TypeChecker::emitCopyOfValue(ValueRef value, Type type)
+    {
+        const auto valueType = type.toValue();
+        const auto temp = m_emitter.spillToTempSlot(value, valueType);
+        if (valueType.kind() == TypeKind::DynamicArray)
+        {
+            return m_emitter.emitArrayCopy(temp, valueType);
+        }
+
+        emitDynamicArrayFieldCopies(temp, valueType);
+        return m_emitter.emitLoad(temp, valueType);
+    }
+
+    ValueRef TypeChecker::copyValueIfNeeded(const CompilationUnit& unit, u32 index, ValueRef value, Type type)
+    {
+        const auto valueType = type.toValue();
+        const auto isDynamicArray = valueType.kind() == TypeKind::DynamicArray;
+        if (value.id() < 0 || (!isDynamicArray && !typeHasDynamicArrayField(valueType)) || !expressionIsAddressable(unit, index))
+        {
+            return value;
+        }
+
+        // the caller copies b in a := b from the address of b
+        if (isDynamicArray && unit.nodeBuffer.kind(NodeLayout::stripGroupings(unit.nodeBuffer, index)) == NodeKind::NameExpression)
+        {
+            return value;
+        }
+
+        return emitCopyOfValue(value, valueType);
+    }
+
     bool TypeChecker::assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const
     {
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
@@ -2893,7 +3019,8 @@ namespace Caracal
             }
             else
             {
-                m_emitter.emitStoreValue(materializeValue(checkedRight), aggregateDestination, bindingType.toValue());
+                const auto storedValue = copyValueIfNeeded(unit, strippedRight, materializeValue(checkedRight), bindingType);
+                m_emitter.emitStoreValue(storedValue, aggregateDestination, bindingType.toValue());
             }
             return;
         }
@@ -2934,11 +3061,12 @@ namespace Caracal
             return;
         }
 
-        if (bindingType.kind() == TypeKind::FixedArray || bindingType.kind() == TypeKind::Type)
+        if (bindingType.kind() == TypeKind::FixedArray || bindingType.kind() == TypeKind::DynamicArray || bindingType.kind() == TypeKind::Type)
         {
             // aggregates without a preallocated slot allocate one here and store the value into it
+            const auto storedValue = copyValueIfNeeded(unit, strippedRight, materializeValue(checkedRight), bindingType);
             const auto destination = m_emitter.allocateAggregateSlot(nameId, name, bindingType);
-            m_emitter.emitStoreValue(materializeValue(checkedRight), destination, bindingType.toValue());
+            m_emitter.emitStoreValue(storedValue, destination, bindingType.toValue());
             return;
         }
 
@@ -3829,6 +3957,10 @@ namespace Caracal
             const auto sourceAddress = m_emitter.localOrGlobalAddress(nameIdOf(unit, strippedAssignedValue), nameOf(unit, strippedAssignedValue));
             assignedValue = m_emitter.emitArrayCopy(sourceAddress, leftType.toValue());
         }
+        else
+        {
+            assignedValue = copyValueIfNeeded(unit, assignmentLayout.value, assignedValue, leftType);
+        }
 
         if (leftKind == NodeKind::NameExpression)
         {
@@ -4383,6 +4515,10 @@ namespace Caracal
             const auto reserveNulByte = typeDefinition.type() == m_module.wellKnown().string;
             fieldValue = m_emitter.emitArrayCopy(sourceAddress, fieldType, reserveNulByte);
         }
+        else
+        {
+            fieldValue = copyValueIfNeeded(unit, strippedField, fieldValue, fieldType);
+        }
         const auto fieldAddress = m_emitter.emitFieldAddress(thisAddress, typeDefinition.type(), fieldIndex, fieldType);
         m_emitter.emitStoreValue(fieldValue, fieldAddress, fieldType);
     }
@@ -4610,7 +4746,16 @@ namespace Caracal
                 }
             }
 
-            m_emitter.emitReturnValue(m_emitter.emitWidened(materializeExpressionValue(unit, value.child, checkedValue), type.toValue(), declaredReturnType.toValue()));
+            auto returnedValue = materializeExpressionValue(unit, value.child, checkedValue);
+            if (unit.nodeBuffer.kind(NodeLayout::stripGroupings(unit.nodeBuffer, value.child)) != NodeKind::NameExpression)
+            {
+                returnedValue = copyValueIfNeeded(unit, value.child, returnedValue, type);
+            }
+            else if (returnedNameNeedsCopy(unit, value.child, type))
+            {
+                returnedValue = emitCopyOfValue(returnedValue, type);
+            }
+            m_emitter.emitReturnValue(m_emitter.emitWidened(returnedValue, type.toValue(), declaredReturnType.toValue()));
         }
         else
         {
@@ -5902,7 +6047,12 @@ namespace Caracal
             {
                 m_constructorDestinations.pop_back();
             }
-            argumentValues.push_back(EmittedArgument{ argumentValue, checkedArgument.value, checkedArgument.folded });
+            auto emittedArgument = checkedArgument.value;
+            if (!parameterWantsAddress && !isVariadicArgument)
+            {
+                emittedArgument = copyValueIfNeeded(unit, argumentValue, emittedArgument, checkedArgument.type);
+            }
+            argumentValues.push_back(EmittedArgument{ argumentValue, emittedArgument, checkedArgument.folded });
         }
 
         const auto expectedArgumentCount = parameterCount - parameterOffset;
@@ -6535,7 +6685,8 @@ namespace Caracal
             {
                 const auto element = m_childrenStack[position];
                 const auto checkedElement = typeCheckExpression(unit, element, elementContext);
-                capturedElements.push_back(CapturedArrayElement{ element, checkedElement.value, checkedElement.folded });
+                const auto elementValue = copyValueIfNeeded(unit, element, checkedElement.value, checkedElement.type);
+                capturedElements.push_back(CapturedArrayElement{ element, elementValue, checkedElement.folded });
                 const auto type = checkedElement.type;
                 if (type == Type::Undefined())
                 {

@@ -1,0 +1,103 @@
+type Holder
+    items: [i32; _]
+
+type Outer
+    holder: Holder
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define objectFromFieldCopiesDynamicField() i32
+block entry(0):
+    %slot0 = allocate_local : Outer "outer"
+    %slot1 = allocate_local : Holder "constructed"
+    %slot2 = allocate_local : [i32; _] "temp"
+    %slot3 = allocate_local : Holder "temp"
+    %slot4 = allocate_local : Holder "other"
+    %0 = address_of %slot0 : ref Outer
+    %1 = address_of %slot1 : ref Holder
+    %2 = address_of %slot2 : ref [i32; _]
+    %3 = const 8 : i64
+    %4 = size_of i32 : i64
+    %5 = call C.calloc(%3, %4) : rawptr
+    %6 = address_of_field %2.0 : ref i32 "data"
+    store_value %5, %6 : ref i32
+    %7 = const 2 : i32
+    %8 = address_of_field %2.1 : ref i32 "length"
+    store_value %7, %8 : i32
+    %9 = const 8 : i32
+    %10 = address_of_field %2.2 : ref i32 "capacity"
+    store_value %9, %10 : i32
+    %11 = const 0 : i32
+    %12 = element_address %5[%11] : i32
+    %13 = const 5 : i32
+    store_value %13, %12 : i32
+    %14 = const 1 : i32
+    %15 = element_address %5[%14] : i32
+    %16 = const 6 : i32
+    store_value %16, %15 : i32
+    %17 = load_value %2 : [i32; _]
+    call Holder.new(%1, %17)
+    %18 = load_value %1 : Holder
+    call Outer.new(%0, %18)
+    %19 = address_of_field %0.0 : ref Holder "holder"
+    %20 = load_value %19 : Holder
+    %21 = address_of %slot3 : ref Holder
+    store_value %20, %21 : Holder
+    %22 = address_of_field %21.0 : ref [i32; _] "items"
+    %23 = array_copy %22 : [i32; _]
+    store_value %23, %22 : [i32; _]
+    %24 = load_value %21 : Holder
+    %25 = address_of %slot4 : ref Holder
+    store_value %24, %25 : Holder
+    %26 = address_of_field %25.0 : ref [i32; _] "items"
+    %27 = const 0 : i32
+    %28 = const 9 : i32
+    %29 = address_of_field %26.0 : ref i32 "data"
+    %30 = load_value %29 : ref i32
+    %31 = element_address %30[%27] : i32
+    store_value %28, %31 : i32
+    %32 = address_of_field %0.0 : ref Holder "holder"
+    %33 = address_of_field %32.0 : ref [i32; _] "items"
+    %34 = const 0 : i32
+    %35 = address_of_field %33.0 : ref i32 "data"
+    %36 = load_value %35 : ref i32
+    %37 = element_address %36[%34] : i32
+    %38 = load_value %37 : i32
+    return %38
+
+define Holder.new(%0: ref Holder ".this", %1: [i32; _] "items") void
+block entry(0):
+    %0 = parameter 0 : ref Holder ".this"
+    %1 = parameter 1 : [i32; _] "items"
+    %slot0 = allocate_local : [i32; _] "temp"
+    %2 = address_of %slot0 : ref [i32; _]
+    store_value %1, %2 : [i32; _]
+    %3 = array_copy %2 : [i32; _]
+    %4 = address_of_field %0.0 : ref [i32; _] "items"
+    store_value %3, %4 : [i32; _]
+    return
+
+define Outer.new(%0: ref Outer ".this", %1: Holder "holder") void
+block entry(0):
+    %0 = parameter 0 : ref Outer ".this"
+    %1 = parameter 1 : Holder "holder"
+    %slot0 = allocate_local : Holder "holder"
+    %slot1 = allocate_local : Holder "temp"
+    %2 = address_of %slot0 : ref Holder
+    store_value %1, %2 : Holder
+    %3 = load_value %2 : Holder
+    %4 = address_of %slot1 : ref Holder
+    store_value %3, %4 : Holder
+    %5 = address_of_field %4.0 : ref [i32; _] "items"
+    %6 = array_copy %5 : [i32; _]
+    store_value %6, %5 : [i32; _]
+    %7 = load_value %4 : Holder
+    %8 = address_of_field %0.0 : ref Holder "holder"
+    store_value %7, %8 : Holder
+    return

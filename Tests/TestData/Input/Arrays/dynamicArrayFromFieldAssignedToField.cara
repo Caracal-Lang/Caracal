@@ -1,0 +1,13 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def dynamicArrayFromFieldAssignedToField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    other := Holder.new([1, 2, ...]);
+    other.items = holder.items;
+    other.items.set(0, 9);
+    return holder.items.at(0);
+}

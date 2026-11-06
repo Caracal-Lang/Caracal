@@ -1,0 +1,17 @@
+type Holder(items: [i32; _])
+{
+    items := items
+
+    def firstAfterWrite() i32
+    {
+        copy := .items;
+        copy.set(0, 9);
+        return .items.at(0);
+    }
+}
+
+def dynamicArrayFromOwnField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    return holder.firstAfterWrite();
+}

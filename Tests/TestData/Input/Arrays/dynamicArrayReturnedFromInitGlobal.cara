@@ -1,0 +1,19 @@
+numbers :: init [i32; _];
+
+def readNumbers() [i32; _]
+{
+    return numbers;
+}
+
+def dynamicArrayReturnedFromInitGlobal() i32
+{
+    copy := readNumbers();
+    copy.set(0, 9);
+    return numbers.at(0);
+}
+
+def main() i32
+{
+    numbers = [5, 6, ...];
+    return dynamicArrayReturnedFromInitGlobal();
+}

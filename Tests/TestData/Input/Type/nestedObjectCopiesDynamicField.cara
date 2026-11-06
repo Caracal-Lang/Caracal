@@ -1,0 +1,17 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+type Outer(holder: Holder)
+{
+    holder := holder
+}
+
+def nestedObjectCopiesDynamicField() i32
+{
+    outer := Outer.new(Holder.new([5, 6, ...]));
+    other := outer;
+    other.holder.items.set(0, 9);
+    return outer.holder.items.at(0);
+}

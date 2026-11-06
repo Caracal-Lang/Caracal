@@ -1,0 +1,135 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Named
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: name
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: string
+            }
+        }
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: name
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: name
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: size
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: objectWithStringFieldHasNoCopy
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: named
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Named
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(2): {
+                                StringLiteral: "a"
+                                NumberLiteral: 5
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: other
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: named
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: other
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

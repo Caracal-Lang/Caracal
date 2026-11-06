@@ -1,0 +1,12 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def objectInArrayLiteralCopiesDynamicField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    holders := [holder, holder];
+    holders.at(0).items.set(0, 9);
+    return holder.items.at(0) %* 10 %+ holders.at(1).items.at(0);
+}

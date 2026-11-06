@@ -1,0 +1,12 @@
+type Named(name: string, size: i32)
+{
+    name := name
+    size := size
+}
+
+def objectWithStringFieldHasNoCopy() i32
+{
+    named := Named.new("a", 5);
+    other := named;
+    return other.size;
+}

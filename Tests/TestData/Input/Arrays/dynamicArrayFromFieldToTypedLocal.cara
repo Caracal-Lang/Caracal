@@ -1,0 +1,12 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def dynamicArrayFromFieldToTypedLocal() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    copy : [i32; _] = holder.items;
+    copy.set(0, 9);
+    return holder.items.at(0);
+}

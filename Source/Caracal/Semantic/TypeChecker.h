@@ -191,6 +191,12 @@ namespace Caracal
         void emitLocalBinding(const CompilationUnit& unit, u32 nameId, std::string_view name, Type bindingType, Type rightType, u32 strippedRight, const CheckedValue& checkedRight, bool referencesConstant, ValueRef aggregateDestination, bool constructorFilled);
         [[nodiscard]] bool memberLeftYieldsAddress(const CompilationUnit& unit, u32 leftIndex);
         [[nodiscard]] bool isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const;
+        [[nodiscard]] bool returnedNameNeedsCopy(const CompilationUnit& unit, u32 index, Type type) const;
+        [[nodiscard]] bool expressionIsAddressable(const CompilationUnit& unit, u32 index) const;
+        [[nodiscard]] bool typeHasDynamicArrayField(Type type) const;
+        void emitDynamicArrayFieldCopies(ValueRef address, Type type);
+        [[nodiscard]] ValueRef emitCopyOfValue(ValueRef value, Type type);
+        [[nodiscard]] ValueRef copyValueIfNeeded(const CompilationUnit& unit, u32 index, ValueRef value, Type type);
         [[nodiscard]] bool assignmentTargetGoesThroughCall(const CompilationUnit& unit, u32 targetIndex) const;
         [[nodiscard]] ValueRef emitAssignmentTargetAddress(const CompilationUnit& unit, u32 targetIndex);
         void reportWriteToConstantReceiver(const CompilationUnit& unit, u32 receiverIndex, u32 targetIndex);

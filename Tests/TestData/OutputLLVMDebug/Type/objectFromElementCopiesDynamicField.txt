@@ -1,0 +1,116 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Holder = type { { ptr, i32, i32 } }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @objectFromElementCopiesDynamicField() {
+entry:
+  %constructed = alloca %Holder, align 8
+  %temp = alloca { ptr, i32, i32 }, align 8
+  %constructed1 = alloca %Holder, align 8
+  %temp2 = alloca { ptr, i32, i32 }, align 8
+  %holders = alloca [2 x %Holder], align 8
+  %temp3 = alloca %Holder, align 8
+  %other = alloca %Holder, align 8
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  store i32 2, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 5, ptr %element, align 4
+  %element4 = getelementptr i32, ptr %call, i32 1
+  store i32 6, ptr %element4, align 4
+  %load = load { ptr, i32, i32 }, ptr %temp, align 8
+  call void @Holder.new(ptr %constructed, { ptr, i32, i32 } %load)
+  %load5 = load %Holder, ptr %constructed, align 8
+  %call6 = call ptr @calloc(i64 8, i64 4)
+  %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp2, i32 0, i32 0
+  store ptr %call6, ptr %data7, align 8
+  %length8 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp2, i32 0, i32 1
+  store i32 2, ptr %length8, align 4
+  %capacity9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp2, i32 0, i32 2
+  store i32 8, ptr %capacity9, align 4
+  %element10 = getelementptr i32, ptr %call6, i32 0
+  store i32 7, ptr %element10, align 4
+  %element11 = getelementptr i32, ptr %call6, i32 1
+  store i32 8, ptr %element11, align 4
+  %load12 = load { ptr, i32, i32 }, ptr %temp2, align 8
+  call void @Holder.new(ptr %constructed1, { ptr, i32, i32 } %load12)
+  %load13 = load %Holder, ptr %constructed1, align 8
+  %element14 = getelementptr [2 x %Holder], ptr %holders, i32 0, i32 0
+  store %Holder %load5, ptr %element14, align 8
+  %element15 = getelementptr [2 x %Holder], ptr %holders, i32 0, i32 1
+  store %Holder %load13, ptr %element15, align 8
+  %element16 = getelementptr [2 x %Holder], ptr %holders, i32 0, i32 0
+  %load17 = load %Holder, ptr %element16, align 8
+  store %Holder %load17, ptr %temp3, align 8
+  %items = getelementptr inbounds nuw %Holder, ptr %temp3, i32 0, i32 0
+  %data18 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0
+  %length19 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1
+  %capacity20 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2
+  %load21 = load ptr, ptr %data18, align 8
+  %load22 = load i32, ptr %length19, align 4
+  %load23 = load i32, ptr %capacity20, align 4
+  %widened = sext i32 %load23 to i64
+  %copy = call ptr @calloc(i64 %widened, i64 4)
+  %widened24 = sext i32 %load22 to i64
+  %bytes = mul i64 %widened24, 4
+  %copied = call ptr @memmove(ptr %copy, ptr %load21, i64 %bytes)
+  %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
+  %1 = insertvalue { ptr, i32, i32 } %0, i32 %load22, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load23, 2
+  store { ptr, i32, i32 } %array_copy, ptr %items, align 8
+  %load25 = load %Holder, ptr %temp3, align 8
+  store %Holder %load25, ptr %other, align 8
+  %items26 = getelementptr inbounds nuw %Holder, ptr %other, i32 0, i32 0
+  %data27 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items26, i32 0, i32 0
+  %load28 = load ptr, ptr %data27, align 8
+  %element29 = getelementptr i32, ptr %load28, i32 0
+  store i32 9, ptr %element29, align 4
+  %element30 = getelementptr [2 x %Holder], ptr %holders, i32 0, i32 0
+  %items31 = getelementptr inbounds nuw %Holder, ptr %element30, i32 0, i32 0
+  %data32 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items31, i32 0, i32 0
+  %load33 = load ptr, ptr %data32, align 8
+  %element34 = getelementptr i32, ptr %load33, i32 0
+  %load35 = load i32, ptr %element34, align 4
+  ret i32 %load35
+}
+
+define void @Holder.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+entry:
+  %temp = alloca { ptr, i32, i32 }, align 8
+  store { ptr, i32, i32 } %1, ptr %temp, align 8
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 0
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 2
+  %load = load ptr, ptr %data, align 8
+  %load1 = load i32, ptr %length, align 4
+  %load2 = load i32, ptr %capacity, align 4
+  %widened = sext i32 %load2 to i64
+  %copy = call ptr @calloc(i64 %widened, i64 4)
+  %widened3 = sext i32 %load1 to i64
+  %bytes = mul i64 %widened3, 4
+  %copied = call ptr @memmove(ptr %copy, ptr %load, i64 %bytes)
+  %2 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
+  %3 = insertvalue { ptr, i32, i32 } %2, i32 %load1, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %3, i32 %load2, 2
+  %items = getelementptr inbounds nuw %Holder, ptr %0, i32 0, i32 0
+  store { ptr, i32, i32 } %array_copy, ptr %items, align 8
+  ret void
+}
+
+; uselistorder directives
+uselistorder ptr @Holder.new, { 1, 0 }

@@ -1,0 +1,199 @@
+TypeDefinitionStatement: {
+    Type: Holder
+    Name: Holder
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: items
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (Holder) -> void
+    Name: change
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: Holder
+                Lexeme: Holder
+            }
+        }
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(1): {
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; _]
+                        Left: {
+                            NameExpression: {
+                                Type: Holder
+                                Name: value
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; _], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; _], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 0
+                            NumberLiteral: 9
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: objectAsArgumentCopiesDynamicField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Holder
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Holder
+                    Left: {
+                        NameExpression: {
+                            Type: Holder
+                            Name: Holder
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Holder
+                            Function type: (ref Holder, [i32; _]) -> void
+                            NameExpression: {
+                                Type: (ref Holder, [i32; _]) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                ArrayLiteral(2): {
+                                    Type: [i32; _]
+                                    Dynamic: true
+                                    NumberLiteral: 5
+                                    NumberLiteral: 6
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            FunctionCallExpression: {
+                Type: void
+                Function type: (Holder) -> void
+                NameExpression: {
+                    Type: (Holder) -> void
+                    Name: change
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: Holder
+                        Name: holder
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; _]
+                        Left: {
+                            NameExpression: {
+                                Type: Holder
+                                Name: holder
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; _], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; _], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

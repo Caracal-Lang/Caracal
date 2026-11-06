@@ -1,0 +1,289 @@
+TypeDefinitionStatement: {
+    Type: Holder
+    Name: Holder
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: items
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Outer
+    Name: Outer
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: holder
+            TypeNameNode: {
+                Type: Holder
+                Lexeme: Holder
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Outer) -> Holder
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: holderCopy
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: Holder
+                    Lexeme: Holder
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: Holder
+                    MemberAccessExpression: {
+                        NameExpression: {
+                            Type: Holder
+                            Name: holder
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: objectReturnedFromFieldCopiesDynamicField
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Outer
+            Left: {
+                NameExpression: {
+                    Type: Outer
+                    Name: outer
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Outer
+                    Left: {
+                        NameExpression: {
+                            Type: Outer
+                            Name: Outer
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Outer
+                            Function type: (ref Outer, Holder) -> void
+                            NameExpression: {
+                                Type: (ref Outer, Holder) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: Holder
+                                    Left: {
+                                        NameExpression: {
+                                            Type: Holder
+                                            Name: Holder
+                                        }
+                                    }
+                                    Operation: ConstructorCall
+                                    Right: {
+                                        FunctionCallExpression: {
+                                            Type: Holder
+                                            Function type: (ref Holder, [i32; _]) -> void
+                                            NameExpression: {
+                                                Type: (ref Holder, [i32; _]) -> void
+                                                Name: new
+                                            }
+                                            ArgumentsNode(1): {
+                                                ArrayLiteral(2): {
+                                                    Type: [i32; _]
+                                                    Dynamic: true
+                                                    NumberLiteral: 5
+                                                    NumberLiteral: 6
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Holder
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: other
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Holder
+                    Left: {
+                        NameExpression: {
+                            Type: Outer
+                            Name: outer
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Holder
+                            Function type: (ref Outer) -> Holder
+                            NameExpression: {
+                                Type: (ref Outer) -> Holder
+                                Name: holderCopy
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; _]
+                        Left: {
+                            NameExpression: {
+                                Type: Holder
+                                Name: other
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [i32; _], i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref [i32; _], i32, i32) -> void
+                            Name: set
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 0
+                            NumberLiteral: 9
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; _]
+                        Left: {
+                            BinaryExpression: {
+                                Type: Holder
+                                Left: {
+                                    NameExpression: {
+                                        Type: Outer
+                                        Name: outer
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: Holder
+                                        Name: holder
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; _], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; _], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

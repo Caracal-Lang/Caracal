@@ -1,0 +1,12 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def objectCopiedToLocalCopiesDynamicField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    other := holder;
+    other.items.set(0, 9);
+    return holder.items.at(0);
+}

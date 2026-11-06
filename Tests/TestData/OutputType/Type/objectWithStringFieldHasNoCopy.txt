@@ -1,0 +1,135 @@
+TypeDefinitionStatement: {
+    Type: Named
+    Name: Named
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: name
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+        }
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: string
+                    Name: name
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: string
+                    Name: name
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: objectWithStringFieldHasNoCopy
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Named
+            Left: {
+                NameExpression: {
+                    Type: Named
+                    Name: named
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Named
+                    Left: {
+                        NameExpression: {
+                            Type: Named
+                            Name: Named
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Named
+                            Function type: (ref Named, string, i32) -> void
+                            NameExpression: {
+                                Type: (ref Named, string, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(2): {
+                                StringLiteral: "a"
+                                NumberLiteral: 5
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Named
+            Left: {
+                NameExpression: {
+                    Type: Named
+                    Name: other
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Named
+                    Name: named
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Named
+                        Name: other
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}

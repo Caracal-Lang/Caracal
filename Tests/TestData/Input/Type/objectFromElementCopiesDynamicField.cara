@@ -1,0 +1,12 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def objectFromElementCopiesDynamicField() i32
+{
+    holders := [Holder.new([5, 6, ...]), Holder.new([7, 8, ...])];
+    other := holders.at(0);
+    other.items.set(0, 9);
+    return holders.at(0).items.at(0);
+}

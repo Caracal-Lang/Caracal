@@ -1,0 +1,13 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def objectAddedToArrayCopiesDynamicField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    holders := [Holder.new([1, 2, ...]), ...];
+    holders.add(holder);
+    holders.at(1).items.set(0, 9);
+    return holder.items.at(0);
+}

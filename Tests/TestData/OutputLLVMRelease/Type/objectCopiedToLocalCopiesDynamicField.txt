@@ -1,0 +1,49 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nofree nounwind willreturn memory(readwrite, argmem: none)
+define i32 @objectCopiedToLocalCopiesDynamicField() local_unnamed_addr #1 {
+entry:
+  %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  store i32 5, ptr %call, align 4
+  %element2 = getelementptr i8, ptr %call, i64 4
+  store i32 6, ptr %element2, align 4
+  %0 = load i64, ptr %call, align 1
+  %1 = trunc i64 %0 to i32
+  ret i32 %1
+}
+
+; Function Attrs: mustprogress nofree nounwind willreturn
+define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
+entry:
+  %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
+  %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1
+  %.fca.2.extract = extractvalue { ptr, i32, i32 } %1, 2
+  %widened = sext i32 %.fca.2.extract to i64
+  %copy = tail call ptr @calloc(i64 %widened, i64 4)
+  %widened3 = sext i32 %.fca.1.extract to i64
+  %bytes = shl nsw i64 %widened3, 2
+  tail call void @llvm.memcpy.p0.p0.i64(ptr align 1 %copy, ptr align 1 %.fca.0.extract, i64 %bytes, i1 false)
+  store ptr %copy, ptr %0, align 8
+  %.repack4 = getelementptr inbounds nuw i8, ptr %0, i64 8
+  store i32 %.fca.1.extract, ptr %.repack4, align 8
+  %.repack6 = getelementptr inbounds nuw i8, ptr %0, i64 12
+  store i32 %.fca.2.extract, ptr %.repack6, align 4
+  ret void
+
+; uselistorder directives
+  uselistorder ptr %0, { 1, 2, 0 }
+}
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memcpy.p0.p0.i64(ptr noalias writeonly captures(none) %0, ptr noalias readonly captures(none) %1, i64 %2, i1 immarg %3) #3
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nofree nounwind willreturn memory(readwrite, argmem: none) }
+attributes #2 = { mustprogress nofree nounwind willreturn }
+attributes #3 = { nocallback nofree nounwind willreturn memory(argmem: readwrite) }

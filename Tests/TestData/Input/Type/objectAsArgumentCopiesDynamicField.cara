@@ -1,0 +1,16 @@
+type Holder(items: [i32; _])
+{
+    items := items
+}
+
+def change(value: Holder)
+{
+    value.items.set(0, 9);
+}
+
+def objectAsArgumentCopiesDynamicField() i32
+{
+    holder := Holder.new([5, 6, ...]);
+    change(holder);
+    return holder.items.at(0);
+}

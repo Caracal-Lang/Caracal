@@ -1,0 +1,64 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+@numbers = local_unnamed_addr global { ptr, i32, i32 } zeroinitializer
+
+; Function Attrs: mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite)
+declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
+
+; Function Attrs: mustprogress nofree nounwind willreturn
+define { ptr, i32, i32 } @readNumbers() local_unnamed_addr #1 {
+entry:
+  %load.unpack = load ptr, ptr @numbers, align 8
+  %load.unpack5 = load i32, ptr getelementptr inbounds nuw (i8, ptr @numbers, i64 8), align 8
+  %load.unpack6 = load i32, ptr getelementptr inbounds nuw (i8, ptr @numbers, i64 12), align 4
+  %widened = sext i32 %load.unpack6 to i64
+  %copy = tail call ptr @calloc(i64 %widened, i64 4)
+  %widened4 = sext i32 %load.unpack5 to i64
+  %bytes = shl nsw i64 %widened4, 2
+  tail call void @llvm.memmove.p0.p0.i64(ptr align 1 %copy, ptr align 1 %load.unpack, i64 %bytes, i1 false)
+  %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
+  %1 = insertvalue { ptr, i32, i32 } %0, i32 %load.unpack5, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load.unpack6, 2
+  ret { ptr, i32, i32 } %array_copy
+
+; uselistorder directives
+  uselistorder i32 %load.unpack5, { 1, 0 }
+  uselistorder i32 %load.unpack6, { 1, 0 }
+  uselistorder ptr %copy, { 1, 0 }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
+define i32 @dynamicArrayReturnedFromInitGlobal() local_unnamed_addr #2 {
+entry:
+  %load.unpack.i = load ptr, ptr @numbers, align 8
+  %load3 = load i32, ptr %load.unpack.i, align 4
+  ret i32 %load3
+}
+
+; Function Attrs: mustprogress nofree nounwind willreturn memory(write, argmem: none, inaccessiblemem: readwrite)
+define noundef i32 @main() local_unnamed_addr #3 {
+entry:
+  %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
+  store i32 5, ptr %call, align 4
+  %element1 = getelementptr i8, ptr %call, i64 4
+  store i32 6, ptr %element1, align 4
+  store ptr %call, ptr @numbers, align 8
+  store i32 2, ptr getelementptr inbounds nuw (i8, ptr @numbers, i64 8), align 8
+  store i32 8, ptr getelementptr inbounds nuw (i8, ptr @numbers, i64 12), align 4
+  ret i32 5
+}
+
+; Function Attrs: nocallback nofree nounwind willreturn memory(argmem: readwrite)
+declare void @llvm.memmove.p0.p0.i64(ptr writeonly captures(none) %0, ptr readonly captures(none) %1, i64 %2, i1 immarg %3) #4
+
+; uselistorder directives
+uselistorder ptr @numbers, { 1, 0, 2, 3, 4 }
+
+attributes #0 = { mustprogress nofree nounwind willreturn allockind("alloc,zeroed") allocsize(0,1) memory(inaccessiblemem: readwrite) "alloc-family"="malloc" }
+attributes #1 = { mustprogress nofree nounwind willreturn }
+attributes #2 = { mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none) }
+attributes #3 = { mustprogress nofree nounwind willreturn memory(write, argmem: none, inaccessiblemem: readwrite) }
+attributes #4 = { nocallback nofree nounwind willreturn memory(argmem: readwrite) }

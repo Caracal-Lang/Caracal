@@ -1,0 +1,12 @@
+def same(values: ref [i32; _]) [i32; _]
+{
+    return values;
+}
+
+def dynamicArrayReturnedFromRefParameter() i32
+{
+    numbers := [5, 6, ...];
+    copy := same(ref numbers);
+    copy.set(0, 9);
+    return numbers.at(0);
+}
