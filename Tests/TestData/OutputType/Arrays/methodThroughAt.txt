@@ -1,0 +1,190 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Point, i32) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: plus
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: value
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: x
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: methodThroughAt
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: point
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Point
+                    Left: {
+                        NameExpression: {
+                            Type: Point
+                            Name: Point
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref Point, i32) -> void
+                            NameExpression: {
+                                Type: (ref Point, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: [Point; 2]
+            Left: {
+                NameExpression: {
+                    Type: [Point; 2]
+                    Name: points
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [Point; 2]
+                    NameExpression: {
+                        Type: Point
+                        Name: point
+                    }
+                    NameExpression: {
+                        Type: Point
+                        Name: point
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Point
+                        Left: {
+                            NameExpression: {
+                                Type: [Point; 2]
+                                Name: points
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: Point
+                                Function type: (ref [Point; 2], i32) -> Point
+                                NameExpression: {
+                                    Type: (ref [Point; 2], i32) -> Point
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref Point, i32) -> i32
+                        NameExpression: {
+                            Type: (ref Point, i32) -> i32
+                            Name: plus
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 2
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

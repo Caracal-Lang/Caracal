@@ -1,0 +1,11 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def objectAssignedFromConstructor() i32
+{
+    point := Point.new(1);
+    point = Point.new(3);
+    return point.x;
+}

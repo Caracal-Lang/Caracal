@@ -1,0 +1,10 @@
+def stringComparedToLiteral() i32
+{
+    text := "a";
+    if text == "a"
+    {
+        return 1;
+    }
+
+    return 0;
+}

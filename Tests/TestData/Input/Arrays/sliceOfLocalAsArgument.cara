@@ -1,0 +1,10 @@
+def sum(values: [i32]) i32
+{
+    return values.at(0) %+ values.at(1);
+}
+
+def sliceOfLocalAsArgument() i32
+{
+    numbers := [1, 2];
+    return sum(numbers.slice());
+}

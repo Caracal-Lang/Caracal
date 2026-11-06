@@ -1,0 +1,11 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+origin :: Point.new(6);
+
+def fieldOfGlobalObject() i32
+{
+    return origin.x;
+}

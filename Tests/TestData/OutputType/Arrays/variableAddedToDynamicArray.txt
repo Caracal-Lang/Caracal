@@ -1,0 +1,172 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: variableAddedToDynamicArray
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: point
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Point
+                    Left: {
+                        NameExpression: {
+                            Type: Point
+                            Name: Point
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref Point, i32) -> void
+                            NameExpression: {
+                                Type: (ref Point, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: [Point; _]
+            Left: {
+                NameExpression: {
+                    Type: [Point; _]
+                    Name: points
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: [Point; _]
+                    Lexeme: [Point; _]
+                    Kind: Dynamic
+                    DataType: {
+                        TypeNameNode: {
+                            Type: Point
+                            Lexeme: Point
+                        }
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(0): {
+                    Type: [Point; _]
+                    Dynamic: true
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: [Point; _]
+                        Name: points
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref [Point; _], Point) -> void
+                        NameExpression: {
+                            Type: (ref [Point; _], Point) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: Point
+                                Name: point
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Point
+                        Left: {
+                            NameExpression: {
+                                Type: [Point; _]
+                                Name: points
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: Point
+                                Function type: (ref [Point; _], i32) -> Point
+                                NameExpression: {
+                                    Type: (ref [Point; _], i32) -> Point
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}

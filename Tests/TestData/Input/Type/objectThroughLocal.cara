@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def makePoint(x: i32) Point
+{
+    return Point.new(x);
+}
+
+def objectThroughLocal() i32
+{
+    point := makePoint(3);
+    other := point;
+    return other.x;
+}

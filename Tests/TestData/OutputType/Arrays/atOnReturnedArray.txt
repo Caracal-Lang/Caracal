@@ -1,0 +1,79 @@
+FunctionDefinitionStatement: {
+    Type: () -> [i32; 3]
+    Name: makeNumbers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        ArrayTypeNameNode: {
+            Type: [i32; 3]
+            Lexeme: [i32; 3]
+            Kind: Fixed
+            DataType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            Length: {
+                NumberLiteral: 3
+            }
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: [i32; 3]
+            ArrayLiteral(3): {
+                Type: [i32; 3]
+                NumberLiteral: 1
+                NumberLiteral: 2
+                NumberLiteral: 3
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: atOnReturnedArray
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: [i32; 3]
+                        Function type: () -> [i32; 3]
+                        NameExpression: {
+                            Type: () -> [i32; 3]
+                            Name: makeNumbers
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; 3], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; 3], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,99 @@
+EnumDefinitionStatement: {
+    Type: Color(u8)
+    Name: Color
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: Red
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: Green
+            Value: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: enumCompared
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Color(u8)
+            Left: {
+                NameExpression: {
+                    Type: Color(u8)
+                    Name: color
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Color(u8)
+                    Left: {
+                        NameExpression: {
+                            Type: Color(u8)
+                            Name: Color
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: Color(u8)
+                            Name: Green
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: Color(u8)
+                            Name: color
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Color(u8)
+                            Left: {
+                                NameExpression: {
+                                    Type: Color(u8)
+                                    Name: Color
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Color(u8)
+                                    Name: Green
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}

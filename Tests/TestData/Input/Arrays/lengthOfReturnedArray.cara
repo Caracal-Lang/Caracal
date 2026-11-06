@@ -1,0 +1,9 @@
+def makeNumbers() [i32; 3]
+{
+    return [1, 2, 3];
+}
+
+def lengthOfReturnedArray() i32
+{
+    return makeNumbers().length;
+}

@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def makePoint(x: i32) Point
+{
+    return Point.new(x);
+}
+
+def objectAssignedFromCall() i32
+{
+    point := Point.new(1);
+    point = makePoint(3);
+    return point.x;
+}

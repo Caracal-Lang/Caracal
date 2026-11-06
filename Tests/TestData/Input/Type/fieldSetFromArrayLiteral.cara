@@ -1,0 +1,10 @@
+type Box
+{
+    numbers := [1, 2, 3]
+}
+
+def fieldSetFromArrayLiteral() i32
+{
+    box := Box.new();
+    return box.numbers.at(1);
+}

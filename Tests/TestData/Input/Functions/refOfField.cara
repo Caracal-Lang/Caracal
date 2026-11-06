@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def bump(value: ref i32)
+{
+    value = value %+ 1;
+}
+
+def refOfField() i32
+{
+    point := Point.new(5);
+    bump(ref point.x);
+    return point.x;
+}

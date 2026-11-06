@@ -1,0 +1,12 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def variableAddedToDynamicArray() i32
+{
+    point := Point.new(4);
+    points : [Point; _] = [...];
+    points.add(point);
+    return points.at(0).x;
+}

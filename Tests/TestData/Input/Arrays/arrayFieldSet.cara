@@ -1,0 +1,29 @@
+type Inner(size: i32)
+{
+    size := size
+
+    def twice() i32
+    {
+        return .size %* 2;
+    }
+}
+
+type Holder(inner: Inner, items: [i32; _], name: string)
+{
+    inner := inner
+    items := items
+    name := name
+}
+
+def makeHolder() Holder
+{
+    items : [i32; _] = [5, 6, ...];
+    return Holder.new(Inner.new(4), items, "name");
+}
+
+def arrayFieldSet() i32
+{
+    holder := makeHolder();
+    holder.items.set(0, 8);
+    return holder.items.at(0);
+}

@@ -1,0 +1,35 @@
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: lengthOfArrayLiteral
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    ArrayLiteral(3): {
+                        Type: [i32; 3]
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                        NumberLiteral: 3
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}

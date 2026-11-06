@@ -1,0 +1,83 @@
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: arrayInArrayLiteral
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [[i32; 2]; 2]
+            Left: {
+                NameExpression: {
+                    Type: [[i32; 2]; 2]
+                    Name: grid
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [[i32; 2]; 2]
+                    ArrayLiteral(2): {
+                        Type: [i32; 2]
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                    }
+                    ArrayLiteral(2): {
+                        Type: [i32; 2]
+                        NumberLiteral: 3
+                        NumberLiteral: 4
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: [i32; 2]
+                        Left: {
+                            NameExpression: {
+                                Type: [[i32; 2]; 2]
+                                Name: grid
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: [i32; 2]
+                                Function type: (ref [[i32; 2]; 2], i32) -> [i32; 2]
+                                NameExpression: {
+                                    Type: (ref [[i32; 2]; 2], i32) -> [i32; 2]
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (ref [i32; 2], i32) -> i32
+                        NameExpression: {
+                            Type: (ref [i32; 2], i32) -> i32
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

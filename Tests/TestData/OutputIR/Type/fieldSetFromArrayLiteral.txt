@@ -1,0 +1,39 @@
+type Box
+    numbers: [i32; 3]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define fieldSetFromArrayLiteral() i32
+block entry(0):
+    %slot0 = allocate_local : Box "box"
+    %0 = address_of %slot0 : ref Box
+    call Box.new(%0)
+    %1 = address_of_field %0.0 : ref [i32; 3] "numbers"
+    %2 = const 1 : i32
+    %3 = element_address %1[%2] : i32
+    %4 = load_value %3 : i32
+    return %4
+
+define Box.new(%0: ref Box ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Box ".this"
+    %1 = address_of_field %0.0 : ref [i32; 3] "numbers"
+    %2 = const 0 : i32
+    %3 = element_address %1[%2] : i32
+    %4 = const 1 : i32
+    store_value %4, %3 : i32
+    %5 = const 1 : i32
+    %6 = element_address %1[%5] : i32
+    %7 = const 2 : i32
+    store_value %7, %6 : i32
+    %8 = const 2 : i32
+    %9 = element_address %1[%8] : i32
+    %10 = const 3 : i32
+    store_value %10, %9 : i32
+    return

@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+def methodThroughAt() i32
+{
+    point := Point.new(1);
+    points := [point, point];
+    return points.at(1).plus(2);
+}

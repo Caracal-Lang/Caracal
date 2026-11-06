@@ -1,0 +1,16 @@
+enum Color
+{
+    Red
+    Green
+}
+
+def enumCompared() i32
+{
+    color := Color.Green;
+    if color == Color.Green
+    {
+        return 1;
+    }
+
+    return 0;
+}

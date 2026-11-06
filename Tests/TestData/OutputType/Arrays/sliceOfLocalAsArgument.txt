@@ -1,0 +1,150 @@
+FunctionDefinitionStatement: {
+    Type: (const [i32]) -> i32
+    Name: sum
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32]
+                Lexeme: [i32]
+                Kind: Slice
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: const [i32]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref const [i32], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref const [i32], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: const [i32]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref const [i32], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref const [i32], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: sliceOfLocalAsArgument
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; 2]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; 2]
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (const [i32]) -> i32
+                NameExpression: {
+                    Type: (const [i32]) -> i32
+                    Name: sum
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: [i32]
+                        Left: {
+                            NameExpression: {
+                                Type: [i32; 2]
+                                Name: numbers
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: [i32]
+                                Function type: (ref [i32; 2]) -> [i32]
+                                NameExpression: {
+                                    Type: (ref [i32; 2]) -> [i32]
+                                    Name: slice
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

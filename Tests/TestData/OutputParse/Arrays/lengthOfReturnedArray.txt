@@ -1,0 +1,72 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: makeNumbers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        ArrayTypeNameNode: {
+            Type: undefined
+            Lexeme: [i32; 3]
+            Kind: Fixed
+            DataType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i32
+                }
+            }
+            Length: {
+                NumberLiteral: 3
+            }
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            ArrayLiteral(3): {
+                Type: undefined
+                NumberLiteral: 1
+                NumberLiteral: 2
+                NumberLiteral: 3
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: lengthOfReturnedArray
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: makeNumbers
+                        }
+                        ArgumentsNode(0): {
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}

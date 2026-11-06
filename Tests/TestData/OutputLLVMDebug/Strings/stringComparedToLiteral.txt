@@ -1,0 +1,101 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+@0 = private unnamed_addr constant [2 x i8] c"a\00", align 1
+@1 = private unnamed_addr constant [2 x i8] c"a\00", align 1
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @stringComparedToLiteral() {
+entry:
+  %text = alloca %string, align 8
+  %temp = alloca %string, align 8
+  %_bytes = getelementptr inbounds nuw %string, ptr %text, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
+  store ptr @0, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  store i32 1, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
+  store i32 1, ptr %capacity, align 4
+  %load = load %string, ptr %text, align 8
+  %_bytes1 = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0
+  %data2 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes1, i32 0, i32 0
+  store ptr @1, ptr %data2, align 8
+  %length3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes1, i32 0, i32 1
+  store i32 1, ptr %length3, align 4
+  %capacity4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes1, i32 0, i32 2
+  store i32 1, ptr %capacity4, align 4
+  %load5 = load %string, ptr %temp, align 8
+  %call = call i1 @string.equals(%string %load, %string %load5)
+  br i1 %call, label %if.true, label %if.continuation
+
+if.true:                                          ; preds = %entry
+  ret i32 1
+
+if.continuation:                                  ; preds = %entry
+  ret i32 0
+}
+
+define i1 @string.equals(%string %0, %string %1) {
+entry:
+  %lhs = alloca %string, align 8
+  %rhs = alloca %string, align 8
+  store %string %0, ptr %lhs, align 8
+  store %string %1, ptr %rhs, align 8
+  %_bytes = getelementptr inbounds nuw %string, ptr %lhs, i32 0, i32 0
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
+  %load = load i32, ptr %length, align 4
+  %_bytes3 = getelementptr inbounds nuw %string, ptr %rhs, i32 0, i32 0
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 1
+  %load5 = load i32, ptr %length4, align 4
+  %not_equal = icmp ne i32 %load, %load5
+  br i1 %not_equal, label %if.true, label %if.continuation
+
+if.true:                                          ; preds = %entry
+  ret i1 false
+
+if.continuation:                                  ; preds = %entry
+  br label %while.condition
+
+while.condition:                                  ; preds = %if.continuation2, %if.continuation
+  %phi = phi i32 [ 0, %if.continuation ], [ %add, %if.continuation2 ]
+  %_bytes6 = getelementptr inbounds nuw %string, ptr %lhs, i32 0, i32 0
+  %length7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 1
+  %load8 = load i32, ptr %length7, align 4
+  %less_than = icmp slt i32 %phi, %load8
+  br i1 %less_than, label %while.body, label %while.continuation
+
+while.body:                                       ; preds = %while.condition
+  %_bytes9 = getelementptr inbounds nuw %string, ptr %lhs, i32 0, i32 0
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes9, i32 0, i32 0
+  %load10 = load ptr, ptr %data, align 8
+  %element = getelementptr i8, ptr %load10, i32 %phi
+  %load11 = load i8, ptr %element, align 1
+  %_bytes12 = getelementptr inbounds nuw %string, ptr %rhs, i32 0, i32 0
+  %data13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes12, i32 0, i32 0
+  %load14 = load ptr, ptr %data13, align 8
+  %element15 = getelementptr i8, ptr %load14, i32 %phi
+  %load16 = load i8, ptr %element15, align 1
+  %not_equal17 = icmp ne i8 %load11, %load16
+  br i1 %not_equal17, label %if.true1, label %if.continuation2
+
+if.true1:                                         ; preds = %while.body
+  ret i1 false
+
+if.continuation2:                                 ; preds = %while.body
+  %add = add i32 %phi, 1
+  br label %while.condition
+
+while.continuation:                               ; preds = %while.condition
+  ret i1 true
+}

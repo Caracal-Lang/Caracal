@@ -1,0 +1,16 @@
+type Point(x: i32)
+{
+    x := x
+
+    def plus(value: i32) i32
+    {
+        return .x %+ value;
+    }
+}
+
+origin :: Point.new(6);
+
+def methodOfGlobalObject() i32
+{
+    return origin.plus(1);
+}

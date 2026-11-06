@@ -1,0 +1,20 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def makePoint(x: i32) Point
+{
+    return Point.new(x);
+}
+
+type Box
+{
+    point := makePoint(3)
+}
+
+def fieldSetFromFunction() i32
+{
+    box := Box.new();
+    return box.point.x;
+}

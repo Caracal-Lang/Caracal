@@ -1,0 +1,14 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def readPoint(point: Point) i32
+{
+    return point.x;
+}
+
+def newObjectInArgument() i32
+{
+    return readPoint(Point.new(7));
+}

@@ -1,0 +1,9 @@
+def twoStringLiteralsCompared() i32
+{
+    if "a" == "a"
+    {
+        return 1;
+    }
+
+    return 0;
+}

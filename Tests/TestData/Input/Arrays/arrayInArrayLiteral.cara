@@ -1,0 +1,5 @@
+def arrayInArrayLiteral() i32
+{
+    grid := [[1, 2], [3, 4]];
+    return grid.at(1).at(0);
+}

@@ -1,0 +1,14 @@
+def name() string
+{
+    return "a";
+}
+
+def stringFromCallCompared() i32
+{
+    if name() == "a"
+    {
+        return 1;
+    }
+
+    return 0;
+}

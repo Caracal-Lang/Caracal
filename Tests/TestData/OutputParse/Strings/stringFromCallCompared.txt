@@ -1,0 +1,67 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: name
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: string
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            StringLiteral: "a"
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: stringFromCallCompared
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: name
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        StringLiteral: "a"
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 0
+        }
+    }
+}

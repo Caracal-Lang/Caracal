@@ -1,0 +1,15 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def makePoint(x: i32) Point
+{
+    return Point.new(x);
+}
+
+def functionCallInArrayLiteral() i32
+{
+    points := [makePoint(1), makePoint(2)];
+    return points.at(1).x;
+}

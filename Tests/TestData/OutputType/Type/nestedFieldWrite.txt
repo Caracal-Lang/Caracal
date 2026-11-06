@@ -1,0 +1,344 @@
+TypeDefinitionStatement: {
+    Type: Inner
+    Name: Inner
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(2): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: size
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Inner) -> i32
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: twice
+            }
+            ParametersNode(0): {
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: i32
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            MemberAccessExpression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: size
+                                }
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 2
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Holder
+    Name: Holder
+    ParametersNode(3): {
+        ParameterNode: {
+            Name: inner
+            TypeNameNode: {
+                Type: Inner
+                Lexeme: Inner
+            }
+        }
+        ParameterNode: {
+            Name: items
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+        ParameterNode: {
+            Name: name
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+        }
+    }
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+        }
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: string
+                    Name: name
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: string
+                    Name: name
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> Holder
+    Name: makeHolder
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: Holder
+            Lexeme: Holder
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: items
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: [i32; _]
+                    Lexeme: [i32; _]
+                    Kind: Dynamic
+                    DataType: {
+                        TypeNameNode: {
+                            Type: i32
+                            Lexeme: i32
+                        }
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 5
+                    NumberLiteral: 6
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: Holder
+            BinaryExpression: {
+                Type: Holder
+                Left: {
+                    NameExpression: {
+                        Type: Holder
+                        Name: Holder
+                    }
+                }
+                Operation: ConstructorCall
+                Right: {
+                    FunctionCallExpression: {
+                        Type: Holder
+                        Function type: (ref Holder, Inner, [i32; _], string) -> void
+                        NameExpression: {
+                            Type: (ref Holder, Inner, [i32; _], string) -> void
+                            Name: new
+                        }
+                        ArgumentsNode(3): {
+                            BinaryExpression: {
+                                Type: Inner
+                                Left: {
+                                    NameExpression: {
+                                        Type: Inner
+                                        Name: Inner
+                                    }
+                                }
+                                Operation: ConstructorCall
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: Inner
+                                        Function type: (ref Inner, i32) -> void
+                                        NameExpression: {
+                                            Type: (ref Inner, i32) -> void
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 4
+                                        }
+                                    }
+                                }
+                            }
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: items
+                            }
+                            StringLiteral: "name"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: nestedFieldWrite
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: Holder
+            Left: {
+                NameExpression: {
+                    Type: Holder
+                    Name: holder
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: Holder
+                    Function type: () -> Holder
+                    NameExpression: {
+                        Type: () -> Holder
+                        Name: makeHolder
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        BinaryExpression: {
+                            Type: Inner
+                            Left: {
+                                NameExpression: {
+                                    Type: Holder
+                                    Name: holder
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Inner
+                                    Name: inner
+                                }
+                            }
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: size
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 9
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Holder
+                                Name: holder
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: size
+                    }
+                }
+            }
+        }
+    }
+}
