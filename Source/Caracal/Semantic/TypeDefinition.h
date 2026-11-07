@@ -6,6 +6,7 @@
 #include <Caracal/Syntax/UnaryOperatorKind.h>
 #include <Caracal/Semantic/Type.h>
 #include <Caracal/Semantic/FieldDefinition.h>
+#include <Caracal/Semantic/OverloadSet.h>
 #include <Caracal/Text/TransparentStringHash.h>
 #include <optional>
 #include <string>
@@ -28,7 +29,7 @@ namespace Caracal
     class TypeDefinition
     {
     public:
-        using MethodsByName = std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>>;
+        using MethodsByName = std::unordered_map<std::string, OverloadSet, TransparentStringHash, std::equal_to<>>;
 
         TypeDefinition(
             Type type,
@@ -45,7 +46,7 @@ namespace Caracal
         [[nodiscard]] const std::vector<FieldDefinition>& fields() const noexcept { return m_fields; }
         void addMethod(Type methodType, const std::string& methodName) noexcept;
         [[nodiscard]] const MethodsByName& methods() const noexcept { return m_methods; }
-        [[nodiscard]] Type tryGetMethodTypeByName(std::string_view methodName) const noexcept;
+        [[nodiscard]] const OverloadSet* tryGetMethodOverloadSet(std::string_view methodName) const noexcept;
         void addOperatorSignature(BinaryOperatorKind binaryOperator, const OperatorSignature& signature) noexcept;
         void addOperatorSignature(UnaryOperatorKind unaryOperator, const OperatorSignature& signature) noexcept;
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(BinaryOperatorKind binaryOperator) const noexcept;

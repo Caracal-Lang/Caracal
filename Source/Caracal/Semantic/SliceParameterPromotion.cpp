@@ -202,7 +202,7 @@ namespace Caracal
             case NodeKind::FunctionCallExpression:
             {
                 const auto calleeName = context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, index)));
-                AnalyzeSliceParameterCallArguments(context, unit, index, module.tryGetFunctionTypeByName(calleeName), 0, name, enclosingParameters, module, usage);
+                AnalyzeSliceParameterCallArguments(context, unit, index, tryGetOverload(module.tryGetOverloadSet(calleeName)), 0, name, enclosingParameters, module, usage);
                 return;
             }
             case NodeKind::BinaryExpression:
@@ -261,7 +261,7 @@ namespace Caracal
 
                             if (receiverType != Type::Undefined() && receiverType.kind() == TypeKind::Type)
                             {
-                                const auto methodType = module.getTypeDefinition(receiverType).tryGetMethodTypeByName(context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, binaryLayout.right))));
+                                const auto methodType = tryGetOverload(module.getTypeDefinition(receiverType).tryGetMethodOverloadSet(context.getLexeme(unit.fileId, buffer.mainToken(CallNameExpressionIndex(buffer, binaryLayout.right)))));
                                 if (methodType != Type::Undefined())
                                 {
                                     calleeType = methodType;

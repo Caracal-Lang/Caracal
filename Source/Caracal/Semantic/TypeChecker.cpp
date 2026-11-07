@@ -822,7 +822,7 @@ namespace Caracal
     void TypeChecker::collectFunctionDeclaration(const CompilationUnit& unit, u32 index)
     {
         const auto functionName = nameOf(unit, index);
-        const auto existingFunctionType = m_module.tryGetFunctionTypeByName(functionName);
+        const auto existingFunctionType = tryGetOverload(m_module.tryGetOverloadSet(functionName));
         if (existingFunctionType != Type::Undefined())
         {
             const auto& existingDefinition = m_module.getFunctionDefinition(existingFunctionType);
@@ -860,7 +860,7 @@ namespace Caracal
 
         // we need to append a number in case the name is already in use
         auto functionName = baseName;
-        for (auto suffix = 1; m_module.tryGetFunctionTypeByName(functionName) != Type::Undefined(); ++suffix)
+        for (auto suffix = 1; m_module.tryGetOverloadSet(functionName) != nullptr; ++suffix)
         {
             functionName = baseName + "_" + std::to_string(suffix);
         }
@@ -1094,7 +1094,7 @@ namespace Caracal
                 const auto parameterNames = collectParameterNames(unit, methodLayout.parameters);
                 declarationParameters.insert(declarationParameters.end(), parameterNames.begin(), parameterNames.end());
 
-                auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+                auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
                 if (methodType != Type::Undefined())
                 {
                     auto otherLocation = std::optional<SourceLocation>{};
@@ -1573,7 +1573,7 @@ namespace Caracal
         auto returns = typeCheckReturnTypesNode(unit, methodLayout.returnTypes);
         popScope(false);
 
-        auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -1656,7 +1656,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckConstructorSignature(const CompilationUnit& unit, u32 typeIndex, TypeDefinition& typeDefinition, Type typeType)
     {
-        auto constructorType = typeDefinition.tryGetMethodTypeByName("new");
+        auto constructorType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet("new"));
         if (constructorType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -2909,7 +2909,7 @@ namespace Caracal
 
             const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, index);
             auto& typeDefinition = m_module.getTypeDefinition(typeType);
-            const auto constructorType = typeDefinition.tryGetMethodTypeByName("new");
+            const auto constructorType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet("new"));
             const auto emitConstructor = constructorType != Type::Undefined();
             if (typeLayout.hasConstructorParameters)
             {
@@ -3044,7 +3044,7 @@ namespace Caracal
                     continue;
                 }
 
-                const auto methodType = typeDefinition.tryGetMethodTypeByName(nameOf(unit, methodLayout.methodName));
+                const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(nameOf(unit, methodLayout.methodName)));
                 if (methodType == Type::Undefined())
                 {
                     continue;
@@ -3316,7 +3316,7 @@ namespace Caracal
             && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::FunctionCallExpression)
         {
             // a call returning an aggregate stores into a preallocated slot
-            const auto calleeType = m_module.tryGetFunctionTypeByName(nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer)));
+            const auto calleeType = tryGetOverload(m_module.tryGetOverloadSet(nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer))));
             if (calleeType != Type::Undefined())
             {
                 const auto& calleeReturns = m_module.getFunctionDefinition(calleeType).returnTypes();
@@ -3373,8 +3373,8 @@ namespace Caracal
 
                 if (receiverType.kind() == TypeKind::Type)
                 {
-                    const auto methodType = m_module.getTypeDefinition(receiverType).tryGetMethodTypeByName(
-                        nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right)));
+                    const auto methodType = tryGetOverload(m_module.getTypeDefinition(receiverType).tryGetMethodOverloadSet(
+                        nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right))));
                     if (methodType != Type::Undefined())
                     {
                         const auto& methodReturns = m_module.getFunctionDefinition(methodType).returnTypes();
@@ -4352,8 +4352,8 @@ namespace Caracal
         if (!stubParameters.empty() && stubParameters.front().type().toBaseType().kind() == TypeKind::Type)
         {
             const auto& receiverDefinition = m_module.getTypeDefinition(stubParameters.front().type().toBaseType());
-            beginTestType = receiverDefinition.tryGetMethodTypeByName(TestBeginMethodName);
-            endTestType = receiverDefinition.tryGetMethodTypeByName(TestEndMethodName);
+            beginTestType = tryGetOverload(receiverDefinition.tryGetMethodOverloadSet(TestBeginMethodName));
+            endTestType = tryGetOverload(receiverDefinition.tryGetMethodOverloadSet(TestEndMethodName));
             receiver = m_emitter.addressOfLocal(internName(stubParameters.front().name()));
         }
 
@@ -4762,7 +4762,7 @@ namespace Caracal
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, index);
 
-        const auto methodType = m_module.getTypeDefinition(m_currentType).tryGetMethodTypeByName(nameOf(unit, methodLayout.methodName));
+        const auto methodType = tryGetOverload(m_module.getTypeDefinition(m_currentType).tryGetMethodOverloadSet(nameOf(unit, methodLayout.methodName)));
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -5401,7 +5401,7 @@ namespace Caracal
                         const auto nameExpressionIndex = NodeLayout::subtreeBegin(buffer, binaryLayout.right);
                         const auto name = std::string(nameOf(unit, nameExpressionIndex));
 
-                        auto methodType = typeDefinition.tryGetMethodTypeByName(name);
+                        auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(name));
                         if (methodType != Type::Undefined())
                         {
                             auto& methodDefinition = m_module.getFunctionDefinition(methodType);
@@ -5674,7 +5674,7 @@ namespace Caracal
 
                     // only intrinsic methods are callable on builtin types, operator declarations are just signatures
                     auto& typeDefinition = m_module.getTypeDefinition(leftType);
-                    const auto methodType = typeDefinition.tryGetMethodTypeByName(name);
+                    const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(name));
                     auto isIntrinsic = false;
                     if (methodType != Type::Undefined())
                     {
@@ -6011,13 +6011,13 @@ namespace Caracal
         CARACAL_ZONE_DETAIL("expr.call");
         const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, index);
         const auto name = nameOf(unit, nameExpressionIndex);
-        auto functionType = m_module.tryGetFunctionTypeByName(name);
+        auto functionType = tryGetOverload(m_module.tryGetOverloadSet(name));
         if (functionType == Type::Undefined())
         {
             if (m_currentType != Type::Undefined())
             {
                 auto& typeDefinition = m_module.getTypeDefinition(m_currentType);
-                if (typeDefinition.tryGetMethodTypeByName(name) != Type::Undefined())
+                if (typeDefinition.tryGetMethodOverloadSet(name) != nullptr)
                 {
                     m_diagnostics.addMethodCallMissingDotError(
                         unit.source,
@@ -6134,7 +6134,7 @@ namespace Caracal
         {
             const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, inner);
             const auto methodName = nameOf(unit, nameExpressionIndex);
-            const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+            const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
             if (methodType == Type::Undefined())
             {
                 m_diagnostics.addUnknownMethodError(

@@ -1,0 +1,16 @@
+ Error T0039 Duplicate function declaration
+    ,-[Diagnostics/Input/duplicateFunctionDifferentParameterNames.cara:5:5]
+  1 | def value(amount: i32) i32 {
+    .     -----
+    .       `-- Previous function declaration is here.
+  2 |     return amount;
+  3 | }
+  4 | 
+  5 | def value(count: i32) i32 {
+    .     -----
+    .       `-- Function 'value' is already declared
+  6 |     return count;
+  7 | }
+  8 | 
+    `----
+  Fix: Rename this function, or remove the duplicate declaration.

@@ -125,7 +125,7 @@ namespace Caracal
             return;
         }
 
-        const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
         if (methodType == Type::Undefined())
         {
             return;
@@ -345,7 +345,7 @@ namespace Caracal
             return;
         }
 
-        const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
         if (methodType == Type::Undefined())
         {
             return;

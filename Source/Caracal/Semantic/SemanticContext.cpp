@@ -172,12 +172,14 @@ namespace Caracal
         return true;
     }
 
-    Type SemanticContext::tryGetFunctionTypeByName(std::string_view typeName) const noexcept
+    const OverloadSet* SemanticContext::tryGetOverloadSet(std::string_view functionName) const noexcept
     {
-        if (const auto result = m_functionNameToType.find(typeName); result != m_functionNameToType.end())
-            return result->second;
+        if (const auto result = m_overloadSetsByName.find(functionName); result != m_overloadSetsByName.end())
+        {
+            return &result->second;
+        }
 
-        return Type::Undefined();
+        return nullptr;
     }
 
     EnumDefinition& SemanticContext::getEnumDefinition(Type type) noexcept
@@ -604,7 +606,7 @@ namespace Caracal
         auto isVariadic = !parameters.empty() && parameters.back().type() == Type::CVariadic();
         m_functionDefinitions.emplace_back(functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(functionId, m_functionDefinitions.size() - 1);
-        m_functionNameToType.try_emplace(std::move(functionName), functionType);
+        m_overloadSetsByName[std::move(functionName)].overloads.push_back(functionType);
 
         return m_functionDefinitions.back();
     }

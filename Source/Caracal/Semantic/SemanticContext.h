@@ -12,6 +12,7 @@
 #include <Caracal/Semantic/TypeDefinition.h>
 #include <Caracal/Semantic/UnitSemantics.h>
 #include <Caracal/Semantic/FunctionDefinition.h>
+#include <Caracal/Semantic/OverloadSet.h>
 #include <Caracal/Syntax/MethodModifier.h>
 #include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Semantic/Parameter.h>
@@ -36,7 +37,7 @@ namespace Caracal
         [[nodiscard]] bool finalizePrelude(bool preludeWasLoaded, DiagnosticsBag& diagnostics) noexcept;
         [[nodiscard]] PreludeFunctionPool& preludeFunctionPool() noexcept { return m_preludeFunctionPool; }
 
-        [[nodiscard]] Type tryGetFunctionTypeByName(std::string_view typeName) const noexcept;
+        [[nodiscard]] const OverloadSet* tryGetOverloadSet(std::string_view functionName) const noexcept;
         [[nodiscard]] EnumDefinition& getEnumDefinition(Type type) noexcept;
         [[nodiscard]] TypeDefinition& getTypeDefinition(Type type) noexcept;
         [[nodiscard]] const OperatorSignature* tryGetOperatorSignature(Type type, BinaryOperatorKind operation) const noexcept;
@@ -121,7 +122,7 @@ namespace Caracal
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;
         std::unordered_map<i32, size_t> m_functionDefinitionIndexById;
-        std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_functionNameToType;
+        std::unordered_map<std::string, OverloadSet, TransparentStringHash, std::equal_to<>> m_overloadSetsByName;
         std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<>> m_constantDefinitionIndexByName;
         std::unordered_map<i32, std::string> m_typeNames;
         std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_nameToTypes;

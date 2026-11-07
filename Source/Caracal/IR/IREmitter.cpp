@@ -25,9 +25,12 @@ namespace Caracal
 
         std::vector<TypeDeclaration::Method> methods;
         methods.reserve(definition.methods().size());
-        for (const auto& [methodName, methodType] : definition.methods())
+        for (const auto& [methodName, overloadSet] : definition.methods())
         {
-            methods.push_back(TypeDeclaration::Method{ methodName, methodType.id() });
+            for (const auto methodType : overloadSet.overloads)
+            {
+                methods.push_back(TypeDeclaration::Method{ methodName, methodType.id() });
+            }
         }
 
         std::ranges::sort(methods, {}, &TypeDeclaration::Method::functionId);
