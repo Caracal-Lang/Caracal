@@ -6174,6 +6174,22 @@ namespace Caracal
         return result;
     }
 
+    TypeChecker::ArgumentContext TypeChecker::argumentContextFor(const CompilationUnit& unit, const Parameter& parameter, u32 argumentValue) const noexcept
+    {
+        auto argumentContext = ArgumentContext{};
+        argumentContext.contextualNumberType = contextualTypeForExpectedType(parameter.type());
+        argumentContext.wantsAddress = parameter.type().isReference();
+        if (!argumentContext.wantsAddress
+            && parameter.type().kind() == TypeKind::DynamicArray
+            && unit.nodeBuffer.kind(NodeLayout::stripGroupings(unit.nodeBuffer, argumentValue)) == NodeKind::NameExpression)
+        {
+            // a dynamic array passed by name is deep copied
+            argumentContext.wantsAddress = true;
+        }
+
+        return argumentContext;
+    }
+
     bool TypeChecker::typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context, ValueRef& emittedCallValue, std::optional<FoldValue>& emittedCallFold, std::optional<ValueRef> implicitArgument)
     {
         CARACAL_ZONE_NAMED("check.callArguments");
@@ -6257,8 +6273,7 @@ namespace Caracal
             // resolve again every iteration, the previous argument's walk may have moved the definition store
             const auto& parameters = m_module.getFunctionDefinition(functionType).parameters();
 
-            auto contextualType = std::optional<Type>{};
-            auto parameterWantsAddress = false;
+            auto argumentContext = ArgumentContext{};
             auto isVariadicArgument = true;
             for (size_t i = 0; i < fixedParameterCount; ++i)
             {
@@ -6267,16 +6282,7 @@ namespace Caracal
                     continue;
                 }
 
-                contextualType = contextualTypeForExpectedType(parameters[i + parameterOffset].type());
-                parameterWantsAddress = parameters[i + parameterOffset].type().isReference();
-                if (!parameterWantsAddress
-                    && parameters[i + parameterOffset].type().kind() == TypeKind::DynamicArray
-                    && unit.nodeBuffer.kind(NodeLayout::stripGroupings(buffer, argumentValue)) == NodeKind::NameExpression)
-                {
-                    // a dynamic array passed by name is deep copied through its address when the call is emitted
-                    // the argument is not loaded
-                    parameterWantsAddress = true;
-                }
+                argumentContext = argumentContextFor(unit, parameters[i + parameterOffset], argumentValue);
                 isVariadicArgument = false;
                 break;
             }
@@ -6291,7 +6297,7 @@ namespace Caracal
                 if (isExternCall)
                 {
                     // extern calls to C need a cstring
-                    contextualType = m_module.wellKnown().cstring;
+                    argumentContext.contextualNumberType = m_module.wellKnown().cstring;
                 }
             }
 
@@ -6311,17 +6317,17 @@ namespace Caracal
                 }
             }
 
-            auto argumentContext = context;
-            argumentContext.contextualNumberType = contextualType;
-            argumentContext.wantsAddress = parameterWantsAddress;
-            argumentContext.receiverPosition = false;
-            const auto checkedArgument = typeCheckExpression(unit, argumentValue, argumentContext);
+            auto argumentExpressionContext = context;
+            argumentExpressionContext.contextualNumberType = argumentContext.contextualNumberType;
+            argumentExpressionContext.wantsAddress = argumentContext.wantsAddress;
+            argumentExpressionContext.receiverPosition = false;
+            const auto checkedArgument = typeCheckExpression(unit, argumentValue, argumentExpressionContext);
             if (pushedTempDestination)
             {
                 m_constructorDestinations.pop_back();
             }
             auto emittedArgument = checkedArgument.value;
-            if (!parameterWantsAddress && !isVariadicArgument)
+            if (!argumentContext.wantsAddress && !isVariadicArgument)
             {
                 emittedArgument = copyValueIfNeeded(unit, argumentValue, emittedArgument, checkedArgument.type);
             }

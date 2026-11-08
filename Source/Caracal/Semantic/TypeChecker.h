@@ -53,6 +53,12 @@ namespace Caracal
             bool receiverPosition = false;
         };
 
+        struct ArgumentContext
+        {
+            std::optional<Type> contextualNumberType;
+            bool wantsAddress = false;
+        };
+
         struct CheckedValue
         {
             Type type;
@@ -232,6 +238,7 @@ namespace Caracal
         [[nodiscard]] Type coerceConditionType(Type conditionType, const CompilationUnit& unit, u32 conditionIndex);
         [[nodiscard]] bool isAssignableTo(Type sourceType, Type targetType) const noexcept;
         [[nodiscard]] std::optional<Type> contextualTypeForExpectedType(Type expectedType) const noexcept;
+        [[nodiscard]] ArgumentContext argumentContextFor(const CompilationUnit& unit, const Parameter& parameter, u32 argumentValue) const noexcept;
         [[nodiscard]] bool tryAddArrayLengthMismatchError(const CompilationUnit& unit, const SourceLocation& location, Type expectedType, Type actualType);
         [[nodiscard]] bool areComparableTypes(Type leftType, Type rightType);
 
