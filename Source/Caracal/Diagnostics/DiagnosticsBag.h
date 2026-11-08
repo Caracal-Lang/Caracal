@@ -165,6 +165,7 @@ namespace Caracal
         void addDuplicateMethodDeclarationError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName, std::optional<SourceLocation> otherLocation = std::nullopt);
 
         // Overload diagnostics
+        void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
         void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
         void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
 

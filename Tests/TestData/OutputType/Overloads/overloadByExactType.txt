@@ -1,0 +1,134 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (bool) -> i32
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: a
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (i32) -> i32
+                                NameExpression: {
+                                    Type: (i32) -> i32
+                                    Name: pick
+                                }
+                                ArgumentsNode(1): {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: a
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (i32) -> i32
+                                NameExpression: {
+                                    Type: (i32) -> i32
+                                    Name: pick
+                                }
+                                ArgumentsNode(1): {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: a
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (bool) -> i32
+                        NameExpression: {
+                            Type: (bool) -> i32
+                            Name: pick
+                        }
+                        ArgumentsNode(1): {
+                            BoolLiteral: true
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

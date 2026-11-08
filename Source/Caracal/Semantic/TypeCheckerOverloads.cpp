@@ -2,8 +2,11 @@
 
 #include <Caracal/Constants.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Syntax/NodeLayout.h>
+#include <Caracal/Syntax/NodeSpans.h>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -62,6 +65,138 @@ namespace Caracal
         }
 
         return definition.fullName();
+    }
+
+    [[nodiscard]] static bool MatchesExactly(const FunctionDefinition& definition, std::span<const Type> argumentTypes) noexcept
+    {
+        const auto& parameters = definition.parameters();
+        if (definition.isVariadic() || parameters.size() != argumentTypes.size())
+        {
+            return false;
+        }
+
+        for (size_t index = 0; index < parameters.size(); ++index)
+        {
+            if (parameters[index].type() != argumentTypes[index])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    TypeChecker::SuspendedEmissionScope::SuspendedEmissionScope(TypeChecker& typeChecker) noexcept
+        : m_typeChecker{ typeChecker }
+        , m_emissionPosition{ typeChecker.m_emitter.suspendEmission() }
+        , m_diagnosticCount{ typeChecker.m_diagnostics.diagnostics().size() }
+        , m_sawUnfoldedBitwiseCall{ typeChecker.m_sawUnfoldedBitwiseCall }
+        , m_leadingDotRootPending{ typeChecker.m_leadingDotRootPending }
+    {
+    }
+
+    TypeChecker::SuspendedEmissionScope::~SuspendedEmissionScope() noexcept
+    {
+        m_typeChecker.m_emitter.resumeEmission(m_emissionPosition);
+        if (!m_keepsDiagnostics)
+        {
+            m_typeChecker.m_diagnostics.removeDiagnosticsAfter(m_diagnosticCount);
+        }
+        m_typeChecker.m_sawUnfoldedBitwiseCall = m_sawUnfoldedBitwiseCall;
+        m_typeChecker.m_leadingDotRootPending = m_leadingDotRootPending;
+    }
+
+    bool TypeChecker::SuspendedEmissionScope::addedError() const noexcept
+    {
+        const auto& diagnostics = m_typeChecker.m_diagnostics.diagnostics();
+        for (size_t index = m_diagnosticCount; index < diagnostics.size(); ++index)
+        {
+            if (diagnostics[index].level() == DiagnosticLevel::Error)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    Type TypeChecker::checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context)
+    {
+        auto scope = SuspendedEmissionScope{ *this };
+        const auto argumentType = typeCheckExpression(unit, argumentValue, context).type;
+        if (scope.addedError())
+        {
+            scope.keepDiagnostics();
+            return Type::Undefined();
+        }
+
+        return argumentType;
+    }
+
+    Type TypeChecker::resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
+    {
+        if (!overloadSet.isOverloaded())
+        {
+            return overloadSet.firstOverload();
+        }
+
+        return resolveOverload(unit, callIndex, nameExpressionIndex, overloadSet);
+    }
+
+    Type TypeChecker::resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
+    {
+        CARACAL_ZONE_NAMED("check.resolveOverload");
+        const auto& buffer = unit.nodeBuffer;
+
+        NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
+        const auto argumentsStart = m_callArgumentStack.size();
+        for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
+        {
+            m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
+        }
+        const auto argumentsEnd = m_callArgumentStack.size();
+
+        auto argumentTypes = std::vector<Type>{};
+        argumentTypes.reserve(argumentsEnd - argumentsStart);
+        auto hasNamedArgument = false;
+        auto hasUndefinedArgument = false;
+        for (auto position = argumentsStart; position < argumentsEnd; ++position)
+        {
+            const auto argumentNode = m_callArgumentStack[position];
+            if (NodeLayout::isNamedArgument(buffer, argumentNode))
+            {
+                hasNamedArgument = true;
+            }
+
+            const auto argumentType = checkArgumentWithoutEmission(unit, NodeLayout::argumentValue(buffer, argumentNode), ExpressionContext{});
+            if (argumentType == Type::Undefined())
+            {
+                hasUndefinedArgument = true;
+            }
+            argumentTypes.push_back(argumentType);
+        }
+        m_callArgumentStack.resize(argumentsStart);
+        if (hasUndefinedArgument)
+        {
+            return Type::Undefined();
+        }
+
+        if (!hasNamedArgument)
+        {
+            for (const auto candidate : overloadSet.overloads)
+            {
+                if (MatchesExactly(m_module.getFunctionDefinition(candidate), argumentTypes))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        m_diagnostics.addNoOverloadMatchesCallError(
+            unit.source,
+            NodeSpans::expressionSourceLocation(buffer, m_compilationContext.tokenBuffer(unit.fileId), callIndex),
+            std::string(nameOf(unit, nameExpressionIndex)));
+        return Type::Undefined();
     }
 
     void TypeChecker::reportInvalidOverloadSets()

@@ -1,0 +1,15 @@
+def pick(value: i32) i32
+{
+    return 1;
+}
+
+def pick(value: bool) i32
+{
+    return 2;
+}
+
+def main() i32
+{
+    a := 5;
+    return pick(a) %+ pick(a) %+ pick(true);
+}

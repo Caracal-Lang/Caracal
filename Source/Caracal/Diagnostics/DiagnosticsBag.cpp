@@ -2251,6 +2251,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0111_NoOverloadMatchesCall,
+            source,
+            location,
+            "Change the arguments to match one overload.");
+        diagnostic.addPrimaryLabel(location, "No overload of '" + functionName + "' accepts these arguments");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCompilerCalledFunctionHasOverloadsError(
         const SourceTextSharedPtr& source,
         const SourceLocation& location,

@@ -110,6 +110,26 @@ namespace Caracal
             bool loadResult = false;
         };
 
+        class SuspendedEmissionScope
+        {
+        public:
+            explicit SuspendedEmissionScope(TypeChecker& typeChecker) noexcept;
+            ~SuspendedEmissionScope() noexcept;
+            SuspendedEmissionScope(const SuspendedEmissionScope&) = delete;
+            SuspendedEmissionScope& operator=(const SuspendedEmissionScope&) = delete;
+
+            [[nodiscard]] bool addedError() const noexcept;
+            void keepDiagnostics() noexcept { m_keepsDiagnostics = true; }
+
+        private:
+            TypeChecker& m_typeChecker;
+            IREmitter::EmissionPosition m_emissionPosition;
+            size_t m_diagnosticCount = 0;
+            bool m_sawUnfoldedBitwiseCall = false;
+            bool m_leadingDotRootPending = false;
+            bool m_keepsDiagnostics = false;
+        };
+
         void collectDeclarations();
         void collectUnitDeclarations(CompilationUnit& unit);
         void collectFunctionDeclaration(const CompilationUnit& unit, u32 index);
@@ -131,6 +151,9 @@ namespace Caracal
         void typeCheckTypeSignatures();
         void reportInvalidOverloadSets();
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
+        [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);

@@ -3333,7 +3333,14 @@ namespace Caracal
             && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::FunctionCallExpression)
         {
             // a call returning an aggregate stores into a preallocated slot
-            const auto calleeType = tryGetOverload(m_module.tryGetOverloadSet(nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer))));
+            const auto calleeNameIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer);
+            auto calleeType = Type::Undefined();
+            if (const auto* calleeSet = m_module.tryGetOverloadSet(nameOf(unit, calleeNameIndex)); calleeSet != nullptr)
+            {
+                const auto diagnosticCount = m_diagnostics.diagnostics().size();
+                calleeType = resolveCallee(unit, strippedInitializer, calleeNameIndex, *calleeSet);
+                m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+            }
             if (calleeType != Type::Undefined())
             {
                 const auto& calleeReturns = m_module.getFunctionDefinition(calleeType).returnTypes();
@@ -6028,8 +6035,8 @@ namespace Caracal
         CARACAL_ZONE_DETAIL("expr.call");
         const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, index);
         const auto name = nameOf(unit, nameExpressionIndex);
-        auto functionType = tryGetOverload(m_module.tryGetOverloadSet(name));
-        if (functionType == Type::Undefined())
+        const auto* overloadSet = m_module.tryGetOverloadSet(name);
+        if (overloadSet == nullptr)
         {
             if (m_currentType != Type::Undefined())
             {
@@ -6049,6 +6056,12 @@ namespace Caracal
                 unit.source,
                 ExpressionSourceLocation(m_compilationContext, unit, index),
                 std::string(name));
+            return Type::Undefined();
+        }
+
+        const auto functionType = resolveCallee(unit, index, nameExpressionIndex, *overloadSet);
+        if (functionType == Type::Undefined())
+        {
             return Type::Undefined();
         }
 

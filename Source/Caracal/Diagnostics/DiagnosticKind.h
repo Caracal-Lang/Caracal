@@ -115,6 +115,7 @@ namespace Caracal
         T0075_DuplicateMethodDeclaration,
 
         // Overload diagnostics
+        T0111_NoOverloadMatchesCall,
         T0113_CompilerCalledFunctionHasOverloads,
         T0114_ExternOverloadsShareSymbol,
 

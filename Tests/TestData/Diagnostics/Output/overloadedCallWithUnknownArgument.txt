@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+     ,-[Diagnostics/Input/overloadedCallWithUnknownArgument.cara:13:17]
+  10 | 
+  11 | def caller() i32
+  12 | {
+  13 |     return pick(missing);
+     .                 -------
+     .                    `-- Unknown name 'missing'
+  14 | }
+  15 | 
+     `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.
