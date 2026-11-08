@@ -1,0 +1,12 @@
+type Counter
+{
+    def value() i32
+    {
+        return 1;
+    }
+
+    def value() bool
+    {
+        return true;
+    }
+}

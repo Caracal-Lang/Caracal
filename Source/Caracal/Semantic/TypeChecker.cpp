@@ -1038,6 +1038,9 @@ namespace Caracal
             auto& typeDefinition = m_module.getTypeDefinition(typeType);
             const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, typeIndex);
             const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+            auto annotations = std::vector<u32>{};
+            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, typeIndex, annotations);
+            const auto isBuiltin = NodeLayout::annotationsContain(unit.nodeBuffer, tokens, annotations, BuiltinAnnotationName);
             auto bodyStatements = std::vector<u32>{};
             NodeLayout::collectChildren(unit.nodeBuffer, typeLayout.body, bodyStatements);
             for (const auto bodyStatement : bodyStatements)
@@ -1075,25 +1078,15 @@ namespace Caracal
                 const auto parameterNames = collectParameterNames(unit, methodLayout.parameters);
                 declarationParameters.insert(declarationParameters.end(), parameterNames.begin(), parameterNames.end());
 
-                auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
-                if (methodType != Type::Undefined())
+                const auto existingType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
+                if (isBuiltin && existingType != Type::Undefined())
                 {
-                    auto otherLocation = std::optional<SourceLocation>{};
-                    const auto& existingDefinition = m_module.getFunctionDefinition(methodType);
-                    if (existingDefinition.definitionNode().index != InvalidNodeIndex)
-                    {
-                        const auto otherNode = existingDefinition.definitionNode();
-                        const auto& otherBuffer = m_compilationContext.nodeBuffer(otherNode.fileId);
-                        const auto otherLayout = NodeLayout::methodDefinition(otherBuffer, otherNode.index);
-                        otherLocation = m_compilationContext.sourceLocation(otherNode.fileId, otherBuffer.mainToken(otherLayout.methodName));
-                    }
-
                     m_diagnostics.addDuplicateMethodDeclarationError(
                         unit.source,
                         nameLocation(unit, methodLayout.methodName),
                         std::string(methodName),
                         typeDefinition.name(),
-                        otherLocation);
+                        methodNameLocation(m_module.getFunctionDefinition(existingType)));
                     continue;
                 }
 
@@ -1102,9 +1095,7 @@ namespace Caracal
                 m_module.setNodeType(NodeIndex{ unit.fileId, bodyStatement }, methodDefinition.type());
             }
 
-            auto annotations = std::vector<u32>{};
-            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, typeIndex, annotations);
-            if (NodeLayout::annotationsContain(unit.nodeBuffer, tokens, annotations, BuiltinAnnotationName))
+            if (isBuiltin)
             {
                 // builtin types are not constructible, they get no synthesized constructor
                 continue;
@@ -1261,6 +1252,19 @@ namespace Caracal
         const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
         source = m_compilationContext.source(nameToken);
         location = m_compilationContext.sourceLocation(nameToken);
+    }
+
+    std::optional<SourceLocation> TypeChecker::methodNameLocation(const FunctionDefinition& methodDefinition) const noexcept
+    {
+        const auto methodNode = methodDefinition.definitionNode();
+        if (methodNode.index == InvalidNodeIndex)
+        {
+            return std::nullopt;
+        }
+
+        const auto& buffer = m_compilationContext.nodeBuffer(methodNode.fileId);
+        const auto methodLayout = NodeLayout::methodDefinition(buffer, methodNode.index);
+        return m_compilationContext.sourceLocation(methodNode.fileId, buffer.mainToken(methodLayout.methodName));
     }
 
     CompilationUnit& TypeChecker::unitFor(NodeIndex index) const noexcept
@@ -1539,6 +1543,10 @@ namespace Caracal
             }
 
             typeCheckMethodSignature(unit, bodyStatement, typeDefinition, typeType);
+            if (!isBuiltin && rejectInvalidMethodOverload(unit, bodyStatement, typeDefinition))
+            {
+                continue;
+            }
 
             if (isBuiltin)
             {
@@ -1562,7 +1570,7 @@ namespace Caracal
         auto returns = typeCheckReturnTypesNode(unit, methodLayout.returnTypes);
         popScope(false);
 
-        auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
+        auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, methodIndex });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -2590,6 +2598,14 @@ namespace Caracal
         return &m_bindingsByName[nameId].back();
     }
 
+    bool TypeChecker::isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, expression);
+        return unit.nodeBuffer.kind(stripped) == NodeKind::NameExpression
+            && tryGetBinding(nameIdOf(unit, stripped)) == nullptr
+            && m_module.tryGetTypeByName(nameOf(unit, stripped)) != Type::Undefined();
+    }
+
     const TypeChecker::LexicalBinding* TypeChecker::tryGetConflictingBinding(u32 nameId) const noexcept
     {
         const auto* existing = tryGetBinding(nameId);
@@ -3061,13 +3077,7 @@ namespace Caracal
                     continue;
                 }
 
-                const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(nameOf(unit, methodLayout.methodName)));
-                if (methodType == Type::Undefined())
-                {
-                    continue;
-                }
-
-                if (!(m_module.getFunctionDefinition(methodType).definitionNode() == NodeIndex{ unit.fileId, bodyStatement }))
+                if (m_module.typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
                 {
                     continue;
                 }
@@ -4786,7 +4796,7 @@ namespace Caracal
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, index);
 
-        const auto methodType = tryGetOverload(m_module.getTypeDefinition(m_currentType).tryGetMethodOverloadSet(nameOf(unit, methodLayout.methodName)));
+        const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -5446,6 +5456,16 @@ namespace Caracal
                             if (methodDefinition.functionType() == FunctionType::PrivateMethod && m_currentType != leftType)
                             {
                                 m_diagnostics.addPrivateMethodCallOutsideTypeError(
+                                    unit.source,
+                                    ExpressionSourceLocation(m_compilationContext, unit, binaryLayout.right),
+                                    name,
+                                    typeDefinition.name());
+                                return Type::Undefined();
+                            }
+
+                            if (methodDefinition.functionType() == FunctionType::StaticMethod && !isTypeNameExpression(unit, binaryLayout.left))
+                            {
+                                m_diagnostics.addStaticMethodCalledWithoutTypeNameError(
                                     unit.source,
                                     ExpressionSourceLocation(m_compilationContext, unit, binaryLayout.right),
                                     name,
@@ -6172,6 +6192,17 @@ namespace Caracal
                     ExpressionSourceLocation(m_compilationContext, unit, inner),
                     typeDefinition.name(),
                     std::string(methodName));
+
+                return recordType(unit, index, Type::Undefined());
+            }
+
+            if (m_module.getFunctionDefinition(methodType).functionType() == FunctionType::StaticMethod)
+            {
+                m_diagnostics.addStaticMethodCalledWithoutTypeNameError(
+                    unit.source,
+                    ExpressionSourceLocation(m_compilationContext, unit, inner),
+                    std::string(methodName),
+                    typeDefinition.name());
 
                 return recordType(unit, index, Type::Undefined());
             }

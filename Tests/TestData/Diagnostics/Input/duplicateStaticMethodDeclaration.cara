@@ -1,0 +1,12 @@
+type Counter
+{
+    def Counter.make(value: i32) i32
+    {
+        return value;
+    }
+
+    def Counter.make(amount: i32) i32
+    {
+        return amount;
+    }
+}

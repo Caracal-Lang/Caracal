@@ -1,0 +1,19 @@
+ Error T0075 Duplicate method declaration
+     ,-[Diagnostics/Input/duplicateMethodDifferentReturnType.cara:8:9]
+   1 | type Counter
+   2 | {
+   3 |     def value() i32
+     .         -----
+     .           `-- Previous method declaration is here.
+   4 |     {
+   5 |         return 1;
+   6 |     }
+   7 | 
+   8 |     def value() bool
+     .         -----
+     .           `-- Method 'value' is already declared in type 'Counter'
+   9 |     {
+  10 |         return true;
+  11 |     }
+     `----
+  Fix: Rename this method, or remove the duplicate declaration.

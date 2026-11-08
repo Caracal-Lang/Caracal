@@ -1115,6 +1115,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addStaticMethodCalledWithoutTypeNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0115_StaticMethodCalledWithoutTypeName,
+            source,
+            location,
+            "Write '" + typeName + "." + methodName + "(...)'.");
+        diagnostic.addPrimaryLabel(location, "'" + methodName + "' is a static method of type '" + typeName + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addStaticMethodTypeNameMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& declaredTypeName, const std::string& enclosingTypeName, const std::string& methodName)
     {
         auto diagnostic = Diagnostic(

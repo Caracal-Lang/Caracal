@@ -1,0 +1,13 @@
+type Box
+{
+    def Box.make(value: i32) i32
+    {
+        return value;
+    }
+}
+
+def main() i32
+{
+    box := Box.new();
+    return box.make(1);
+}

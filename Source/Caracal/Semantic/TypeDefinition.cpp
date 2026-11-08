@@ -33,6 +33,14 @@ namespace Caracal
         m_methods[methodName].overloads.push_back(methodType);
     }
 
+    void TypeDefinition::removeMethod(std::string_view methodName, Type methodType) noexcept
+    {
+        if (const auto result = m_methods.find(methodName); result != m_methods.end())
+        {
+            std::erase(result->second.overloads, methodType);
+        }
+    }
+
     const OverloadSet* TypeDefinition::tryGetMethodOverloadSet(std::string_view methodName) const noexcept
     {
         if (const auto result = m_methods.find(methodName); result != m_methods.end())

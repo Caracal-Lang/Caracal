@@ -54,6 +54,11 @@ namespace Caracal
         return true;
     }
 
+    [[nodiscard]] static bool IsStaticMethod(const FunctionDefinition& definition) noexcept
+    {
+        return definition.functionType() == FunctionType::StaticMethod;
+    }
+
     // an extern without a symbol argument uses its name as the C symbol
     [[nodiscard]] static std::optional<std::string> ExternSymbol(const FunctionDefinition& definition)
     {
@@ -477,5 +482,45 @@ namespace Caracal
         }
 
         return isRejected;
+    }
+
+    bool TypeChecker::rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition)
+    {
+        const auto methodNode = NodeIndex{ unit.fileId, methodIndex };
+        const auto methodType = m_module.typeOfNode(methodNode);
+        const auto& definition = m_module.getFunctionDefinition(methodType);
+        if (HasUndefinedParameter(definition))
+        {
+            return false;
+        }
+
+        for (const auto memberType : typeDefinition.tryGetMethodOverloadSet(definition.name())->overloads)
+        {
+            if (memberType == methodType)
+            {
+                return false;
+            }
+
+            const auto& memberDefinition = m_module.getFunctionDefinition(memberType);
+            if (HasUndefinedParameter(memberDefinition)
+                || IsStaticMethod(memberDefinition) != IsStaticMethod(definition)
+                || !HaveSameParameterTypes(definition, memberDefinition))
+            {
+                continue;
+            }
+
+            const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, methodIndex);
+            m_diagnostics.addDuplicateMethodDeclarationError(
+                unit.source,
+                nameLocation(unit, methodLayout.methodName),
+                definition.name(),
+                typeDefinition.name(),
+                methodNameLocation(memberDefinition));
+            typeDefinition.removeMethod(definition.name(), methodType);
+            m_module.setNodeType(methodNode, Type::Undefined());
+            return true;
+        }
+
+        return false;
     }
 }

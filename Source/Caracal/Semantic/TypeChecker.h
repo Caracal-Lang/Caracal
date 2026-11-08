@@ -158,6 +158,7 @@ namespace Caracal
         void typeCheckTypeSignatures();
         void reportInvalidOverloadSets();
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
+        [[nodiscard]] bool rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
@@ -191,6 +192,7 @@ namespace Caracal
         [[nodiscard]] u32 nameIdOf(const CompilationUnit& unit, u32 index) const noexcept;
         void addVariableBinding(u32 nameId, Type type, std::optional<SourceLocation> location, const SourceTextSharedPtr& source, VariableBindingKind kind, bool referencesConstant = false);
         [[nodiscard]] const LexicalBinding* tryGetBinding(u32 nameId) const noexcept;
+        [[nodiscard]] bool isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept;
         [[nodiscard]] const LexicalBinding* tryGetConflictingBinding(u32 nameId) const noexcept;
         [[nodiscard]] ValueRef addressOfName(const CompilationUnit& unit, u32 nameNode);
         [[nodiscard]] bool nameIsInitConstant(const CompilationUnit& unit, u32 nameNode) const;
@@ -293,6 +295,7 @@ namespace Caracal
         [[nodiscard]] SourceLine statementLine(const CompilationUnit& unit, u32 index) const;
         [[nodiscard]] SourceLocation annotationLocation(const CompilationUnit& unit, u32 index) const noexcept;
         void locateDefinitionName(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
+        [[nodiscard]] std::optional<SourceLocation> methodNameLocation(const FunctionDefinition& methodDefinition) const noexcept;
         [[nodiscard]] bool pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept;
 
         Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept

@@ -1,0 +1,18 @@
+type Counter
+{
+    def value() i32
+    {
+        return 1;
+    }
+
+    def value(flag: bool) i32
+    {
+        _ = flag;
+        return 2;
+    }
+
+    def value() i32
+    {
+        return 3;
+    }
+}

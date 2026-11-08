@@ -45,6 +45,7 @@ namespace Caracal
         [[nodiscard]] const FieldDefinition& tryGetFieldByName(std::string_view fieldName) const noexcept;
         [[nodiscard]] const std::vector<FieldDefinition>& fields() const noexcept { return m_fields; }
         void addMethod(Type methodType, const std::string& methodName) noexcept;
+        void removeMethod(std::string_view methodName, Type methodType) noexcept;
         [[nodiscard]] const MethodsByName& methods() const noexcept { return m_methods; }
         [[nodiscard]] const OverloadSet* tryGetMethodOverloadSet(std::string_view methodName) const noexcept;
         void addOperatorSignature(BinaryOperatorKind binaryOperator, const OperatorSignature& signature) noexcept;

@@ -55,6 +55,7 @@ namespace Caracal
         T0073_MethodCallMissingDot,
         T0076_MemberAccessInDefaultParameter,
         T0077_PrivateMethodCallOutsideType,
+        T0115_StaticMethodCalledWithoutTypeName,
         T0093_MemberAccessInStaticMethod,
         T0094_PrivateFieldAccessOutsideType,
         T0095_MutatingMethodOnImmutableSlice,
