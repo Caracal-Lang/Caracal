@@ -6073,7 +6073,7 @@ namespace Caracal
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
 
         // extern declarations only reach codegen when a call requires them
-        if (functionDefinition.symbolName().has_value())
+        if (functionDefinition.isExtern())
         {
             m_module.markExternRequired(functionType);
         }
@@ -6218,8 +6218,7 @@ namespace Caracal
             parameterCount = parameterTypes.size() - 1;
         }
 
-        auto isExternCallComputed = false;
-        auto isExternCall = false;
+        const auto isExternCall = functionDefinition.isExtern();
         // static intrinsics like i32.bitAnd have no receiver, array intrinsics carry an explicit .this parameter
         const bool hasImplicitThis =
             functionDefinition.functionType() == FunctionType::SynthesizedConstructor ||
@@ -6302,11 +6301,6 @@ namespace Caracal
 
             if (isVariadicArgument)
             {
-                if (!isExternCallComputed)
-                {
-                    isExternCallComputed = true;
-                    isExternCall = m_module.tryGetExternFunctionByFullName(m_module.getFunctionDefinition(functionType).fullName()) != Type::Undefined();
-                }
                 if (isExternCall)
                 {
                     // extern calls to C need a cstring

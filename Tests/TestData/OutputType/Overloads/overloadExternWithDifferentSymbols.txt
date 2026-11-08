@@ -1,0 +1,195 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: absolute
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "labs"
+            }
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f64) -> f64
+    Name: absolute
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "fabs"
+            }
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f64
+                Lexeme: f64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: f64
+            Lexeme: f64
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: whole
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: i32
+                    Operation: ValueNegation
+                    Expression: {
+                        NumberLiteral: 5
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: f64
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: real
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: f64
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                UnaryExpression: {
+                    Type: f64
+                    Operation: ValueNegation
+                    Expression: {
+                        NumberLiteral: 2.5
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: f64
+            Left: {
+                NameExpression: {
+                    Type: f64
+                    Name: limit
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: f64
+                    Lexeme: f64
+                }
+            }
+            Right: {
+                NumberLiteral: 2.0
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        FunctionCallExpression: {
+                            Type: f64
+                            Function type: (f64) -> f64
+                            NameExpression: {
+                                Type: (f64) -> f64
+                                Name: absolute
+                            }
+                            ArgumentsNode(1): {
+                                NameExpression: {
+                                    Type: f64
+                                    Name: real
+                                }
+                            }
+                        }
+                    }
+                    Operation: GreaterThan
+                    Right: {
+                        NameExpression: {
+                            Type: f64
+                            Name: limit
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (i32) -> i32
+                            NameExpression: {
+                                Type: (i32) -> i32
+                                Name: absolute
+                            }
+                            ArgumentsNode(1): {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: whole
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}

@@ -1,0 +1,26 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+extern absolute(%0: f64 "value") f64 symbol "fabs"
+
+extern absolute(%0: i32 "value") i32 symbol "labs"
+
+define main() i32
+block entry(0):
+    %0 = const -5 : i32
+    %1 = const -2.500000 : f64
+    %2 = const 2.000000 : f64
+    %3 = call fabs(%1) : f64
+    %4 = greater_than %3, %2 : bool
+    branch if %4, if.true(1), if.continuation(2)
+block if.true(1):
+    %5 = call labs(%0) : i32
+    return %5
+block if.continuation(2):
+    %6 = const 0 : i32
+    return %6

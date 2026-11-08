@@ -1,0 +1,8 @@
+#extern()
+def printf(format: cstring, ...) i32 {}
+
+def main() i32
+{
+    printf("%s\n", "hello");
+    return 0;
+}
