@@ -2,6 +2,7 @@
 
 #include <Caracal/Constants.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Semantic/ArgumentBinder.h>
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/NodeSpans.h>
 
@@ -218,27 +219,19 @@ namespace Caracal
         auto typesWithoutContext = std::vector<Type>{};
         typesWithoutContext.reserve(argumentCount);
         auto argumentErrors = std::vector<Diagnostic>{};
-        auto hasNamedArgument = false;
         for (size_t position = 0; position < argumentCount; ++position)
         {
-            const auto argumentNode = m_callArgumentStack[argumentsStart + position];
-            if (NodeLayout::isNamedArgument(buffer, argumentNode))
-            {
-                hasNamedArgument = true;
-            }
-            typesWithoutContext.push_back(checkArgumentWithoutContext(unit, NodeLayout::argumentValue(buffer, argumentNode), argumentErrors));
+            const auto argumentValue = NodeLayout::argumentValue(buffer, m_callArgumentStack[argumentsStart + position]);
+            typesWithoutContext.push_back(checkArgumentWithoutContext(unit, argumentValue, argumentErrors));
         }
 
         auto viableCandidates = std::vector<Type>{};
         auto ranks = std::vector<ArgumentRank>{};
-        if (!hasNamedArgument)
+        for (const auto candidate : overloadSet.overloads)
         {
-            for (const auto candidate : overloadSet.overloads)
+            if (rankCandidate(unit, callIndex, candidate, argumentsStart, typesWithoutContext, ranks))
             {
-                if (rankCandidate(unit, candidate, argumentsStart, typesWithoutContext, ranks))
-                {
-                    viableCandidates.push_back(candidate);
-                }
+                viableCandidates.push_back(candidate);
             }
         }
         m_callArgumentStack.resize(argumentsStart);
@@ -270,68 +263,112 @@ namespace Caracal
         return Type::Undefined();
     }
 
-    bool TypeChecker::rankCandidate(const CompilationUnit& unit, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks)
+    bool TypeChecker::rankCandidate(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks)
     {
-        const auto& definition = m_module.getFunctionDefinition(candidate);
-        const auto isVariadic = definition.isVariadic();
-        auto fixedParameterCount = definition.parameters().size();
-        if (isVariadic)
-        {
-            fixedParameterCount -= 1;
-        }
-
         const auto argumentCount = typesWithoutContext.size();
-        if (argumentCount < fixedParameterCount || (!isVariadic && argumentCount > fixedParameterCount))
+        const auto orderedStart = m_orderedSlotStack.size();
+        const auto diagnosticCount = m_diagnostics.diagnostics().size();
+        const auto& definition = m_module.getFunctionDefinition(candidate);
+        const auto isExtern = definition.isExtern();
+        const auto binding = bindCallArguments(
+            m_compilationContext,
+            unit,
+            callIndex,
+            std::span<const u32>{ m_callArgumentStack }.subspan(argumentsStart, argumentCount),
+            definition.parameters(),
+            0,
+            definition.isVariadic(),
+            definition.name(),
+            m_diagnostics,
+            m_orderedSlotStack,
+            orderedStart);
+        m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+        const auto fixedParameterCount = m_orderedSlotStack.size() - orderedStart;
+        if (!binding.ok)
         {
+            m_orderedSlotStack.resize(orderedStart);
             return false;
         }
 
         const auto& buffer = unit.nodeBuffer;
         const auto ranksStart = ranks.size();
-        for (size_t position = 0; position < argumentCount; ++position)
+        auto isAccepted = true;
+        for (size_t position = 0; position < argumentCount && isAccepted; ++position)
         {
-            if (position >= fixedParameterCount)
-            {
-                const auto variadicType = typesWithoutContext[position];
-                if (variadicType == Type::Undefined() || variadicType == Type::Void())
-                {
-                    ranks.resize(ranksStart);
-                    return false;
-                }
-                ranks.push_back(ArgumentRank::Variadic);
-                continue;
-            }
-
-            const auto& parameter = m_module.getFunctionDefinition(candidate).parameters()[position];
-            const auto parameterType = parameter.type();
             const auto argumentValue = NodeLayout::argumentValue(buffer, m_callArgumentStack[argumentsStart + position]);
-            const auto argumentContext = argumentContextFor(unit, parameter, argumentValue);
-            auto context = ExpressionContext{};
-            context.contextualNumberType = argumentContext.contextualNumberType;
-            context.wantsAddress = argumentContext.wantsAddress;
-
-            const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, context);
-            if (argumentType == Type::Undefined() || parameterType == Type::Undefined() || !isAssignableTo(argumentType, parameterType))
+            auto parameterIndex = fixedParameterCount;
+            for (size_t slot = 0; slot < fixedParameterCount; ++slot)
             {
-                ranks.resize(ranksStart);
-                return false;
+                if (m_orderedSlotStack[orderedStart + slot] == argumentValue)
+                {
+                    parameterIndex = slot;
+                    break;
+                }
             }
 
-            if (parameterType == typesWithoutContext[position])
+            auto rank = ArgumentRank::Variadic;
+            if (parameterIndex == fixedParameterCount)
             {
-                ranks.push_back(ArgumentRank::Exact);
-            }
-            else if (parameterType == argumentType)
-            {
-                ranks.push_back(ArgumentRank::Contextual);
+                isAccepted = acceptsVariadicArgument(unit, argumentValue, isExtern);
             }
             else
             {
-                ranks.push_back(ArgumentRank::Widened);
+                isAccepted = rankArgument(unit, candidate, parameterIndex, argumentValue, typesWithoutContext[position], rank);
             }
+            ranks.push_back(rank);
+        }
+        m_orderedSlotStack.resize(orderedStart);
+
+        if (!isAccepted)
+        {
+            ranks.resize(ranksStart);
+        }
+        return isAccepted;
+    }
+
+    // false if the argument does not fit the parameter
+    bool TypeChecker::rankArgument(const CompilationUnit& unit, Type candidate, size_t parameterIndex, u32 argumentValue, Type typeWithoutContext, ArgumentRank& rank)
+    {
+        // a check of an argument can move the definition
+        const auto& parameter = m_module.getFunctionDefinition(candidate).parameters()[parameterIndex];
+        const auto parameterType = parameter.type();
+        const auto argumentContext = argumentContextFor(unit, parameter, argumentValue);
+        auto context = ExpressionContext{};
+        context.contextualNumberType = argumentContext.contextualNumberType;
+        context.wantsAddress = argumentContext.wantsAddress;
+
+        const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, context);
+        if (argumentType == Type::Undefined() || parameterType == Type::Undefined() || !isAssignableTo(argumentType, parameterType))
+        {
+            return false;
         }
 
+        if (parameterType == typeWithoutContext)
+        {
+            rank = ArgumentRank::Exact;
+        }
+        else if (parameterType == argumentType)
+        {
+            rank = ArgumentRank::Contextual;
+        }
+        else
+        {
+            rank = ArgumentRank::Widened;
+        }
         return true;
+    }
+
+    // a C function gets a string literal in ... as a cstring
+    bool TypeChecker::acceptsVariadicArgument(const CompilationUnit& unit, u32 argumentValue, bool isExtern)
+    {
+        auto context = ExpressionContext{};
+        if (isExtern)
+        {
+            context.contextualNumberType = m_module.wellKnown().cstring;
+        }
+
+        const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, context);
+        return argumentType != Type::Undefined() && argumentType != Type::Void();
     }
 
     void TypeChecker::reportInvalidOverloadSets()

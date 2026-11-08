@@ -1,0 +1,14 @@
+def tie(value: i32) i32
+{
+    return value;
+}
+
+def tie(value: i32, extra: i32 = 0) i32
+{
+    return value %+ extra;
+}
+
+def main() i32
+{
+    return tie(1);
+}

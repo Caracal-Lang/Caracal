@@ -1,0 +1,104 @@
+FunctionDefinitionStatement: {
+    Type: (string) -> i32
+    Name: open
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: path
+            TypeNameNode: {
+                Type: string
+                Lexeme: string
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: string
+                    Name: path
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: open
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: id
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: id
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NumberLiteral: 20
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32) -> i32
+                NameExpression: {
+                    Type: (i32) -> i32
+                    Name: open
+                }
+                ArgumentsNode(1): {
+                    NamedArgument: {
+                        Name: id
+                        NumberLiteral: 1
+                    }
+                }
+            }
+        }
+    }
+}

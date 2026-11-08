@@ -1,0 +1,116 @@
+FunctionDefinitionStatement: {
+    Type: (SourceLocation) -> i32
+    Name: where
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: place
+            TypeNameNode: {
+                Type: SourceLocation
+                Lexeme: SourceLocation
+            }
+            DefaultValue: {
+                SourceLocationDefault: sourceLocation
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: SourceLocation
+                        Name: place
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: line
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: where
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: line
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: line
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> void
+    Name: callers
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(0): {
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (SourceLocation) -> i32
+                    NameExpression: {
+                        Type: (SourceLocation) -> i32
+                        Name: where
+                    }
+                    ArgumentsNode(0): {
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32) -> i32
+                    NameExpression: {
+                        Type: (i32) -> i32
+                        Name: where
+                    }
+                    ArgumentsNode(1): {
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+    }
+}

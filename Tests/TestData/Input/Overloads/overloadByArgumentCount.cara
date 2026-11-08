@@ -1,0 +1,14 @@
+def area(side: i32) i32
+{
+    return side;
+}
+
+def area(width: i32, height: i32) i32
+{
+    return width %* height;
+}
+
+def main() i32
+{
+    return area(3) %+ area(2, 5);
+}

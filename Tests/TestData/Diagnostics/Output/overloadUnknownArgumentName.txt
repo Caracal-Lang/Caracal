@@ -1,0 +1,12 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/overloadUnknownArgumentName.cara:14:12]
+  11 | 
+  12 | def main() i32
+  13 | {
+  14 |     return open(name = 1);
+     .            --------------
+     .                   `-- No overload of 'open' accepts these arguments
+  15 | }
+  16 | 
+     `----
+  Fix: Change the arguments to match one overload.

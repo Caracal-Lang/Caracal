@@ -1,0 +1,21 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+extern say(%0: cstring "format", %1: cstring "second") i32 symbol "sayTwo"
+
+extern say(%0: cstring "format", %1: ... "varargs") i32 symbol "printf"
+
+define main() i32
+block entry(0):
+    %0 = const "a\0" : cstring
+    %1 = const "b\0" : cstring
+    %2 = call sayTwo(%0, %1) : i32
+    return %2

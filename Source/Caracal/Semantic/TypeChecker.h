@@ -161,7 +161,9 @@ namespace Caracal
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
-        [[nodiscard]] bool rankCandidate(const CompilationUnit& unit, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks);
+        [[nodiscard]] bool rankCandidate(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks);
+        [[nodiscard]] bool rankArgument(const CompilationUnit& unit, Type candidate, size_t parameterIndex, u32 argumentValue, Type typeWithoutContext, ArgumentRank& rank);
+        [[nodiscard]] bool acceptsVariadicArgument(const CompilationUnit& unit, u32 argumentValue, bool isExtern);
         [[nodiscard]] Type checkArgumentWithoutContext(const CompilationUnit& unit, u32 argumentValue, std::vector<Diagnostic>& argumentErrors);
         [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
         [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
