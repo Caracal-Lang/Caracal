@@ -1,0 +1,252 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: size
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: size
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; 3]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 3
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: size
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; 4]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 4
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 4
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: four
+                }
+            }
+            Right: {
+                ArrayLiteral(4): {
+                    Type: undefined
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                    NumberLiteral: 4
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: size
+                                }
+                                ArgumentsNode(1): {
+                                    ArrayLiteral(3): {
+                                        Type: undefined
+                                        NumberLiteral: 1
+                                        NumberLiteral: 2
+                                        NumberLiteral: 3
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: undefined
+                                Left: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: size
+                                        }
+                                        ArgumentsNode(1): {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: four
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NumberLiteral: 10
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: size
+                                }
+                                ArgumentsNode(1): {
+                                    ArrayLiteral(2): {
+                                        Type: undefined
+                                        NumberLiteral: 5
+                                        NumberLiteral: 6
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 100
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

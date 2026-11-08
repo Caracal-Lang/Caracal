@@ -1,0 +1,191 @@
+FunctionDefinitionStatement: {
+    Type: ([i32; _]) -> i32
+    Name: count
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32; _]
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: ([bool; _]) -> i32
+    Name: count
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [bool; _]
+                Lexeme: [bool; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: [bool; _]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: length
+                            }
+                        }
+                    }
+                }
+                Operation: MultiplicationWrapping
+                Right: {
+                    NumberLiteral: 10
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: [bool; _]
+            Left: {
+                NameExpression: {
+                    Type: [bool; _]
+                    Name: flags
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [bool; _]
+                    Dynamic: true
+                    BoolLiteral: true
+                    BoolLiteral: false
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: ([i32; _]) -> i32
+                        NameExpression: {
+                            Type: ([i32; _]) -> i32
+                            Name: count
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: numbers
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: ([bool; _]) -> i32
+                        NameExpression: {
+                            Type: ([bool; _]) -> i32
+                            Name: count
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: [bool; _]
+                                Name: flags
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

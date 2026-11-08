@@ -1,0 +1,191 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: count
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [i32; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: count
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [bool; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: bool
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: length
+                            }
+                        }
+                    }
+                }
+                Operation: MultiplicationWrapping
+                Right: {
+                    NumberLiteral: 10
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: undefined
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: flags
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: undefined
+                    Dynamic: true
+                    BoolLiteral: true
+                    BoolLiteral: false
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: count
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: undefined
+                                Name: numbers
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: count
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: undefined
+                                Name: flags
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

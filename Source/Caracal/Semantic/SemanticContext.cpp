@@ -335,6 +335,17 @@ namespace Caracal
         return false;
     }
 
+    Type SemanticContext::tryGetMutableSliceType(Type immutableSlice) const noexcept
+    {
+        const auto arrayName = BuildArrayTypeName(*this, TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
+        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        {
+            return existing->second;
+        }
+
+        return Type::Undefined();
+    }
+
     Type SemanticContext::getArrayElementType(Type type) const noexcept
     {
         const auto id = type.toBaseType().id();

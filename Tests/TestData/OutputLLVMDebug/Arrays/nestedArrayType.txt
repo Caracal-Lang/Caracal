@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @"rows$const [[i32; 4]]"({ ptr, i32 } %0) {
+define i32 @"rows$[[i32; 4]]"({ ptr, i32 } %0) {
 entry:
   ret i32 0
 }

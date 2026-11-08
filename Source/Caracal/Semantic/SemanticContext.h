@@ -50,6 +50,7 @@ namespace Caracal
 
         [[nodiscard]] Type getOrCreateArrayType(TypeKind arrayKind, Type elementType, i32 length, bool immutableSlice = false) noexcept;
         [[nodiscard]] bool isImmutableSlice(Type type) const noexcept;
+        [[nodiscard]] Type tryGetMutableSliceType(Type immutableSlice) const noexcept;
         [[nodiscard]] Type getArrayElementType(Type type) const noexcept;
         [[nodiscard]] i32 getArrayLength(Type type) const noexcept;
         [[nodiscard]] const std::vector<Type>& arrayTypes() const noexcept { return m_arrayTypes; }

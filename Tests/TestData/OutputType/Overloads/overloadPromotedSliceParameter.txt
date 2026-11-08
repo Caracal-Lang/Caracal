@@ -1,0 +1,248 @@
+FunctionDefinitionStatement: {
+    Type: (const [i32]) -> i32
+    Name: total
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32]
+                Lexeme: [i32]
+                Kind: Slice
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: const [i32]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref const [i32], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref const [i32], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: const [i32]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref const [i32], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref const [i32], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: ([bool]) -> i32
+    Name: total
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [bool]
+                Lexeme: [bool]
+                Kind: Slice
+                DataType: {
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: [bool]
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 100
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(3): {
+        VariableDeclaration: {
+            Type: [i32; 2]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: numbers
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; 2]
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: [bool; 1]
+            Left: {
+                NameExpression: {
+                    Type: [bool; 1]
+                    Name: flags
+                }
+            }
+            Right: {
+                ArrayLiteral(1): {
+                    Type: [bool; 1]
+                    BoolLiteral: true
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (const [i32]) -> i32
+                        NameExpression: {
+                            Type: (const [i32]) -> i32
+                            Name: total
+                        }
+                        ArgumentsNode(1): {
+                            BinaryExpression: {
+                                Type: [i32]
+                                Left: {
+                                    NameExpression: {
+                                        Type: [i32; 2]
+                                        Name: numbers
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: [i32]
+                                        Function type: (ref [i32; 2]) -> [i32]
+                                        NameExpression: {
+                                            Type: (ref [i32; 2]) -> [i32]
+                                            Name: slice
+                                        }
+                                        ArgumentsNode(0): {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: ([bool]) -> i32
+                        NameExpression: {
+                            Type: ([bool]) -> i32
+                            Name: total
+                        }
+                        ArgumentsNode(1): {
+                            BinaryExpression: {
+                                Type: [bool]
+                                Left: {
+                                    NameExpression: {
+                                        Type: [bool; 1]
+                                        Name: flags
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: [bool]
+                                        Function type: (ref [bool; 1]) -> [bool]
+                                        NameExpression: {
+                                            Type: (ref [bool; 1]) -> [bool]
+                                            Name: slice
+                                        }
+                                        ArgumentsNode(0): {
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,169 @@
+EnumDefinitionStatement: {
+    Type: Color(u8)
+    Name: Color
+    FieldNodes(2): {
+        EnumFieldDeclaration: {
+            Name: Red
+            Value: 0
+        }
+        EnumFieldDeclaration: {
+            Name: Green
+            Value: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (Color) -> i32
+    Name: code
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: color
+            TypeNameNode: {
+                Type: Color(u8)
+                Lexeme: Color
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: Color(u8)
+                            Name: color
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        BinaryExpression: {
+                            Type: Color(u8)
+                            Left: {
+                                NameExpression: {
+                                    Type: Color(u8)
+                                    Name: Color
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                NameExpression: {
+                                    Type: Color(u8)
+                                    Name: Green
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 20
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 10
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: code
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (Color) -> i32
+                        NameExpression: {
+                            Type: (Color) -> i32
+                            Name: code
+                        }
+                        ArgumentsNode(1): {
+                            BinaryExpression: {
+                                Type: Color(u8)
+                                Left: {
+                                    NameExpression: {
+                                        Type: Color(u8)
+                                        Name: Color
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: Color(u8)
+                                        Name: Green
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (i32) -> i32
+                        NameExpression: {
+                            Type: (i32) -> i32
+                            Name: code
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 3
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

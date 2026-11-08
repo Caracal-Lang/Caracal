@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @"total$const [i32]"({ ptr, i32 } %0) !dbg !4 {
+define i32 @"total$[i32]"({ ptr, i32 } %0) !dbg !4 {
 entry:
   %values = alloca { ptr, i32 }, align 8, !dbg !14
     #dbg_declare(ptr %values, !15, !DIExpression(), !14)
@@ -80,7 +80,7 @@ entry:
   %new_length = add i32 %load9, 1, !dbg !44
   store i32 %new_length, ptr %length7, align 4, !dbg !44
   %load12 = load { ptr, i32 }, ptr %view, align 8, !dbg !45
-  %call13 = call i32 @"total$const [i32]"({ ptr, i32 } %load12), !dbg !45
+  %call13 = call i32 @"total$[i32]"({ ptr, i32 } %load12), !dbg !45
   %data14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0, !dbg !45
   %length15 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !45
   %capacity16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2, !dbg !45
@@ -108,7 +108,7 @@ entry:
 !1 = !DIFile(filename: "sliceAndDynamicArray.cara", directory: "InputDebugInfo")
 !2 = !{i32 2, !"Debug Info Version", i32 3}
 !3 = !{i32 2, !"CodeView", i32 1}
-!4 = distinct !DISubprogram(name: "total", linkageName: "total$const [i32]", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!4 = distinct !DISubprogram(name: "total", linkageName: "total$[i32]", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
 !5 = !DISubroutineType(types: !6)
 !6 = !{!7, !8}
 !7 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)

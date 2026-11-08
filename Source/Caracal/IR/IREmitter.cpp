@@ -27,7 +27,11 @@ namespace Caracal
                 signatureName += ",";
             }
 
-            const auto parameterType = parameters[index].type();
+            auto parameterType = parameters[index].type();
+            if (semanticContext.isImmutableSlice(parameterType))
+            {
+                parameterType = semanticContext.tryGetMutableSliceType(parameterType);
+            }
             if (parameterType.isReference())
             {
                 signatureName += "ref.";

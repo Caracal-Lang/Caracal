@@ -1,0 +1,204 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: read
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (ref i32) -> i32
+    Name: read
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: ref i32
+                Lexeme: i32
+                Ref: true
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: ref i32
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: a
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: first
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32) -> i32
+                    NameExpression: {
+                        Type: (i32) -> i32
+                        Name: read
+                    }
+                    ArgumentsNode(1): {
+                        NameExpression: {
+                            Type: i32
+                            Name: a
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: second
+                }
+            }
+            Right: {
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (ref i32) -> i32
+                    NameExpression: {
+                        Type: (ref i32) -> i32
+                        Name: read
+                    }
+                    ArgumentsNode(1): {
+                        UnaryExpression: {
+                            Type: ref i32
+                            Operation: ReferenceOf
+                            Expression: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: a
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: first
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: second
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NumberLiteral: 10
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: a
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 10
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,93 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"count$[i32; _]"({ ptr, i32, i32 } %0) {
+entry:
+  %temp = alloca { ptr, i32, i32 }, align 8
+  store { ptr, i32, i32 } %0, ptr %temp, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+define i32 @"count$[bool; _]"({ ptr, i32, i32 } %0) {
+entry:
+  %temp = alloca { ptr, i32, i32 }, align 8
+  store { ptr, i32, i32 } %0, ptr %temp, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  %load = load i32, ptr %length, align 4
+  %multiply = mul i32 %load, 10
+  ret i32 %multiply
+}
+
+define i32 @main() {
+entry:
+  %numbers = alloca { ptr, i32, i32 }, align 8
+  %flags = alloca { ptr, i32, i32 }, align 8
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 1
+  store i32 3, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 1, ptr %element, align 4
+  %element1 = getelementptr i32, ptr %call, i32 1
+  store i32 2, ptr %element1, align 4
+  %element2 = getelementptr i32, ptr %call, i32 2
+  store i32 3, ptr %element2, align 4
+  %call3 = call ptr @calloc(i64 8, i64 1)
+  %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 0
+  store ptr %call3, ptr %data4, align 8
+  %length5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 1
+  store i32 2, ptr %length5, align 4
+  %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 2
+  store i32 8, ptr %capacity6, align 4
+  %element7 = getelementptr i1, ptr %call3, i32 0
+  store i1 true, ptr %element7, align 1
+  %element8 = getelementptr i1, ptr %call3, i32 1
+  store i1 false, ptr %element8, align 1
+  %data9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 0
+  %length10 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 1
+  %capacity11 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 2
+  %load = load ptr, ptr %data9, align 8
+  %load12 = load i32, ptr %length10, align 4
+  %load13 = load i32, ptr %capacity11, align 4
+  %widened = sext i32 %load13 to i64
+  %copy = call ptr @calloc(i64 %widened, i64 4)
+  %widened14 = sext i32 %load12 to i64
+  %bytes = mul i64 %widened14, 4
+  %copied = call ptr @memmove(ptr %copy, ptr %load, i64 %bytes)
+  %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
+  %1 = insertvalue { ptr, i32, i32 } %0, i32 %load12, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load13, 2
+  %call15 = call i32 @"count$[i32; _]"({ ptr, i32, i32 } %array_copy)
+  %data16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 0
+  %length17 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 1
+  %capacity18 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %flags, i32 0, i32 2
+  %load19 = load ptr, ptr %data16, align 8
+  %load20 = load i32, ptr %length17, align 4
+  %load21 = load i32, ptr %capacity18, align 4
+  %widened22 = sext i32 %load21 to i64
+  %copy23 = call ptr @calloc(i64 %widened22, i64 1)
+  %widened24 = sext i32 %load20 to i64
+  %bytes25 = mul i64 %widened24, 1
+  %copied26 = call ptr @memmove(ptr %copy23, ptr %load19, i64 %bytes25)
+  %2 = insertvalue { ptr, i32, i32 } poison, ptr %copy23, 0
+  %3 = insertvalue { ptr, i32, i32 } %2, i32 %load20, 1
+  %array_copy27 = insertvalue { ptr, i32, i32 } %3, i32 %load21, 2
+  %call28 = call i32 @"count$[bool; _]"({ ptr, i32, i32 } %array_copy27)
+  %add = add i32 %call15, %call28
+  ret i32 %add
+}

@@ -1,0 +1,21 @@
+def total(values: [i32]) i32
+{
+    return values.at(0) %+ values.at(1);
+}
+
+def total(values: [bool]) i32
+{
+    _ = values;
+    return 100;
+}
+
+def forward(values: [i32]) i32
+{
+    return total(values);
+}
+
+def main() i32
+{
+    numbers := [2, 3];
+    return forward(numbers.slice());
+}

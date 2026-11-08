@@ -1,0 +1,16 @@
+def read(value: ref i32) i32
+{
+    return value;
+}
+
+def read(flag: bool) i32
+{
+    _ = flag;
+    return 2;
+}
+
+def main() i32
+{
+    a := 1;
+    return read(a);
+}

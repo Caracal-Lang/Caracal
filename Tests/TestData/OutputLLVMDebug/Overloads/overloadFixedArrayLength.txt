@@ -1,0 +1,69 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"size$[i32; 2]"([2 x i32] %0) {
+entry:
+  %values = alloca [2 x i32], align 4
+  store [2 x i32] %0, ptr %values, align 4
+  ret i32 2
+}
+
+define i32 @"size$[i32; 3]"([3 x i32] %0) {
+entry:
+  %values = alloca [3 x i32], align 4
+  store [3 x i32] %0, ptr %values, align 4
+  ret i32 3
+}
+
+define i32 @"size$[i32; 4]"([4 x i32] %0) {
+entry:
+  %values = alloca [4 x i32], align 4
+  store [4 x i32] %0, ptr %values, align 4
+  ret i32 4
+}
+
+define i32 @main() {
+entry:
+  %four = alloca [4 x i32], align 4
+  %temp = alloca [3 x i32], align 4
+  %temp1 = alloca [2 x i32], align 4
+  %element = getelementptr [4 x i32], ptr %four, i32 0, i32 0
+  store i32 1, ptr %element, align 4
+  %element2 = getelementptr [4 x i32], ptr %four, i32 0, i32 1
+  store i32 2, ptr %element2, align 4
+  %element3 = getelementptr [4 x i32], ptr %four, i32 0, i32 2
+  store i32 3, ptr %element3, align 4
+  %element4 = getelementptr [4 x i32], ptr %four, i32 0, i32 3
+  store i32 4, ptr %element4, align 4
+  %element5 = getelementptr [3 x i32], ptr %temp, i32 0, i32 0
+  store i32 1, ptr %element5, align 4
+  %element6 = getelementptr [3 x i32], ptr %temp, i32 0, i32 1
+  store i32 2, ptr %element6, align 4
+  %element7 = getelementptr [3 x i32], ptr %temp, i32 0, i32 2
+  store i32 3, ptr %element7, align 4
+  %load = load [3 x i32], ptr %temp, align 4
+  %call = call i32 @"size$[i32; 3]"([3 x i32] %load)
+  %load8 = load [4 x i32], ptr %four, align 4
+  %call9 = call i32 @"size$[i32; 4]"([4 x i32] %load8)
+  %multiply = mul i32 %call9, 10
+  %add = add i32 %call, %multiply
+  %element10 = getelementptr [2 x i32], ptr %temp1, i32 0, i32 0
+  store i32 5, ptr %element10, align 4
+  %element11 = getelementptr [2 x i32], ptr %temp1, i32 0, i32 1
+  store i32 6, ptr %element11, align 4
+  %load12 = load [2 x i32], ptr %temp1, align 4
+  %call13 = call i32 @"size$[i32; 2]"([2 x i32] %load12)
+  %multiply14 = mul i32 %call13, 100
+  %add15 = add i32 %add, %multiply14
+  ret i32 %add15
+}

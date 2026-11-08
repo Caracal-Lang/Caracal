@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define sum$const [i32](%0: const [i32] "values") i32
+define sum$[i32](%0: const [i32] "values") i32
 block entry(0):
     %0 = parameter 0 : const [i32] "values"
     %slot0 = allocate_local : const [i32] "temp"
@@ -56,5 +56,5 @@ block entry(0):
     %17 = address_of_field %0.1 : ref i32 "length"
     %18 = load_value %17 : i32
     %19 = make_slice %16, %18 : [i32]
-    %20 = call sum$const [i32](%19) : i32
+    %20 = call sum$[i32](%19) : i32
     return %20
