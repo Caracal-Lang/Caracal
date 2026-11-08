@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @arrayLiteralAssignedToField() {
+define i32 @"arrayLiteralAssignedToField$"() {
 entry:
   %holder = alloca %Holder, align 8
   %temp = alloca [2 x i32], align 4
@@ -23,7 +23,7 @@ entry:
   %element2 = getelementptr [2 x i32], ptr %temp, i32 0, i32 1
   store i32 2, ptr %element2, align 4
   %load = load [2 x i32], ptr %temp, align 4
-  call void @Holder.new(ptr %holder, [2 x i32] %load)
+  call void @"Holder.new$ref.Holder,[i32; 2]"(ptr %holder, [2 x i32] %load)
   %element3 = getelementptr [2 x i32], ptr %temp1, i32 0, i32 0
   store i32 3, ptr %element3, align 4
   %element4 = getelementptr [2 x i32], ptr %temp1, i32 0, i32 1
@@ -37,7 +37,7 @@ entry:
   ret i32 %load8
 }
 
-define void @Holder.new(ptr nonnull %0, [2 x i32] %1) {
+define void @"Holder.new$ref.Holder,[i32; 2]"(ptr nonnull %0, [2 x i32] %1) {
 entry:
   %items = alloca [2 x i32], align 4
   store [2 x i32] %1, ptr %items, align 4

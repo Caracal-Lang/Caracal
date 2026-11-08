@@ -688,15 +688,7 @@ namespace Caracal
     void SemanticContext::createBuiltinType(Type type, std::string_view name, bool addVariants)
     {
         m_nameToTypes.try_emplace(std::string(name), type);
-
-        if (type == Type::CVariadic())
-        {
-            m_typeNames.try_emplace(type.id(), std::string("C Variadic"));
-        }
-        else
-        {
-            m_typeNames.try_emplace(type.id(), std::string(name));
-        }
+        m_typeNames.try_emplace(type.id(), std::string(name));
 
         if (addVariants)
         {

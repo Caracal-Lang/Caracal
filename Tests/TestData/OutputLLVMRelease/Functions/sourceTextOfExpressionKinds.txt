@@ -8,69 +8,69 @@ target triple = "x86_64-unknown-none"
 %Inner = type {}
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @add(i32 %0, i32 %1) local_unnamed_addr #0 {
+define i32 @"add$i32,i32"(i32 %0, i32 %1) local_unnamed_addr #0 {
 entry:
   %add = add i32 %1, %0
   ret i32 %add
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describe(i32 %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describe$i32,string"(i32 %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describeBool(i1 %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describeBool$bool,string"(i1 %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describeString(%string %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describeString$string,string"(%string %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describeBox(%Box %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describeBox$Box,string"(%Box %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describeReference(ptr nonnull readnone captures(none) %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describeReference$ref.i32,string"(ptr nonnull readnone captures(none) %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @callers(i32 %0, i1 %1) local_unnamed_addr #0 {
+define void @"callers$i32,bool"(i32 %0, i1 %1) local_unnamed_addr #0 {
 entry:
   ret void
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @Inner.size(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
+define noundef i32 @"Inner.size$ref.Inner"(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
 entry:
   ret i32 1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @Inner.new(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
+define void @"Inner.new$ref.Inner"(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
 entry:
   ret void
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define range(i32 0, -1) i32 @Box.twice(ptr nonnull readnone captures(none) %0, i32 %1) local_unnamed_addr #0 {
+define range(i32 0, -1) i32 @"Box.twice$ref.Box,i32"(ptr nonnull readnone captures(none) %0, i32 %1) local_unnamed_addr #0 {
 entry:
   %multiply = shl i32 %1, 1
   ret i32 %multiply
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, %Inner %1) local_unnamed_addr #1 {
+define void @"Box.new$ref.Box,Inner"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, %Inner %1) local_unnamed_addr #1 {
 entry:
   store i32 2, ptr %0, align 4
   ret void

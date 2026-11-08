@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define bump(%0: ref i32 "value") void
+define bump$ref.i32(%0: ref i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref i32 "value"
     %1 = load_value %0 : i32
@@ -18,19 +18,19 @@ block entry(0):
     store_value %3, %0 : i32
     return
 
-define refOfField() i32
+define refOfField$() i32
 block entry(0):
     %slot0 = allocate_local : Point "point"
     %0 = address_of %slot0 : ref Point
     %1 = const 5 : i32
-    call Point.new(%0, %1)
+    call Point.new$ref.Point,i32(%0, %1)
     %2 = address_of_field %0.0 : ref i32 "x"
-    call bump(%2)
+    call bump$ref.i32(%2)
     %3 = address_of_field %0.0 : ref i32 "x"
     %4 = load_value %3 : i32
     return %4
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

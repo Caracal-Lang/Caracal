@@ -6,17 +6,17 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define read(%0: ref i32 "x") i32
+define read$ref.i32(%0: ref i32 "x") i32
 block entry(0):
     %0 = parameter 0 : ref i32 "x"
     %1 = load_value %0 : i32
     return %1
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : i32 "value"
     %0 = const 5 : i32
     %1 = address_of %slot0 : ref i32
     store_value %0, %1 : i32
-    %2 = call read(%1) : i32
+    %2 = call read$ref.i32(%1) : i32
     return %2

@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define dynamicArrayAssignedToFieldFromName() i32
+define dynamicArrayAssignedToFieldFromName$() i32
 block entry(0):
     %slot0 = allocate_local : Items "holder"
     %slot1 = allocate_local : [i32; _] "temp"
@@ -18,7 +18,7 @@ block entry(0):
     %1 = address_of %slot1 : ref [i32; _]
     %2 = const 8 : i64
     %3 = size_of i32 : i64
-    %4 = call C.calloc(%2, %3) : rawptr
+    %4 = call calloc(%2, %3) : rawptr
     %5 = address_of_field %1.0 : ref i32 "data"
     store_value %4, %5 : ref i32
     %6 = const 2 : i32
@@ -36,11 +36,11 @@ block entry(0):
     %15 = const 6 : i32
     store_value %15, %14 : i32
     %16 = load_value %1 : [i32; _]
-    call Items.new(%0, %16)
+    call Items.new$ref.Items,[i32; _](%0, %16)
     %17 = address_of %slot2 : ref [i32; _]
     %18 = const 8 : i64
     %19 = size_of i32 : i64
-    %20 = call C.calloc(%18, %19) : rawptr
+    %20 = call calloc(%18, %19) : rawptr
     %21 = address_of_field %17.0 : ref i32 "data"
     store_value %20, %21 : ref i32
     %22 = const 2 : i32
@@ -74,7 +74,7 @@ block entry(0):
     %44 = load_value %43 : i32
     return %44
 
-define Items.new(%0: ref Items ".this", %1: [i32; _] "items") void
+define Items.new$ref.Items,[i32; _](%0: ref Items ".this", %1: [i32; _] "items") void
 block entry(0):
     %0 = parameter 0 : ref Items ".this"
     %1 = parameter 1 : [i32; _] "items"

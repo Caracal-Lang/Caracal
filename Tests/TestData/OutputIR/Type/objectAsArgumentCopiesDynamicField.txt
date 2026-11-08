@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define change(%0: Holder "value") void
+define change$Holder(%0: Holder "value") void
 block entry(0):
     %0 = parameter 0 : Holder "value"
     %slot0 = allocate_local : Holder "value"
@@ -24,7 +24,7 @@ block entry(0):
     store_value %4, %7 : i32
     return
 
-define objectAsArgumentCopiesDynamicField() i32
+define objectAsArgumentCopiesDynamicField$() i32
 block entry(0):
     %slot0 = allocate_local : Holder "holder"
     %slot1 = allocate_local : [i32; _] "temp"
@@ -33,7 +33,7 @@ block entry(0):
     %1 = address_of %slot1 : ref [i32; _]
     %2 = const 8 : i64
     %3 = size_of i32 : i64
-    %4 = call C.calloc(%2, %3) : rawptr
+    %4 = call calloc(%2, %3) : rawptr
     %5 = address_of_field %1.0 : ref i32 "data"
     store_value %4, %5 : ref i32
     %6 = const 2 : i32
@@ -51,7 +51,7 @@ block entry(0):
     %15 = const 6 : i32
     store_value %15, %14 : i32
     %16 = load_value %1 : [i32; _]
-    call Holder.new(%0, %16)
+    call Holder.new$ref.Holder,[i32; _](%0, %16)
     %17 = load_value %0 : Holder
     %18 = address_of %slot2 : ref Holder
     store_value %17, %18 : Holder
@@ -59,7 +59,7 @@ block entry(0):
     %20 = array_copy %19 : [i32; _]
     store_value %20, %19 : [i32; _]
     %21 = load_value %18 : Holder
-    call change(%21)
+    call change$Holder(%21)
     %22 = address_of_field %0.0 : ref [i32; _] "items"
     %23 = const 0 : i32
     %24 = address_of_field %22.0 : ref i32 "data"
@@ -68,7 +68,7 @@ block entry(0):
     %27 = load_value %26 : i32
     return %27
 
-define Holder.new(%0: ref Holder ".this", %1: [i32; _] "items") void
+define Holder.new$ref.Holder,[i32; _](%0: ref Holder ".this", %1: [i32; _] "items") void
 block entry(0):
     %0 = parameter 0 : ref Holder ".this"
     %1 = parameter 1 : [i32; _] "items"

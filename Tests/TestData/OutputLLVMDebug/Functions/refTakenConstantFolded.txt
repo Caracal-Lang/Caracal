@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @takeRef(ptr nonnull %0) {
+define i32 @"takeRef$ref.i32"(ptr nonnull %0) {
 entry:
   %load = load i32, ptr %0, align 4
   ret i32 %load
@@ -24,7 +24,7 @@ entry:
   store i32 5, ptr %x, align 4
   %load = load i32, ptr %x, align 4
   store i32 %load, ptr %refConstTemp, align 4
-  %call = call i32 @takeRef(ptr %refConstTemp)
+  %call = call i32 @"takeRef$ref.i32"(ptr %refConstTemp)
   %add = add i32 6, %call
   ret i32 %add
 }

@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define constructorInLoopBody() i32
+define constructorInLoopBody$() i32
 block entry(0):
     %0 = const 0 : i32
     %1 = const 0 : i32
@@ -25,7 +25,7 @@ block while.body(2):
     %slot1 = allocate_local : Point "temp"
     %6 = address_of %slot0 : ref Point
     %7 = const 2 : i32
-    call Point.new(%6, %7)
+    call Point.new$ref.Point,i32(%6, %7)
     %8 = load_value %6 : Point
     %9 = address_of %slot1 : ref Point
     store_value %8, %9 : Point
@@ -38,7 +38,7 @@ block while.body(2):
 block while.continuation(3):
     return %3
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

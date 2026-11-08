@@ -6,25 +6,25 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define negate(%0: i32 "value") i32
+define negate$i32(%0: i32 "value") i32
 block entry(0):
     %0 = parameter 0 : i32 "value"
     %1 = value_negate %0 : i32
     return %1
 
-define negateFloat(%0: f32 "value") f32
+define negateFloat$f32(%0: f32 "value") f32
 block entry(0):
     %0 = parameter 0 : f32 "value"
     %1 = value_negate %0 : f32
     return %1
 
-define invert(%0: bool "value") bool
+define invert$bool(%0: bool "value") bool
 block entry(0):
     %0 = parameter 0 : bool "value"
     %1 = logical_negate %0 : bool
     return %1
 
-define bothTrue(%0: bool "left", %1: bool "right") bool
+define bothTrue$bool,bool(%0: bool "left", %1: bool "right") bool
 block entry(0):
     %0 = parameter 0 : bool "left"
     %1 = parameter 1 : bool "right"
@@ -35,7 +35,7 @@ block and.merge(2):
     %2 = phi [entry(0): %0], [and.rhs(1): %1] : bool
     return %2
 
-define eitherTrue(%0: bool "left", %1: bool "right") bool
+define eitherTrue$bool,bool(%0: bool "left", %1: bool "right") bool
 block entry(0):
     %0 = parameter 0 : bool "left"
     %1 = parameter 1 : bool "right"

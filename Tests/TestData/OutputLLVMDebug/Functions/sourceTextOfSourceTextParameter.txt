@@ -22,7 +22,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @describe(i32 %0, %string %1, %string %2, %string %3) {
+define %string @"describe$i32,string,string,string"(i32 %0, %string %1, %string %2, %string %3) {
 entry:
   %first = alloca %string, align 8
   %second = alloca %string, align 8
@@ -34,7 +34,7 @@ entry:
   ret %string %load
 }
 
-define %string @fromDefault(i32 %0, %string %1, %string %2) {
+define %string @"fromDefault$i32,string,string"(i32 %0, %string %1, %string %2) {
 entry:
   %first = alloca %string, align 8
   %second = alloca %string, align 8
@@ -44,7 +44,7 @@ entry:
   ret %string %load
 }
 
-define void @callers() {
+define void @"callers$"() {
 entry:
   %temp = alloca %string, align 8
   %temp1 = alloca %string, align 8
@@ -78,7 +78,7 @@ entry:
   %capacity16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes13, i32 0, i32 2
   store i32 6, ptr %capacity16, align 4
   %load17 = load %string, ptr %temp2, align 8
-  %call = call %string @describe(i32 3, %string %load, %string %load12, %string %load17)
+  %call = call %string @"describe$i32,string,string,string"(i32 3, %string %load, %string %load12, %string %load17)
   %_bytes18 = getelementptr inbounds nuw %string, ptr %temp3, i32 0, i32 0
   %data19 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes18, i32 0, i32 0
   store ptr @3, ptr %data19, align 8
@@ -103,7 +103,7 @@ entry:
   %capacity31 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes28, i32 0, i32 2
   store i32 9, ptr %capacity31, align 4
   %load32 = load %string, ptr %temp5, align 8
-  %call33 = call %string @describe(i32 3, %string %load22, %string %load27, %string %load32)
+  %call33 = call %string @"describe$i32,string,string,string"(i32 3, %string %load22, %string %load27, %string %load32)
   %_bytes34 = getelementptr inbounds nuw %string, ptr %temp6, i32 0, i32 0
   %data35 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes34, i32 0, i32 0
   store ptr @6, ptr %data35, align 8
@@ -120,6 +120,6 @@ entry:
   %capacity42 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes39, i32 0, i32 2
   store i32 6, ptr %capacity42, align 4
   %load43 = load %string, ptr %temp7, align 8
-  %call44 = call %string @fromDefault(i32 11, %string %load38, %string %load43)
+  %call44 = call %string @"fromDefault$i32,string,string"(i32 11, %string %load38, %string %load43)
   ret void
 }

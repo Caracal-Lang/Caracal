@@ -13,17 +13,17 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @fieldSetFromArrayLiteral() {
+define i32 @"fieldSetFromArrayLiteral$"() {
 entry:
   %box = alloca %Box, align 8
-  call void @Box.new(ptr %box)
+  call void @"Box.new$ref.Box"(ptr %box)
   %numbers = getelementptr inbounds nuw %Box, ptr %box, i32 0, i32 0
   %element = getelementptr [3 x i32], ptr %numbers, i32 0, i32 1
   %load = load i32, ptr %element, align 4
   ret i32 %load
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   %numbers = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   %element = getelementptr [3 x i32], ptr %numbers, i32 0, i32 0

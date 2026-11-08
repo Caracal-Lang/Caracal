@@ -19,7 +19,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @where(%SourceLocation %0) {
+define i32 @"where$SourceLocation"(%SourceLocation %0) {
 entry:
   %place = alloca %SourceLocation, align 8
   store %SourceLocation %0, ptr %place, align 8
@@ -28,7 +28,7 @@ entry:
   ret i32 %load
 }
 
-define void @callers() {
+define void @"callers$"() {
 entry:
   %temp = alloca %SourceLocation, align 8
   %constructed = alloca %SourceLocation, align 8
@@ -46,7 +46,7 @@ entry:
   %line = getelementptr inbounds nuw %SourceLocation, ptr %temp, i32 0, i32 1
   store i32 16, ptr %line, align 4
   %load = load %SourceLocation, ptr %temp, align 8
-  %call = call i32 @where(%SourceLocation %load)
+  %call = call i32 @"where$SourceLocation"(%SourceLocation %load)
   %_bytes3 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
   %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 0
   store ptr @1, ptr %data4, align 8
@@ -55,10 +55,10 @@ entry:
   %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 2
   store i32 7, ptr %capacity6, align 4
   %load7 = load %string, ptr %temp1, align 8
-  call void @SourceLocation.new(ptr %constructed, %string %load7, i32 1)
+  call void @"SourceLocation.new$ref.SourceLocation,string,i32"(ptr %constructed, %string %load7, i32 1)
   %load8 = load %SourceLocation, ptr %constructed, align 8
-  %call9 = call i32 @where(%SourceLocation %load8)
-  call void @Box.new(ptr %box)
+  %call9 = call i32 @"where$SourceLocation"(%SourceLocation %load8)
+  call void @"Box.new$ref.Box"(ptr %box)
   %filePath10 = getelementptr inbounds nuw %SourceLocation, ptr %temp2, i32 0, i32 0
   %_bytes11 = getelementptr inbounds nuw %string, ptr %filePath10, i32 0, i32 0
   %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0
@@ -70,11 +70,11 @@ entry:
   %line15 = getelementptr inbounds nuw %SourceLocation, ptr %temp2, i32 0, i32 1
   store i32 19, ptr %line15, align 4
   %load16 = load %SourceLocation, ptr %temp2, align 8
-  %call17 = call i32 @Box.measure(ptr %box, %SourceLocation %load16)
+  %call17 = call i32 @"Box.measure$ref.Box,SourceLocation"(ptr %box, %SourceLocation %load16)
   ret void
 }
 
-define i32 @Box.measure(ptr nonnull %0, %SourceLocation %1) {
+define i32 @"Box.measure$ref.Box,SourceLocation"(ptr nonnull %0, %SourceLocation %1) {
 entry:
   %place = alloca %SourceLocation, align 8
   store %SourceLocation %1, ptr %place, align 8
@@ -83,12 +83,12 @@ entry:
   ret i32 %load
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   ret void
 }
 
-define void @SourceLocation.new(ptr nonnull %0, %string %1, i32 %2) {
+define void @"SourceLocation.new$ref.SourceLocation,string,i32"(ptr nonnull %0, %string %1, i32 %2) {
 entry:
   %filePath = alloca %string, align 8
   store %string %1, ptr %filePath, align 8

@@ -6,18 +6,18 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define one() i32
+define one$() i32
 block entry(0):
     %0 = const 1 : i32
     return %0
 
-define inner(%0: i32 "x") void
+define inner$i32(%0: i32 "x") void
 block entry(0):
     %0 = parameter 0 : i32 "x"
     return
 
-define outer() void
+define outer$() void
 block entry(0):
-    %0 = call one() : i32
-    call inner(%0)
+    %0 = call one$() : i32
+    call inner$i32(%0)
     return

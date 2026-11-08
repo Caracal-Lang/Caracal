@@ -15,7 +15,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @read() {
+define i32 @"read$"() {
 entry:
   %load = load i32, ptr getelementptr ([3 x i32], ptr @shared, i32 0, i32 2), align 4
   %load1 = load i32, ptr @alias, align 4

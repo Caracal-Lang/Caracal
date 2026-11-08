@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define atOnArrayLiteral() i32
+define atOnArrayLiteral$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; 3] "temp"
     %0 = address_of %slot0 : ref [i32; 3]

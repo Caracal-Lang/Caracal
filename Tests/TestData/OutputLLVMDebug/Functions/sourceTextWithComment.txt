@@ -17,7 +17,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @describe(i32 %0, %string %1) {
+define %string @"describe$i32,string"(i32 %0, %string %1) {
 entry:
   %text = alloca %string, align 8
   store %string %1, ptr %text, align 8
@@ -25,7 +25,7 @@ entry:
   ret %string %load
 }
 
-define void @callers() {
+define void @"callers$"() {
 entry:
   %temp = alloca %string, align 8
   %temp1 = alloca %string, align 8
@@ -38,7 +38,7 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 23, ptr %capacity, align 4
   %load = load %string, ptr %temp, align 8
-  %call = call %string @describe(i32 3, %string %load)
+  %call = call %string @"describe$i32,string"(i32 3, %string %load)
   %_bytes3 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
   %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 0
   store ptr @1, ptr %data4, align 8
@@ -47,7 +47,7 @@ entry:
   %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 2
   store i32 6, ptr %capacity6, align 4
   %load7 = load %string, ptr %temp1, align 8
-  %call8 = call %string @describe(i32 7, %string %load7)
+  %call8 = call %string @"describe$i32,string"(i32 7, %string %load7)
   %_bytes9 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0
   %data10 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes9, i32 0, i32 0
   store ptr @2, ptr %data10, align 8
@@ -56,6 +56,6 @@ entry:
   %capacity12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes9, i32 0, i32 2
   store i32 6, ptr %capacity12, align 4
   %load13 = load %string, ptr %temp2, align 8
-  %call14 = call %string @describe(i32 11, %string %load13)
+  %call14 = call %string @"describe$i32,string"(i32 11, %string %load13)
   ret void
 }

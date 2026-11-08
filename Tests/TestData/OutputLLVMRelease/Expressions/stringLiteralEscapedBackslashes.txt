@@ -6,7 +6,7 @@ target triple = "x86_64-unknown-none"
 @0 = private unnamed_addr constant [30 x i8] c"bsn:\\n bst:\\t bsbsn:\\\\n end:\\\00", align 1
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef nonnull ptr @escapedBackslashes() local_unnamed_addr #0 {
+define noundef nonnull ptr @"escapedBackslashes$"() local_unnamed_addr #0 {
 entry:
   ret ptr @0
 }

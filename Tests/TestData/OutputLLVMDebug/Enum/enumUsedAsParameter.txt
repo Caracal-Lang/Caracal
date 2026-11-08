@@ -11,14 +11,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i1 @choose(i1 %0) {
+define i1 @"choose$Answer"(i1 %0) {
 entry:
   ret i1 %0
 }
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
-  %call = call i1 @choose(i1 true)
+  %call = call i1 @"choose$Answer"(i1 true)
   %equal = icmp eq i1 %call, true
   br i1 %equal, label %if.true, label %if.continuation
 

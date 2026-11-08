@@ -27,7 +27,7 @@ while.body.preheader.i:
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define void @string.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
+define void @"string.new$ref.string,[u8; _]"(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
 entry:
   %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
   %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1
@@ -44,7 +44,7 @@ entry:
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
-define noundef i1 @string.equals(%string %0, %string %1) local_unnamed_addr #3 {
+define noundef i1 @"string.equals$string,string"(%string %0, %string %1) local_unnamed_addr #3 {
 entry:
   %.fca.0.0.extract18 = extractvalue %string %0, 0, 0
   %.fca.0.1.extract19 = extractvalue %string %0, 0, 1
@@ -79,18 +79,18 @@ while.body:                                       ; preds = %while.body, %while.
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
-define noundef i1 @string.notEquals(%string %0, %string %1) local_unnamed_addr #3 {
+define noundef i1 @"string.notEquals$string,string"(%string %0, %string %1) local_unnamed_addr #3 {
 entry:
   %.fca.0.0.extract18.i = extractvalue %string %0, 0, 0
   %.fca.0.1.extract19.i = extractvalue %string %0, 0, 1
   %.fca.0.0.extract.i = extractvalue %string %1, 0, 0
   %.fca.0.1.extract.i = extractvalue %string %1, 0, 1
   %not_equal.not.i = icmp eq i32 %.fca.0.1.extract19.i, %.fca.0.1.extract.i
-  br i1 %not_equal.not.i, label %while.condition.preheader.i, label %string.equals.exit
+  br i1 %not_equal.not.i, label %while.condition.preheader.i, label %"string.equals$string,string.exit"
 
 while.condition.preheader.i:                      ; preds = %entry
   %less_than22.i = icmp sgt i32 %.fca.0.1.extract19.i, 0
-  br i1 %less_than22.i, label %while.body.preheader.i, label %string.equals.exit
+  br i1 %less_than22.i, label %while.body.preheader.i, label %"string.equals$string,string.exit"
 
 while.body.preheader.i:                           ; preds = %while.condition.preheader.i
   %wide.trip.count.i = zext nneg i32 %.fca.0.1.extract19.i to i64
@@ -106,9 +106,9 @@ while.body.i:                                     ; preds = %while.body.i, %whil
   %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1
   %exitcond.not.i = icmp eq i64 %indvars.iv.next.i, %wide.trip.count.i
   %or.cond = select i1 %not_equal17.not.i.not, i1 true, i1 %exitcond.not.i
-  br i1 %or.cond, label %string.equals.exit, label %while.body.i
+  br i1 %or.cond, label %"string.equals$string,string.exit", label %while.body.i
 
-string.equals.exit:                               ; preds = %while.body.i, %entry, %while.condition.preheader.i
+"string.equals$string,string.exit":               ; preds = %while.body.i, %entry, %while.condition.preheader.i
   %2 = phi i1 [ true, %entry ], [ false, %while.condition.preheader.i ], [ %not_equal17.not.i.not, %while.body.i ]
   ret i1 %2
 }

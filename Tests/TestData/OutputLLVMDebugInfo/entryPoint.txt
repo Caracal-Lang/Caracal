@@ -45,18 +45,18 @@ entry:
   br i1 %load, label %if.true, label %if.continuation, !dbg !14
 
 if.true:                                          ; preds = %entry
-  call void @TestRun.new(ptr %run), !dbg !56
-  call void @__caracal_tests_stub(ptr %run), !dbg !57
-  call void @TestRun.printSummary(ptr %run), !dbg !58
-  %call = call i32 @TestRun.exitCode(ptr %run), !dbg !59
+  call void @"TestRun.new$ref.TestRun"(ptr %run), !dbg !56
+  call void @"__caracal_tests_stub$ref.TestRun"(ptr %run), !dbg !57
+  call void @"TestRun.printSummary$ref.TestRun"(ptr %run), !dbg !58
+  %call = call i32 @"TestRun.exitCode$ref.TestRun"(ptr %run), !dbg !59
   ret i32 %call, !dbg !59
 
 if.continuation:                                  ; preds = %entry
-  %call1 = call i32 @caracal.userMain(), !dbg !60
+  %call1 = call i32 @"main$"(), !dbg !60
   ret i32 %call1, !dbg !60
 }
 
-define void @__caracal_tests_stub(ptr nonnull %0) !dbg !61 {
+define void @"__caracal_tests_stub$ref.TestRun"(ptr nonnull %0) !dbg !61 {
 entry:
   %Assert = alloca ptr, align 8, !dbg !65
     #dbg_declare(ptr %Assert, !66, !DIExpression(), !65)
@@ -64,12 +64,12 @@ entry:
   ret void, !dbg !65
 }
 
-define void @print(%string %0) !dbg !67 {
+define void @"print$string"(%string %0) !dbg !67 {
 entry:
   %message = alloca %string, align 8, !dbg !71
     #dbg_declare(ptr %message, !72, !DIExpression(), !71)
   store %string %0, ptr %message, align 8, !dbg !71
-  %call = call i32 @string.length(ptr %message), !dbg !73
+  %call = call i32 @"string.length$ref.string"(ptr %message), !dbg !73
   %_bytes = getelementptr inbounds nuw %string, ptr %message, i32 0, i32 0, !dbg !73
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0, !dbg !73
   %load = load ptr, ptr %data, align 8, !dbg !73
@@ -77,7 +77,7 @@ entry:
   ret void, !dbg !71
 }
 
-define void @printLine(%string %0) !dbg !74 {
+define void @"printLine$string"(%string %0) !dbg !74 {
 entry:
   %message = alloca %string, align 8, !dbg !75
     #dbg_declare(ptr %message, !76, !DIExpression(), !75)
@@ -89,12 +89,12 @@ entry:
   ret void, !dbg !75
 }
 
-define i32 @caracal.userMain() !dbg !78 {
+define i32 @"main$"() !dbg !78 {
 entry:
   ret i32 0, !dbg !79
 }
 
-define void @TestRun.beginTest(ptr nonnull %0, %string %1) !dbg !80 {
+define void @"TestRun.beginTest$ref.TestRun,string"(ptr nonnull %0, %string %1) !dbg !80 {
 entry:
   %.this = alloca ptr, align 8, !dbg !81
     #dbg_declare(ptr %.this, !82, !DIExpression(), !81)
@@ -115,7 +115,7 @@ entry:
   ret void, !dbg !81
 }
 
-define void @TestRun.endTest(ptr nonnull %0) !dbg !87 {
+define void @"TestRun.endTest$ref.TestRun"(ptr nonnull %0) !dbg !87 {
 entry:
   %.this = alloca ptr, align 8, !dbg !88
     #dbg_declare(ptr %.this, !89, !DIExpression(), !88)
@@ -142,14 +142,14 @@ if.continuation:                                  ; preds = %entry
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !93
   store i32 5, ptr %capacity, align 4, !dbg !93
   %load3 = load %string, ptr %temp, align 8, !dbg !93
-  call void @print(%string %load3), !dbg !93
+  call void @"print$string"(%string %load3), !dbg !93
   %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !94
   %load4 = load %string, ptr %currentTest, align 8, !dbg !94
-  call void @printLine(%string %load4), !dbg !94
+  call void @"printLine$string"(%string %load4), !dbg !94
   ret void, !dbg !88
 }
 
-define void @TestRun.isTrue(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !95 {
+define void @"TestRun.isTrue$ref.TestRun,bool,string,SourceLocation"(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !95 {
 entry:
   %.this = alloca ptr, align 8, !dbg !96
     #dbg_declare(ptr %.this, !97, !DIExpression(), !96)
@@ -181,7 +181,7 @@ if.true:                                          ; preds = %entry
   %load3 = load %string, ptr %temp, align 8, !dbg !102
   %load4 = load %string, ptr %message, align 8, !dbg !102
   %load5 = load %SourceLocation, ptr %location, align 8, !dbg !102
-  call void @TestRun._fail(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !102
+  call void @"TestRun._fail$ref.TestRun,string,string,SourceLocation"(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !102
   %_bytes6 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !103
   %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 0, !dbg !103
   store ptr @3, ptr %data7, align 8, !dbg !103
@@ -190,7 +190,7 @@ if.true:                                          ; preds = %entry
   %capacity9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 2, !dbg !103
   store i32 20, ptr %capacity9, align 4, !dbg !103
   %load10 = load %string, ptr %temp1, align 8, !dbg !103
-  call void @printLine(%string %load10), !dbg !103
+  call void @"printLine$string"(%string %load10), !dbg !103
   %_bytes11 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !104
   %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0, !dbg !104
   store ptr @4, ptr %data12, align 8, !dbg !104
@@ -199,14 +199,14 @@ if.true:                                          ; preds = %entry
   %capacity14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 2, !dbg !104
   store i32 21, ptr %capacity14, align 4, !dbg !104
   %load15 = load %string, ptr %temp2, align 8, !dbg !104
-  call void @printLine(%string %load15), !dbg !104
+  call void @"printLine$string"(%string %load15), !dbg !104
   br label %if.continuation, !dbg !101
 
 if.continuation:                                  ; preds = %if.true, %entry
   ret void, !dbg !96
 }
 
-define void @TestRun.isFalse(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !105 {
+define void @"TestRun.isFalse$ref.TestRun,bool,string,SourceLocation"(ptr nonnull %0, i1 %1, %string %2, %SourceLocation %3) !dbg !105 {
 entry:
   %.this = alloca ptr, align 8, !dbg !106
     #dbg_declare(ptr %.this, !107, !DIExpression(), !106)
@@ -237,7 +237,7 @@ if.true:                                          ; preds = %entry
   %load3 = load %string, ptr %temp, align 8, !dbg !112
   %load4 = load %string, ptr %message, align 8, !dbg !112
   %load5 = load %SourceLocation, ptr %location, align 8, !dbg !112
-  call void @TestRun._fail(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !112
+  call void @"TestRun._fail$ref.TestRun,string,string,SourceLocation"(ptr %0, %string %load3, %string %load4, %SourceLocation %load5), !dbg !112
   %_bytes6 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0, !dbg !113
   %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 0, !dbg !113
   store ptr @6, ptr %data7, align 8, !dbg !113
@@ -246,7 +246,7 @@ if.true:                                          ; preds = %entry
   %capacity9 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes6, i32 0, i32 2, !dbg !113
   store i32 21, ptr %capacity9, align 4, !dbg !113
   %load10 = load %string, ptr %temp1, align 8, !dbg !113
-  call void @printLine(%string %load10), !dbg !113
+  call void @"printLine$string"(%string %load10), !dbg !113
   %_bytes11 = getelementptr inbounds nuw %string, ptr %temp2, i32 0, i32 0, !dbg !114
   %data12 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 0, !dbg !114
   store ptr @7, ptr %data12, align 8, !dbg !114
@@ -255,14 +255,14 @@ if.true:                                          ; preds = %entry
   %capacity14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes11, i32 0, i32 2, !dbg !114
   store i32 20, ptr %capacity14, align 4, !dbg !114
   %load15 = load %string, ptr %temp2, align 8, !dbg !114
-  call void @printLine(%string %load15), !dbg !114
+  call void @"printLine$string"(%string %load15), !dbg !114
   br label %if.continuation, !dbg !111
 
 if.continuation:                                  ; preds = %if.true, %entry
   ret void, !dbg !106
 }
 
-define void @TestRun.printSummary(ptr nonnull %0) !dbg !115 {
+define void @"TestRun.printSummary$ref.TestRun"(ptr nonnull %0) !dbg !115 {
 entry:
   %.this = alloca ptr, align 8, !dbg !116
     #dbg_declare(ptr %.this, !117, !DIExpression(), !116)
@@ -286,7 +286,7 @@ entry:
   ret void, !dbg !116
 }
 
-define i32 @TestRun.exitCode(ptr nonnull %0) !dbg !121 {
+define i32 @"TestRun.exitCode$ref.TestRun"(ptr nonnull %0) !dbg !121 {
 entry:
   %.this = alloca ptr, align 8, !dbg !122
     #dbg_declare(ptr %.this, !123, !DIExpression(), !122)
@@ -303,7 +303,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 0, !dbg !125
 }
 
-define void @TestRun._fail(ptr nonnull %0, %string %1, %string %2, %SourceLocation %3) !dbg !126 {
+define void @"TestRun._fail$ref.TestRun,string,string,SourceLocation"(ptr nonnull %0, %string %1, %string %2, %SourceLocation %3) !dbg !126 {
 entry:
   %.this = alloca ptr, align 8, !dbg !127
     #dbg_declare(ptr %.this, !128, !DIExpression(), !127)
@@ -336,10 +336,10 @@ if.true:                                          ; preds = %entry
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2, !dbg !133
   store i32 5, ptr %capacity, align 4, !dbg !133
   %load3 = load %string, ptr %temp, align 8, !dbg !133
-  call void @print(%string %load3), !dbg !133
+  call void @"print$string"(%string %load3), !dbg !133
   %currentTest = getelementptr inbounds nuw %TestRun, ptr %0, i32 0, i32 0, !dbg !134
   %load4 = load %string, ptr %currentTest, align 8, !dbg !134
-  call void @printLine(%string %load4), !dbg !134
+  call void @"printLine$string"(%string %load4), !dbg !134
   br label %if.continuation, !dbg !132
 
 if.continuation:                                  ; preds = %if.true, %entry
@@ -353,10 +353,10 @@ if.continuation:                                  ; preds = %if.true, %entry
   %capacity10 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes7, i32 0, i32 2, !dbg !136
   store i32 3, ptr %capacity10, align 4, !dbg !136
   %load11 = load %string, ptr %temp5, align 8, !dbg !136
-  call void @print(%string %load11), !dbg !136
+  call void @"print$string"(%string %load11), !dbg !136
   %load12 = load %string, ptr %checkName, align 8, !dbg !137
-  call void @print(%string %load12), !dbg !137
-  %call = call i1 @string.isEmpty(ptr %message), !dbg !138
+  call void @"print$string"(%string %load12), !dbg !137
+  %call = call i1 @"string.isEmpty$ref.string"(ptr %message), !dbg !138
   %5 = xor i1 %call, true, !dbg !138
   br i1 %5, label %if.true1, label %if.continuation2, !dbg !138
 
@@ -369,9 +369,9 @@ if.true1:                                         ; preds = %if.continuation
   %capacity17 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes14, i32 0, i32 2, !dbg !139
   store i32 2, ptr %capacity17, align 4, !dbg !139
   %load18 = load %string, ptr %temp13, align 8, !dbg !139
-  call void @print(%string %load18), !dbg !139
+  call void @"print$string"(%string %load18), !dbg !139
   %load19 = load %string, ptr %message, align 8, !dbg !140
-  call void @print(%string %load19), !dbg !140
+  call void @"print$string"(%string %load19), !dbg !140
   br label %if.continuation2, !dbg !138
 
 if.continuation2:                                 ; preds = %if.true1, %if.continuation
@@ -383,7 +383,7 @@ if.continuation2:                                 ; preds = %if.true1, %if.conti
   %capacity25 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes22, i32 0, i32 2, !dbg !141
   store i32 0, ptr %capacity25, align 4, !dbg !141
   %load26 = load %string, ptr %temp20, align 8, !dbg !141
-  call void @printLine(%string %load26), !dbg !141
+  call void @"printLine$string"(%string %load26), !dbg !141
   %_bytes27 = getelementptr inbounds nuw %string, ptr %temp21, i32 0, i32 0, !dbg !142
   %data28 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 0, !dbg !142
   store ptr @13, ptr %data28, align 8, !dbg !142
@@ -392,17 +392,17 @@ if.continuation2:                                 ; preds = %if.true1, %if.conti
   %capacity30 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 2, !dbg !142
   store i32 9, ptr %capacity30, align 4, !dbg !142
   %load31 = load %string, ptr %temp21, align 8, !dbg !142
-  call void @print(%string %load31), !dbg !142
+  call void @"print$string"(%string %load31), !dbg !142
   %filePath = getelementptr inbounds nuw %SourceLocation, ptr %location, i32 0, i32 0, !dbg !143
   %load32 = load %string, ptr %filePath, align 8, !dbg !143
-  call void @print(%string %load32), !dbg !143
+  call void @"print$string"(%string %load32), !dbg !143
   %line = getelementptr inbounds nuw %SourceLocation, ptr %location, i32 0, i32 1, !dbg !144
   %load33 = load i32, ptr %line, align 4, !dbg !144
   %call34 = call i32 (ptr, ...) @printf(ptr @14, i32 %load33), !dbg !144
   ret void, !dbg !127
 }
 
-define void @TestRun.new(ptr nonnull %0) !dbg !145 {
+define void @"TestRun.new$ref.TestRun"(ptr nonnull %0) !dbg !145 {
 entry:
   %.this = alloca ptr, align 8, !dbg !146
     #dbg_declare(ptr %.this, !147, !DIExpression(), !146)
@@ -427,7 +427,7 @@ entry:
   ret void, !dbg !146
 }
 
-define i32 @string.length(ptr nonnull %0) {
+define i32 @"string.length$ref.string"(ptr nonnull %0) {
 entry:
   %.this = alloca ptr, align 8
   store ptr %0, ptr %.this, align 8
@@ -437,7 +437,7 @@ entry:
   ret i32 %load
 }
 
-define i1 @string.isEmpty(ptr nonnull %0) {
+define i1 @"string.isEmpty$ref.string"(ptr nonnull %0) {
 entry:
   %.this = alloca ptr, align 8
   store ptr %0, ptr %.this, align 8
@@ -483,62 +483,62 @@ entry:
 !29 = !DIDerivedType(tag: DW_TAG_member, name: "currentTestFailed", scope: !16, baseType: !5, size: 8, offset: 128)
 !30 = !DIDerivedType(tag: DW_TAG_member, name: "testCount", scope: !16, baseType: !12, size: 32, offset: 160)
 !31 = !DIDerivedType(tag: DW_TAG_member, name: "failedTestCount", scope: !16, baseType: !12, size: 32, offset: 192)
-!32 = !DISubprogram(name: "beginTest", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: 0)
+!32 = !DISubprogram(name: "beginTest", linkageName: "TestRun.beginTest$ref.TestRun,string", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: 0)
 !33 = !DIFile(filename: "TestRun.cara", directory: "Core")
 !34 = !DISubroutineType(types: !35)
 !35 = !{null, !36, !19}
 !36 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !16, size: 64, flags: DIFlagArtificial | DIFlagObjectPointer)
-!37 = !DISubprogram(name: "endTest", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: 0)
+!37 = !DISubprogram(name: "endTest", linkageName: "TestRun.endTest$ref.TestRun", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: 0)
 !38 = !DISubroutineType(types: !39)
 !39 = !{null, !36}
-!40 = !DISubprogram(name: "isTrue", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: 0)
+!40 = !DISubprogram(name: "isTrue", linkageName: "TestRun.isTrue$ref.TestRun,bool,string,SourceLocation", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: 0)
 !41 = !DISubroutineType(types: !42)
 !42 = !{null, !36, !5, !19, !43}
 !43 = !DICompositeType(tag: DW_TAG_structure_type, name: "SourceLocation", size: 192, elements: !44)
 !44 = !{!45, !46}
 !45 = !DIDerivedType(tag: DW_TAG_member, name: "filePath", scope: !43, baseType: !19, size: 128)
 !46 = !DIDerivedType(tag: DW_TAG_member, name: "line", scope: !43, baseType: !12, size: 32, offset: 128)
-!47 = !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: 0)
-!48 = !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: 0)
-!49 = !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: 0)
+!47 = !DISubprogram(name: "isFalse", linkageName: "TestRun.isFalse$ref.TestRun,bool,string,SourceLocation", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: 0)
+!48 = !DISubprogram(name: "printSummary", linkageName: "TestRun.printSummary$ref.TestRun", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: 0)
+!49 = !DISubprogram(name: "exitCode", linkageName: "TestRun.exitCode$ref.TestRun", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: 0)
 !50 = !DISubroutineType(types: !51)
 !51 = !{!12, !36}
-!52 = !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: 0)
+!52 = !DISubprogram(name: "_fail", linkageName: "TestRun._fail$ref.TestRun,string,string,SourceLocation", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: 0)
 !53 = !DISubroutineType(types: !54)
 !54 = !{null, !36, !19, !19, !43}
-!55 = !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
+!55 = !DISubprogram(name: "new", linkageName: "TestRun.new$ref.TestRun", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
 !56 = !DILocation(line: 7, scope: !8)
 !57 = !DILocation(line: 8, scope: !8)
 !58 = !DILocation(line: 9, scope: !8)
 !59 = !DILocation(line: 10, scope: !8)
 !60 = !DILocation(line: 12, scope: !8)
-!61 = distinct !DISubprogram(name: "__caracal_tests_stub", scope: !9, file: !9, line: 15, type: !62, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!61 = distinct !DISubprogram(name: "__caracal_tests_stub", linkageName: "__caracal_tests_stub$ref.TestRun", scope: !9, file: !9, line: 15, type: !62, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
 !62 = !DISubroutineType(types: !63)
 !63 = !{null, !64}
 !64 = !DIDerivedType(tag: DW_TAG_reference_type, baseType: !16, size: 64)
 !65 = !DILocation(line: 15, scope: !61)
 !66 = !DILocalVariable(name: "Assert", arg: 1, scope: !61, file: !9, line: 15, type: !64)
-!67 = distinct !DISubprogram(name: "print", scope: !68, file: !68, line: 1, type: !69, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!67 = distinct !DISubprogram(name: "print", linkageName: "print$string", scope: !68, file: !68, line: 1, type: !69, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
 !68 = !DIFile(filename: "Print.cara", directory: "Core")
 !69 = !DISubroutineType(types: !70)
 !70 = !{null, !19}
 !71 = !DILocation(line: 1, scope: !67)
 !72 = !DILocalVariable(name: "message", arg: 1, scope: !67, file: !68, line: 1, type: !19)
 !73 = !DILocation(line: 3, scope: !67)
-!74 = distinct !DISubprogram(name: "printLine", scope: !68, file: !68, line: 6, type: !69, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
+!74 = distinct !DISubprogram(name: "printLine", linkageName: "printLine$string", scope: !68, file: !68, line: 6, type: !69, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, retainedNodes: !13)
 !75 = !DILocation(line: 6, scope: !74)
 !76 = !DILocalVariable(name: "message", arg: 1, scope: !74, file: !68, line: 6, type: !19)
 !77 = !DILocation(line: 8, scope: !74)
-!78 = distinct !DISubprogram(name: "main", linkageName: "caracal.userMain", scope: !3, file: !3, line: 1, type: !10, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
+!78 = distinct !DISubprogram(name: "main", linkageName: "main$", scope: !3, file: !3, line: 1, type: !10, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2)
 !79 = !DILocation(line: 3, scope: !78)
-!80 = distinct !DISubprogram(name: "beginTest", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !32, retainedNodes: !13)
+!80 = distinct !DISubprogram(name: "beginTest", linkageName: "TestRun.beginTest$ref.TestRun,string", scope: !16, file: !33, line: 8, type: !34, scopeLine: 8, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !32, retainedNodes: !13)
 !81 = !DILocation(line: 8, scope: !80)
 !82 = !DILocalVariable(name: "this", arg: 1, scope: !80, file: !33, line: 8, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !83 = !DILocalVariable(name: "name", arg: 2, scope: !80, file: !33, line: 8, type: !19)
 !84 = !DILocation(line: 10, scope: !80)
 !85 = !DILocation(line: 11, scope: !80)
 !86 = !DILocation(line: 12, scope: !80)
-!87 = distinct !DISubprogram(name: "endTest", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !37, retainedNodes: !13)
+!87 = distinct !DISubprogram(name: "endTest", linkageName: "TestRun.endTest$ref.TestRun", scope: !16, file: !33, line: 15, type: !38, scopeLine: 15, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !37, retainedNodes: !13)
 !88 = !DILocation(line: 15, scope: !87)
 !89 = !DILocalVariable(name: "this", arg: 1, scope: !87, file: !33, line: 15, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !90 = !DILocation(line: 17, scope: !87)
@@ -546,7 +546,7 @@ entry:
 !92 = !DILocation(line: 20, scope: !87)
 !93 = !DILocation(line: 23, scope: !87)
 !94 = !DILocation(line: 24, scope: !87)
-!95 = distinct !DISubprogram(name: "isTrue", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !40, retainedNodes: !13)
+!95 = distinct !DISubprogram(name: "isTrue", linkageName: "TestRun.isTrue$ref.TestRun,bool,string,SourceLocation", scope: !16, file: !33, line: 27, type: !41, scopeLine: 27, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !40, retainedNodes: !13)
 !96 = !DILocation(line: 27, scope: !95)
 !97 = !DILocalVariable(name: "this", arg: 1, scope: !95, file: !33, line: 27, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !98 = !DILocalVariable(name: "condition", arg: 2, scope: !95, file: !33, line: 27, type: !5)
@@ -556,7 +556,7 @@ entry:
 !102 = !DILocation(line: 31, scope: !95)
 !103 = !DILocation(line: 32, scope: !95)
 !104 = !DILocation(line: 33, scope: !95)
-!105 = distinct !DISubprogram(name: "isFalse", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !47, retainedNodes: !13)
+!105 = distinct !DISubprogram(name: "isFalse", linkageName: "TestRun.isFalse$ref.TestRun,bool,string,SourceLocation", scope: !16, file: !33, line: 37, type: !41, scopeLine: 37, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !47, retainedNodes: !13)
 !106 = !DILocation(line: 37, scope: !105)
 !107 = !DILocalVariable(name: "this", arg: 1, scope: !105, file: !33, line: 37, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !108 = !DILocalVariable(name: "condition", arg: 2, scope: !105, file: !33, line: 37, type: !5)
@@ -566,18 +566,18 @@ entry:
 !112 = !DILocation(line: 41, scope: !105)
 !113 = !DILocation(line: 42, scope: !105)
 !114 = !DILocation(line: 43, scope: !105)
-!115 = distinct !DISubprogram(name: "printSummary", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !48, retainedNodes: !13)
+!115 = distinct !DISubprogram(name: "printSummary", linkageName: "TestRun.printSummary$ref.TestRun", scope: !16, file: !33, line: 47, type: !38, scopeLine: 47, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !48, retainedNodes: !13)
 !116 = !DILocation(line: 47, scope: !115)
 !117 = !DILocalVariable(name: "this", arg: 1, scope: !115, file: !33, line: 47, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !118 = !DILocation(line: 49, scope: !115)
 !119 = !DILocalVariable(name: "passedTestCount", scope: !115, file: !33, line: 49, type: !12)
 !120 = !DILocation(line: 50, scope: !115)
-!121 = distinct !DISubprogram(name: "exitCode", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !49, retainedNodes: !13)
+!121 = distinct !DISubprogram(name: "exitCode", linkageName: "TestRun.exitCode$ref.TestRun", scope: !16, file: !33, line: 53, type: !50, scopeLine: 53, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !49, retainedNodes: !13)
 !122 = !DILocation(line: 53, scope: !121)
 !123 = !DILocalVariable(name: "this", arg: 1, scope: !121, file: !33, line: 53, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !124 = !DILocation(line: 55, scope: !121)
 !125 = !DILocation(line: 56, scope: !121)
-!126 = distinct !DISubprogram(name: "_fail", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !52, retainedNodes: !13)
+!126 = distinct !DISubprogram(name: "_fail", linkageName: "TestRun._fail$ref.TestRun,string,string,SourceLocation", scope: !16, file: !33, line: 59, type: !53, scopeLine: 59, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !52, retainedNodes: !13)
 !127 = !DILocation(line: 59, scope: !126)
 !128 = !DILocalVariable(name: "this", arg: 1, scope: !126, file: !33, line: 59, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !129 = !DILocalVariable(name: "checkName", arg: 2, scope: !126, file: !33, line: 59, type: !19)
@@ -596,7 +596,7 @@ entry:
 !142 = !DILocation(line: 77, scope: !126)
 !143 = !DILocation(line: 78, scope: !126)
 !144 = !DILocation(line: 79, scope: !126)
-!145 = distinct !DISubprogram(name: "new", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !55, retainedNodes: !13)
+!145 = distinct !DISubprogram(name: "new", linkageName: "TestRun.new$ref.TestRun", scope: !16, file: !33, line: 1, type: !38, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !2, declaration: !55, retainedNodes: !13)
 !146 = !DILocation(line: 1, scope: !145)
 !147 = !DILocalVariable(name: "this", arg: 1, scope: !145, file: !33, line: 1, type: !36, flags: DIFlagArtificial | DIFlagObjectPointer)
 !148 = !DILocation(line: 3, scope: !145)

@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @atOnDynamicArrayLiteral() {
+define i32 @"atOnDynamicArrayLiteral$"() {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   %call = call ptr @calloc(i64 8, i64 4)

@@ -9,7 +9,7 @@ target triple = "x86_64-unknown-none"
 declare noundef i32 @printf(ptr noundef readonly captures(none) %0, ...) local_unnamed_addr #0
 
 ; Function Attrs: nofree nounwind
-define noundef i32 @func() local_unnamed_addr #0 {
+define noundef i32 @"func$"() local_unnamed_addr #0 {
 entry:
   %call = tail call i32 (ptr, ...) @printf(ptr nonnull dereferenceable(1) @0, i32 1)
   ret i32 0

@@ -6,13 +6,13 @@ target triple = "x86_64-unknown-none"
 %string = type { { ptr, i32, i32 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describe(i32 %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describe$i32,string"(i32 %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @callers() local_unnamed_addr #0 {
+define void @"callers$"() local_unnamed_addr #0 {
 entry:
   ret void
 }

@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @sum([4 x i32] %0) !dbg !4 {
+define i32 @"sum$[i32; 4]"([4 x i32] %0) !dbg !4 {
 entry:
   %values = alloca [4 x i32], align 4, !dbg !12
     #dbg_declare(ptr %values, !13, !DIExpression(), !12)
@@ -40,9 +40,9 @@ entry:
   store i32 3, ptr %element2, align 4, !dbg !18
   %element3 = getelementptr [4 x i32], ptr %numbers, i32 0, i32 3, !dbg !18
   store i32 4, ptr %element3, align 4, !dbg !18
-  call void @Grid.new(ptr %grid), !dbg !20
+  call void @"Grid.new$ref.Grid"(ptr %grid), !dbg !20
   %load = load [4 x i32], ptr %numbers, align 4, !dbg !29
-  %call = call i32 @sum([4 x i32] %load), !dbg !29
+  %call = call i32 @"sum$[i32; 4]"([4 x i32] %load), !dbg !29
   %cells = getelementptr inbounds nuw %Grid, ptr %grid, i32 0, i32 0, !dbg !29
   %element4 = getelementptr [4 x i32], ptr %cells, i32 0, i32 1, !dbg !29
   %load5 = load i32, ptr %element4, align 4, !dbg !29
@@ -51,7 +51,7 @@ entry:
   ret i32 %subtract6, !dbg !29
 }
 
-define void @Grid.new(ptr nonnull %0) !dbg !30 {
+define void @"Grid.new$ref.Grid"(ptr nonnull %0) !dbg !30 {
 entry:
   %.this = alloca ptr, align 8, !dbg !31
     #dbg_declare(ptr %.this, !32, !DIExpression(), !31)
@@ -75,7 +75,7 @@ entry:
 !1 = !DIFile(filename: "fixedArrayLocal.cara", directory: "InputDebugInfo")
 !2 = !{i32 2, !"Debug Info Version", i32 3}
 !3 = !{i32 2, !"CodeView", i32 1}
-!4 = distinct !DISubprogram(name: "sum", scope: !1, file: !1, line: 6, type: !5, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
+!4 = distinct !DISubprogram(name: "sum", linkageName: "sum$[i32; 4]", scope: !1, file: !1, line: 6, type: !5, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
 !5 = !DISubroutineType(types: !6)
 !6 = !{!7, !8}
 !7 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)
@@ -86,7 +86,7 @@ entry:
 !12 = !DILocation(line: 6, scope: !4)
 !13 = !DILocalVariable(name: "values", arg: 1, scope: !4, file: !1, line: 6, type: !8)
 !14 = !DILocation(line: 8, scope: !4)
-!15 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !16, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
+!15 = distinct !DISubprogram(name: "main", linkageName: "main", scope: !1, file: !1, line: 11, type: !16, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !11)
 !16 = !DISubroutineType(types: !17)
 !17 = !{!7}
 !18 = !DILocation(line: 13, scope: !15)
@@ -96,12 +96,12 @@ entry:
 !22 = !DICompositeType(tag: DW_TAG_structure_type, name: "Grid", size: 128, elements: !23)
 !23 = !{!24, !25}
 !24 = !DIDerivedType(tag: DW_TAG_member, name: "cells", scope: !22, baseType: !8, size: 128)
-!25 = !DISubprogram(name: "new", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
+!25 = !DISubprogram(name: "new", linkageName: "Grid.new$ref.Grid", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: 0)
 !26 = !DISubroutineType(types: !27)
 !27 = !{null, !28}
 !28 = !DIDerivedType(tag: DW_TAG_pointer_type, baseType: !22, size: 64, flags: DIFlagArtificial | DIFlagObjectPointer)
 !29 = !DILocation(line: 15, scope: !15)
-!30 = distinct !DISubprogram(name: "new", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, declaration: !25, retainedNodes: !11)
+!30 = distinct !DISubprogram(name: "new", linkageName: "Grid.new$ref.Grid", scope: !22, file: !1, line: 1, type: !26, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, declaration: !25, retainedNodes: !11)
 !31 = !DILocation(line: 1, scope: !30)
 !32 = !DILocalVariable(name: "this", arg: 1, scope: !30, file: !1, line: 1, type: !28, flags: DIFlagArtificial | DIFlagObjectPointer)
 !33 = !DILocation(line: 3, scope: !30)

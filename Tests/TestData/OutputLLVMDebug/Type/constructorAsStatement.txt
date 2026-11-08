@@ -13,14 +13,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorAsStatement() {
+define i32 @"constructorAsStatement$"() {
 entry:
   %constructed = alloca %Point, align 8
-  call void @Point.new(ptr %constructed, i32 7)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 7)
   ret i32 0
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

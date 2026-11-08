@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @total({ ptr, i32 } %0) {
+define i32 @"total$const [i32]"({ ptr, i32 } %0) {
 entry:
   %temp = alloca { ptr, i32 }, align 8
   store { ptr, i32 } %0, ptr %temp, align 8
@@ -20,7 +20,7 @@ entry:
   ret i32 %load
 }
 
-define i32 @use() {
+define i32 @"use$"() {
 entry:
   %numbers = alloca [3 x i32], align 4
   %element = getelementptr [3 x i32], ptr %numbers, i32 0, i32 0
@@ -31,6 +31,6 @@ entry:
   store i32 3, ptr %element2, align 4
   %0 = insertvalue { ptr, i32 } poison, ptr %numbers, 0
   %slice = insertvalue { ptr, i32 } %0, i32 3, 1
-  %call = call i32 @total({ ptr, i32 } %slice)
+  %call = call i32 @"total$const [i32]"({ ptr, i32 } %slice)
   ret i32 %call
 }

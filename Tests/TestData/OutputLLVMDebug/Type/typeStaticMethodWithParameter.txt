@@ -11,18 +11,18 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
-  %call = call i32 @Math.id(i32 7)
+  %call = call i32 @"Math.id$i32"(i32 7)
   ret i32 %call
 }
 
-define i32 @Math.id(i32 %0) {
+define i32 @"Math.id$i32"(i32 %0) {
 entry:
   ret i32 %0
 }
 
-define void @Math.new(ptr nonnull %0) {
+define void @"Math.new$ref.Math"(ptr nonnull %0) {
 entry:
   ret void
 }

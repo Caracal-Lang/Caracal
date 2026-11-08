@@ -11,13 +11,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @__caracal_helper() {
+define i32 @"__caracal_helper$"() {
 entry:
   ret i32 7
 }
 
-define i32 @callsHelper() {
+define i32 @"callsHelper$"() {
 entry:
-  %call = call i32 @__caracal_helper()
+  %call = call i32 @"__caracal_helper$"()
   ret i32 %call
 }

@@ -16,7 +16,7 @@ block entry(0):
     %0 = address_of %slot0 : ref [u8; _]
     %1 = const 8 : i64
     %2 = size_of u8 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref u8 "data"
     store_value %3, %4 : ref u8
     %5 = const 0 : i32
@@ -27,11 +27,11 @@ block entry(0):
     store_value %7, %8 : i32
     %9 = address_of %slot1 : ref string
     %10 = array_copy %0 : [u8; _]
-    call string.new(%9, %10)
+    call string.new$ref.string,[u8; _](%9, %10)
     %12 = const 42 : i32
     return %12
 
-define string.new(%0: ref string ".this", %1: [u8; _] "bytes") void
+define string.new$ref.string,[u8; _](%0: ref string ".this", %1: [u8; _] "bytes") void
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = parameter 1 : [u8; _] "bytes"

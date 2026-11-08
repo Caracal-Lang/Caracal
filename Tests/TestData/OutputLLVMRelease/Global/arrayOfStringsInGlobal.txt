@@ -11,7 +11,7 @@ target triple = "x86_64-unknown-none"
 @llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none)
-define i32 @arrayOfStringsInGlobal() local_unnamed_addr #0 {
+define i32 @"arrayOfStringsInGlobal$"() local_unnamed_addr #0 {
 entry:
   %load.i = load i32, ptr getelementptr inbounds nuw (i8, ptr @names, i64 8), align 8
   %add = add i32 %load.i, 2
@@ -19,7 +19,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+define i32 @"string.length$ref.string"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
 entry:
   %length = getelementptr inbounds nuw i8, ptr %0, i64 8
   %load = load i32, ptr %length, align 4

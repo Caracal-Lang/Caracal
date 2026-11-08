@@ -1,0 +1,19 @@
+def add(left: i32, right: i32) i32
+{
+    return left %+ right;
+}
+
+def add(flag: bool, value: i32) i32
+{
+    if flag
+    {
+        return value;
+    }
+
+    return 0;
+}
+
+def main() i32
+{
+    return add(1, 2) %+ add(true, 4);
+}

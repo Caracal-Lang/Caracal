@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorInLoopBody() {
+define i32 @"constructorInLoopBody$"() {
 entry:
   %constructed = alloca %Point, align 8
   %temp = alloca %Point, align 8
@@ -26,7 +26,7 @@ while.condition:                                  ; preds = %while.body, %entry
   br i1 %less_than, label %while.body, label %while.continuation
 
 while.body:                                       ; preds = %while.condition
-  call void @Point.new(ptr %constructed, i32 2)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 2)
   %load = load %Point, ptr %constructed, align 4
   store %Point %load, ptr %temp, align 4
   %x = getelementptr inbounds nuw %Point, ptr %temp, i32 0, i32 0
@@ -39,7 +39,7 @@ while.continuation:                               ; preds = %while.condition
   ret i32 %phi1
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

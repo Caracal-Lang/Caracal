@@ -11,15 +11,15 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @inner(ptr nonnull %0) {
+define void @"inner$ref.i32"(ptr nonnull %0) {
 entry:
   ret void
 }
 
-define void @outer() {
+define void @"outer$"() {
 entry:
   %x = alloca i32, align 4
   store i32 20, ptr %x, align 4
-  call void @inner(ptr %x)
+  call void @"inner$ref.i32"(ptr %x)
   ret void
 }

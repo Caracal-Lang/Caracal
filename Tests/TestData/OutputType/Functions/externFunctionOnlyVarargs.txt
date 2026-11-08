@@ -1,5 +1,5 @@
 FunctionDefinitionStatement: {
-    Type: (C Variadic) -> i32
+    Type: (...) -> i32
     Name: printf
     Annotation: {
         Name: extern
@@ -10,7 +10,7 @@ FunctionDefinitionStatement: {
         ParameterNode: {
             Name: varargs
             TypeNameNode: {
-                Type: C Variadic
+                Type: ...
                 Lexeme: ...
             }
         }

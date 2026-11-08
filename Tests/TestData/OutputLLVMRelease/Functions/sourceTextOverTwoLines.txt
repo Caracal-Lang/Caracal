@@ -8,13 +8,13 @@ target triple = "x86_64-unknown-none"
 @0 = private unnamed_addr constant [15 x i8] c"1\0A        %+ 2\00", align 1
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describe(i32 %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describe$i32,string"(i32 %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @caller() local_unnamed_addr #0 {
+define %string @"caller$"() local_unnamed_addr #0 {
 entry:
   ret %string { { ptr, i32, i32 } { ptr @0, i32 14, i32 14 } }
 }

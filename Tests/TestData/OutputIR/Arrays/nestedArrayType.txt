@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define rows(%0: const [[i32; 4]] "matrix") i32
+define rows$const [[i32; 4]](%0: const [[i32; 4]] "matrix") i32
 block entry(0):
     %0 = parameter 0 : const [[i32; 4]] "matrix"
     %1 = const 0 : i32

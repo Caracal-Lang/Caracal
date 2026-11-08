@@ -15,7 +15,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @addTo(ptr nonnull %0, i32 %1) {
+define void @"addTo$ref.i32,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %load = load i32, ptr %0, align 4
   %add = add i32 %load, %1
@@ -23,7 +23,7 @@ entry:
   ret void
 }
 
-define i32 @stuff(i32 %0, %string %1, %SourceLocation %2) {
+define i32 @"stuff$i32,string,SourceLocation"(i32 %0, %string %1, %SourceLocation %2) {
 entry:
   %text = alloca %string, align 8
   %place = alloca %SourceLocation, align 8
@@ -35,7 +35,7 @@ entry:
   ret i32 %add
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

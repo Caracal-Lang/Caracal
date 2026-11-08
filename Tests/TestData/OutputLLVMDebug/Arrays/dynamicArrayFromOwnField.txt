@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @dynamicArrayFromOwnField() {
+define i32 @"dynamicArrayFromOwnField$"() {
 entry:
   %holder = alloca %Holder, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -29,12 +29,12 @@ entry:
   %element1 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element1, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Holder.new(ptr %holder, { ptr, i32, i32 } %load)
-  %call2 = call i32 @Holder.firstAfterWrite(ptr %holder)
+  call void @"Holder.new$ref.Holder,[i32; _]"(ptr %holder, { ptr, i32, i32 } %load)
+  %call2 = call i32 @"Holder.firstAfterWrite$ref.Holder"(ptr %holder)
   ret i32 %call2
 }
 
-define i32 @Holder.firstAfterWrite(ptr nonnull %0) {
+define i32 @"Holder.firstAfterWrite$ref.Holder"(ptr nonnull %0) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   %copy = alloca { ptr, i32, i32 }, align 8
@@ -68,7 +68,7 @@ entry:
   ret i32 %load12
 }
 
-define void @Holder.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"Holder.new$ref.Holder,[i32; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

@@ -8,7 +8,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define globalCopiedAfterLocalsInBothBranches(%0: bool "condition") i32
+define globalCopiedAfterLocalsInBothBranches$bool(%0: bool "condition") i32
 block entry(0):
     %0 = parameter 0 : bool "condition"
     branch if %0, if.true(1), if.false(2)
@@ -17,7 +17,7 @@ block if.true(1):
     %1 = address_of %slot0 : ref [i32; _]
     %2 = const 8 : i64
     %3 = size_of i32 : i64
-    %4 = call C.calloc(%2, %3) : rawptr
+    %4 = call calloc(%2, %3) : rawptr
     %5 = address_of_field %1.0 : ref i32 "data"
     store_value %4, %5 : ref i32
     %6 = const 1 : i32
@@ -36,7 +36,7 @@ block if.false(2):
     %18 = address_of %slot1 : ref [i32; _]
     %19 = const 8 : i64
     %20 = size_of i32 : i64
-    %21 = call C.calloc(%19, %20) : rawptr
+    %21 = call calloc(%19, %20) : rawptr
     %22 = address_of_field %18.0 : ref i32 "data"
     store_value %21, %22 : ref i32
     %23 = const 1 : i32
@@ -69,7 +69,7 @@ block entry(0):
     %0 = address_of %slot0 : ref [i32; _]
     %1 = const 8 : i64
     %2 = size_of i32 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref i32 "data"
     store_value %3, %4 : ref i32
     %5 = const 1 : i32
@@ -86,5 +86,5 @@ block entry(0):
     %13 = address_of_global @numbers : ref [i32; _]
     store_value %12, %13 : [i32; _]
     %14 = const false : bool
-    %15 = call globalCopiedAfterLocalsInBothBranches(%14) : i32
+    %15 = call globalCopiedAfterLocalsInBothBranches$bool(%14) : i32
     return %15

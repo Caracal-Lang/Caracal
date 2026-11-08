@@ -7,7 +7,7 @@ target triple = "x86_64-unknown-none"
 @shared = local_unnamed_addr global ptr null
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
-define i32 @readShared() local_unnamed_addr #0 {
+define i32 @"readShared$"() local_unnamed_addr #0 {
 entry:
   %load = load ptr, ptr @shared, align 8
   %load1 = load i32, ptr %load, align 4

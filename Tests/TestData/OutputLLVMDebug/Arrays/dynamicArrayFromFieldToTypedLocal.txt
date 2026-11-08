@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @dynamicArrayFromFieldToTypedLocal() {
+define i32 @"dynamicArrayFromFieldToTypedLocal$"() {
 entry:
   %holder = alloca %Holder, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -31,7 +31,7 @@ entry:
   %element2 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element2, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Holder.new(ptr %holder, { ptr, i32, i32 } %load)
+  call void @"Holder.new$ref.Holder,[i32; _]"(ptr %holder, { ptr, i32, i32 } %load)
   %items = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
   %load3 = load { ptr, i32, i32 }, ptr %items, align 8
   store { ptr, i32, i32 } %load3, ptr %temp1, align 8
@@ -62,7 +62,7 @@ entry:
   ret i32 %load19
 }
 
-define void @Holder.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"Holder.new$ref.Holder,[i32; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

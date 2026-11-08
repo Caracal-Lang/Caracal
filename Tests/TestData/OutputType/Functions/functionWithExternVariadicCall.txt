@@ -1,5 +1,5 @@
 FunctionDefinitionStatement: {
-    Type: (cstring, C Variadic) -> i32
+    Type: (cstring, ...) -> i32
     Name: printf
     Annotation: {
         Name: extern
@@ -17,7 +17,7 @@ FunctionDefinitionStatement: {
         ParameterNode: {
             Name: varargs
             TypeNameNode: {
-                Type: C Variadic
+                Type: ...
                 Lexeme: ...
             }
         }
@@ -46,9 +46,9 @@ FunctionDefinitionStatement: {
         ExpressionStatement: {
             FunctionCallExpression: {
                 Type: i32
-                Function type: (cstring, C Variadic) -> i32
+                Function type: (cstring, ...) -> i32
                 NameExpression: {
-                    Type: (cstring, C Variadic) -> i32
+                    Type: (cstring, ...) -> i32
                     Name: printf
                 }
                 ArgumentsNode(2): {

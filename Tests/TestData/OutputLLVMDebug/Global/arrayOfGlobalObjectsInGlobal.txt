@@ -17,13 +17,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @arrayOfGlobalObjectsInGlobal() {
+define i32 @"arrayOfGlobalObjectsInGlobal$"() {
 entry:
   %load = load i32, ptr getelementptr ([2 x %Point], ptr @points, i32 0, i32 1), align 4
   ret i32 %load
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4
@@ -32,7 +32,7 @@ entry:
 
 define void @.global_init() {
 entry:
-  call void @Point.new(ptr @first, i32 5)
+  call void @"Point.new$ref.Point,i32"(ptr @first, i32 5)
   %load = load %Point, ptr @first, align 4
   %load1 = load %Point, ptr @first, align 4
   store %Point %load, ptr @points, align 4

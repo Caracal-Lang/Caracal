@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define passthrough(%0: i8 "value") i8
+define passthrough$i8(%0: i8 "value") i8
 block entry(0):
     %0 = parameter 0 : i8 "value"
     return %0

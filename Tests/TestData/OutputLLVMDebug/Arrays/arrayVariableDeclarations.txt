@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @copy([4 x i32] %0) {
+define i32 @"copy$[i32; 4]"([4 x i32] %0) {
 entry:
   %values = alloca [4 x i32], align 4
   %local = alloca [4 x i32], align 4

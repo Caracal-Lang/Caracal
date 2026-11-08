@@ -11,14 +11,14 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define func() i32
+define func$() i32
 block entry(0):
     %0 = address_of_global @number : ref Number
     %1 = address_of_field %0.0 : ref i32 "value"
     %2 = load_value %1 : i32
     return %2
 
-define Number.new(%0: ref Number ".this", %1: i32 "value") void
+define Number.new$ref.Number,i32(%0: ref Number ".this", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref Number ".this"
     %1 = parameter 1 : i32 "value"
@@ -30,5 +30,5 @@ define .global_init() void
 block entry(0):
     %0 = address_of_global @number : ref Number
     %1 = const 8 : i32
-    call Number.new(%0, %1)
+    call Number.new$ref.Number,i32(%0, %1)
     return

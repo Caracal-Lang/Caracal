@@ -6,12 +6,12 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define mask() i32
+define mask$() i32
 block entry(0):
     %1 = const 4 : i32
     return %1
 
-define flags() u8
+define flags$() u8
 block entry(0):
     %1 = const 7 : u8
     return %1

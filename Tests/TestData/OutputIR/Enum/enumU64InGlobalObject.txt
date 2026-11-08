@@ -15,7 +15,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define enumU64InGlobalObject() i32
+define enumU64InGlobalObject$() i32
 block entry(0):
     %0 = address_of_global @box : ref Box
     %1 = address_of_field %0.0 : ref Values "color"
@@ -30,7 +30,7 @@ block if.continuation(2):
     %6 = const 3 : i32
     return %6
 
-define Box.new(%0: ref Box ".this", %1: Values "color") void
+define Box.new$ref.Box,Values(%0: ref Box ".this", %1: Values "color") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : Values "color"
@@ -42,5 +42,5 @@ define .global_init() void
 block entry(0):
     %0 = address_of_global @box : ref Box
     %1 = const Values.B (= 1) : Values
-    call Box.new(%0, %1)
+    call Box.new$ref.Box,Values(%0, %1)
     return

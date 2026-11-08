@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define take(%0: i64 "value") i64
+define take$i64(%0: i64 "value") i64
 block entry(0):
     %0 = parameter 0 : i64 "value"
     return %0
@@ -20,7 +20,7 @@ block entry(0):
     %0 = const 72 : u8
     %2 = const 101 : u8
     %3 = address_of %slot0 : ref Box
-    call Box.new(%3)
+    call Box.new$ref.Box(%3)
     %4 = const 72 : u8
     %5 = not_equal %0, %4 : bool
     branch if %5, if.true(1), if.continuation(2)
@@ -35,7 +35,7 @@ block if.true(3):
     %9 = const 3 : i32
     return %9
 block if.continuation(4):
-    %10 = call Box.value(%3) : u8
+    %10 = call Box.value$ref.Box(%3) : u8
     %11 = const 72 : u8
     %12 = not_equal %10, %11 : bool
     branch if %12, if.true(5), if.continuation(6)
@@ -44,7 +44,7 @@ block if.true(5):
     return %13
 block if.continuation(6):
     %14 = const 9 : i64
-    %15 = call take(%14) : i64
+    %15 = call take$i64(%14) : i64
     %16 = const 9 : i64
     %17 = not_equal %15, %16 : bool
     branch if %17, if.true(7), if.continuation(8)
@@ -55,14 +55,14 @@ block if.continuation(8):
     %19 = const 42 : i32
     return %19
 
-define Box.value(%0: ref Box ".this") u8
+define Box.value$ref.Box(%0: ref Box ".this") u8
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = address_of_field %0.0 : ref u8 "v"
     %2 = load_value %1 : u8
     return %2
 
-define Box.new(%0: ref Box ".this") void
+define Box.new$ref.Box(%0: ref Box ".this") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = const 72 : u8

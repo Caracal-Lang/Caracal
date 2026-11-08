@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define touch(%0: ref i32 "counter") i32
+define touch$ref.i32(%0: ref i32 "counter") i32
 block entry(0):
     %0 = parameter 0 : ref i32 "counter"
     %1 = load_value %0 : i32
@@ -16,7 +16,7 @@ block entry(0):
     %4 = load_value %0 : i32
     return %4
 
-define elementWriteIndexRunsOnce() i32
+define elementWriteIndexRunsOnce$() i32
 block entry(0):
     %slot0 = allocate_local : i32 "counter"
     %slot1 = allocate_local : [i32; 3] "numbers"
@@ -37,7 +37,7 @@ block entry(0):
     %11 = const 3 : i32
     store_value %11, %10 : i32
     %12 = const 9 : i32
-    %13 = call touch(%1) : i32
+    %13 = call touch$ref.i32(%1) : i32
     %14 = element_address %2[%13] : i32
     store_value %12, %14 : i32
     %15 = load_value %1 : i32

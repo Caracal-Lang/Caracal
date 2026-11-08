@@ -7,7 +7,7 @@ target triple = "x86_64-unknown-none"
 declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
 
 ; Function Attrs: mustprogress nofree nounwind willreturn memory(write, argmem: none, inaccessiblemem: readwrite)
-define { ptr, i32, i32 } @make() local_unnamed_addr #1 {
+define { ptr, i32, i32 } @"make$"() local_unnamed_addr #1 {
 entry:
   %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
   store i32 1, ptr %call, align 4

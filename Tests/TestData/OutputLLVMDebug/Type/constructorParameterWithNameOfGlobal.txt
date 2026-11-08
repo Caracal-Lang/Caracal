@@ -16,13 +16,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorParameterWithNameOfGlobal() {
+define i32 @"constructorParameterWithNameOfGlobal$"() {
 entry:
   %load = load i32, ptr @a, align 4
   ret i32 %load
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %a = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %a, align 4
@@ -31,6 +31,6 @@ entry:
 
 define void @.global_init() {
 entry:
-  call void @Point.new(ptr @a, i32 5)
+  call void @"Point.new$ref.Point,i32"(ptr @a, i32 5)
   ret void
 }

@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define describe(%0: bool "condition", %1: string "text") string
+define describe$bool,string(%0: bool "condition", %1: string "text") string
 block entry(0):
     %0 = parameter 0 : bool "condition"
     %1 = parameter 1 : string "text"
@@ -19,7 +19,7 @@ block entry(0):
     %3 = load_value %2 : string
     return %3
 
-define caller(%0: string "path") string
+define caller$string(%0: string "path") string
 block entry(0):
     %0 = parameter 0 : string "path"
     %slot0 = allocate_local : string "path"
@@ -40,7 +40,7 @@ block entry(0):
     %10 = address_of_field %4.2 : ref i32 "capacity"
     store_value %9, %10 : i32
     %11 = load_value %3 : string
-    %12 = call string.equals(%2, %11) : bool
+    %12 = call string.equals$string,string(%2, %11) : bool
     %13 = address_of %slot2 : ref string
     %14 = address_of_field %13.0 : ref [u8; _] "_bytes"
     %15 = const "path == \"a\\\\b\\n\\\"c\\\"\"\0" : cstring
@@ -53,10 +53,10 @@ block entry(0):
     %20 = address_of_field %14.2 : ref i32 "capacity"
     store_value %19, %20 : i32
     %21 = load_value %13 : string
-    %22 = call describe(%12, %21) : string
+    %22 = call describe$bool,string(%12, %21) : string
     return %22
 
-define string.equals(%0: string "lhs", %1: string "rhs") bool
+define string.equals$string,string(%0: string "lhs", %1: string "rhs") bool
 block entry(0):
     %0 = parameter 0 : string "lhs"
     %slot0 = allocate_local : string "lhs"

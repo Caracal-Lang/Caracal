@@ -13,28 +13,28 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i64 @widen(i32 %0) {
+define i64 @"widen$i32"(i32 %0) {
 entry:
   %int_widen = sext i32 %0 to i64
   ret i64 %int_widen
 }
 
-define i16 @widenUnsigned(i8 %0) {
+define i16 @"widenUnsigned$u8"(i8 %0) {
 entry:
   %int_widen = zext i8 %0 to i16
   ret i16 %int_widen
 }
 
-define i64 @holderWide(i32 %0) {
+define i64 @"holderWide$i32"(i32 %0) {
 entry:
   %holder = alloca %Holder, align 8
-  call void @Holder.new(ptr %holder, i32 %0)
+  call void @"Holder.new$ref.Holder,i32"(ptr %holder, i32 %0)
   %wide = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
   %load = load i64, ptr %wide, align 8
   ret i64 %load
 }
 
-define void @Holder.new(ptr nonnull %0, i32 %1) {
+define void @"Holder.new$ref.Holder,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %int_widen = sext i32 %1 to i64
   %wide = getelementptr inbounds nuw %Holder, ptr %0, i32 0, i32 0

@@ -17,19 +17,19 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i64 @readWide() {
+define i64 @"readWide$"() {
 entry:
   %load = load i64, ptr @wide, align 8
   ret i64 %load
 }
 
-define double @readWideFloat() {
+define double @"readWideFloat$"() {
 entry:
   %load = load double, ptr @wideFloat, align 8
   ret double %load
 }
 
-define i64 @readWideSum() {
+define i64 @"readWideSum$"() {
 entry:
   %load = load i64, ptr @wideSum, align 8
   ret i64 %load

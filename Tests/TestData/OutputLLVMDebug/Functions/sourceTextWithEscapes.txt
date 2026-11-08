@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @describe(i1 %0, %string %1) {
+define %string @"describe$bool,string"(i1 %0, %string %1) {
 entry:
   %text = alloca %string, align 8
   store %string %1, ptr %text, align 8
@@ -24,7 +24,7 @@ entry:
   ret %string %load
 }
 
-define %string @caller(%string %0) {
+define %string @"caller$string"(%string %0) {
 entry:
   %path = alloca %string, align 8
   %temp = alloca %string, align 8
@@ -39,7 +39,7 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 7, ptr %capacity, align 4
   %load2 = load %string, ptr %temp, align 8
-  %call = call i1 @string.equals(%string %load, %string %load2)
+  %call = call i1 @"string.equals$string,string"(%string %load, %string %load2)
   %_bytes3 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
   %data4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 0
   store ptr @1, ptr %data4, align 8
@@ -48,11 +48,11 @@ entry:
   %capacity6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes3, i32 0, i32 2
   store i32 21, ptr %capacity6, align 4
   %load7 = load %string, ptr %temp1, align 8
-  %call8 = call %string @describe(i1 %call, %string %load7)
+  %call8 = call %string @"describe$bool,string"(i1 %call, %string %load7)
   ret %string %call8
 }
 
-define i1 @string.equals(%string %0, %string %1) {
+define i1 @"string.equals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8

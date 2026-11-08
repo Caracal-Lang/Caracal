@@ -10,7 +10,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @Box.sum(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+define i32 @"Box.sum$ref.Box"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
 entry:
   %load = load i32, ptr %0, align 4
   %add = add i32 %load, 2
@@ -18,7 +18,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #2 {
+define void @"Box.new$ref.Box,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #2 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void

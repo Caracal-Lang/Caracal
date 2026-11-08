@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @grow(ptr nonnull %0) {
+define i32 @"grow$ref.[i32; _]"(ptr nonnull %0) {
 entry:
   br label %while.condition
 
@@ -46,7 +46,7 @@ while.continuation:                               ; preds = %while.condition
   ret i32 7
 }
 
-define i32 @elementWriteValueGrowsArray() {
+define i32 @"elementWriteValueGrowsArray$"() {
 entry:
   %numbers = alloca { ptr, i32, i32 }, align 8
   %call = call ptr @calloc(i64 8, i64 4)
@@ -60,7 +60,7 @@ entry:
   store i32 1, ptr %element, align 4
   %element1 = getelementptr i32, ptr %call, i32 1
   store i32 2, ptr %element1, align 4
-  %call2 = call i32 @grow(ptr %numbers)
+  %call2 = call i32 @"grow$ref.[i32; _]"(ptr %numbers)
   %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %numbers, i32 0, i32 0
   %load = load ptr, ptr %data3, align 8
   %element4 = getelementptr i32, ptr %load, i32 0

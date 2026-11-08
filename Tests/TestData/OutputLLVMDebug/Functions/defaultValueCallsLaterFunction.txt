@@ -11,19 +11,19 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @take(i32 %0) {
+define i32 @"take$i32"(i32 %0) {
 entry:
   ret i32 %0
 }
 
-define i32 @limit() {
+define i32 @"limit$"() {
 entry:
   ret i32 1
 }
 
-define i32 @defaultValueCallsLaterFunction() {
+define i32 @"defaultValueCallsLaterFunction$"() {
 entry:
-  %call = call i32 @limit()
-  %call1 = call i32 @take(i32 %call)
+  %call = call i32 @"limit$"()
+  %call1 = call i32 @"take$i32"(i32 %call)
   ret i32 %call1
 }

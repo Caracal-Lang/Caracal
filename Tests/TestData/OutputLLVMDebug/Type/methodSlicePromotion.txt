@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @takeNamed({ ptr, i32 } %0) {
+define i32 @"takeNamed$const [u8]"({ ptr, i32 } %0) {
 entry:
   %temp = alloca { ptr, i32 }, align 8
   store { ptr, i32 } %0, ptr %temp, align 8
@@ -25,23 +25,23 @@ entry:
   ret i32 %load
 }
 
-define i32 @relay({ ptr, i32 } %0) {
+define i32 @"relay$const [u8]"({ ptr, i32 } %0) {
 entry:
-  %call = call i32 @Counter.tally({ ptr, i32 } %0)
+  %call = call i32 @"Counter.tally$const [u8]"({ ptr, i32 } %0)
   ret i32 %call
 }
 
-define i32 @relayNamed({ ptr, i32 } %0) {
+define i32 @"relayNamed$const [u8]"({ ptr, i32 } %0) {
 entry:
-  %call = call i32 @takeNamed({ ptr, i32 } %0)
+  %call = call i32 @"takeNamed$const [u8]"({ ptr, i32 } %0)
   ret i32 %call
 }
 
-define i32 @use(%Counter %0, { ptr, i32 } %1) {
+define i32 @"use$Counter,const [u8]"(%Counter %0, { ptr, i32 } %1) {
 entry:
   %c = alloca %Counter, align 8
   store %Counter %0, ptr %c, align 1
-  %call = call i32 @Counter.count(ptr %c, { ptr, i32 } %1)
+  %call = call i32 @"Counter.count$ref.Counter,const [u8]"(ptr %c, { ptr, i32 } %1)
   ret i32 %call
 }
 
@@ -49,7 +49,7 @@ define i32 @main() {
 entry:
   %c = alloca %Counter, align 8
   %s = alloca %string, align 8
-  call void @Counter.new(ptr %c)
+  call void @"Counter.new$ref.Counter"(ptr %c)
   %_bytes = getelementptr inbounds nuw %string, ptr %s, i32 0, i32 0
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
   store ptr @0, ptr %data, align 8
@@ -64,7 +64,7 @@ entry:
   %load4 = load i32, ptr %length3, align 4
   %0 = insertvalue { ptr, i32 } poison, ptr %load, 0
   %slice = insertvalue { ptr, i32 } %0, i32 %load4, 1
-  %call = call i32 @Counter.count(ptr %c, { ptr, i32 } %slice)
+  %call = call i32 @"Counter.count$ref.Counter,const [u8]"(ptr %c, { ptr, i32 } %slice)
   %_bytes5 = getelementptr inbounds nuw %string, ptr %s, i32 0, i32 0
   %data6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes5, i32 0, i32 0
   %load7 = load ptr, ptr %data6, align 8
@@ -72,7 +72,7 @@ entry:
   %load9 = load i32, ptr %length8, align 4
   %1 = insertvalue { ptr, i32 } poison, ptr %load7, 0
   %slice10 = insertvalue { ptr, i32 } %1, i32 %load9, 1
-  %call11 = call i32 @Counter.tally({ ptr, i32 } %slice10)
+  %call11 = call i32 @"Counter.tally$const [u8]"({ ptr, i32 } %slice10)
   %_bytes12 = getelementptr inbounds nuw %string, ptr %s, i32 0, i32 0
   %data13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes12, i32 0, i32 0
   %load14 = load ptr, ptr %data13, align 8
@@ -80,7 +80,7 @@ entry:
   %load16 = load i32, ptr %length15, align 4
   %2 = insertvalue { ptr, i32 } poison, ptr %load14, 0
   %slice17 = insertvalue { ptr, i32 } %2, i32 %load16, 1
-  %call18 = call i32 @relay({ ptr, i32 } %slice17)
+  %call18 = call i32 @"relay$const [u8]"({ ptr, i32 } %slice17)
   %_bytes19 = getelementptr inbounds nuw %string, ptr %s, i32 0, i32 0
   %data20 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes19, i32 0, i32 0
   %load21 = load ptr, ptr %data20, align 8
@@ -88,7 +88,7 @@ entry:
   %load23 = load i32, ptr %length22, align 4
   %3 = insertvalue { ptr, i32 } poison, ptr %load21, 0
   %slice24 = insertvalue { ptr, i32 } %3, i32 %load23, 1
-  %call25 = call i32 @relayNamed({ ptr, i32 } %slice24)
+  %call25 = call i32 @"relayNamed$const [u8]"({ ptr, i32 } %slice24)
   %load26 = load %Counter, ptr %c, align 1
   %_bytes27 = getelementptr inbounds nuw %string, ptr %s, i32 0, i32 0
   %data28 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes27, i32 0, i32 0
@@ -97,7 +97,7 @@ entry:
   %load31 = load i32, ptr %length30, align 4
   %4 = insertvalue { ptr, i32 } poison, ptr %load29, 0
   %slice32 = insertvalue { ptr, i32 } %4, i32 %load31, 1
-  %call33 = call i32 @use(%Counter %load26, { ptr, i32 } %slice32)
+  %call33 = call i32 @"use$Counter,const [u8]"(%Counter %load26, { ptr, i32 } %slice32)
   %add = add i32 %call, %call11
   %add34 = add i32 %add, %call18
   %add35 = add i32 %add34, %call25
@@ -106,7 +106,7 @@ entry:
   ret i32 %add37
 }
 
-define i32 @Counter.count(ptr nonnull %0, { ptr, i32 } %1) {
+define i32 @"Counter.count$ref.Counter,const [u8]"(ptr nonnull %0, { ptr, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32 }, align 8
   br label %while.condition
@@ -130,7 +130,7 @@ while.continuation:                               ; preds = %while.condition
   ret i32 %phi2
 }
 
-define i32 @Counter.tally({ ptr, i32 } %0) {
+define i32 @"Counter.tally$const [u8]"({ ptr, i32 } %0) {
 entry:
   %temp = alloca { ptr, i32 }, align 8
   store { ptr, i32 } %0, ptr %temp, align 8
@@ -139,7 +139,7 @@ entry:
   ret i32 %load
 }
 
-define void @Counter.new(ptr nonnull %0) {
+define void @"Counter.new$ref.Counter"(ptr nonnull %0) {
 entry:
   ret void
 }

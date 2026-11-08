@@ -10,13 +10,13 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define inner(%0: Values "x") void
+define inner$Values(%0: Values "x") void
 block entry(0):
     %0 = parameter 0 : Values "x"
     return
 
-define outer() void
+define outer$() void
 block entry(0):
     %0 = const Values.First (= 0) : Values
-    call inner(%0)
+    call inner$Values(%0)
     return

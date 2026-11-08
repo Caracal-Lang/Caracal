@@ -8,19 +8,19 @@ target triple = "x86_64-unknown-none"
 @0 = private unnamed_addr constant [2 x i8] c"a\00", align 1
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @name() local_unnamed_addr #0 {
+define %string @"name$"() local_unnamed_addr #0 {
 entry:
   ret %string { { ptr, i32, i32 } { ptr @0, i32 1, i32 1 } }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef range(i32 0, 2) i32 @stringFromCallCompared() local_unnamed_addr #0 {
+define noundef range(i32 0, 2) i32 @"stringFromCallCompared$"() local_unnamed_addr #0 {
 entry:
   ret i32 1
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
-define noundef i1 @string.equals(%string %0, %string %1) local_unnamed_addr #1 {
+define noundef i1 @"string.equals$string,string"(%string %0, %string %1) local_unnamed_addr #1 {
 entry:
   %.fca.0.0.extract18 = extractvalue %string %0, 0, 0
   %.fca.0.1.extract19 = extractvalue %string %0, 0, 1

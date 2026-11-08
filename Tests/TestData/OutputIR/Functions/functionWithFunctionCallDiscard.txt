@@ -6,12 +6,12 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define value() i32
+define value$() i32
 block entry(0):
     %0 = const 42 : i32
     return %0
 
-define func() void
+define func$() void
 block entry(0):
-    %0 = call value() : i32
+    %0 = call value$() : i32
     return

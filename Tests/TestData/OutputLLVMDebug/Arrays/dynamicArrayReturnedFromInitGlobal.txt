@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define { ptr, i32, i32 } @readNumbers() {
+define { ptr, i32, i32 } @"readNumbers$"() {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   %load = load { ptr, i32, i32 }, ptr @numbers, align 8
@@ -35,10 +35,10 @@ entry:
   ret { ptr, i32, i32 } %array_copy
 }
 
-define i32 @dynamicArrayReturnedFromInitGlobal() {
+define i32 @"dynamicArrayReturnedFromInitGlobal$"() {
 entry:
   %copy = alloca { ptr, i32, i32 }, align 8
-  %call = call { ptr, i32, i32 } @readNumbers()
+  %call = call { ptr, i32, i32 } @"readNumbers$"()
   store { ptr, i32, i32 } %call, ptr %copy, align 8
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %copy, i32 0, i32 0
   %load = load ptr, ptr %data, align 8
@@ -66,6 +66,6 @@ entry:
   store i32 6, ptr %element1, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
   store { ptr, i32, i32 } %load, ptr @numbers, align 8
-  %call2 = call i32 @dynamicArrayReturnedFromInitGlobal()
+  %call2 = call i32 @"dynamicArrayReturnedFromInitGlobal$"()
   ret i32 %call2
 }

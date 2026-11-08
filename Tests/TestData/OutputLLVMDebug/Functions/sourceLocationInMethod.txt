@@ -17,7 +17,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @where(%SourceLocation %0) {
+define i32 @"where$SourceLocation"(%SourceLocation %0) {
 entry:
   %place = alloca %SourceLocation, align 8
   store %SourceLocation %0, ptr %place, align 8
@@ -26,15 +26,15 @@ entry:
   ret i32 %load
 }
 
-define i32 @caller() {
+define i32 @"caller$"() {
 entry:
   %box = alloca %Box, align 8
-  call void @Box.new(ptr %box)
-  %call = call i32 @Box.measure(ptr %box)
+  call void @"Box.new$ref.Box"(ptr %box)
+  %call = call i32 @"Box.measure$ref.Box"(ptr %box)
   ret i32 %call
 }
 
-define i32 @Box.measure(ptr nonnull %0) {
+define i32 @"Box.measure$ref.Box"(ptr nonnull %0) {
 entry:
   %temp = alloca %SourceLocation, align 8
   %filePath = getelementptr inbounds nuw %SourceLocation, ptr %temp, i32 0, i32 0
@@ -48,11 +48,11 @@ entry:
   %line = getelementptr inbounds nuw %SourceLocation, ptr %temp, i32 0, i32 1
   store i32 10, ptr %line, align 4
   %load = load %SourceLocation, ptr %temp, align 8
-  %call = call i32 @where(%SourceLocation %load)
+  %call = call i32 @"where$SourceLocation"(%SourceLocation %load)
   ret i32 %call
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   ret void
 }

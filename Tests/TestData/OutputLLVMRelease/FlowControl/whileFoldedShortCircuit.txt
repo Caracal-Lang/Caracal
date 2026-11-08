@@ -6,7 +6,7 @@ target triple = "x86_64-unknown-none"
 @Debug = local_unnamed_addr constant i1 true
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i1 @compute() local_unnamed_addr #0 {
+define noundef i1 @"compute$"() local_unnamed_addr #0 {
 entry:
   ret i1 false
 }

@@ -15,11 +15,11 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorParameterHidesGlobal() {
+define i32 @"constructorParameterHidesGlobal$"() {
 entry:
   %constructed = alloca %Box, align 8
   %temp = alloca %Box, align 8
-  call void @Box.new(ptr %constructed, i32 5)
+  call void @"Box.new$ref.Box,i32"(ptr %constructed, i32 5)
   %load = load %Box, ptr %constructed, align 4
   store %Box %load, ptr %temp, align 4
   %size = getelementptr inbounds nuw %Box, ptr %temp, i32 0, i32 0
@@ -27,7 +27,7 @@ entry:
   ret i32 %load1
 }
 
-define void @Box.new(ptr nonnull %0, i32 %1) {
+define void @"Box.new$ref.Box,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %size = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   store i32 %1, ptr %size, align 4

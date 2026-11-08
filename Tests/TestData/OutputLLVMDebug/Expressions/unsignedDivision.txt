@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define float @unsignedDivide(i8 %0, i8 %1) {
+define float @"unsignedDivide$u8,u8"(i8 %0, i8 %1) {
 entry:
   %int_to_float = uitofp i8 %0 to float
   %int_to_float1 = uitofp i8 %1 to float
@@ -19,7 +19,7 @@ entry:
   ret float %divide
 }
 
-define float @signedDivide(i32 %0, i32 %1) {
+define float @"signedDivide$i32,i32"(i32 %0, i32 %1) {
 entry:
   %int_to_float = sitofp i32 %0 to float
   %int_to_float1 = sitofp i32 %1 to float
@@ -27,7 +27,7 @@ entry:
   ret float %divide
 }
 
-define float @foldedHighByteDivision() {
+define float @"foldedHighByteDivision$"() {
 entry:
   ret float 1.000000e+02
 }

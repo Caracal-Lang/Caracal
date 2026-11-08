@@ -11,12 +11,12 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @mask() {
+define i32 @"mask$"() {
 entry:
   ret i32 4
 }
 
-define i8 @flags() {
+define i8 @"flags$"() {
 entry:
   ret i8 7
 }

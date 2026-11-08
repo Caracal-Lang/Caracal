@@ -11,7 +11,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define arrayLiteralDefaultInGlobal() i32
+define arrayLiteralDefaultInGlobal$() i32
 block entry(0):
     %0 = address_of_global @origin : ref Box
     %1 = address_of_field %0.0 : ref [i32; 2] "values"
@@ -20,7 +20,7 @@ block entry(0):
     %4 = load_value %3 : i32
     return %4
 
-define Box.new(%0: ref Box ".this", %1: [i32; 2] "values") void
+define Box.new$ref.Box,[i32; 2](%0: ref Box ".this", %1: [i32; 2] "values") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : [i32; 2] "values"
@@ -46,5 +46,5 @@ block entry(0):
     %7 = const 2 : i32
     store_value %7, %6 : i32
     %8 = load_value %1 : [i32; 2]
-    call Box.new(%0, %8)
+    call Box.new$ref.Box,[i32; 2](%0, %8)
     return

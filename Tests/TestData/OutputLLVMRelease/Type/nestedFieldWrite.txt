@@ -13,7 +13,7 @@ target triple = "x86_64-unknown-none"
 declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
 
 ; Function Attrs: mustprogress nofree nounwind willreturn memory(readwrite, argmem: none)
-define %Holder @makeHolder() local_unnamed_addr #1 {
+define %Holder @"makeHolder$"() local_unnamed_addr #1 {
 entry:
   %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
   store i32 5, ptr %call, align 4
@@ -32,13 +32,13 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @nestedFieldWrite() local_unnamed_addr #2 {
+define noundef i32 @"nestedFieldWrite$"() local_unnamed_addr #2 {
 entry:
   ret i32 9
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define range(i32 0, -1) i32 @Inner.twice(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
+define range(i32 0, -1) i32 @"Inner.twice$ref.Inner"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
 entry:
   %load = load i32, ptr %0, align 4
   %multiply = shl i32 %load, 1
@@ -46,14 +46,14 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Inner.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #4 {
+define void @"Inner.new$ref.Inner,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #4 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 4), (8, 40)) %0, %Inner %1, { ptr, i32, i32 } %2, %string %3) local_unnamed_addr #5 {
+define void @"Holder.new$ref.Holder,Inner,[i32; _],string"(ptr nonnull writeonly captures(none) initializes((0, 4), (8, 40)) %0, %Inner %1, { ptr, i32, i32 } %2, %string %3) local_unnamed_addr #5 {
 entry:
   %4 = extractvalue %Inner %1, 0
   store i32 %4, ptr %0, align 4

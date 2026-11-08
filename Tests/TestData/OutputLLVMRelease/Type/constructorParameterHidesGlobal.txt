@@ -6,13 +6,13 @@ target triple = "x86_64-unknown-none"
 @value = local_unnamed_addr constant i32 100
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @constructorParameterHidesGlobal() local_unnamed_addr #0 {
+define noundef i32 @"constructorParameterHidesGlobal$"() local_unnamed_addr #0 {
 entry:
   ret i32 5
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
+define void @"Box.new$ref.Box,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void

@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define ptr @passthrough(ptr %0) {
+define ptr @"passthrough$rawptr"(ptr %0) {
 entry:
   ret ptr %0
 }

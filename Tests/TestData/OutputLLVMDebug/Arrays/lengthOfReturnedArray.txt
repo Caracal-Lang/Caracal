@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define [3 x i32] @makeNumbers() {
+define [3 x i32] @"makeNumbers$"() {
 entry:
   %temp = alloca [3 x i32], align 4
   %element = getelementptr [3 x i32], ptr %temp, i32 0, i32 0
@@ -24,8 +24,8 @@ entry:
   ret [3 x i32] %load
 }
 
-define i32 @lengthOfReturnedArray() {
+define i32 @"lengthOfReturnedArray$"() {
 entry:
-  %call = call [3 x i32] @makeNumbers()
+  %call = call [3 x i32] @"makeNumbers$"()
   ret i32 3
 }

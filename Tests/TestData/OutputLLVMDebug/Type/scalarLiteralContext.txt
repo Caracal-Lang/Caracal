@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i64 @take(i64 %0) {
+define i64 @"take$i64"(i64 %0) {
 entry:
   ret i64 %0
 }
@@ -21,7 +21,7 @@ entry:
 define i32 @main() {
 entry:
   %b = alloca %Box, align 8
-  call void @Box.new(ptr %b)
+  call void @"Box.new$ref.Box"(ptr %b)
   br i1 false, label %if.true, label %if.continuation
 
 if.true:                                          ; preds = %entry
@@ -34,7 +34,7 @@ if.true1:                                         ; preds = %if.continuation
   ret i32 3
 
 if.continuation2:                                 ; preds = %if.continuation
-  %call = call i8 @Box.value(ptr %b)
+  %call = call i8 @"Box.value$ref.Box"(ptr %b)
   %not_equal = icmp ne i8 %call, 72
   br i1 %not_equal, label %if.true3, label %if.continuation4
 
@@ -42,7 +42,7 @@ if.true3:                                         ; preds = %if.continuation2
   ret i32 4
 
 if.continuation4:                                 ; preds = %if.continuation2
-  %call7 = call i64 @take(i64 9)
+  %call7 = call i64 @"take$i64"(i64 9)
   %not_equal8 = icmp ne i64 %call7, 9
   br i1 %not_equal8, label %if.true5, label %if.continuation6
 
@@ -53,14 +53,14 @@ if.continuation6:                                 ; preds = %if.continuation4
   ret i32 42
 }
 
-define i8 @Box.value(ptr nonnull %0) {
+define i8 @"Box.value$ref.Box"(ptr nonnull %0) {
 entry:
   %v = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   %load = load i8, ptr %v, align 1
   ret i8 %load
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   %v = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   store i8 72, ptr %v, align 1

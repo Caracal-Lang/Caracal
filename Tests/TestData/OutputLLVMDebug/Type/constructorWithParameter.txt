@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @Number.new(ptr nonnull %0, i32 %1) {
+define void @"Number.new$ref.Number,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %value = getelementptr inbounds nuw %Number, ptr %0, i32 0, i32 0
   store i32 %1, ptr %value, align 4

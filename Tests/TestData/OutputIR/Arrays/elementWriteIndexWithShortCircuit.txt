@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define pick(%0: bool "value") i32
+define pick$bool(%0: bool "value") i32
 block entry(0):
     %0 = parameter 0 : bool "value"
     branch if %0, if.true(1), if.continuation(2)
@@ -17,7 +17,7 @@ block if.continuation(2):
     %2 = const 0 : i32
     return %2
 
-define elementWriteIndexWithShortCircuit() i32
+define elementWriteIndexWithShortCircuit$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; 3] "numbers"
     %0 = const true : bool
@@ -40,7 +40,7 @@ block and.rhs(1):
     jump and.merge(2)
 block and.merge(2):
     %12 = phi [entry(0): %0], [and.rhs(1): %0] : bool
-    %13 = call pick(%12) : i32
+    %13 = call pick$bool(%12) : i32
     %14 = element_address %1[%13] : i32
     store_value %11, %14 : i32
     %15 = const 1 : i32

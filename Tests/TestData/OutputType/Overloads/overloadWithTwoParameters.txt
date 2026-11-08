@@ -1,0 +1,147 @@
+FunctionDefinitionStatement: {
+    Type: (i32, i32) -> i32
+    Name: add
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: left
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+        ParameterNode: {
+            Name: right
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: left
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: right
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (bool, i32) -> i32
+    Name: add
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: flag
+            TypeNameNode: {
+                Type: bool
+                Lexeme: bool
+            }
+        }
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                NameExpression: {
+                    Type: bool
+                    Name: flag
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NameExpression: {
+                            Type: i32
+                            Name: value
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (i32, i32) -> i32
+                        NameExpression: {
+                            Type: (i32, i32) -> i32
+                            Name: add
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 1
+                            NumberLiteral: 2
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (bool, i32) -> i32
+                        NameExpression: {
+                            Type: (bool, i32) -> i32
+                            Name: add
+                        }
+                        ArgumentsNode(2): {
+                            BoolLiteral: true
+                            NumberLiteral: 4
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -6,35 +6,35 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define unsignedGreater(%0: u8 "a", %1: u8 "b") bool
+define unsignedGreater$u8,u8(%0: u8 "a", %1: u8 "b") bool
 block entry(0):
     %0 = parameter 0 : u8 "a"
     %1 = parameter 1 : u8 "b"
     %2 = greater_than %0, %1 : bool
     return %2
 
-define unsignedLess(%0: u8 "a", %1: u8 "b") bool
+define unsignedLess$u8,u8(%0: u8 "a", %1: u8 "b") bool
 block entry(0):
     %0 = parameter 0 : u8 "a"
     %1 = parameter 1 : u8 "b"
     %2 = less_than %0, %1 : bool
     return %2
 
-define unsignedGreaterOrEqual(%0: u8 "a", %1: u8 "b") bool
+define unsignedGreaterOrEqual$u8,u8(%0: u8 "a", %1: u8 "b") bool
 block entry(0):
     %0 = parameter 0 : u8 "a"
     %1 = parameter 1 : u8 "b"
     %2 = greater_or_equal %0, %1 : bool
     return %2
 
-define unsignedLessOrEqual(%0: u8 "a", %1: u8 "b") bool
+define unsignedLessOrEqual$u8,u8(%0: u8 "a", %1: u8 "b") bool
 block entry(0):
     %0 = parameter 0 : u8 "a"
     %1 = parameter 1 : u8 "b"
     %2 = less_or_equal %0, %1 : bool
     return %2
 
-define foldedHighByteIsGreater() bool
+define foldedHighByteIsGreater$() bool
 block entry(0):
     %0 = const true : bool
     return %0

@@ -11,13 +11,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i64 @wrapAdd(i64 %0, i64 %1) {
+define i64 @"wrapAdd$u64,u64"(i64 %0, i64 %1) {
 entry:
   %add = add i64 %0, %1
   ret i64 %add
 }
 
-define i64 @wrapMultiply(i64 %0, i64 %1) {
+define i64 @"wrapMultiply$u64,u64"(i64 %0, i64 %1) {
 entry:
   %multiply = mul i64 %0, %1
   ret i64 %multiply
@@ -25,11 +25,11 @@ entry:
 
 define i32 @main() {
 entry:
-  %call = call i64 @wrapAdd(i64 -1, i64 1)
+  %call = call i64 @"wrapAdd$u64,u64"(i64 -1, i64 1)
   %equal = icmp eq i64 %call, 0
-  %call7 = call i64 @wrapMultiply(i64 4294967296, i64 4294967296)
+  %call7 = call i64 @"wrapMultiply$u64,u64"(i64 4294967296, i64 4294967296)
   %equal8 = icmp eq i64 %call7, 0
-  %call9 = call i64 @wrapAdd(i64 -1, i64 0)
+  %call9 = call i64 @"wrapAdd$u64,u64"(i64 -1, i64 0)
   %greater_than = icmp ugt i64 %call9, 1
   br i1 %equal, label %and.rhs, label %and.merge
 

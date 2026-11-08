@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @dynamicArrayFromFieldOfElement() {
+define i32 @"dynamicArrayFromFieldOfElement$"() {
 entry:
   %constructed = alloca %Holder, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -34,7 +34,7 @@ entry:
   %element4 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element4, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Holder.new(ptr %constructed, { ptr, i32, i32 } %load)
+  call void @"Holder.new$ref.Holder,[i32; _]"(ptr %constructed, { ptr, i32, i32 } %load)
   %load5 = load %Holder, ptr %constructed, align 8
   %call6 = call ptr @calloc(i64 8, i64 4)
   %data7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp2, i32 0, i32 0
@@ -48,7 +48,7 @@ entry:
   %element11 = getelementptr i32, ptr %call6, i32 1
   store i32 8, ptr %element11, align 4
   %load12 = load { ptr, i32, i32 }, ptr %temp2, align 8
-  call void @Holder.new(ptr %constructed1, { ptr, i32, i32 } %load12)
+  call void @"Holder.new$ref.Holder,[i32; _]"(ptr %constructed1, { ptr, i32, i32 } %load12)
   %load13 = load %Holder, ptr %constructed1, align 8
   %element14 = getelementptr [2 x %Holder], ptr %holders, i32 0, i32 0
   store %Holder %load5, ptr %element14, align 8
@@ -86,7 +86,7 @@ entry:
   ret i32 %load34
 }
 
-define void @Holder.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"Holder.new$ref.Holder,[i32; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

@@ -17,7 +17,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i1 @readFlag() {
+define i1 @"readFlag$"() {
 entry:
   %load = load i1, ptr @flag, align 1
   ret i1 %load

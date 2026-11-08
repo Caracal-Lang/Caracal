@@ -6,19 +6,19 @@ target triple = "x86_64-unknown-none"
 %string = type { { ptr, i32, i32 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describe(%string returned %0) local_unnamed_addr #0 {
+define %string @"describe$string"(%string returned %0) local_unnamed_addr #0 {
 entry:
   ret %string %0
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @use() local_unnamed_addr #0 {
+define noundef i32 @"use$"() local_unnamed_addr #0 {
 entry:
   ret i32 7
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @Tagged.labelLength(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+define i32 @"Tagged.labelLength$ref.Tagged"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
 entry:
   %length.i = getelementptr inbounds nuw i8, ptr %0, i64 8
   %load.i = load i32, ptr %length.i, align 4
@@ -26,7 +26,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Tagged.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, %string %1) local_unnamed_addr #2 {
+define void @"Tagged.new$ref.Tagged,string"(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, %string %1) local_unnamed_addr #2 {
 entry:
   %2 = extractvalue %string %1, 0
   %.elt = extractvalue { ptr, i32, i32 } %2, 0
@@ -41,7 +41,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+define i32 @"string.length$ref.string"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
 entry:
   %length = getelementptr inbounds nuw i8, ptr %0, i64 8
   %load = load i32, ptr %length, align 4

@@ -9,22 +9,22 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define Two.one(%0: ref Two ".this") i32
+define Two.one$ref.Two(%0: ref Two ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Two ".this"
     %1 = address_of_field %0.0 : ref i32 "one"
     %2 = load_value %1 : i32
     return %2
 
-define Two.value(%0: ref Two ".this") i32
+define Two.value$ref.Two(%0: ref Two ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Two ".this"
-    %1 = call Two.one(%0) : i32
-    %2 = call Two.one(%0) : i32
+    %1 = call Two.one$ref.Two(%0) : i32
+    %2 = call Two.one$ref.Two(%0) : i32
     %3 = add %1, %2 : i32
     return %3
 
-define Two.new(%0: ref Two ".this") void
+define Two.new$ref.Two(%0: ref Two ".this") void
 block entry(0):
     %0 = parameter 0 : ref Two ".this"
     %1 = const 1 : i32

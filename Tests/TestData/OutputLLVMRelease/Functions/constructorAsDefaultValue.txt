@@ -6,20 +6,20 @@ target triple = "x86_64-unknown-none"
 %Point = type { i32 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @readPoint(%Point %0) local_unnamed_addr #0 {
+define i32 @"readPoint$Point"(%Point %0) local_unnamed_addr #0 {
 entry:
   %.fca.0.extract = extractvalue %Point %0, 0
   ret i32 %.fca.0.extract
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @constructorAsDefaultValue() local_unnamed_addr #0 {
+define noundef i32 @"constructorAsDefaultValue$"() local_unnamed_addr #0 {
 entry:
   ret i32 6
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Point.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
+define void @"Point.new$ref.Point,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void

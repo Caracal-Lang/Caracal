@@ -23,7 +23,7 @@ common.ret:
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define void @string.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
+define void @"string.new$ref.string,[u8; _]"(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
 entry:
   %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
   %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1
@@ -40,7 +40,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
+define i32 @"string.length$ref.string"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #3 {
 entry:
   %length = getelementptr inbounds nuw i8, ptr %0, i64 8
   %load = load i32, ptr %length, align 4

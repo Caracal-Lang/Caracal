@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i1 @compute() {
+define i1 @"compute$"() {
 entry:
   ret i1 false
 }
@@ -28,7 +28,7 @@ while.condition:                                  ; preds = %entry
   br i1 %load, label %and.rhs, label %and.merge
 
 and.rhs:                                          ; preds = %while.condition
-  %call = call i1 @compute()
+  %call = call i1 @"compute$"()
   br label %and.merge
 
 and.merge:                                        ; preds = %and.rhs, %while.condition

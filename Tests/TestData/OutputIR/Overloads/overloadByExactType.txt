@@ -6,13 +6,13 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define pick(%0: i32 "value") i32
+define pick$i32(%0: i32 "value") i32
 block entry(0):
     %0 = parameter 0 : i32 "value"
     %1 = const 1 : i32
     return %1
 
-define pick(%0: bool "value") i32
+define pick$bool(%0: bool "value") i32
 block entry(0):
     %0 = parameter 0 : bool "value"
     %1 = const 2 : i32
@@ -21,10 +21,10 @@ block entry(0):
 define main() i32
 block entry(0):
     %0 = const 5 : i32
-    %1 = call pick(%0) : i32
-    %2 = call pick(%0) : i32
+    %1 = call pick$i32(%0) : i32
+    %2 = call pick$i32(%0) : i32
     %3 = add %1, %2 : i32
     %4 = const true : bool
-    %5 = call pick(%4) : i32
+    %5 = call pick$bool(%4) : i32
     %6 = add %3, %5 : i32
     return %6

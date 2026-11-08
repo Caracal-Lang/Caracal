@@ -13,7 +13,7 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : Box "b"
     %0 = address_of %slot0 : ref Box
-    call Box.new(%0)
+    call Box.new$ref.Box(%0)
     %1 = address_of_field %0.0 : ref i32 "x"
     %2 = const 42 : i32
     store_value %2, %1 : i32
@@ -21,7 +21,7 @@ block entry(0):
     %4 = load_value %3 : i32
     return %4
 
-define Box.new(%0: ref Box ".this") void
+define Box.new$ref.Box(%0: ref Box ".this") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = const 40 : i32

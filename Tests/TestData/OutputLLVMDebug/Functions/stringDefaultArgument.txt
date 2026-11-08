@@ -17,7 +17,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @describe(%string %0) {
+define %string @"describe$string"(%string %0) {
 entry:
   %prefix = alloca %string, align 8
   store %string %0, ptr %prefix, align 8
@@ -25,7 +25,7 @@ entry:
   ret %string %load
 }
 
-define i32 @use() {
+define i32 @"use$"() {
 entry:
   %t = alloca %Tagged, align 8
   %temp = alloca %string, align 8
@@ -39,7 +39,7 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 4, ptr %capacity, align 4
   %load = load %string, ptr %temp, align 8
-  call void @Tagged.new(ptr %t, %string %load)
+  call void @"Tagged.new$ref.Tagged,string"(ptr %t, %string %load)
   %_bytes2 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
   %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 0
   store ptr @1, ptr %data3, align 8
@@ -48,22 +48,22 @@ entry:
   %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 2
   store i32 3, ptr %capacity5, align 4
   %load6 = load %string, ptr %temp1, align 8
-  %call = call %string @describe(%string %load6)
+  %call = call %string @"describe$string"(%string %load6)
   store %string %call, ptr %d, align 8
-  %call7 = call i32 @Tagged.labelLength(ptr %t)
-  %call8 = call i32 @string.length(ptr %d)
+  %call7 = call i32 @"Tagged.labelLength$ref.Tagged"(ptr %t)
+  %call8 = call i32 @"string.length$ref.string"(ptr %d)
   %add = add i32 %call7, %call8
   ret i32 %add
 }
 
-define i32 @Tagged.labelLength(ptr nonnull %0) {
+define i32 @"Tagged.labelLength$ref.Tagged"(ptr nonnull %0) {
 entry:
   %_label = getelementptr inbounds nuw %Tagged, ptr %0, i32 0, i32 0
-  %call = call i32 @string.length(ptr %_label)
+  %call = call i32 @"string.length$ref.string"(ptr %_label)
   ret i32 %call
 }
 
-define void @Tagged.new(ptr nonnull %0, %string %1) {
+define void @"Tagged.new$ref.Tagged,string"(ptr nonnull %0, %string %1) {
 entry:
   %label = alloca %string, align 8
   store %string %1, ptr %label, align 8
@@ -73,7 +73,7 @@ entry:
   ret void
 }
 
-define i32 @string.length(ptr nonnull %0) {
+define i32 @"string.length$ref.string"(ptr nonnull %0) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1

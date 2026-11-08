@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @globalCopiedAfterLocalsInBothBranches(i1 %0) {
+define i32 @"globalCopiedAfterLocalsInBothBranches$bool"(i1 %0) {
 entry:
   %numbers = alloca { ptr, i32, i32 }, align 8
   %numbers1 = alloca { ptr, i32, i32 }, align 8
@@ -78,6 +78,6 @@ entry:
   store i32 5, ptr %element, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
   store { ptr, i32, i32 } %load, ptr @numbers, align 8
-  %call1 = call i32 @globalCopiedAfterLocalsInBothBranches(i1 false)
+  %call1 = call i32 @"globalCopiedAfterLocalsInBothBranches$bool"(i1 false)
   ret i32 %call1
 }

@@ -7,7 +7,7 @@ target triple = "x86_64-unknown-none"
 declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
 
 ; Function Attrs: mustprogress nofree nounwind willreturn memory(readwrite, argmem: none)
-define i32 @dynamicArrayFromOwnField() local_unnamed_addr #1 {
+define i32 @"dynamicArrayFromOwnField$"() local_unnamed_addr #1 {
 entry:
   %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
   store i32 5, ptr %call, align 4
@@ -19,7 +19,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
-define i32 @Holder.firstAfterWrite(ptr nonnull readonly captures(none) %0) local_unnamed_addr #2 {
+define i32 @"Holder.firstAfterWrite$ref.Holder"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #2 {
 entry:
   %load10 = load ptr, ptr %0, align 8
   %load12 = load i32, ptr %load10, align 4
@@ -27,7 +27,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #3 {
+define void @"Holder.new$ref.Holder,[i32; _]"(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #3 {
 entry:
   %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
   %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1

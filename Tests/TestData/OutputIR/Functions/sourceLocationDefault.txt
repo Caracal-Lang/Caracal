@@ -15,7 +15,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define where(%0: SourceLocation "place") i32
+define where$SourceLocation(%0: SourceLocation "place") i32
 block entry(0):
     %0 = parameter 0 : SourceLocation "place"
     %slot0 = allocate_local : SourceLocation "place"
@@ -25,7 +25,7 @@ block entry(0):
     %3 = load_value %2 : i32
     return %3
 
-define callers() void
+define callers$() void
 block entry(0):
     %slot0 = allocate_local : SourceLocation "temp"
     %slot1 = allocate_local : SourceLocation "constructed"
@@ -48,7 +48,7 @@ block entry(0):
     %10 = const 16 : i32
     store_value %10, %9 : i32
     %11 = load_value %0 : SourceLocation
-    %12 = call where(%11) : i32
+    %12 = call where$SourceLocation(%11) : i32
     %13 = address_of %slot1 : ref SourceLocation
     %14 = address_of %slot2 : ref string
     %15 = address_of_field %14.0 : ref [u8; _] "_bytes"
@@ -63,11 +63,11 @@ block entry(0):
     store_value %20, %21 : i32
     %22 = load_value %14 : string
     %23 = const 1 : i32
-    call SourceLocation.new(%13, %22, %23)
+    call SourceLocation.new$ref.SourceLocation,string,i32(%13, %22, %23)
     %24 = load_value %13 : SourceLocation
-    %25 = call where(%24) : i32
+    %25 = call where$SourceLocation(%24) : i32
     %26 = address_of %slot3 : ref Box
-    call Box.new(%26)
+    call Box.new$ref.Box(%26)
     %27 = address_of %slot4 : ref SourceLocation
     %28 = address_of_field %27.0 : ref string "filePath"
     %29 = address_of_field %28.0 : ref [u8; _] "_bytes"
@@ -84,10 +84,10 @@ block entry(0):
     %37 = const 19 : i32
     store_value %37, %36 : i32
     %38 = load_value %27 : SourceLocation
-    %39 = call Box.measure(%26, %38) : i32
+    %39 = call Box.measure$ref.Box,SourceLocation(%26, %38) : i32
     return
 
-define Box.measure(%0: ref Box ".this", %1: SourceLocation "place") i32
+define Box.measure$ref.Box,SourceLocation(%0: ref Box ".this", %1: SourceLocation "place") i32
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : SourceLocation "place"
@@ -98,12 +98,12 @@ block entry(0):
     %4 = load_value %3 : i32
     return %4
 
-define Box.new(%0: ref Box ".this") void
+define Box.new$ref.Box(%0: ref Box ".this") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     return
 
-define SourceLocation.new(%0: ref SourceLocation ".this", %1: string "filePath", %2: i32 "line") void
+define SourceLocation.new$ref.SourceLocation,string,i32(%0: ref SourceLocation ".this", %1: string "filePath", %2: i32 "line") void
 block entry(0):
     %0 = parameter 0 : ref SourceLocation ".this"
     %1 = parameter 1 : string "filePath"

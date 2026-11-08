@@ -14,15 +14,15 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorAssignedToField() {
+define i32 @"constructorAssignedToField$"() {
 entry:
   %start = alloca %Inner, align 8
   %holder = alloca %Holder, align 8
   %constructed = alloca %Inner, align 8
-  call void @Inner.new(ptr %start, i32 1)
+  call void @"Inner.new$ref.Inner,i32"(ptr %start, i32 1)
   %load = load %Inner, ptr %start, align 4
-  call void @Holder.new(ptr %holder, %Inner %load)
-  call void @Inner.new(ptr %constructed, i32 9)
+  call void @"Holder.new$ref.Holder,Inner"(ptr %holder, %Inner %load)
+  call void @"Inner.new$ref.Inner,i32"(ptr %constructed, i32 9)
   %load1 = load %Inner, ptr %constructed, align 4
   %inner = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
   store %Inner %load1, ptr %inner, align 4
@@ -32,14 +32,14 @@ entry:
   ret i32 %load3
 }
 
-define void @Inner.new(ptr nonnull %0, i32 %1) {
+define void @"Inner.new$ref.Inner,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %size = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
   store i32 %1, ptr %size, align 4
   ret void
 }
 
-define void @Holder.new(ptr nonnull %0, %Inner %1) {
+define void @"Holder.new$ref.Holder,Inner"(ptr nonnull %0, %Inner %1) {
 entry:
   %inner = alloca %Inner, align 8
   store %Inner %1, ptr %inner, align 4

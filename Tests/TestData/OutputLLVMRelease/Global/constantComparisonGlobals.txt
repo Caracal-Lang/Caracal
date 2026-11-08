@@ -10,7 +10,7 @@ target triple = "x86_64-unknown-none"
 @sameBool = local_unnamed_addr constant i1 false
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i1 @readFlag() local_unnamed_addr #0 {
+define noundef i1 @"readFlag$"() local_unnamed_addr #0 {
 entry:
   ret i1 true
 }

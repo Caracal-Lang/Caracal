@@ -13,16 +13,16 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %pair = alloca %Pair, align 8
-  call void @Pair.new(ptr %pair, i32 1, i32 2)
+  call void @"Pair.new$ref.Pair,i32,i32"(ptr %pair, i32 1, i32 2)
   %right = getelementptr inbounds nuw %Pair, ptr %pair, i32 0, i32 1
   %load = load i32, ptr %right, align 4
   ret i32 %load
 }
 
-define void @Pair.new(ptr nonnull %0, i32 %1, i32 %2) {
+define void @"Pair.new$ref.Pair,i32,i32"(ptr nonnull %0, i32 %1, i32 %2) {
 entry:
   %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
   store i32 %1, ptr %left, align 4

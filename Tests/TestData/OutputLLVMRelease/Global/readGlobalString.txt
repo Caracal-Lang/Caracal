@@ -9,7 +9,7 @@ target triple = "x86_64-unknown-none"
 @greeting = local_unnamed_addr constant %string { { ptr, i32, i32 } { ptr @0, i32 5, i32 5 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @lengthOf(%string %0) local_unnamed_addr #0 {
+define i32 @"lengthOf$string"(%string %0) local_unnamed_addr #0 {
 entry:
   %.fca.0.1.extract = extractvalue %string %0, 0, 1
   ret i32 %.fca.0.1.extract
@@ -22,7 +22,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: read)
-define i32 @string.length(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
+define i32 @"string.length$ref.string"(ptr nonnull readonly captures(none) %0) local_unnamed_addr #1 {
 entry:
   %length = getelementptr inbounds nuw i8, ptr %0, i64 8
   %load = load i32, ptr %length, align 4

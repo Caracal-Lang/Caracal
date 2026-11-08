@@ -7,7 +7,7 @@ target triple = "x86_64-unknown-none"
 @llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none)
-define range(i32 3, 6) i32 @arrayOfEnumValuesInGlobal() local_unnamed_addr #0 {
+define range(i32 3, 6) i32 @"arrayOfEnumValuesInGlobal$"() local_unnamed_addr #0 {
 entry:
   %load = load i32, ptr getelementptr inbounds nuw (i8, ptr @colors, i64 4), align 4
   %equal = icmp eq i32 %load, 5

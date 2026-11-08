@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define newObjectInWhileCondition() i32
+define newObjectInWhileCondition$() i32
 block entry(0):
     %0 = const 0 : i32
     jump while.condition(1)
@@ -19,7 +19,7 @@ block while.condition(1):
     %1 = phi [entry(0): %0], [while.body(2): %10] : i32
     %2 = address_of %slot0 : ref Point
     %3 = const 2 : i32
-    call Point.new(%2, %3)
+    call Point.new$ref.Point,i32(%2, %3)
     %4 = load_value %2 : Point
     %5 = address_of %slot1 : ref Point
     store_value %4, %5 : Point
@@ -34,7 +34,7 @@ block while.body(2):
 block while.continuation(3):
     return %1
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

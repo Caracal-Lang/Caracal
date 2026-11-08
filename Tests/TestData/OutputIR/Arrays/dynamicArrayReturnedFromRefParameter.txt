@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define same(%0: ref [i32; _] "values") [i32; _]
+define same$ref.[i32; _](%0: ref [i32; _] "values") [i32; _]
 block entry(0):
     %0 = parameter 0 : ref [i32; _] "values"
     %slot0 = allocate_local : [i32; _] "temp"
@@ -16,14 +16,14 @@ block entry(0):
     %3 = array_copy %2 : [i32; _]
     return %3
 
-define dynamicArrayReturnedFromRefParameter() i32
+define dynamicArrayReturnedFromRefParameter$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; _] "numbers"
     %slot1 = allocate_local : [i32; _] "copy"
     %0 = address_of %slot0 : ref [i32; _]
     %1 = const 8 : i64
     %2 = size_of i32 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref i32 "data"
     store_value %3, %4 : ref i32
     %5 = const 2 : i32
@@ -41,7 +41,7 @@ block entry(0):
     %14 = const 6 : i32
     store_value %14, %13 : i32
     %15 = address_of %slot1 : ref [i32; _]
-    %16 = call same(%0) : [i32; _]
+    %16 = call same$ref.[i32; _](%0) : [i32; _]
     store_value %16, %15 : [i32; _]
     %17 = const 0 : i32
     %18 = const 9 : i32

@@ -12,7 +12,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define describe(%0: string "prefix") string
+define describe$string(%0: string "prefix") string
 block entry(0):
     %0 = parameter 0 : string "prefix"
     %slot0 = allocate_local : string "prefix"
@@ -21,7 +21,7 @@ block entry(0):
     %2 = load_value %1 : string
     return %2
 
-define use() i32
+define use$() i32
 block entry(0):
     %slot0 = allocate_local : Tagged "t"
     %slot1 = allocate_local : string "temp"
@@ -40,7 +40,7 @@ block entry(0):
     %8 = address_of_field %2.2 : ref i32 "capacity"
     store_value %7, %8 : i32
     %9 = load_value %1 : string
-    call Tagged.new(%0, %9)
+    call Tagged.new$ref.Tagged,string(%0, %9)
     %10 = address_of %slot2 : ref string
     %11 = address_of %slot3 : ref string
     %12 = address_of_field %11.0 : ref [u8; _] "_bytes"
@@ -54,21 +54,21 @@ block entry(0):
     %18 = address_of_field %12.2 : ref i32 "capacity"
     store_value %17, %18 : i32
     %19 = load_value %11 : string
-    %20 = call describe(%19) : string
+    %20 = call describe$string(%19) : string
     store_value %20, %10 : string
-    %21 = call Tagged.labelLength(%0) : i32
-    %22 = call string.length(%10) : i32
+    %21 = call Tagged.labelLength$ref.Tagged(%0) : i32
+    %22 = call string.length$ref.string(%10) : i32
     %23 = add %21, %22 : i32
     return %23
 
-define Tagged.labelLength(%0: ref Tagged ".this") i32
+define Tagged.labelLength$ref.Tagged(%0: ref Tagged ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Tagged ".this"
     %1 = address_of_field %0.0 : ref string "_label"
-    %2 = call string.length(%1) : i32
+    %2 = call string.length$ref.string(%1) : i32
     return %2
 
-define Tagged.new(%0: ref Tagged ".this", %1: string "label") void
+define Tagged.new$ref.Tagged,string(%0: ref Tagged ".this", %1: string "label") void
 block entry(0):
     %0 = parameter 0 : ref Tagged ".this"
     %1 = parameter 1 : string "label"
@@ -80,7 +80,7 @@ block entry(0):
     store_value %3, %4 : string
     return
 
-define string.length(%0: ref string ".this") i32
+define string.length$ref.string(%0: ref string ".this") i32
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = address_of_field %0.0 : ref [u8; _] "_bytes"

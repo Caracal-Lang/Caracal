@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define makeNumbers() [i32; 3]
+define makeNumbers$() [i32; 3]
 block entry(0):
     %slot0 = allocate_local : [i32; 3] "temp"
     %0 = address_of %slot0 : ref [i32; 3]
@@ -25,10 +25,10 @@ block entry(0):
     %10 = load_value %0 : [i32; 3]
     return %10
 
-define atOnReturnedArray() i32
+define atOnReturnedArray$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; 3] "temp"
-    %0 = call makeNumbers() : [i32; 3]
+    %0 = call makeNumbers$() : [i32; 3]
     %1 = address_of %slot0 : ref [i32; 3]
     store_value %0, %1 : [i32; 3]
     %2 = const 1 : i32

@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @stringComparedToLiteral() {
+define i32 @"stringComparedToLiteral$"() {
 entry:
   %text = alloca %string, align 8
   %temp = alloca %string, align 8
@@ -36,7 +36,7 @@ entry:
   %capacity4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes1, i32 0, i32 2
   store i32 1, ptr %capacity4, align 4
   %load5 = load %string, ptr %temp, align 8
-  %call = call i1 @string.equals(%string %load, %string %load5)
+  %call = call i1 @"string.equals$string,string"(%string %load, %string %load5)
   br i1 %call, label %if.true, label %if.continuation
 
 if.true:                                          ; preds = %entry
@@ -46,7 +46,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 0
 }
 
-define i1 @string.equals(%string %0, %string %1) {
+define i1 @"string.equals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8

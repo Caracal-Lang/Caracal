@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @func() {
+define void @"func$"() {
 entry:
   %temp = alloca %string, align 8
   %temp1 = alloca %string, align 8
@@ -36,11 +36,11 @@ entry:
   %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 2
   store i32 3, ptr %capacity5, align 4
   %load6 = load %string, ptr %temp1, align 8
-  %call = call i1 @string.equals(%string %load, %string %load6)
+  %call = call i1 @"string.equals$string,string"(%string %load, %string %load6)
   ret void
 }
 
-define i1 @string.equals(%string %0, %string %1) {
+define i1 @"string.equals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8

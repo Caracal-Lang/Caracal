@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define fill(%0: [i32] "values") void
+define fill$[i32](%0: [i32] "values") void
 block entry(0):
     %0 = parameter 0 : [i32] "values"
     %slot0 = allocate_local : [i32] "temp"
@@ -20,7 +20,7 @@ block entry(0):
     store_value %1, %6 : i32
     return
 
-define elementWriteThroughSliceParameter() i32
+define elementWriteThroughSliceParameter$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; 2] "numbers"
     %0 = address_of %slot0 : ref [i32; 2]
@@ -34,7 +34,7 @@ block entry(0):
     store_value %6, %5 : i32
     %7 = const 2 : i32
     %8 = make_slice %0, %7 : [i32]
-    call fill(%8)
+    call fill$[i32](%8)
     %9 = const 0 : i32
     %10 = element_address %0[%9] : i32
     %11 = load_value %10 : i32

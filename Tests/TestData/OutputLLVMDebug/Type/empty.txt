@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @Empty.new(ptr nonnull %0) {
+define void @"Empty.new$ref.Empty"(ptr nonnull %0) {
 entry:
   ret void
 }

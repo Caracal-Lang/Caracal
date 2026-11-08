@@ -13,7 +13,7 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : Grid "grid"
     %0 = address_of %slot0 : ref Grid
-    call Grid.new(%0)
+    call Grid.new$ref.Grid(%0)
     %1 = address_of_field %0.0 : ref [i32; 3] "cells"
     %2 = const 0 : i32
     %3 = element_address %1[%2] : i32
@@ -25,7 +25,7 @@ block entry(0):
     %9 = add %4, %8 : i32
     return %9
 
-define Grid.new(%0: ref Grid ".this") void
+define Grid.new$ref.Grid(%0: ref Grid ".this") void
 block entry(0):
     %0 = parameter 0 : ref Grid ".this"
     %1 = address_of_field %0.0 : ref [i32; 3] "cells"

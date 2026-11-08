@@ -9,23 +9,23 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : Box "box"
     %0 = address_of %slot0 : ref Box
     %1 = const 7 : i32
-    call Box.new(%0, %1)
-    %2 = call Box.get(%0) : i32
+    call Box.new$ref.Box,i32(%0, %1)
+    %2 = call Box.get$ref.Box(%0) : i32
     return %2
 
-define Box.get(%0: ref Box ".this") i32
+define Box.get$ref.Box(%0: ref Box ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = address_of_field %0.0 : ref i32 "value"
     %2 = load_value %1 : i32
     return %2
 
-define Box.new(%0: ref Box ".this", %1: i32 "value") void
+define Box.new$ref.Box,i32(%0: ref Box ".this", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : i32 "value"

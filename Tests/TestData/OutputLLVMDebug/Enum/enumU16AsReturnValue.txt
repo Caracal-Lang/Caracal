@@ -11,14 +11,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i16 @make() {
+define i16 @"make$"() {
 entry:
   ret i16 1
 }
 
-define i32 @enumU16AsReturnValue() {
+define i32 @"enumU16AsReturnValue$"() {
 entry:
-  %call = call i16 @make()
+  %call = call i16 @"make$"()
   %equal = icmp eq i16 %call, 1
   br i1 %equal, label %if.true, label %if.continuation
 

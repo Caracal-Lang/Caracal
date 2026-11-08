@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i64 @passthrough(i64 %0) {
+define i64 @"passthrough$u64"(i64 %0) {
 entry:
   ret i64 %0
 }

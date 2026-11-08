@@ -8,8 +8,8 @@ extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") 
 
 extern myPuts(%0: cstring "message") i32 symbol "puts"
 
-define func() i32
+define func$() i32
 block entry(0):
     %0 = const "hi\0" : cstring
-    %1 = call myPuts(%0) : i32
+    %1 = call puts(%0) : i32
     return %1

@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define { ptr, i32, i32 } @same(ptr nonnull %0) {
+define { ptr, i32, i32 } @"same$ref.[i32; _]"(ptr nonnull %0) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   %load = load { ptr, i32, i32 }, ptr %0, align 8
@@ -33,7 +33,7 @@ entry:
   ret { ptr, i32, i32 } %array_copy
 }
 
-define i32 @dynamicArrayReturnedFromRefParameter() {
+define i32 @"dynamicArrayReturnedFromRefParameter$"() {
 entry:
   %numbers = alloca { ptr, i32, i32 }, align 8
   %copy = alloca { ptr, i32, i32 }, align 8
@@ -48,7 +48,7 @@ entry:
   store i32 5, ptr %element, align 4
   %element1 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element1, align 4
-  %call2 = call { ptr, i32, i32 } @same(ptr %numbers)
+  %call2 = call { ptr, i32, i32 } @"same$ref.[i32; _]"(ptr %numbers)
   store { ptr, i32, i32 } %call2, ptr %copy, align 8
   %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %copy, i32 0, i32 0
   %load = load ptr, ptr %data3, align 8

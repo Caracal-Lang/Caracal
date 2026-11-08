@@ -12,6 +12,6 @@ extern C.clock() i32 symbol "clock"
 
 define main() i32
 block entry(0):
-    %0 = call C.clock() : i32
+    %0 = call clock() : i32
     %1 = const 0 : i32
     return %1

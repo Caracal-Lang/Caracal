@@ -10,7 +10,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Grid.new(ptr nonnull writeonly captures(none) initializes((0, 12)) %0) local_unnamed_addr #1 {
+define void @"Grid.new$ref.Grid"(ptr nonnull writeonly captures(none) initializes((0, 12)) %0) local_unnamed_addr #1 {
 entry:
   store i32 4, ptr %0, align 4
   %element1 = getelementptr i8, ptr %0, i64 4

@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define describe(%0: i32 "value", %1: string "text") string
+define describe$i32,string(%0: i32 "value", %1: string "text") string
 block entry(0):
     %0 = parameter 0 : i32 "value"
     %1 = parameter 1 : string "text"
@@ -19,7 +19,7 @@ block entry(0):
     %3 = load_value %2 : string
     return %3
 
-define callers() void
+define callers$() void
 block entry(0):
     %slot0 = allocate_local : string "temp"
     %slot1 = allocate_local : string "temp"
@@ -38,7 +38,7 @@ block entry(0):
     %8 = address_of_field %2.2 : ref i32 "capacity"
     store_value %7, %8 : i32
     %9 = load_value %1 : string
-    %10 = call describe(%0, %9) : string
+    %10 = call describe$i32,string(%0, %9) : string
     %11 = const 3 : i32
     %12 = address_of %slot1 : ref string
     %13 = address_of_field %12.0 : ref [u8; _] "_bytes"
@@ -52,7 +52,7 @@ block entry(0):
     %19 = address_of_field %13.2 : ref i32 "capacity"
     store_value %18, %19 : i32
     %20 = load_value %12 : string
-    %21 = call describe(%11, %20) : string
+    %21 = call describe$i32,string(%11, %20) : string
     %22 = const 3 : i32
     %23 = address_of %slot2 : ref string
     %24 = address_of_field %23.0 : ref [u8; _] "_bytes"
@@ -66,7 +66,7 @@ block entry(0):
     %30 = address_of_field %24.2 : ref i32 "capacity"
     store_value %29, %30 : i32
     %31 = load_value %23 : string
-    %32 = call describe(%22, %31) : string
+    %32 = call describe$i32,string(%22, %31) : string
     %33 = const 9 : i32
     %34 = address_of %slot3 : ref string
     %35 = address_of_field %34.0 : ref [u8; _] "_bytes"
@@ -80,5 +80,5 @@ block entry(0):
     %41 = address_of_field %35.2 : ref i32 "capacity"
     store_value %40, %41 : i32
     %42 = load_value %34 : string
-    %43 = call describe(%33, %42) : string
+    %43 = call describe$i32,string(%33, %42) : string
     return

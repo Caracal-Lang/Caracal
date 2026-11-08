@@ -16,7 +16,7 @@ declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 define i32 @main() {
 entry:
   %b = alloca %Buffer, align 8
-  call void @Buffer.new(ptr %b)
+  call void @"Buffer.new$ref.Buffer"(ptr %b)
   %bytes = getelementptr inbounds nuw %Buffer, ptr %b, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %bytes, i32 0, i32 1
   %load = load i32, ptr %length, align 4
@@ -28,7 +28,7 @@ entry:
   ret i32 %add3
 }
 
-define void @Buffer.new(ptr nonnull %0) {
+define void @"Buffer.new$ref.Buffer"(ptr nonnull %0) {
 entry:
   %bytes = getelementptr inbounds nuw %Buffer, ptr %0, i32 0, i32 0
   %call = call ptr @calloc(i64 8, i64 1)

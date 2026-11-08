@@ -6,13 +6,13 @@ target triple = "x86_64-unknown-none"
 %string = type { { ptr, i32, i32 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @objectWithStringFieldHasNoCopy() local_unnamed_addr #0 {
+define noundef i32 @"objectWithStringFieldHasNoCopy$"() local_unnamed_addr #0 {
 entry:
   ret i32 5
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Named.new(ptr nonnull writeonly captures(none) initializes((0, 20)) %0, %string %1, i32 %2) local_unnamed_addr #1 {
+define void @"Named.new$ref.Named,string,i32"(ptr nonnull writeonly captures(none) initializes((0, 20)) %0, %string %1, i32 %2) local_unnamed_addr #1 {
 entry:
   %3 = extractvalue %string %1, 0
   %.elt = extractvalue { ptr, i32, i32 } %3, 0

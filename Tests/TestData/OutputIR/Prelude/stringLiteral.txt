@@ -27,7 +27,7 @@ block entry(0):
     %6 = const 5 : i32
     %7 = address_of_field %1.2 : ref i32 "capacity"
     store_value %6, %7 : i32
-    %8 = call string.length(%0) : i32
+    %8 = call string.length$ref.string(%0) : i32
     %9 = const 5 : i32
     %10 = not_equal %8, %9 : bool
     branch if %10, if.true(1), if.continuation(2)
@@ -36,7 +36,7 @@ block if.true(1):
     return %11
 block if.continuation(2):
     %12 = const 0 : i32
-    %13 = call string.byteAt(%0, %12) : u8
+    %13 = call string.byteAt$ref.string,i32(%0, %12) : u8
     %14 = const 72 : u8
     %15 = not_equal %13, %14 : bool
     branch if %15, if.true(3), if.continuation(4)
@@ -56,7 +56,7 @@ block if.continuation(4):
     %23 = const 12 : i32
     %24 = address_of_field %18.2 : ref i32 "capacity"
     store_value %23, %24 : i32
-    %25 = call string.length(%17) : i32
+    %25 = call string.length$ref.string(%17) : i32
     %26 = const 12 : i32
     %27 = not_equal %25, %26 : bool
     branch if %27, if.true(5), if.continuation(6)
@@ -76,7 +76,7 @@ block if.continuation(6):
     %35 = const 0 : i32
     %36 = address_of_field %30.2 : ref i32 "capacity"
     store_value %35, %36 : i32
-    %37 = call string.isEmpty(%29) : bool
+    %37 = call string.isEmpty$ref.string(%29) : bool
     %38 = logical_negate %37 : bool
     branch if %38, if.true(7), if.continuation(8)
 block if.true(7):
@@ -97,7 +97,7 @@ block if.continuation(8):
     store_value %46, %47 : i32
     %48 = load_value %0 : string
     %49 = load_value %40 : string
-    %50 = call string.notEquals(%48, %49) : bool
+    %50 = call string.notEquals$string,string(%48, %49) : bool
     branch if %50, if.true(9), if.continuation(10)
 block if.true(9):
     %51 = const 6 : i32
@@ -119,18 +119,18 @@ block if.continuation(10):
     store_value %60, %40 : string
     %61 = load_value %0 : string
     %62 = load_value %40 : string
-    %63 = call string.equals(%61, %62) : bool
+    %63 = call string.equals$string,string(%61, %62) : bool
     branch if %63, if.true(11), if.continuation(12)
 block if.true(11):
     %64 = const 7 : i32
     return %64
 block if.continuation(12):
     %65 = const "done\0" : cstring
-    %66 = call C.puts(%65) : i32
+    %66 = call puts(%65) : i32
     %67 = const 42 : i32
     return %67
 
-define string.length(%0: ref string ".this") i32
+define string.length$ref.string(%0: ref string ".this") i32
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
@@ -138,7 +138,7 @@ block entry(0):
     %3 = load_value %2 : i32
     return %3
 
-define string.byteAt(%0: ref string ".this", %1: i32 "index") u8
+define string.byteAt$ref.string,i32(%0: ref string ".this", %1: i32 "index") u8
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = parameter 1 : i32 "index"
@@ -149,7 +149,7 @@ block entry(0):
     %6 = load_value %5 : u8
     return %6
 
-define string.isEmpty(%0: ref string ".this") bool
+define string.isEmpty$ref.string(%0: ref string ".this") bool
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
@@ -159,7 +159,7 @@ block entry(0):
     %5 = equal %3, %4 : bool
     return %5
 
-define string.notEquals(%0: string "lhs", %1: string "rhs") bool
+define string.notEquals$string,string(%0: string "lhs", %1: string "rhs") bool
 block entry(0):
     %0 = parameter 0 : string "lhs"
     %slot0 = allocate_local : string "lhs"
@@ -171,11 +171,11 @@ block entry(0):
     store_value %2, %3 : string
     %4 = load_value %1 : string
     %5 = load_value %3 : string
-    %6 = call string.equals(%4, %5) : bool
+    %6 = call string.equals$string,string(%4, %5) : bool
     %7 = logical_negate %6 : bool
     return %7
 
-define string.equals(%0: string "lhs", %1: string "rhs") bool
+define string.equals$string,string(%0: string "lhs", %1: string "rhs") bool
 block entry(0):
     %0 = parameter 0 : string "lhs"
     %slot0 = allocate_local : string "lhs"

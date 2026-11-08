@@ -11,14 +11,14 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define fieldOfGlobalObject() i32
+define fieldOfGlobalObject$() i32
 block entry(0):
     %0 = address_of_global @origin : ref Point
     %1 = address_of_field %0.0 : ref i32 "x"
     %2 = load_value %1 : i32
     return %2
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"
@@ -30,5 +30,5 @@ define .global_init() void
 block entry(0):
     %0 = address_of_global @origin : ref Point
     %1 = const 6 : i32
-    call Point.new(%0, %1)
+    call Point.new$ref.Point,i32(%0, %1)
     return

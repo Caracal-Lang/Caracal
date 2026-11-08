@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @readValue() {
+define i32 @"readValue$"() {
 entry:
   %load = load i32, ptr @value, align 4
   ret i32 %load
@@ -30,6 +30,6 @@ if.true:                                          ; preds = %entry
   br label %if.continuation
 
 if.continuation:                                  ; preds = %if.true, %entry
-  %call = call i32 @readValue()
+  %call = call i32 @"readValue$"()
   ret i32 %call
 }

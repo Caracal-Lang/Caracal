@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define localsOfDifferentTypesInBothBranches(%0: bool "condition") i32
+define localsOfDifferentTypesInBothBranches$bool(%0: bool "condition") i32
 block entry(0):
     %0 = parameter 0 : bool "condition"
     branch if %0, if.true(1), if.false(2)
@@ -20,7 +20,7 @@ block if.false(2):
     %slot0 = allocate_local : Point "value"
     %3 = address_of %slot0 : ref Point
     %4 = const 5 : i32
-    call Point.new(%3, %4)
+    call Point.new$ref.Point,i32(%3, %4)
     %5 = address_of_field %3.0 : ref i32 "x"
     %6 = load_value %5 : i32
     jump if.continuation(3)
@@ -28,7 +28,7 @@ block if.continuation(3):
     %7 = phi [if.true(1): %2], [if.false(2): %6] : i32
     return %7
 
-define Point.plus(%0: ref Point ".this", %1: i32 "value") i32
+define Point.plus$ref.Point,i32(%0: ref Point ".this", %1: i32 "value") i32
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "value"
@@ -37,7 +37,7 @@ block entry(0):
     %4 = add %3, %1 : i32
     return %4
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"
