@@ -1,4 +1,5 @@
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
+#include <iterator>
 
 #include <unordered_map>
 
@@ -2264,6 +2265,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0112_CallMatchesMoreThanOneOverload,
+            source,
+            location,
+            "Add a type suffix to a literal or change an argument, so that one overload fits best.");
+        diagnostic.addPrimaryLabel(location, "'" + functionName + "' has more than one equally good overload for these arguments");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCompilerCalledFunctionHasOverloadsError(
         const SourceTextSharedPtr& source,
         const SourceLocation& location,
@@ -2463,6 +2477,19 @@ namespace Caracal
     void DiagnosticsBag::removeDiagnosticsAfter(size_t count)
     {
         m_diagnostics.erase(m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count), m_diagnostics.end());
+    }
+
+    std::vector<Diagnostic> DiagnosticsBag::takeDiagnosticsAfter(size_t count)
+    {
+        const auto first = m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count);
+        auto taken = std::vector<Diagnostic>(std::make_move_iterator(first), std::make_move_iterator(m_diagnostics.end()));
+        m_diagnostics.erase(first, m_diagnostics.end());
+        return taken;
+    }
+
+    void DiagnosticsBag::addDiagnostics(std::vector<Diagnostic> diagnostics)
+    {
+        m_diagnostics.insert(m_diagnostics.end(), std::make_move_iterator(diagnostics.begin()), std::make_move_iterator(diagnostics.end()));
     }
 
     int DiagnosticsBag::errorCount() const noexcept

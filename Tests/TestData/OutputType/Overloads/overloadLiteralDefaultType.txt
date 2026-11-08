@@ -1,0 +1,81 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: value
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (i64) -> i32
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i64
+                Lexeme: i64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32) -> i32
+                NameExpression: {
+                    Type: (i32) -> i32
+                    Name: pick
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 1
+                }
+            }
+        }
+    }
+}

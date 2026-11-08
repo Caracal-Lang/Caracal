@@ -1,0 +1,12 @@
+ Error T0112 This call matches more than one overload
+     ,-[Diagnostics/Input/overloadTieAcrossArguments.cara:19:12]
+  16 | {
+  17 |     a := 1;
+  18 |     b := 2;
+  19 |     return tie(a, b);
+     .            ---------
+     .                `-- 'tie' has more than one equally good overload for these arguments
+  20 | }
+  21 | 
+     `----
+  Fix: Add a type suffix to a literal or change an argument, so that one overload fits best.

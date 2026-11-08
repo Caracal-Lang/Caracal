@@ -5,6 +5,8 @@
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/NodeSpans.h>
 
+#include <algorithm>
+#include <iterator>
 #include <optional>
 #include <span>
 #include <string>
@@ -67,17 +69,30 @@ namespace Caracal
         return definition.fullName();
     }
 
-    [[nodiscard]] static bool MatchesExactly(const FunctionDefinition& definition, std::span<const Type> argumentTypes) noexcept
+    [[nodiscard]] static bool IsBetterCandidate(std::span<const ArgumentRank> candidate, std::span<const ArgumentRank> other) noexcept
     {
-        const auto& parameters = definition.parameters();
-        if (definition.isVariadic() || parameters.size() != argumentTypes.size())
+        auto isBetterForOne = false;
+        for (size_t position = 0; position < candidate.size(); ++position)
         {
-            return false;
+            if (candidate[position] < other[position])
+            {
+                return false;
+            }
+            if (candidate[position] > other[position])
+            {
+                isBetterForOne = true;
+            }
         }
 
-        for (size_t index = 0; index < parameters.size(); ++index)
+        return isBetterForOne;
+    }
+
+    [[nodiscard]] static bool IsBestCandidate(std::span<const ArgumentRank> ranks, size_t argumentCount, size_t candidate, size_t candidateCount) noexcept
+    {
+        const auto candidateRanks = ranks.subspan(candidate * argumentCount, argumentCount);
+        for (size_t other = 0; other < candidateCount; ++other)
         {
-            if (parameters[index].type() != argumentTypes[index])
+            if (other != candidate && !IsBetterCandidate(candidateRanks, ranks.subspan(other * argumentCount, argumentCount)))
             {
                 return false;
             }
@@ -93,15 +108,14 @@ namespace Caracal
         , m_sawUnfoldedBitwiseCall{ typeChecker.m_sawUnfoldedBitwiseCall }
         , m_leadingDotRootPending{ typeChecker.m_leadingDotRootPending }
     {
+        ++m_typeChecker.m_suspendedEmissionDepth;
     }
 
     TypeChecker::SuspendedEmissionScope::~SuspendedEmissionScope() noexcept
     {
+        --m_typeChecker.m_suspendedEmissionDepth;
         m_typeChecker.m_emitter.resumeEmission(m_emissionPosition);
-        if (!m_keepsDiagnostics)
-        {
-            m_typeChecker.m_diagnostics.removeDiagnosticsAfter(m_diagnosticCount);
-        }
+        m_typeChecker.m_diagnostics.removeDiagnosticsAfter(m_diagnosticCount);
         m_typeChecker.m_sawUnfoldedBitwiseCall = m_sawUnfoldedBitwiseCall;
         m_typeChecker.m_leadingDotRootPending = m_leadingDotRootPending;
     }
@@ -120,17 +134,40 @@ namespace Caracal
         return false;
     }
 
+    std::vector<Diagnostic> TypeChecker::SuspendedEmissionScope::takeDiagnostics()
+    {
+        return m_typeChecker.m_diagnostics.takeDiagnosticsAfter(m_diagnosticCount);
+    }
+
+    Type TypeChecker::checkArgumentWithoutContext(const CompilationUnit& unit, u32 argumentValue, std::vector<Diagnostic>& argumentErrors)
+    {
+        auto scope = SuspendedEmissionScope{ *this };
+        const auto argumentType = typeCheckExpression(unit, argumentValue, ExpressionContext{}).type;
+        if (scope.addedError() || argumentType == Type::Undefined())
+        {
+            auto diagnostics = scope.takeDiagnostics();
+            argumentErrors.insert(argumentErrors.end(), std::make_move_iterator(diagnostics.begin()), std::make_move_iterator(diagnostics.end()));
+            return Type::Undefined();
+        }
+
+        return argumentType;
+    }
+
     Type TypeChecker::checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context)
     {
         auto scope = SuspendedEmissionScope{ *this };
         const auto argumentType = typeCheckExpression(unit, argumentValue, context).type;
         if (scope.addedError())
         {
-            scope.keepDiagnostics();
             return Type::Undefined();
         }
 
         return argumentType;
+    }
+
+    bool TypeChecker::isUnresolvedOverloadCall(NodeIndex call) const noexcept
+    {
+        return std::ranges::find(m_unresolvedOverloadCalls, call) != m_unresolvedOverloadCalls.end();
     }
 
     Type TypeChecker::resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
@@ -146,57 +183,155 @@ namespace Caracal
     Type TypeChecker::resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
     {
         CARACAL_ZONE_NAMED("check.resolveOverload");
-        const auto& buffer = unit.nodeBuffer;
+        const auto callee = selectOverload(unit, callIndex, nameExpressionIndex, overloadSet);
+        if (m_suspendedEmissionDepth == 0)
+        {
+            m_unresolvedOverloadCalls.clear();
+        }
 
+        return callee;
+    }
+
+    Type TypeChecker::selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
+    {
+        const auto storedCallee = m_module.typeOfNode(NodeIndex{ unit.fileId, nameExpressionIndex });
+        if (std::ranges::find(overloadSet.overloads, storedCallee) != overloadSet.overloads.end())
+        {
+            return storedCallee;
+        }
+
+        const auto call = NodeIndex{ unit.fileId, callIndex };
+        if (m_suspendedEmissionDepth > 0 && isUnresolvedOverloadCall(call))
+        {
+            return Type::Undefined();
+        }
+
+        const auto& buffer = unit.nodeBuffer;
         NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
         const auto argumentsStart = m_callArgumentStack.size();
         for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
         {
             m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
         }
-        const auto argumentsEnd = m_callArgumentStack.size();
+        const auto argumentCount = m_callArgumentStack.size() - argumentsStart;
 
-        auto argumentTypes = std::vector<Type>{};
-        argumentTypes.reserve(argumentsEnd - argumentsStart);
+        auto typesWithoutContext = std::vector<Type>{};
+        typesWithoutContext.reserve(argumentCount);
+        auto argumentErrors = std::vector<Diagnostic>{};
         auto hasNamedArgument = false;
-        auto hasUndefinedArgument = false;
-        for (auto position = argumentsStart; position < argumentsEnd; ++position)
+        for (size_t position = 0; position < argumentCount; ++position)
         {
-            const auto argumentNode = m_callArgumentStack[position];
+            const auto argumentNode = m_callArgumentStack[argumentsStart + position];
             if (NodeLayout::isNamedArgument(buffer, argumentNode))
             {
                 hasNamedArgument = true;
             }
-
-            const auto argumentType = checkArgumentWithoutEmission(unit, NodeLayout::argumentValue(buffer, argumentNode), ExpressionContext{});
-            if (argumentType == Type::Undefined())
-            {
-                hasUndefinedArgument = true;
-            }
-            argumentTypes.push_back(argumentType);
-        }
-        m_callArgumentStack.resize(argumentsStart);
-        if (hasUndefinedArgument)
-        {
-            return Type::Undefined();
+            typesWithoutContext.push_back(checkArgumentWithoutContext(unit, NodeLayout::argumentValue(buffer, argumentNode), argumentErrors));
         }
 
+        auto viableCandidates = std::vector<Type>{};
+        auto ranks = std::vector<ArgumentRank>{};
         if (!hasNamedArgument)
         {
             for (const auto candidate : overloadSet.overloads)
             {
-                if (MatchesExactly(m_module.getFunctionDefinition(candidate), argumentTypes))
+                if (rankCandidate(unit, candidate, argumentsStart, typesWithoutContext, ranks))
                 {
-                    return candidate;
+                    viableCandidates.push_back(candidate);
                 }
             }
         }
+        m_callArgumentStack.resize(argumentsStart);
 
-        m_diagnostics.addNoOverloadMatchesCallError(
-            unit.source,
-            NodeSpans::expressionSourceLocation(buffer, m_compilationContext.tokenBuffer(unit.fileId), callIndex),
-            std::string(nameOf(unit, nameExpressionIndex)));
+        const auto location = NodeSpans::expressionSourceLocation(buffer, m_compilationContext.tokenBuffer(unit.fileId), callIndex);
+        if (viableCandidates.empty())
+        {
+            m_unresolvedOverloadCalls.push_back(call);
+            if (!argumentErrors.empty())
+            {
+                m_diagnostics.addDiagnostics(std::move(argumentErrors));
+                return Type::Undefined();
+            }
+
+            m_diagnostics.addNoOverloadMatchesCallError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
+            return Type::Undefined();
+        }
+
+        for (size_t candidate = 0; candidate < viableCandidates.size(); ++candidate)
+        {
+            if (IsBestCandidate(ranks, argumentCount, candidate, viableCandidates.size()))
+            {
+                return recordType(unit, nameExpressionIndex, viableCandidates[candidate]);
+            }
+        }
+
+        m_unresolvedOverloadCalls.push_back(call);
+        m_diagnostics.addCallMatchesMoreThanOneOverloadError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
         return Type::Undefined();
+    }
+
+    bool TypeChecker::rankCandidate(const CompilationUnit& unit, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks)
+    {
+        const auto& definition = m_module.getFunctionDefinition(candidate);
+        const auto isVariadic = definition.isVariadic();
+        auto fixedParameterCount = definition.parameters().size();
+        if (isVariadic)
+        {
+            fixedParameterCount -= 1;
+        }
+
+        const auto argumentCount = typesWithoutContext.size();
+        if (argumentCount < fixedParameterCount || (!isVariadic && argumentCount > fixedParameterCount))
+        {
+            return false;
+        }
+
+        const auto& buffer = unit.nodeBuffer;
+        const auto ranksStart = ranks.size();
+        for (size_t position = 0; position < argumentCount; ++position)
+        {
+            if (position >= fixedParameterCount)
+            {
+                const auto variadicType = typesWithoutContext[position];
+                if (variadicType == Type::Undefined() || variadicType == Type::Void())
+                {
+                    ranks.resize(ranksStart);
+                    return false;
+                }
+                ranks.push_back(ArgumentRank::Variadic);
+                continue;
+            }
+
+            const auto& parameter = m_module.getFunctionDefinition(candidate).parameters()[position];
+            const auto parameterType = parameter.type();
+            const auto argumentValue = NodeLayout::argumentValue(buffer, m_callArgumentStack[argumentsStart + position]);
+            const auto argumentContext = argumentContextFor(unit, parameter, argumentValue);
+            auto context = ExpressionContext{};
+            context.contextualNumberType = argumentContext.contextualNumberType;
+            context.wantsAddress = argumentContext.wantsAddress;
+
+            const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, context);
+            if (argumentType == Type::Undefined() || parameterType == Type::Undefined() || !isAssignableTo(argumentType, parameterType))
+            {
+                ranks.resize(ranksStart);
+                return false;
+            }
+
+            if (parameterType == typesWithoutContext[position])
+            {
+                ranks.push_back(ArgumentRank::Exact);
+            }
+            else if (parameterType == argumentType)
+            {
+                ranks.push_back(ArgumentRank::Contextual);
+            }
+            else
+            {
+                ranks.push_back(ArgumentRank::Widened);
+            }
+        }
+
+        return true;
     }
 
     void TypeChecker::reportInvalidOverloadSets()

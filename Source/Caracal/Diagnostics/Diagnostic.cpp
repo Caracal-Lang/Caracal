@@ -241,6 +241,8 @@ namespace Caracal
                 return "T0075";
             case DiagnosticKind::T0111_NoOverloadMatchesCall:
                 return "T0111";
+            case DiagnosticKind::T0112_CallMatchesMoreThanOneOverload:
+                return "T0112";
             case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
                 return "T0113";
             case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
@@ -580,6 +582,8 @@ namespace Caracal
                 return "Duplicate method declaration";
             case DiagnosticKind::T0111_NoOverloadMatchesCall:
                 return "No overload matches this call";
+            case DiagnosticKind::T0112_CallMatchesMoreThanOneOverload:
+                return "This call matches more than one overload";
             case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
                 return "This function cannot have overloads";
             case DiagnosticKind::T0114_ExternOverloadsShareSymbol:

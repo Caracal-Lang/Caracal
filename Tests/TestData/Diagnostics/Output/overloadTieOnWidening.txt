@@ -1,0 +1,12 @@
+ Error T0112 This call matches more than one overload
+     ,-[Diagnostics/Input/overloadTieOnWidening.cara:16:12]
+  13 | def main() i32
+  14 | {
+  15 |     small := 1'i16;
+  16 |     return tie(small);
+     .            ----------
+     .                 `-- 'tie' has more than one equally good overload for these arguments
+  17 | }
+  18 | 
+     `----
+  Fix: Add a type suffix to a literal or change an argument, so that one overload fits best.

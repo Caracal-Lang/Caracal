@@ -1,0 +1,12 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/overloadNestedNoMatchDepthThirty.cara:20:157]
+  17 | 
+  18 | def main() i32
+  19 | {
+  20 |     return step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(step(1.5))))))))))))))))))))))))))))));
+     .                                                                                                                                                             ---------
+     .                                                                                                                                                                 `-- No overload of 'step' accepts these arguments
+  21 | }
+  22 | 
+     `----
+  Fix: Change the arguments to match one overload.

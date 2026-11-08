@@ -166,6 +166,7 @@ namespace Caracal
 
         // Overload diagnostics
         void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
         void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
         void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
 
@@ -190,6 +191,8 @@ namespace Caracal
 
         const std::vector<Diagnostic>& diagnostics() const;
         void removeDiagnosticsAfter(size_t count);
+        [[nodiscard]] std::vector<Diagnostic> takeDiagnosticsAfter(size_t count);
+        void addDiagnostics(std::vector<Diagnostic> diagnostics);
         [[nodiscard]] bool hasErrors() const noexcept;
         [[nodiscard]] bool hasWarnings() const noexcept;
         [[nodiscard]] int errorCount() const noexcept;

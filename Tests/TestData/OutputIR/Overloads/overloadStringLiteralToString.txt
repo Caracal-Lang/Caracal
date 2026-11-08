@@ -1,0 +1,43 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define text$string(%0: string "value") i32
+block entry(0):
+    %0 = parameter 0 : string "value"
+    %slot0 = allocate_local : string "value"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %2 = const 1 : i32
+    return %2
+
+define text$cstring(%0: cstring "value") i32
+block entry(0):
+    %0 = parameter 0 : cstring "value"
+    %1 = const 2 : i32
+    return %1
+
+define main() i32
+block entry(0):
+    %slot0 = allocate_local : string "temp"
+    %0 = address_of %slot0 : ref string
+    %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
+    %2 = const "a\0" : cstring
+    %3 = address_of_field %1.0 : ref u8 "data"
+    store_value %2, %3 : ref u8
+    %4 = const 1 : i32
+    %5 = address_of_field %1.1 : ref i32 "length"
+    store_value %4, %5 : i32
+    %6 = const 1 : i32
+    %7 = address_of_field %1.2 : ref i32 "capacity"
+    store_value %6, %7 : i32
+    %8 = load_value %0 : string
+    %9 = call text$string(%8) : i32
+    return %9

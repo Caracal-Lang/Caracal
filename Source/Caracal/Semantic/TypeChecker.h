@@ -25,6 +25,14 @@
 
 namespace Caracal
 {
+    enum class ArgumentRank : u8
+    {
+        Variadic,
+        Widened,
+        Contextual,
+        Exact
+    };
+
     class CARACAL_API TypeChecker
     {
     public:
@@ -119,7 +127,7 @@ namespace Caracal
             SuspendedEmissionScope& operator=(const SuspendedEmissionScope&) = delete;
 
             [[nodiscard]] bool addedError() const noexcept;
-            void keepDiagnostics() noexcept { m_keepsDiagnostics = true; }
+            [[nodiscard]] std::vector<Diagnostic> takeDiagnostics();
 
         private:
             TypeChecker& m_typeChecker;
@@ -127,7 +135,6 @@ namespace Caracal
             size_t m_diagnosticCount = 0;
             bool m_sawUnfoldedBitwiseCall = false;
             bool m_leadingDotRootPending = false;
-            bool m_keepsDiagnostics = false;
         };
 
         void collectDeclarations();
@@ -153,7 +160,11 @@ namespace Caracal
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] bool rankCandidate(const CompilationUnit& unit, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks);
+        [[nodiscard]] Type checkArgumentWithoutContext(const CompilationUnit& unit, u32 argumentValue, std::vector<Diagnostic>& argumentErrors);
         [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
+        [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
@@ -317,6 +328,8 @@ namespace Caracal
         std::vector<u32> m_annotationScratch;
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
+        std::vector<NodeIndex> m_unresolvedOverloadCalls;
+        u32 m_suspendedEmissionDepth = 0;
         std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;
 

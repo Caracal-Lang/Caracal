@@ -1,0 +1,63 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"step$i32"(i32 %0) {
+entry:
+  %add = add i32 %0, 1
+  ret i32 %add
+}
+
+define i32 @"step$i64"(i64 %0) {
+entry:
+  ret i32 2
+}
+
+define i32 @"step$bool"(i1 %0) {
+entry:
+  ret i32 3
+}
+
+define i32 @main() {
+entry:
+  %call = call i32 @"step$i32"(i32 1)
+  %call1 = call i32 @"step$i32"(i32 %call)
+  %call2 = call i32 @"step$i32"(i32 %call1)
+  %call3 = call i32 @"step$i32"(i32 %call2)
+  %call4 = call i32 @"step$i32"(i32 %call3)
+  %call5 = call i32 @"step$i32"(i32 %call4)
+  %call6 = call i32 @"step$i32"(i32 %call5)
+  %call7 = call i32 @"step$i32"(i32 %call6)
+  %call8 = call i32 @"step$i32"(i32 %call7)
+  %call9 = call i32 @"step$i32"(i32 %call8)
+  %call10 = call i32 @"step$i32"(i32 %call9)
+  %call11 = call i32 @"step$i32"(i32 %call10)
+  %call12 = call i32 @"step$i32"(i32 %call11)
+  %call13 = call i32 @"step$i32"(i32 %call12)
+  %call14 = call i32 @"step$i32"(i32 %call13)
+  %call15 = call i32 @"step$i32"(i32 %call14)
+  %call16 = call i32 @"step$i32"(i32 %call15)
+  %call17 = call i32 @"step$i32"(i32 %call16)
+  %call18 = call i32 @"step$i32"(i32 %call17)
+  %call19 = call i32 @"step$i32"(i32 %call18)
+  %call20 = call i32 @"step$i32"(i32 %call19)
+  %call21 = call i32 @"step$i32"(i32 %call20)
+  %call22 = call i32 @"step$i32"(i32 %call21)
+  %call23 = call i32 @"step$i32"(i32 %call22)
+  %call24 = call i32 @"step$i32"(i32 %call23)
+  %call25 = call i32 @"step$i32"(i32 %call24)
+  %call26 = call i32 @"step$i32"(i32 %call25)
+  %call27 = call i32 @"step$i32"(i32 %call26)
+  %call28 = call i32 @"step$i32"(i32 %call27)
+  %call29 = call i32 @"step$i32"(i32 %call28)
+  ret i32 %call29
+}

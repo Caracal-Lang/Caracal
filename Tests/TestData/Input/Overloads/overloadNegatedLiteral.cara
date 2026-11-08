@@ -1,0 +1,14 @@
+def small(value: i8) i32
+{
+    return 1;
+}
+
+def small(value: bool) i32
+{
+    return 2;
+}
+
+def main() i32
+{
+    return small(-1);
+}

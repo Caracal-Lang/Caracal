@@ -116,6 +116,7 @@ namespace Caracal
 
         // Overload diagnostics
         T0111_NoOverloadMatchesCall,
+        T0112_CallMatchesMoreThanOneOverload,
         T0113_CompilerCalledFunctionHasOverloads,
         T0114_ExternOverloadsShareSymbol,
 

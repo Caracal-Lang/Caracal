@@ -1,0 +1,78 @@
+FunctionDefinitionStatement: {
+    Type: (f32) -> i32
+    Name: measure
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f32
+                Lexeme: f32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (f64) -> i32
+    Name: measure
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: f64
+                Lexeme: f64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (f32) -> i32
+                NameExpression: {
+                    Type: (f32) -> i32
+                    Name: measure
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 1.5
+                }
+            }
+        }
+    }
+}
