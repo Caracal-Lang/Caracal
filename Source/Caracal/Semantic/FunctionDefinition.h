@@ -67,11 +67,13 @@ namespace Caracal
         [[nodiscard]] NodeIndex definitionNode() const noexcept { return m_definitionNode; }
         void setDefinitionNode(NodeIndex definitionNode) noexcept { m_definitionNode = definitionNode; }
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
+        [[nodiscard]] bool isExtern() const noexcept { return m_isExtern; }
 
         void setParameters(std::vector<Parameter> parameters) noexcept;
         void setReturnTypes(std::vector<Type> returnTypes) noexcept;
         void setIsVariadic(bool isVariadic) noexcept;
         void setSymbolName(std::optional<std::string> symbolName) noexcept { m_symbolName = std::move(symbolName); }
+        void setIsExtern(bool isExtern) noexcept { m_isExtern = isExtern; }
 
     private:
         Type m_type;
@@ -82,6 +84,7 @@ namespace Caracal
         std::string m_fullName;
         std::optional<std::string> m_symbolName;
         bool m_isVariadic;
+        bool m_isExtern{ false };
         std::vector<Parameter> m_parameters;
         std::vector<Type> m_returnTypes;
         NodeIndex m_definitionNode{};

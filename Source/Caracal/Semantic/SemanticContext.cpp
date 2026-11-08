@@ -611,6 +611,14 @@ namespace Caracal
         return m_functionDefinitions.back();
     }
 
+    void SemanticContext::removeOverload(std::string_view functionName, Type functionType) noexcept
+    {
+        if (const auto result = m_overloadSetsByName.find(functionName); result != m_overloadSetsByName.end())
+        {
+            std::erase(result->second.overloads, functionType);
+        }
+    }
+
     FunctionDefinition& SemanticContext::createMethod(
         TypeDefinition& typeDefinition,
         MethodModifier modifier,

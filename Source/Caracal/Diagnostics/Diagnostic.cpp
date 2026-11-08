@@ -239,6 +239,10 @@ namespace Caracal
                 return "T0074";
             case DiagnosticKind::T0075_DuplicateMethodDeclaration:
                 return "T0075";
+            case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
+                return "T0113";
+            case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
+                return "T0114";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
@@ -572,6 +576,10 @@ namespace Caracal
                 return "Field access is missing the leading dot";
             case DiagnosticKind::T0075_DuplicateMethodDeclaration:
                 return "Duplicate method declaration";
+            case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
+                return "This function cannot have overloads";
+            case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
+                return "Two extern overloads use one C symbol";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:

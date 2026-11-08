@@ -1,0 +1,14 @@
+ Error T0114 Two extern overloads use one C symbol
+    ,-[Diagnostics/Input/overloadExternSameSymbol.cara:5:5]
+  1 | #extern(symbol = "puts")
+  2 | def write(message: cstring) i32 {}
+    .     -----
+    .       `-- The other overload is here.
+  3 | 
+  4 | #extern(symbol = "puts")
+  5 | def write(count: i32) i32 {}
+    .     -----
+    .       `-- Another overload of 'write' also uses the C symbol 'puts'
+  6 | 
+    `----
+  Fix: Give each overload its own C symbol, or rename one function.

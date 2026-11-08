@@ -114,6 +114,10 @@ namespace Caracal
         T0040_DuplicateTypeDeclaration,
         T0075_DuplicateMethodDeclaration,
 
+        // Overload diagnostics
+        T0113_CompilerCalledFunctionHasOverloads,
+        T0114_ExternOverloadsShareSymbol,
+
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,
         T0079_EmptyArrayLiteral,

@@ -2182,8 +2182,8 @@ namespace Caracal
             DiagnosticKind::T0039_DuplicateFunctionDeclaration,
             source,
             location,
-            "Rename this function, or remove the duplicate declaration.");
-        diagnostic.addPrimaryLabel(location, "Function '" + functionName + "' is already declared");
+            "Change the parameter types, rename this function, or remove the duplicate declaration.");
+        diagnostic.addPrimaryLabel(location, "Function '" + functionName + "' is already declared with these parameter types");
         AddPreviousDeclarationLabel(
             diagnostic,
             source,
@@ -2247,6 +2247,59 @@ namespace Caracal
         {
             diagnostic.addSecondaryLabel(otherLocation.value(), "Previous method declaration is here.");
         }
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addCompilerCalledFunctionHasOverloadsError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const SourceTextSharedPtr& otherSource,
+        std::optional<SourceLocation> otherLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads,
+            source,
+            location,
+            "Rename this function.");
+        diagnostic.addPrimaryLabel(location, "The compiler calls '" + functionName + "' by name");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            otherSource,
+            otherLocation,
+            "Previous function declaration",
+            "Previous function declaration of '" + functionName + "' is here.",
+            "Previous function declaration is here.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addExternOverloadsShareSymbolError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const std::string& symbolName,
+        const SourceTextSharedPtr& otherSource,
+        std::optional<SourceLocation> otherLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0114_ExternOverloadsShareSymbol,
+            source,
+            location,
+            "Give each overload its own C symbol, or rename one function.");
+        diagnostic.addPrimaryLabel(location, "Another overload of '" + functionName + "' also uses the C symbol '" + symbolName + "'");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            otherSource,
+            otherLocation,
+            "Other overload",
+            "The other overload of '" + functionName + "' is here.",
+            "The other overload is here.");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }

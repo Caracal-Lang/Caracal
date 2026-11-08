@@ -822,33 +822,14 @@ namespace Caracal
     void TypeChecker::collectFunctionDeclaration(const CompilationUnit& unit, u32 index)
     {
         const auto functionName = nameOf(unit, index);
-        const auto existingFunctionType = tryGetOverload(m_module.tryGetOverloadSet(functionName));
-        if (existingFunctionType != Type::Undefined())
-        {
-            const auto& existingDefinition = m_module.getFunctionDefinition(existingFunctionType);
-            auto otherSource = SourceTextSharedPtr{};
-            auto otherLocation = std::optional<SourceLocation>{};
-            locateDefinitionName(
-                existingDefinition.definitionNode(),
-                otherSource,
-                otherLocation);
-
-            m_diagnostics.addDuplicateFunctionDeclarationError(
-                unit.source,
-                nameLocation(unit, index),
-                std::string(functionName),
-                otherSource,
-                otherLocation);
-            return;
-        }
-
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
         auto parameters = collectParameterNames(unit, functionLayout.parameters);
         auto& functionDefinition = m_module.createFunction(functionName, std::move(parameters), std::vector<Type>());
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
         m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
-        if (functionName == TestsStubName)
+
+        if (functionName == TestsStubName && m_testsStubDeclaration.index == InvalidNodeIndex)
         {
             m_testsStubDeclaration = NodeIndex{ unit.fileId, index };
         }
@@ -1442,6 +1423,13 @@ namespace Caracal
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionSignature(unit, functionDeclaration.index);
         }
+
+        reportInvalidOverloadSets();
+        for (const auto functionDeclaration : m_functionDeclarations)
+        {
+            const auto& unit = unitFor(functionDeclaration);
+            typeCheckFunctionDefaultValues(unit, functionDeclaration.index);
+        }
     }
 
     void TypeChecker::typeCheckTypeSignatures()
@@ -1461,7 +1449,7 @@ namespace Caracal
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
 
         pushScope(ScopeKind::Function);
-        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters);
+        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters, false);
         auto returns = typeCheckReturnTypesNode(unit, functionLayout.returnTypes);
         popScope(false);
 
@@ -1497,6 +1485,7 @@ namespace Caracal
         functionDefinition.setReturnTypes(std::move(returns));
         functionDefinition.setIsVariadic(isVariadic);
         functionDefinition.setSymbolName(std::move(symbolName));
+        functionDefinition.setIsExtern(isExtern);
     }
 
     void TypeChecker::typeCheckTypeSignature(const CompilationUnit& unit, u32 index)
@@ -1628,6 +1617,7 @@ namespace Caracal
         methodDefinition.setReturnTypes(std::move(returns));
         methodDefinition.setIsVariadic(isVariadic);
         methodDefinition.setSymbolName(std::move(symbolName));
+        methodDefinition.setIsExtern(isExtern);
     }
 
     void TypeChecker::validateStaticMethodTypeName(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition)
@@ -1777,7 +1767,7 @@ namespace Caracal
         return recordType(unit, index, arrayType);
     }
 
-    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters)
+    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, std::span<const Parameter> earlierParameters)
     {
         const auto namedParameter = nameOf(unit, defaultIndex);
         for (const auto& parameter : earlierParameters)
@@ -1791,7 +1781,54 @@ namespace Caracal
         m_diagnostics.addSourceTextMustReferToEarlierParameterError(unit.source, nameLocation(unit, defaultIndex), std::string(namedParameter));
     }
 
-    std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index)
+    void TypeChecker::typeCheckDefaultValue(const CompilationUnit& unit, u32 parameterIndex, Type parameterType, std::span<const Parameter> earlierParameters)
+    {
+        const auto parameterLayout = NodeLayout::parameter(unit.nodeBuffer, parameterIndex);
+        auto defaultContext = ExpressionContext{};
+        defaultContext.contextualNumberType = parameterType;
+        const auto checkedDefault = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
+        const auto defaultType = checkedDefault.type;
+        if (checkedDefault.folded.has_value())
+        {
+            m_emitter.recordDefaultArgumentFold(unit.fileId, parameterLayout.defaultValue, checkedDefault.folded.value());
+        }
+        if (defaultType != Type::Undefined() && !isAssignableTo(defaultType, parameterType))
+        {
+            const auto location = ExpressionSourceLocation(m_compilationContext, unit, parameterLayout.defaultValue);
+            if (!tryAddArrayLengthMismatchError(unit, location, parameterType, defaultType))
+            {
+                m_diagnostics.addDefaultParameterTypeMismatchError(
+                    unit.source,
+                    location,
+                    formatTypeName(m_module, parameterType),
+                    formatTypeName(m_module, defaultType));
+            }
+        }
+        if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
+        {
+            typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, earlierParameters);
+        }
+    }
+
+    void TypeChecker::typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index)
+    {
+        const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
+        const auto& parameters = m_module.getFunctionDefinition(m_module.typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
+        auto parameterNodes = std::vector<u32>{};
+        NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
+
+        pushScope(ScopeKind::Function);
+        for (size_t position = 0; position < parameterNodes.size(); ++position)
+        {
+            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue)
+            {
+                typeCheckDefaultValue(unit, parameterNodes[position], parameters[position].type(), std::span<const Parameter>(parameters.data(), position));
+            }
+        }
+        popScope(false);
+    }
+
+    std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index, bool checksDefaultValues)
     {
         std::vector<Parameter> parameters{};
         auto seenDefault = false;
@@ -1829,29 +1866,9 @@ namespace Caracal
 
             if (parameterLayout.hasDefaultValue)
             {
-                auto defaultContext = ExpressionContext{};
-                defaultContext.contextualNumberType = parameterType;
-                const auto checkedDefault = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
-                const auto defaultType = checkedDefault.type;
-                if (checkedDefault.folded.has_value())
+                if (checksDefaultValues)
                 {
-                    m_emitter.recordDefaultArgumentFold(unit.fileId, parameterLayout.defaultValue, checkedDefault.folded.value());
-                }
-                if (defaultType != Type::Undefined() && !isAssignableTo(defaultType, parameterType))
-                {
-                    const auto location = ExpressionSourceLocation(m_compilationContext, unit, parameterLayout.defaultValue);
-                    if (!tryAddArrayLengthMismatchError(unit, location, parameterType, defaultType))
-                    {
-                        m_diagnostics.addDefaultParameterTypeMismatchError(
-                            unit.source,
-                            location,
-                            formatTypeName(m_module, parameterType),
-                            formatTypeName(m_module, defaultType));
-                    }
-                }
-                if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
-                {
-                    typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, parameters);
+                    typeCheckDefaultValue(unit, parameterIndex, parameterType, parameters);
                 }
                 seenDefault = true;
             }

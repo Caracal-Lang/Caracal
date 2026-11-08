@@ -1,0 +1,16 @@
+ Error T0113 This function cannot have overloads
+    ,-[Diagnostics/Input/overloadedTestsStub.cara:5:5]
+  1 | def __caracal_tests_stub(Assert: i32)
+    .     --------------------
+    .               `-- Previous function declaration is here.
+  2 | {
+  3 | }
+  4 | 
+  5 | def __caracal_tests_stub(Assert: bool)
+    .     --------------------
+    .               `-- The compiler calls '__caracal_tests_stub' by name
+  6 | {
+  7 | }
+  8 | 
+    `----
+  Fix: Rename this function.

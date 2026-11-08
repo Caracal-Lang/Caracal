@@ -1,0 +1,15 @@
+ Error T0113 This function cannot have overloads
+    ,-[Diagnostics/Input/overloadedMain.cara:4:5]
+  1 | def main() {
+    .     ----
+    .       `-- Previous function declaration is here.
+  2 | }
+  3 | 
+  4 | def main(value: i32) {
+    .     ----
+    .       `-- The compiler calls 'main' by name
+  5 |     _ = value;
+  6 | }
+  7 | 
+    `----
+  Fix: Rename this function.

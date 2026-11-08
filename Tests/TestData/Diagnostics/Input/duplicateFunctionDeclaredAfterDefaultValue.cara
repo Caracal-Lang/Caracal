@@ -1,0 +1,11 @@
+def limit() i32 {
+    return 1;
+}
+
+def take(value: i32 = limit()) i32 {
+    return value;
+}
+
+def limit() i32 {
+    return 2;
+}

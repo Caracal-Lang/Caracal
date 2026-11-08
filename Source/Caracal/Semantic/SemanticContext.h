@@ -61,6 +61,7 @@ namespace Caracal
             std::string_view name,
             std::vector<Parameter> parameters,
             std::vector<Type> returnTypes) noexcept;
+        void removeOverload(std::string_view functionName, Type functionType) noexcept;
         [[nodiscard]] FunctionDefinition& createMethod(
             TypeDefinition& typeDefinition,
             MethodModifier modifier,

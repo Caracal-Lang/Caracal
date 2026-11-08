@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -122,16 +123,20 @@ namespace Caracal
         void checkUninitializedInitConstants();
         void typeCheckFunctionSignatures();
         void typeCheckTypeSignatures();
+        void reportInvalidOverloadSets();
+        [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
+        void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
         void validateStaticMethodTypeName(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         void typeCheckConstructorSignature(const CompilationUnit& unit, u32 typeIndex, TypeDefinition& typeDefinition, Type typeType);
         [[nodiscard]] Type typeCheckTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index);
-        [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index);
+        [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index, bool checksDefaultValues = true);
+        void typeCheckDefaultValue(const CompilationUnit& unit, u32 parameterIndex, Type parameterType, std::span<const Parameter> earlierParameters);
         [[nodiscard]] bool emitsTestsOf(const CompilationUnit& unit) const noexcept;
-        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters);
+        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, std::span<const Parameter> earlierParameters);
         [[nodiscard]] std::vector<Type> typeCheckReturnTypesNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] i32 convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex);
         void pushScope(ScopeKind kind);
