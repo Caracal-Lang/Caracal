@@ -13,22 +13,22 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @Two.value(ptr nonnull %0) {
+define i32 @"Two.value$ref.Two"(ptr nonnull %0) {
 entry:
-  %call = call i32 @Two.one(ptr %0)
-  %call1 = call i32 @Two.one(ptr %0)
+  %call = call i32 @"Two.one$ref.Two"(ptr %0)
+  %call1 = call i32 @"Two.one$ref.Two"(ptr %0)
   %add = add i32 %call, %call1
   ret i32 %add
 }
 
-define i32 @Two.one(ptr nonnull %0) {
+define i32 @"Two.one$ref.Two"(ptr nonnull %0) {
 entry:
   %one = getelementptr inbounds nuw %Two, ptr %0, i32 0, i32 0
   %load = load i32, ptr %one, align 4
   ret i32 %load
 }
 
-define void @Two.new(ptr nonnull %0) {
+define void @"Two.new$ref.Two"(ptr nonnull %0) {
 entry:
   %one = getelementptr inbounds nuw %Two, ptr %0, i32 0, i32 0
   store i32 1, ptr %one, align 4

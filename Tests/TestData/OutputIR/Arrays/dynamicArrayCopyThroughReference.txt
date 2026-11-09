@@ -13,7 +13,7 @@ block entry(0):
     %0 = address_of %slot0 : ref [i32; _]
     %1 = const 8 : i64
     %2 = size_of i32 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref i32 "data"
     store_value %3, %4 : ref i32
     %5 = const 2 : i32
@@ -33,7 +33,7 @@ block entry(0):
     %15 = address_of %slot1 : ref [i32; _]
     %16 = const 8 : i64
     %17 = size_of i32 : i64
-    %18 = call C.calloc(%16, %17) : rawptr
+    %18 = call calloc(%16, %17) : rawptr
     %19 = address_of_field %15.0 : ref i32 "data"
     store_value %18, %19 : ref i32
     %20 = const 1 : i32

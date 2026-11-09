@@ -6,20 +6,20 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define storeInto(%0: ref i32 "target", %1: i32 "source") void
+define storeInto$ref.i32,i32(%0: ref i32 "target", %1: i32 "source") void
 block entry(0):
     %0 = parameter 0 : ref i32 "target"
     %1 = parameter 1 : i32 "source"
     store_value %1, %0 : i32
     return
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : i32 "value"
     %0 = const 0 : i32
     %1 = address_of %slot0 : ref i32
     store_value %0, %1 : i32
     %2 = const 7 : i32
-    call storeInto(%1, %2)
+    call storeInto$ref.i32,i32(%1, %2)
     %3 = load_value %1 : i32
     return %3

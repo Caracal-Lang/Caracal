@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define float @func() {
+define float @"func$"() {
 entry:
   ret float 3.000000e+00
 }

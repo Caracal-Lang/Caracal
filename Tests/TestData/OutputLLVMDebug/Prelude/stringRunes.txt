@@ -27,7 +27,7 @@ entry:
   store i32 5, ptr %length, align 4
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 5, ptr %capacity, align 4
-  %call = call i32 @string.runeCount(ptr %ascii)
+  %call = call i32 @"string.runeCount$ref.string"(ptr %ascii)
   %not_equal = icmp ne i32 %call, 5
   %mixed = alloca %string, align 8
   %euro = alloca %string, align 8
@@ -37,7 +37,7 @@ if.true:                                          ; preds = %entry
   ret i32 2
 
 if.continuation:                                  ; preds = %entry
-  %call25 = call i32 @string.runeAt(ptr %ascii, i32 0)
+  %call25 = call i32 @"string.runeAt$ref.string,i32"(ptr %ascii, i32 0)
   %not_equal26 = icmp ne i32 %call25, 72
   br i1 %not_equal26, label %if.true1, label %if.continuation2
 
@@ -45,7 +45,7 @@ if.true1:                                         ; preds = %if.continuation
   ret i32 3
 
 if.continuation2:                                 ; preds = %if.continuation
-  %call27 = call i32 @string.runeLengthAt(ptr %ascii, i32 0)
+  %call27 = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %ascii, i32 0)
   %not_equal28 = icmp ne i32 %call27, 1
   br i1 %not_equal28, label %if.true3, label %if.continuation4
 
@@ -60,7 +60,7 @@ if.continuation4:                                 ; preds = %if.continuation2
   store i32 12, ptr %length31, align 4
   %capacity32 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes29, i32 0, i32 2
   store i32 12, ptr %capacity32, align 4
-  %call33 = call i32 @string.length(ptr %mixed)
+  %call33 = call i32 @"string.length$ref.string"(ptr %mixed)
   %not_equal34 = icmp ne i32 %call33, 12
   br i1 %not_equal34, label %if.true5, label %if.continuation6
 
@@ -68,7 +68,7 @@ if.true5:                                         ; preds = %if.continuation4
   ret i32 5
 
 if.continuation6:                                 ; preds = %if.continuation4
-  %call35 = call i32 @string.runeCount(ptr %mixed)
+  %call35 = call i32 @"string.runeCount$ref.string"(ptr %mixed)
   %not_equal36 = icmp ne i32 %call35, 7
   br i1 %not_equal36, label %if.true7, label %if.continuation8
 
@@ -76,7 +76,7 @@ if.true7:                                         ; preds = %if.continuation6
   ret i32 6
 
 if.continuation8:                                 ; preds = %if.continuation6
-  %call37 = call i32 @string.runeLengthAt(ptr %mixed, i32 2)
+  %call37 = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %mixed, i32 2)
   %not_equal38 = icmp ne i32 %call37, 2
   br i1 %not_equal38, label %if.true9, label %if.continuation10
 
@@ -84,7 +84,7 @@ if.true9:                                         ; preds = %if.continuation8
   ret i32 7
 
 if.continuation10:                                ; preds = %if.continuation8
-  %call39 = call i32 @string.runeAt(ptr %mixed, i32 2)
+  %call39 = call i32 @"string.runeAt$ref.string,i32"(ptr %mixed, i32 2)
   %not_equal40 = icmp ne i32 %call39, 252
   br i1 %not_equal40, label %if.true11, label %if.continuation12
 
@@ -92,7 +92,7 @@ if.true11:                                        ; preds = %if.continuation10
   ret i32 8
 
 if.continuation12:                                ; preds = %if.continuation10
-  %call41 = call i32 @string.runeLengthAt(ptr %mixed, i32 8)
+  %call41 = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %mixed, i32 8)
   %not_equal42 = icmp ne i32 %call41, 4
   br i1 %not_equal42, label %if.true13, label %if.continuation14
 
@@ -100,7 +100,7 @@ if.true13:                                        ; preds = %if.continuation12
   ret i32 9
 
 if.continuation14:                                ; preds = %if.continuation12
-  %call43 = call i32 @string.runeAt(ptr %mixed, i32 8)
+  %call43 = call i32 @"string.runeAt$ref.string,i32"(ptr %mixed, i32 8)
   %not_equal44 = icmp ne i32 %call43, 128008
   br i1 %not_equal44, label %if.true15, label %if.continuation16
 
@@ -115,7 +115,7 @@ if.continuation16:                                ; preds = %if.continuation14
   store i32 3, ptr %length47, align 4
   %capacity48 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes45, i32 0, i32 2
   store i32 3, ptr %capacity48, align 4
-  %call49 = call i32 @string.length(ptr %euro)
+  %call49 = call i32 @"string.length$ref.string"(ptr %euro)
   %not_equal50 = icmp ne i32 %call49, 3
   br i1 %not_equal50, label %if.true17, label %if.continuation18
 
@@ -123,7 +123,7 @@ if.true17:                                        ; preds = %if.continuation16
   ret i32 11
 
 if.continuation18:                                ; preds = %if.continuation16
-  %call51 = call i32 @string.runeCount(ptr %euro)
+  %call51 = call i32 @"string.runeCount$ref.string"(ptr %euro)
   %not_equal52 = icmp ne i32 %call51, 1
   br i1 %not_equal52, label %if.true19, label %if.continuation20
 
@@ -131,7 +131,7 @@ if.true19:                                        ; preds = %if.continuation18
   ret i32 12
 
 if.continuation20:                                ; preds = %if.continuation18
-  %call53 = call i32 @string.runeAt(ptr %euro, i32 0)
+  %call53 = call i32 @"string.runeAt$ref.string,i32"(ptr %euro, i32 0)
   %not_equal54 = icmp ne i32 %call53, 8364
   br i1 %not_equal54, label %if.true21, label %if.continuation22
 
@@ -144,12 +144,12 @@ if.continuation22:                                ; preds = %if.continuation20
 while.condition:                                  ; preds = %while.body, %if.continuation22
   %phi = phi i32 [ 0, %if.continuation22 ], [ %add, %while.body ]
   %phi55 = phi i32 [ 0, %if.continuation22 ], [ %add58, %while.body ]
-  %call56 = call i32 @string.length(ptr %mixed)
+  %call56 = call i32 @"string.length$ref.string"(ptr %mixed)
   %less_than = icmp slt i32 %phi, %call56
   br i1 %less_than, label %while.body, label %while.continuation
 
 while.body:                                       ; preds = %while.condition
-  %call57 = call i32 @string.runeLengthAt(ptr %mixed, i32 %phi)
+  %call57 = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %mixed, i32 %phi)
   %add = add i32 %phi, %call57
   %add58 = add i32 %phi55, 1
   br label %while.condition
@@ -165,7 +165,7 @@ if.continuation24:                                ; preds = %while.continuation
   ret i32 42
 }
 
-define i32 @string.runeCount(ptr nonnull %0) {
+define i32 @"string.runeCount$ref.string"(ptr nonnull %0) {
 entry:
   br label %while.condition
 
@@ -179,7 +179,7 @@ while.condition:                                  ; preds = %while.body, %entry
   br i1 %less_than, label %while.body, label %while.continuation
 
 while.body:                                       ; preds = %while.condition
-  %call = call i32 @string.runeLengthAt(ptr %0, i32 %phi1)
+  %call = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %0, i32 %phi1)
   %add = add i32 %phi1, %call
   %add2 = add i32 %phi, 1
   br label %while.condition
@@ -188,7 +188,7 @@ while.continuation:                               ; preds = %while.condition
   ret i32 %phi
 }
 
-define i32 @string.runeAt(ptr nonnull %0, i32 %1) {
+define i32 @"string.runeAt$ref.string,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
@@ -196,7 +196,7 @@ entry:
   %element = getelementptr i8, ptr %load, i32 %1
   %load5 = load i8, ptr %element, align 1
   %int_widen = zext i8 %load5 to i32
-  %call = call i32 @string.runeLengthAt(ptr %0, i32 %1)
+  %call = call i32 @"string.runeLengthAt$ref.string,i32"(ptr %0, i32 %1)
   %equal = icmp eq i32 %call, 1
   br i1 %equal, label %if.true, label %if.continuation
 
@@ -251,7 +251,7 @@ while.continuation:                               ; preds = %while.condition
   ret i32 %phi14
 }
 
-define i32 @string.runeLengthAt(ptr nonnull %0, i32 %1) {
+define i32 @"string.runeLengthAt$ref.string,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
@@ -282,7 +282,7 @@ if.continuation4:                                 ; preds = %if.continuation2
   ret i32 4
 }
 
-define i32 @string.length(ptr nonnull %0) {
+define i32 @"string.length$ref.string"(ptr nonnull %0) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1

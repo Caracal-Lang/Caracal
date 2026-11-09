@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define readLoop(%0: Number "n", %1: i32 "count") i32
+define readLoop$Number,i32(%0: Number "n", %1: i32 "count") i32
 block entry(0):
     %0 = parameter 0 : Number "n"
     %slot0 = allocate_local : Number "n"
@@ -31,18 +31,18 @@ block while.continuation(3):
     %9 = load_value %8 : i32
     return %9
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : Number "constructed"
     %0 = address_of %slot0 : ref Number
     %1 = const 6 : i32
-    call Number.new(%0, %1)
+    call Number.new$ref.Number,i32(%0, %1)
     %2 = load_value %0 : Number
     %3 = const 2 : i32
-    %4 = call readLoop(%2, %3) : i32
+    %4 = call readLoop$Number,i32(%2, %3) : i32
     return %4
 
-define Number.new(%0: ref Number ".this", %1: i32 "value") void
+define Number.new$ref.Number,i32(%0: ref Number ".this", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref Number ".this"
     %1 = parameter 1 : i32 "value"

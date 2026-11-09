@@ -11,14 +11,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @first([4 x i32] %0) {
+define i32 @"first$[i32; 4]"([4 x i32] %0) {
 entry:
   %values = alloca [4 x i32], align 4
   store [4 x i32] %0, ptr %values, align 4
   ret i32 0
 }
 
-define [8 x float] @make() {
+define [8 x float] @"make$"() {
 entry:
   %temp = alloca [8 x float], align 4
   %element = getelementptr [8 x float], ptr %temp, i32 0, i32 0

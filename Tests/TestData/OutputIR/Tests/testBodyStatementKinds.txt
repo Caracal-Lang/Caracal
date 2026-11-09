@@ -16,7 +16,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define addTo(%0: ref i32 "total", %1: i32 "value") void
+define addTo$ref.i32,i32(%0: ref i32 "total", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref i32 "total"
     %1 = parameter 1 : i32 "value"
@@ -25,7 +25,7 @@ block entry(0):
     store_value %3, %0 : i32
     return
 
-define stuff(%0: i32 "value", %1: string "text", %2: SourceLocation "place") i32
+define stuff$i32,string,SourceLocation(%0: i32 "value", %1: string "text", %2: SourceLocation "place") i32
 block entry(0):
     %0 = parameter 0 : i32 "value"
     %1 = parameter 1 : string "text"
@@ -41,7 +41,7 @@ block entry(0):
     %8 = add %7, %0 : i32
     return %8
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

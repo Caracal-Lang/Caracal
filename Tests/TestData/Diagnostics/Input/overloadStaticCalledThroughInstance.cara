@@ -1,0 +1,19 @@
+type Box
+{
+    def Box.make(value: i32) i32
+    {
+        return value;
+    }
+
+    def Box.make(flag: bool) i32
+    {
+        _ = flag;
+        return 2;
+    }
+}
+
+def main() i32
+{
+    box := Box.new();
+    return box.make(1);
+}

@@ -9,23 +9,23 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define fieldWriteThroughAtOnDynamicArray() i32
+define fieldWriteThroughAtOnDynamicArray$() i32
 block entry(0):
     %slot0 = allocate_local : Point "constructed"
     %slot1 = allocate_local : Point "constructed"
     %slot2 = allocate_local : [Point; _] "points"
     %0 = address_of %slot0 : ref Point
     %1 = const 1 : i32
-    call Point.new(%0, %1)
+    call Point.new$ref.Point,i32(%0, %1)
     %2 = load_value %0 : Point
     %3 = address_of %slot1 : ref Point
     %4 = const 1 : i32
-    call Point.new(%3, %4)
+    call Point.new$ref.Point,i32(%3, %4)
     %5 = load_value %3 : Point
     %6 = address_of %slot2 : ref [Point; _]
     %7 = const 8 : i64
     %8 = size_of Point : i64
-    %9 = call C.calloc(%7, %8) : rawptr
+    %9 = call calloc(%7, %8) : rawptr
     %10 = address_of_field %6.0 : ref Point "data"
     store_value %9, %10 : ref Point
     %11 = const 2 : i32
@@ -64,7 +64,7 @@ block entry(0):
     %39 = add %32, %38 : i32
     return %39
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

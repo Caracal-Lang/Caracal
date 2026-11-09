@@ -16,7 +16,7 @@ declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 define i32 @main() {
 entry:
   %grid = alloca %Grid, align 8
-  call void @Grid.new(ptr %grid)
+  call void @"Grid.new$ref.Grid"(ptr %grid)
   %cells = getelementptr inbounds nuw %Grid, ptr %grid, i32 0, i32 0
   %element = getelementptr [3 x i32], ptr %cells, i32 0, i32 0
   %load = load i32, ptr %element, align 4
@@ -27,7 +27,7 @@ entry:
   ret i32 %add
 }
 
-define void @Grid.new(ptr nonnull %0) {
+define void @"Grid.new$ref.Grid"(ptr nonnull %0) {
 entry:
   %cells = getelementptr inbounds nuw %Grid, ptr %0, i32 0, i32 0
   %element = getelementptr [3 x i32], ptr %cells, i32 0, i32 0

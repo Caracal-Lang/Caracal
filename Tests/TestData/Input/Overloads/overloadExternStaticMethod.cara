@@ -1,0 +1,19 @@
+type Math
+{
+    #extern(symbol = "labs")
+    def Math.absolute(value: i64) i64 {}
+
+    #extern(symbol = "abs")
+    def Math.absolute(value: i32) i32 {}
+}
+
+def main() i32
+{
+    small := Math.absolute(-3);
+    large := Math.absolute(-4'i64);
+    if large == 4'i64
+    {
+        return small %+ 40;
+    }
+    return 0;
+}

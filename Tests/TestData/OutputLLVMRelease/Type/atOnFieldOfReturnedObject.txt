@@ -6,19 +6,19 @@ target triple = "x86_64-unknown-none"
 %Box = type { [2 x i32] }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %Box @makeBox() local_unnamed_addr #0 {
+define %Box @"makeBox$"() local_unnamed_addr #0 {
 entry:
   ret %Box { [2 x i32] [i32 1, i32 2] }
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @atOnFieldOfReturnedObject() local_unnamed_addr #0 {
+define noundef i32 @"atOnFieldOfReturnedObject$"() local_unnamed_addr #0 {
 entry:
   ret i32 2
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, [2 x i32] %1) local_unnamed_addr #1 {
+define void @"Box.new$ref.Box,[i32; 2]"(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, [2 x i32] %1) local_unnamed_addr #1 {
 entry:
   %.elt = extractvalue [2 x i32] %1, 0
   store i32 %.elt, ptr %0, align 4

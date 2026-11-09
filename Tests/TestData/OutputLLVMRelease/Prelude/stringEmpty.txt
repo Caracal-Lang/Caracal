@@ -13,7 +13,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define void @string.new(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
+define void @"string.new$ref.string,[u8; _]"(ptr nonnull writeonly captures(none) initializes((0, 16)) %0, { ptr, i32, i32 } %1) local_unnamed_addr #2 {
 entry:
   %.fca.0.extract = extractvalue { ptr, i32, i32 } %1, 0
   %.fca.1.extract = extractvalue { ptr, i32, i32 } %1, 1

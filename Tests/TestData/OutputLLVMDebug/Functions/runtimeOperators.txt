@@ -11,25 +11,25 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @negate(i32 %0) {
+define i32 @"negate$i32"(i32 %0) {
 entry:
   %1 = sub i32 0, %0
   ret i32 %1
 }
 
-define float @negateFloat(float %0) {
+define float @"negateFloat$f32"(float %0) {
 entry:
   %1 = fneg float %0
   ret float %1
 }
 
-define i1 @invert(i1 %0) {
+define i1 @"invert$bool"(i1 %0) {
 entry:
   %1 = xor i1 %0, true
   ret i1 %1
 }
 
-define i1 @bothTrue(i1 %0, i1 %1) {
+define i1 @"bothTrue$bool,bool"(i1 %0, i1 %1) {
 entry:
   br i1 %0, label %and.rhs, label %and.merge
 
@@ -41,7 +41,7 @@ and.merge:                                        ; preds = %and.rhs, %entry
   ret i1 %phi
 }
 
-define i1 @eitherTrue(i1 %0, i1 %1) {
+define i1 @"eitherTrue$bool,bool"(i1 %0, i1 %1) {
 entry:
   br i1 %0, label %or.merge, label %or.rhs
 

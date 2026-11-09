@@ -9,7 +9,7 @@ target triple = "x86_64-unknown-none"
 @llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none)
-define range(i32 3, 8) i32 @enumU64InGlobalObject() local_unnamed_addr #0 {
+define range(i32 3, 8) i32 @"enumU64InGlobalObject$"() local_unnamed_addr #0 {
 entry:
   %load = load i64, ptr @box, align 8
   %equal = icmp eq i64 %load, 1
@@ -18,7 +18,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, i64 %1) local_unnamed_addr #1 {
+define void @"Box.new$ref.Box,Values"(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, i64 %1) local_unnamed_addr #1 {
 entry:
   store i64 %1, ptr %0, align 8
   ret void

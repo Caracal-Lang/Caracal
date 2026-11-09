@@ -1,0 +1,12 @@
+ Error T0115 Static methods are called through their type name
+     ,-[Diagnostics/Input/staticMethodCalledThroughInstance.cara:12:16]
+   9 | def main() i32
+  10 | {
+  11 |     box := Box.new();
+  12 |     return box.make(1);
+     .                -------
+     .                   `-- 'make' is a static method of type 'Box'
+  13 | }
+  14 | 
+     `----
+  Fix: Write 'Box.make(...)'.

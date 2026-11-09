@@ -1,0 +1,20 @@
+def tie(left: i32, right: i64) i32
+{
+    _ = left;
+    _ = right;
+    return 1;
+}
+
+def tie(left: i64, right: i32) i32
+{
+    _ = left;
+    _ = right;
+    return 2;
+}
+
+def main() i32
+{
+    a := 1;
+    b := 2;
+    return tie(a, b);
+}

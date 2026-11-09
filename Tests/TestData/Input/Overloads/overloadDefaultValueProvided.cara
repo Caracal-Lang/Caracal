@@ -1,0 +1,15 @@
+def retry(count: i32, delay: i32 = 5) i32
+{
+    return count %+ delay;
+}
+
+def retry(flag: bool) i32
+{
+    _ = flag;
+    return 0;
+}
+
+def main() i32
+{
+    return retry(1, 2);
+}

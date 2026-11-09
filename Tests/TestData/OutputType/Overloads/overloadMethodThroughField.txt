@@ -1,0 +1,318 @@
+TypeDefinitionStatement: {
+    Type: Inner
+    Name: Inner
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Inner, i32) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: amount
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: amount
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Inner, bool) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: flag
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                IfStatement: {
+                    Condition: {
+                        NameExpression: {
+                            Type: bool
+                            Name: flag
+                        }
+                    }
+                    True: {
+                        BlockNode(1): {
+                            AssignmentStatement: {
+                                Left: {
+                                    MemberAccessExpression: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                Right: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            MemberAccessExpression: {
+                                                NameExpression: {
+                                                    Type: i32
+                                                    Name: value
+                                                }
+                                            }
+                                        }
+                                        Operation: AdditionWrapping
+                                        Right: {
+                                            NumberLiteral: 10
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Outer
+    Name: Outer
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: Inner
+                    Name: inner
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Inner
+                    Left: {
+                        NameExpression: {
+                            Type: Inner
+                            Name: Inner
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Inner
+                            Function type: (ref Inner) -> void
+                            NameExpression: {
+                                Type: (ref Inner) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Outer
+            Left: {
+                NameExpression: {
+                    Type: Outer
+                    Name: outer
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Outer
+                    Left: {
+                        NameExpression: {
+                            Type: Outer
+                            Name: Outer
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Outer
+                            Function type: (ref Outer) -> void
+                            NameExpression: {
+                                Type: (ref Outer) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Outer
+                                Name: outer
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Inner, i32) -> void
+                        NameExpression: {
+                            Type: (ref Inner, i32) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 3
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Outer
+                                Name: outer
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Inner, bool) -> void
+                        NameExpression: {
+                            Type: (ref Inner, bool) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(1): {
+                            BoolLiteral: true
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: Inner
+                        Left: {
+                            NameExpression: {
+                                Type: Outer
+                                Name: outer
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: Inner
+                                Name: inner
+                            }
+                        }
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

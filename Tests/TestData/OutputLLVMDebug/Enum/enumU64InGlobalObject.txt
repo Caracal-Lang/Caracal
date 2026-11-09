@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @enumU64InGlobalObject() {
+define i32 @"enumU64InGlobalObject$"() {
 entry:
   %load = load i64, ptr @box, align 8
   %equal = icmp eq i64 %load, 1
@@ -29,7 +29,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 3
 }
 
-define void @Box.new(ptr nonnull %0, i64 %1) {
+define void @"Box.new$ref.Box,Values"(ptr nonnull %0, i64 %1) {
 entry:
   %color = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   store i64 %1, ptr %color, align 8
@@ -38,6 +38,6 @@ entry:
 
 define void @.global_init() {
 entry:
-  call void @Box.new(ptr @box, i64 1)
+  call void @"Box.new$ref.Box,Values"(ptr @box, i64 1)
   ret void
 }

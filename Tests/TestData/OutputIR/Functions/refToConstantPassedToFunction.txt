@@ -6,14 +6,14 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define mutate(%0: ref i32 "p") void
+define mutate$ref.i32(%0: ref i32 "p") void
 block entry(0):
     %0 = parameter 0 : ref i32 "p"
     %1 = const 6 : i32
     store_value %1, %0 : i32
     return
 
-define caller() i32
+define caller$() i32
 block entry(0):
     %slot0 = allocate_local : i32 "x"
     %slot1 = allocate_local : i32 "refConstTemp"
@@ -23,6 +23,6 @@ block entry(0):
     %2 = load_value %1 : i32
     %3 = address_of %slot1 : ref i32
     store_value %2, %3 : i32
-    call mutate(%3)
+    call mutate$ref.i32(%3)
     %4 = load_value %1 : i32
     return %4

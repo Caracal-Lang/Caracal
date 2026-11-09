@@ -1,0 +1,19 @@
+ Error T0075 Duplicate method declaration
+     ,-[Diagnostics/Input/duplicateStaticMethodDeclaration.cara:8:17]
+   1 | type Counter
+   2 | {
+   3 |     def Counter.make(value: i32) i32
+     .                 ----
+     .                   `-- Previous method declaration is here.
+   4 |     {
+   5 |         return value;
+   6 |     }
+   7 | 
+   8 |     def Counter.make(amount: i32) i32
+     .                 ----
+     .                   `-- Method 'make' is already declared in type 'Counter' with these parameter types
+   9 |     {
+  10 |         return amount;
+  11 |     }
+     `----
+  Fix: Change the parameter types, rename this method, or remove the duplicate declaration.

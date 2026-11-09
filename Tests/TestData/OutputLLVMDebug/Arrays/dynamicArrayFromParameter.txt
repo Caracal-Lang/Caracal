@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @take({ ptr, i32, i32 } %0) {
+define i32 @"take$[i32; _]"({ ptr, i32, i32 } %0) {
 entry:
   %ys = alloca { ptr, i32, i32 }, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -36,7 +36,7 @@ entry:
   ret i32 %load5
 }
 
-define i32 @use() {
+define i32 @"use$"() {
 entry:
   %items = alloca { ptr, i32, i32 }, align 8
   %call = call ptr @calloc(i64 8, i64 4)
@@ -66,6 +66,6 @@ entry:
   %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
   %1 = insertvalue { ptr, i32, i32 } %0, i32 %load6, 1
   %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load7, 2
-  %call9 = call i32 @take({ ptr, i32, i32 } %array_copy)
+  %call9 = call i32 @"take$[i32; _]"({ ptr, i32, i32 } %array_copy)
   ret i32 %call9
 }

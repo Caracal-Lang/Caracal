@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @swap(ptr nonnull %0, ptr nonnull %1) {
+define void @"swap$ref.i32,ref.i32"(ptr nonnull %0, ptr nonnull %1) {
 entry:
   %load = load i32, ptr %0, align 4
   %load1 = load i32, ptr %1, align 4

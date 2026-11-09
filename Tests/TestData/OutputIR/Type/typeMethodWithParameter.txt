@@ -9,19 +9,19 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : Counter "counter"
     %0 = address_of %slot0 : ref Counter
     %1 = const 1 : i32
-    call Counter.new(%0, %1)
+    call Counter.new$ref.Counter,i32(%0, %1)
     %2 = const 4 : i32
-    call Counter.add(%0, %2)
+    call Counter.add$ref.Counter,i32(%0, %2)
     %3 = address_of_field %0.0 : ref i32 "value"
     %4 = load_value %3 : i32
     return %4
 
-define Counter.add(%0: ref Counter ".this", %1: i32 "amount") void
+define Counter.add$ref.Counter,i32(%0: ref Counter ".this", %1: i32 "amount") void
 block entry(0):
     %0 = parameter 0 : ref Counter ".this"
     %1 = parameter 1 : i32 "amount"
@@ -32,7 +32,7 @@ block entry(0):
     store_value %4, %5 : i32
     return
 
-define Counter.new(%0: ref Counter ".this", %1: i32 "value") void
+define Counter.new$ref.Counter,i32(%0: ref Counter ".this", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref Counter ".this"
     %1 = parameter 1 : i32 "value"

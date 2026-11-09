@@ -8,9 +8,9 @@
   4 | 
   5 | def value() i32 {
     .     -----
-    .       `-- Function 'value' is already declared
+    .       `-- Function 'value' is already declared with these parameter types
   6 |     return 2;
   7 | }
   8 | 
     `----
-  Fix: Rename this function, or remove the duplicate declaration.
+  Fix: Change the parameter types, rename this function, or remove the duplicate declaration.

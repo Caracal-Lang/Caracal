@@ -4,48 +4,48 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:
 target triple = "x86_64-unknown-none"
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @widen(float %0) local_unnamed_addr #0 {
+define double @"widen$f32"(float %0) local_unnamed_addr #0 {
 entry:
   %float_widen = fpext float %0 to double
   ret double %float_widen
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @widenAssignment(float %0) local_unnamed_addr #0 {
+define double @"widenAssignment$f32"(float %0) local_unnamed_addr #0 {
 entry:
   %float_widen = fpext float %0 to double
   ret double %float_widen
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @takesWide(double returned %0) local_unnamed_addr #0 {
+define double @"takesWide$f64"(double returned %0) local_unnamed_addr #0 {
 entry:
   ret double %0
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @widenArgument(float %0) local_unnamed_addr #0 {
+define double @"widenArgument$f32"(float %0) local_unnamed_addr #0 {
 entry:
   %float_widen = fpext float %0 to double
   ret double %float_widen
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @widenReturn(float %0) local_unnamed_addr #0 {
+define double @"widenReturn$f32"(float %0) local_unnamed_addr #0 {
 entry:
   %float_widen = fpext float %0 to double
   ret double %float_widen
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @holderWide(float %0) local_unnamed_addr #0 {
+define double @"holderWide$f32"(float %0) local_unnamed_addr #0 {
 entry:
   %float_widen.i = fpext float %0 to double
   ret double %float_widen.i
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Holder.new(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, float %1) local_unnamed_addr #1 {
+define void @"Holder.new$ref.Holder,f32"(ptr nonnull writeonly captures(none) initializes((0, 8)) %0, float %1) local_unnamed_addr #1 {
 entry:
   %float_widen = fpext float %1 to double
   store double %float_widen, ptr %0, align 8

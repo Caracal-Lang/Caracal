@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define [3 x i32] @pick(i1 %0) {
+define [3 x i32] @"pick$bool"(i1 %0) {
 entry:
   %temp = alloca [3 x i32], align 4
   %temp3 = alloca [3 x i32], align 4

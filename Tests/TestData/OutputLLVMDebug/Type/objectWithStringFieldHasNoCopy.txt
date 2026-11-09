@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @objectWithStringFieldHasNoCopy() {
+define i32 @"objectWithStringFieldHasNoCopy$"() {
 entry:
   %named = alloca %Named, align 8
   %temp = alloca %string, align 8
@@ -29,7 +29,7 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 1, ptr %capacity, align 4
   %load = load %string, ptr %temp, align 8
-  call void @Named.new(ptr %named, %string %load, i32 5)
+  call void @"Named.new$ref.Named,string,i32"(ptr %named, %string %load, i32 5)
   %load1 = load %Named, ptr %named, align 8
   store %Named %load1, ptr %other, align 8
   %size = getelementptr inbounds nuw %Named, ptr %other, i32 0, i32 1
@@ -37,7 +37,7 @@ entry:
   ret i32 %load2
 }
 
-define void @Named.new(ptr nonnull %0, %string %1, i32 %2) {
+define void @"Named.new$ref.Named,string,i32"(ptr nonnull %0, %string %1, i32 %2) {
 entry:
   %name = alloca %string, align 8
   store %string %1, ptr %name, align 8

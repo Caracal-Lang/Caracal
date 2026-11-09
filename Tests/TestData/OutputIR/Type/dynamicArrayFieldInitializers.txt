@@ -14,7 +14,7 @@ define main() i32
 block entry(0):
     %slot0 = allocate_local : Buffer "b"
     %0 = address_of %slot0 : ref Buffer
-    call Buffer.new(%0)
+    call Buffer.new$ref.Buffer(%0)
     %1 = address_of_field %0.0 : ref [u8; _] "bytes"
     %2 = address_of_field %1.1 : ref i32 "length"
     %3 = load_value %2 : i32
@@ -26,13 +26,13 @@ block entry(0):
     %9 = add %7, %8 : i32
     return %9
 
-define Buffer.new(%0: ref Buffer ".this") void
+define Buffer.new$ref.Buffer(%0: ref Buffer ".this") void
 block entry(0):
     %0 = parameter 0 : ref Buffer ".this"
     %1 = address_of_field %0.0 : ref [u8; _] "bytes"
     %2 = const 8 : i64
     %3 = size_of u8 : i64
-    %4 = call C.calloc(%2, %3) : rawptr
+    %4 = call calloc(%2, %3) : rawptr
     %5 = address_of_field %1.0 : ref u8 "data"
     store_value %4, %5 : ref u8
     %6 = const 2 : i32
@@ -52,7 +52,7 @@ block entry(0):
     %16 = address_of_field %0.1 : ref [u8; _] "spare"
     %17 = const 8 : i64
     %18 = size_of u8 : i64
-    %19 = call C.calloc(%17, %18) : rawptr
+    %19 = call calloc(%17, %18) : rawptr
     %20 = address_of_field %16.0 : ref u8 "data"
     store_value %19, %20 : ref u8
     %21 = const 0 : i32

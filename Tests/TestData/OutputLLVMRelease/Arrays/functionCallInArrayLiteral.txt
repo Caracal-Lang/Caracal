@@ -6,20 +6,20 @@ target triple = "x86_64-unknown-none"
 %Point = type { i32 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %Point @makePoint(i32 %0) local_unnamed_addr #0 {
+define %Point @"makePoint$i32"(i32 %0) local_unnamed_addr #0 {
 entry:
   %load.fca.0.insert = insertvalue %Point poison, i32 %0, 0
   ret %Point %load.fca.0.insert
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @functionCallInArrayLiteral() local_unnamed_addr #0 {
+define noundef i32 @"functionCallInArrayLiteral$"() local_unnamed_addr #0 {
 entry:
   ret i32 2
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Point.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
+define void @"Point.new$ref.Point,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void

@@ -6,11 +6,11 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define inner() void
+define inner$() void
 block entry(0):
     return
 
-define outer() void
+define outer$() void
 block entry(0):
-    call inner()
+    call inner$()
     return

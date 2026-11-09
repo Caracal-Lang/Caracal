@@ -17,20 +17,20 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorDefaultInGlobal() {
+define i32 @"constructorDefaultInGlobal$"() {
 entry:
   %load = load i32, ptr @origin, align 4
   ret i32 %load
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4
   ret void
 }
 
-define void @Box.new(ptr nonnull %0, %Point %1) {
+define void @"Box.new$ref.Box,Point"(ptr nonnull %0, %Point %1) {
 entry:
   %point = alloca %Point, align 8
   store %Point %1, ptr %point, align 4
@@ -43,8 +43,8 @@ entry:
 define void @.global_init() {
 entry:
   %constructed = alloca %Point, align 8
-  call void @Point.new(ptr %constructed, i32 5)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 5)
   %load = load %Point, ptr %constructed, align 4
-  call void @Box.new(ptr @origin, %Point %load)
+  call void @"Box.new$ref.Box,Point"(ptr @origin, %Point %load)
   ret void
 }

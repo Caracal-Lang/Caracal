@@ -7,7 +7,7 @@ target triple = "x86_64-unknown-none"
 
 declare void @print(ptr %0) local_unnamed_addr
 
-define void @func() local_unnamed_addr {
+define void @"func$"() local_unnamed_addr {
 entry:
   tail call void @print(ptr nonnull @0)
   ret void

@@ -1,0 +1,265 @@
+FunctionDefinitionStatement: {
+    Type: ([i32; 2]) -> i32
+    Name: kind
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i32; 2]
+                Lexeme: [i32; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i32; 2]
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: ([bool; 2]) -> i32
+    Name: kind
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [bool; 2]
+                Lexeme: [bool; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: [bool; 2]
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: ([i64; 2]) -> i32
+    Name: kind
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [i64; 2]
+                Lexeme: [i64; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: i64
+                        Lexeme: i64
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: [i64; 2]
+                    Name: values
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 3
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i64; 2]
+            Left: {
+                NameExpression: {
+                    Type: [i64; 2]
+                    Name: wide
+                }
+            }
+            ExplicitType: {
+                ArrayTypeNameNode: {
+                    Type: [i64; 2]
+                    Lexeme: [i64; 2]
+                    Kind: Fixed
+                    DataType: {
+                        TypeNameNode: {
+                            Type: i64
+                            Lexeme: i64
+                        }
+                    }
+                    Length: {
+                        NumberLiteral: 2
+                    }
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i64; 2]
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: ([i32; 2]) -> i32
+                                NameExpression: {
+                                    Type: ([i32; 2]) -> i32
+                                    Name: kind
+                                }
+                                ArgumentsNode(1): {
+                                    ArrayLiteral(2): {
+                                        Type: [i32; 2]
+                                        NumberLiteral: 1
+                                        NumberLiteral: 2
+                                    }
+                                }
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: ([bool; 2]) -> i32
+                                        NameExpression: {
+                                            Type: ([bool; 2]) -> i32
+                                            Name: kind
+                                        }
+                                        ArgumentsNode(1): {
+                                            ArrayLiteral(2): {
+                                                Type: [bool; 2]
+                                                BoolLiteral: true
+                                                BoolLiteral: false
+                                            }
+                                        }
+                                    }
+                                }
+                                Operation: MultiplicationWrapping
+                                Right: {
+                                    NumberLiteral: 10
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: ([i64; 2]) -> i32
+                                NameExpression: {
+                                    Type: ([i64; 2]) -> i32
+                                    Name: kind
+                                }
+                                ArgumentsNode(1): {
+                                    NameExpression: {
+                                        Type: [i64; 2]
+                                        Name: wide
+                                    }
+                                }
+                            }
+                        }
+                        Operation: MultiplicationWrapping
+                        Right: {
+                            NumberLiteral: 50
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

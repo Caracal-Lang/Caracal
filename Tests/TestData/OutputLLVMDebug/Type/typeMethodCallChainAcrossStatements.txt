@@ -13,18 +13,18 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %counter = alloca %Counter, align 8
-  call void @Counter.new(ptr %counter, i32 0)
-  call void @Counter.inc(ptr %counter)
-  call void @Counter.inc(ptr %counter)
+  call void @"Counter.new$ref.Counter,i32"(ptr %counter, i32 0)
+  call void @"Counter.inc$ref.Counter"(ptr %counter)
+  call void @"Counter.inc$ref.Counter"(ptr %counter)
   %value = getelementptr inbounds nuw %Counter, ptr %counter, i32 0, i32 0
   %load = load i32, ptr %value, align 4
   ret i32 %load
 }
 
-define void @Counter.inc(ptr nonnull %0) {
+define void @"Counter.inc$ref.Counter"(ptr nonnull %0) {
 entry:
   %value = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0
   %load = load i32, ptr %value, align 4
@@ -34,7 +34,7 @@ entry:
   ret void
 }
 
-define void @Counter.new(ptr nonnull %0, i32 %1) {
+define void @"Counter.new$ref.Counter,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %value = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0
   store i32 %1, ptr %value, align 4

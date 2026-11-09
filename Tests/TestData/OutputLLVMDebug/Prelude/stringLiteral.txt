@@ -32,7 +32,7 @@ entry:
   store i32 5, ptr %length, align 4
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 5, ptr %capacity, align 4
-  %call = call i32 @string.length(ptr %s)
+  %call = call i32 @"string.length$ref.string"(ptr %s)
   %not_equal = icmp ne i32 %call, 5
   %u = alloca %string, align 8
   %e = alloca %string, align 8
@@ -44,7 +44,7 @@ if.true:                                          ; preds = %entry
   ret i32 2
 
 if.continuation:                                  ; preds = %entry
-  %call11 = call i8 @string.byteAt(ptr %s, i32 0)
+  %call11 = call i8 @"string.byteAt$ref.string,i32"(ptr %s, i32 0)
   %not_equal12 = icmp ne i8 %call11, 72
   br i1 %not_equal12, label %if.true1, label %if.continuation2
 
@@ -59,7 +59,7 @@ if.continuation2:                                 ; preds = %if.continuation
   store i32 12, ptr %length15, align 4
   %capacity16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes13, i32 0, i32 2
   store i32 12, ptr %capacity16, align 4
-  %call17 = call i32 @string.length(ptr %u)
+  %call17 = call i32 @"string.length$ref.string"(ptr %u)
   %not_equal18 = icmp ne i32 %call17, 12
   br i1 %not_equal18, label %if.true3, label %if.continuation4
 
@@ -74,7 +74,7 @@ if.continuation4:                                 ; preds = %if.continuation2
   store i32 0, ptr %length21, align 4
   %capacity22 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes19, i32 0, i32 2
   store i32 0, ptr %capacity22, align 4
-  %call23 = call i1 @string.isEmpty(ptr %e)
+  %call23 = call i1 @"string.isEmpty$ref.string"(ptr %e)
   %0 = xor i1 %call23, true
   br i1 %0, label %if.true5, label %if.continuation6
 
@@ -91,7 +91,7 @@ if.continuation6:                                 ; preds = %if.continuation4
   store i32 5, ptr %capacity27, align 4
   %load = load %string, ptr %s, align 8
   %load28 = load %string, ptr %t, align 8
-  %call29 = call i1 @string.notEquals(%string %load, %string %load28)
+  %call29 = call i1 @"string.notEquals$string,string"(%string %load, %string %load28)
   br i1 %call29, label %if.true7, label %if.continuation8
 
 if.true7:                                         ; preds = %if.continuation6
@@ -109,7 +109,7 @@ if.continuation8:                                 ; preds = %if.continuation6
   store %string %load34, ptr %t, align 8
   %load35 = load %string, ptr %s, align 8
   %load36 = load %string, ptr %t, align 8
-  %call37 = call i1 @string.equals(%string %load35, %string %load36)
+  %call37 = call i1 @"string.equals$string,string"(%string %load35, %string %load36)
   br i1 %call37, label %if.true9, label %if.continuation10
 
 if.true9:                                         ; preds = %if.continuation8
@@ -120,7 +120,7 @@ if.continuation10:                                ; preds = %if.continuation8
   ret i32 42
 }
 
-define i32 @string.length(ptr nonnull %0) {
+define i32 @"string.length$ref.string"(ptr nonnull %0) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
@@ -128,7 +128,7 @@ entry:
   ret i32 %load
 }
 
-define i8 @string.byteAt(ptr nonnull %0, i32 %1) {
+define i8 @"string.byteAt$ref.string,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
@@ -138,7 +138,7 @@ entry:
   ret i8 %load1
 }
 
-define i1 @string.isEmpty(ptr nonnull %0) {
+define i1 @"string.isEmpty$ref.string"(ptr nonnull %0) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1
@@ -147,7 +147,7 @@ entry:
   ret i1 %equal
 }
 
-define i1 @string.notEquals(%string %0, %string %1) {
+define i1 @"string.notEquals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8
@@ -155,12 +155,12 @@ entry:
   store %string %1, ptr %rhs, align 8
   %load = load %string, ptr %lhs, align 8
   %load1 = load %string, ptr %rhs, align 8
-  %call = call i1 @string.equals(%string %load, %string %load1)
+  %call = call i1 @"string.equals$string,string"(%string %load, %string %load1)
   %2 = xor i1 %call, true
   ret i1 %2
 }
 
-define i1 @string.equals(%string %0, %string %1) {
+define i1 @"string.equals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8

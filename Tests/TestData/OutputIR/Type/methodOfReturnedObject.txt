@@ -9,27 +9,27 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define makePoint(%0: i32 "x") Point
+define makePoint$i32(%0: i32 "x") Point
 block entry(0):
     %0 = parameter 0 : i32 "x"
     %slot0 = allocate_local : Point "constructed"
     %1 = address_of %slot0 : ref Point
-    call Point.new(%1, %0)
+    call Point.new$ref.Point,i32(%1, %0)
     %2 = load_value %1 : Point
     return %2
 
-define methodOfReturnedObject() i32
+define methodOfReturnedObject$() i32
 block entry(0):
     %slot0 = allocate_local : Point "temp"
     %0 = const 7 : i32
-    %1 = call makePoint(%0) : Point
+    %1 = call makePoint$i32(%0) : Point
     %2 = address_of %slot0 : ref Point
     store_value %1, %2 : Point
     %3 = const 1 : i32
-    %4 = call Point.plus(%2, %3) : i32
+    %4 = call Point.plus$ref.Point,i32(%2, %3) : i32
     return %4
 
-define Point.plus(%0: ref Point ".this", %1: i32 "value") i32
+define Point.plus$ref.Point,i32(%0: ref Point ".this", %1: i32 "value") i32
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "value"
@@ -38,7 +38,7 @@ block entry(0):
     %4 = add %3, %1 : i32
     return %4
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

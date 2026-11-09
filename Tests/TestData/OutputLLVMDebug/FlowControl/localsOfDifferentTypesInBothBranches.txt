@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @localsOfDifferentTypesInBothBranches(i1 %0) {
+define i32 @"localsOfDifferentTypesInBothBranches$bool"(i1 %0) {
 entry:
   %value = alloca %Point, align 8
   br i1 %0, label %if.true, label %if.false
@@ -22,7 +22,7 @@ if.true:                                          ; preds = %entry
   br label %if.continuation
 
 if.false:                                         ; preds = %entry
-  call void @Point.new(ptr %value, i32 5)
+  call void @"Point.new$ref.Point,i32"(ptr %value, i32 5)
   %x = getelementptr inbounds nuw %Point, ptr %value, i32 0, i32 0
   %load = load i32, ptr %x, align 4
   br label %if.continuation
@@ -32,7 +32,7 @@ if.continuation:                                  ; preds = %if.false, %if.true
   ret i32 %phi
 }
 
-define i32 @Point.plus(ptr nonnull %0, i32 %1) {
+define i32 @"Point.plus$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   %load = load i32, ptr %x, align 4
@@ -40,7 +40,7 @@ entry:
   ret i32 %add
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

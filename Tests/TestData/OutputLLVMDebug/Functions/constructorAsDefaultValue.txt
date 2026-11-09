@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @readPoint(%Point %0) {
+define i32 @"readPoint$Point"(%Point %0) {
 entry:
   %point = alloca %Point, align 8
   store %Point %0, ptr %point, align 4
@@ -22,16 +22,16 @@ entry:
   ret i32 %load
 }
 
-define i32 @constructorAsDefaultValue() {
+define i32 @"constructorAsDefaultValue$"() {
 entry:
   %constructed = alloca %Point, align 8
-  call void @Point.new(ptr %constructed, i32 6)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 6)
   %load = load %Point, ptr %constructed, align 4
-  %call = call i32 @readPoint(%Point %load)
+  %call = call i32 @"readPoint$Point"(%Point %load)
   ret i32 %call
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

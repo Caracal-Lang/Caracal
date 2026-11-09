@@ -1,0 +1,89 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define count$[i32; _](%0: [i32; _] "values") i32
+block entry(0):
+    %0 = parameter 0 : [i32; _] "values"
+    %slot0 = allocate_local : [i32; _] "temp"
+    %1 = address_of %slot0 : ref [i32; _]
+    store_value %0, %1 : [i32; _]
+    %2 = address_of_field %1.1 : ref i32 "length"
+    %3 = load_value %2 : i32
+    return %3
+
+define count$[i32; 3](%0: [i32; 3] "values") i32
+block entry(0):
+    %0 = parameter 0 : [i32; 3] "values"
+    %slot0 = allocate_local : [i32; 3] "values"
+    %1 = address_of %slot0 : ref [i32; 3]
+    store_value %0, %1 : [i32; 3]
+    %3 = const 30 : i32
+    return %3
+
+define main() i32
+block entry(0):
+    %slot0 = allocate_local : [i32; _] "growing"
+    %slot1 = allocate_local : [i32; 3] "fixed"
+    %slot2 = allocate_local : [i32; 3] "temp"
+    %0 = address_of %slot0 : ref [i32; _]
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 2 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 1 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
+    store_value %14, %13 : i32
+    %15 = address_of %slot1 : ref [i32; 3]
+    %16 = const 0 : i32
+    %17 = element_address %15[%16] : i32
+    %18 = const 1 : i32
+    store_value %18, %17 : i32
+    %19 = const 1 : i32
+    %20 = element_address %15[%19] : i32
+    %21 = const 2 : i32
+    store_value %21, %20 : i32
+    %22 = const 2 : i32
+    %23 = element_address %15[%22] : i32
+    %24 = const 3 : i32
+    store_value %24, %23 : i32
+    %25 = array_copy %0 : [i32; _]
+    %26 = call count$[i32; _](%25) : i32
+    %27 = load_value %15 : [i32; 3]
+    %28 = call count$[i32; 3](%27) : i32
+    %29 = add %26, %28 : i32
+    %30 = address_of %slot2 : ref [i32; 3]
+    %31 = const 0 : i32
+    %32 = element_address %30[%31] : i32
+    %33 = const 7 : i32
+    store_value %33, %32 : i32
+    %34 = const 1 : i32
+    %35 = element_address %30[%34] : i32
+    %36 = const 8 : i32
+    store_value %36, %35 : i32
+    %37 = const 2 : i32
+    %38 = element_address %30[%37] : i32
+    %39 = const 9 : i32
+    store_value %39, %38 : i32
+    %40 = load_value %30 : [i32; 3]
+    %41 = call count$[i32; 3](%40) : i32
+    %42 = const 2 : i32
+    %43 = multiply %41, %42 : i32
+    %44 = add %29, %43 : i32
+    return %44

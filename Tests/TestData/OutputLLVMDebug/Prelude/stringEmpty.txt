@@ -38,11 +38,11 @@ entry:
   %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
   %1 = insertvalue { ptr, i32, i32 } %0, i32 %load4, 1
   %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load5, 2
-  call void @string.new(ptr %s, { ptr, i32, i32 } %array_copy)
+  call void @"string.new$ref.string,[u8; _]"(ptr %s, { ptr, i32, i32 } %array_copy)
   ret i32 42
 }
 
-define void @string.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"string.new$ref.string,[u8; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

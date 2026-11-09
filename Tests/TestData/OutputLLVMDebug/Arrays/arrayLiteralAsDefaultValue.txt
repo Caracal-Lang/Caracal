@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @read([2 x i32] %0) {
+define i32 @"read$[i32; 2]"([2 x i32] %0) {
 entry:
   %values = alloca [2 x i32], align 4
   store [2 x i32] %0, ptr %values, align 4
@@ -20,7 +20,7 @@ entry:
   ret i32 %load
 }
 
-define i32 @arrayLiteralAsDefaultValue() {
+define i32 @"arrayLiteralAsDefaultValue$"() {
 entry:
   %temp = alloca [2 x i32], align 4
   %element = getelementptr [2 x i32], ptr %temp, i32 0, i32 0
@@ -28,6 +28,6 @@ entry:
   %element1 = getelementptr [2 x i32], ptr %temp, i32 0, i32 1
   store i32 2, ptr %element1, align 4
   %load = load [2 x i32], ptr %temp, align 4
-  %call = call i32 @read([2 x i32] %load)
+  %call = call i32 @"read$[i32; 2]"([2 x i32] %load)
   ret i32 %call
 }

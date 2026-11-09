@@ -13,30 +13,30 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @first() {
+define i32 @"first$"() {
 entry:
   ret i32 1
 }
 
-define i32 @second() {
+define i32 @"second$"() {
 entry:
   ret i32 2
 }
 
-define i32 @constructorArgumentsInSourceOrder() {
+define i32 @"constructorArgumentsInSourceOrder$"() {
 entry:
   %constructed = alloca %Pair, align 8
   %temp = alloca %Pair, align 8
-  %call = call i32 @first()
-  %call1 = call i32 @second()
-  call void @Pair.new(ptr %constructed, i32 %call, i32 %call1)
+  %call = call i32 @"first$"()
+  %call1 = call i32 @"second$"()
+  call void @"Pair.new$ref.Pair,i32,i32"(ptr %constructed, i32 %call, i32 %call1)
   %load = load %Pair, ptr %constructed, align 4
   store %Pair %load, ptr %temp, align 4
-  %call2 = call i32 @Pair.value(ptr %temp)
+  %call2 = call i32 @"Pair.value$ref.Pair"(ptr %temp)
   ret i32 %call2
 }
 
-define i32 @Pair.value(ptr nonnull %0) {
+define i32 @"Pair.value$ref.Pair"(ptr nonnull %0) {
 entry:
   %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
   %load = load i32, ptr %left, align 4
@@ -47,7 +47,7 @@ entry:
   ret i32 %add
 }
 
-define void @Pair.new(ptr nonnull %0, i32 %1, i32 %2) {
+define void @"Pair.new$ref.Pair,i32,i32"(ptr nonnull %0, i32 %1, i32 %2) {
 entry:
   %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
   store i32 %1, ptr %left, align 4

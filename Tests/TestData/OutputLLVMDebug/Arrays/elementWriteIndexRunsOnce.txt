@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @touch(ptr nonnull %0) {
+define i32 @"touch$ref.i32"(ptr nonnull %0) {
 entry:
   %load = load i32, ptr %0, align 4
   %add = add i32 %load, 1
@@ -20,7 +20,7 @@ entry:
   ret i32 %load1
 }
 
-define i32 @elementWriteIndexRunsOnce() {
+define i32 @"elementWriteIndexRunsOnce$"() {
 entry:
   %counter = alloca i32, align 4
   %numbers = alloca [3 x i32], align 4
@@ -31,7 +31,7 @@ entry:
   store i32 2, ptr %element1, align 4
   %element2 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 2
   store i32 3, ptr %element2, align 4
-  %call = call i32 @touch(ptr %counter)
+  %call = call i32 @"touch$ref.i32"(ptr %counter)
   %element3 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 %call
   store i32 9, ptr %element3, align 4
   %load = load i32, ptr %counter, align 4

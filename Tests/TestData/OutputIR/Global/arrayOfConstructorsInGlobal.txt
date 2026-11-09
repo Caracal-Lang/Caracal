@@ -11,7 +11,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define arrayOfConstructorsInGlobal() i32
+define arrayOfConstructorsInGlobal$() i32
 block entry(0):
     %0 = address_of_global @origin : ref [Point; 2]
     %1 = const 1 : i32
@@ -20,7 +20,7 @@ block entry(0):
     %4 = load_value %3 : i32
     return %4
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"
@@ -34,11 +34,11 @@ block entry(0):
     %slot1 = allocate_local : Point "constructed"
     %0 = address_of %slot0 : ref Point
     %1 = const 5 : i32
-    call Point.new(%0, %1)
+    call Point.new$ref.Point,i32(%0, %1)
     %2 = load_value %0 : Point
     %3 = address_of %slot1 : ref Point
     %4 = const 6 : i32
-    call Point.new(%3, %4)
+    call Point.new$ref.Point,i32(%3, %4)
     %5 = load_value %3 : Point
     %6 = address_of_global @origin : ref [Point; 2]
     %7 = const 0 : i32

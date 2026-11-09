@@ -25,7 +25,7 @@ namespace Caracal
 
         [[nodiscard]] FunctionId id() const noexcept { return m_id; }
         [[nodiscard]] const std::string& name() const noexcept { return m_name; }
-        // the name the function is emitted under when it differs from name, like main for caracalMain
+        // the name the function is emitted under, like add$i32,i32, or main for caracalMain
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
         [[nodiscard]] const std::vector<IRParameter>& parameters() const noexcept { return m_parameters; }
         [[nodiscard]] Type returnType() const noexcept { return m_returnType; }

@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define describe(%0: i32 "value", %1: string "first", %2: string "second", %3: string "third") string
+define describe$i32,string,string,string(%0: i32 "value", %1: string "first", %2: string "second", %3: string "third") string
 block entry(0):
     %0 = parameter 0 : i32 "value"
     %1 = parameter 1 : string "first"
@@ -27,7 +27,7 @@ block entry(0):
     %9 = load_value %6 : string
     return %9
 
-define fromDefault(%0: i32 "count", %1: string "first", %2: string "second") string
+define fromDefault$i32,string,string(%0: i32 "count", %1: string "first", %2: string "second") string
 block entry(0):
     %0 = parameter 0 : i32 "count"
     %1 = parameter 1 : string "first"
@@ -41,7 +41,7 @@ block entry(0):
     %6 = load_value %4 : string
     return %6
 
-define callers() void
+define callers$() void
 block entry(0):
     %slot0 = allocate_local : string "temp"
     %slot1 = allocate_local : string "temp"
@@ -88,7 +88,7 @@ block entry(0):
     %26 = address_of_field %20.2 : ref i32 "capacity"
     store_value %25, %26 : i32
     %27 = load_value %19 : string
-    %28 = call describe(%0, %9, %18, %27) : string
+    %28 = call describe$i32,string,string,string(%0, %9, %18, %27) : string
     %29 = address_of %slot3 : ref string
     %30 = address_of_field %29.0 : ref [u8; _] "_bytes"
     %31 = const "written\0" : cstring
@@ -126,7 +126,7 @@ block entry(0):
     %55 = address_of_field %49.2 : ref i32 "capacity"
     store_value %54, %55 : i32
     %56 = load_value %48 : string
-    %57 = call describe(%38, %37, %47, %56) : string
+    %57 = call describe$i32,string,string,string(%38, %37, %47, %56) : string
     %58 = const 11 : i32
     %59 = address_of %slot6 : ref string
     %60 = address_of_field %59.0 : ref [u8; _] "_bytes"
@@ -152,5 +152,5 @@ block entry(0):
     %75 = address_of_field %69.2 : ref i32 "capacity"
     store_value %74, %75 : i32
     %76 = load_value %68 : string
-    %77 = call fromDefault(%58, %67, %76) : string
+    %77 = call fromDefault$i32,string,string(%58, %67, %76) : string
     return

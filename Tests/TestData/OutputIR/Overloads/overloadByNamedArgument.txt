@@ -1,0 +1,32 @@
+type string
+    const _bytes: [u8; _]
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define open$string(%0: string "path") i32
+block entry(0):
+    %0 = parameter 0 : string "path"
+    %slot0 = allocate_local : string "path"
+    %1 = address_of %slot0 : ref string
+    store_value %0, %1 : string
+    %3 = const 0 : i32
+    return %3
+
+define open$i32(%0: i32 "id") i32
+block entry(0):
+    %0 = parameter 0 : i32 "id"
+    %1 = const 20 : i32
+    %2 = add %0, %1 : i32
+    return %2
+
+define main() i32
+block entry(0):
+    %0 = const 1 : i32
+    %1 = call open$i32(%0) : i32
+    return %1

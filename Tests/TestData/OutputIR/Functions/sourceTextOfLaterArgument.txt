@@ -11,7 +11,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define describe(%0: i32 "first", %1: i32 "second", %2: i32 "third", %3: string "text") string
+define describe$i32,i32,i32,string(%0: i32 "first", %1: i32 "second", %2: i32 "third", %3: string "text") string
 block entry(0):
     %0 = parameter 0 : i32 "first"
     %1 = parameter 1 : i32 "second"
@@ -23,7 +23,7 @@ block entry(0):
     %5 = load_value %4 : string
     return %5
 
-define callers() void
+define callers$() void
 block entry(0):
     %slot0 = allocate_local : string "temp"
     %slot1 = allocate_local : Box "box"
@@ -43,9 +43,9 @@ block entry(0):
     %10 = address_of_field %4.2 : ref i32 "capacity"
     store_value %9, %10 : i32
     %11 = load_value %3 : string
-    %12 = call describe(%0, %1, %2, %11) : string
+    %12 = call describe$i32,i32,i32,string(%0, %1, %2, %11) : string
     %13 = address_of %slot1 : ref Box
-    call Box.new(%13)
+    call Box.new$ref.Box(%13)
     %14 = const 5 : i32
     %15 = const 42 : i32
     %16 = address_of %slot2 : ref string
@@ -60,10 +60,10 @@ block entry(0):
     %23 = address_of_field %17.2 : ref i32 "capacity"
     store_value %22, %23 : i32
     %24 = load_value %16 : string
-    %25 = call Box.measure(%13, %14, %15, %24) : string
+    %25 = call Box.measure$ref.Box,i32,i32,string(%13, %14, %15, %24) : string
     return
 
-define Box.measure(%0: ref Box ".this", %1: i32 "first", %2: i32 "second", %3: string "text") string
+define Box.measure$ref.Box,i32,i32,string(%0: ref Box ".this", %1: i32 "first", %2: i32 "second", %3: string "text") string
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : i32 "first"
@@ -75,7 +75,7 @@ block entry(0):
     %5 = load_value %4 : string
     return %5
 
-define Box.new(%0: ref Box ".this") void
+define Box.new$ref.Box(%0: ref Box ".this") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     return

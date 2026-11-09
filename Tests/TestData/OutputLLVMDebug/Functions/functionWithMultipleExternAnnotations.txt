@@ -17,7 +17,7 @@ declare i32 @puts(ptr %0)
 
 declare i32 @clock()
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %call = call i32 @puts(ptr @0)
   %call1 = call i32 @clock()

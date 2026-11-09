@@ -10,7 +10,7 @@ declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unname
 declare noalias noundef ptr @realloc(ptr allocptr captures(none) %0, i64 noundef %1) local_unnamed_addr #1
 
 ; Function Attrs: nounwind
-define noundef i32 @grow(ptr nonnull captures(none) %0) local_unnamed_addr #2 {
+define noundef i32 @"grow$ref.[i32; _]"(ptr nonnull captures(none) %0) local_unnamed_addr #2 {
 entry:
   %length = getelementptr inbounds nuw i8, ptr %0, i64 8
   %capacity = getelementptr inbounds nuw i8, ptr %0, i64 12
@@ -46,7 +46,7 @@ while.continuation:                               ; preds = %while.body
 }
 
 ; Function Attrs: nounwind
-define i32 @elementWriteValueGrowsArray() local_unnamed_addr #2 {
+define i32 @"elementWriteValueGrowsArray$"() local_unnamed_addr #2 {
 entry:
   %call = tail call dereferenceable_or_null(32) ptr @calloc(i64 8, i64 4)
   store i32 1, ptr %call, align 4
@@ -71,9 +71,9 @@ while.body.i:                                     ; preds = %while.body.i, %entr
   %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1
   %add.i = add nuw nsw i32 %phi3.i, 1
   %exitcond.not.i = icmp eq i32 %add.i, 64
-  br i1 %exitcond.not.i, label %grow.exit, label %while.body.i
+  br i1 %exitcond.not.i, label %"grow$ref.[i32; _].exit", label %while.body.i
 
-grow.exit:                                        ; preds = %while.body.i
+"grow$ref.[i32; _].exit":                         ; preds = %while.body.i
   %element11 = getelementptr i8, ptr %grown.i, i64 4
   %load12 = load i32, ptr %element11, align 4
   %add = add i32 %load12, 700

@@ -14,7 +14,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @readShared() {
+define i32 @"readShared$"() {
 entry:
   %load = load ptr, ptr @shared, align 8
   %load1 = load i32, ptr %load, align 4
@@ -24,6 +24,6 @@ entry:
 define i32 @main() {
 entry:
   store ptr @limit, ptr @shared, align 8
-  %call = call i32 @readShared()
+  %call = call i32 @"readShared$"()
   ret i32 %call
 }

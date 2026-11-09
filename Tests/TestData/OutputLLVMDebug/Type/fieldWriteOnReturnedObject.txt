@@ -13,25 +13,25 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %Point @makePoint(i32 %0) {
+define %Point @"makePoint$i32"(i32 %0) {
 entry:
   %constructed = alloca %Point, align 8
-  call void @Point.new(ptr %constructed, i32 %0)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 %0)
   %load = load %Point, ptr %constructed, align 4
   ret %Point %load
 }
 
-define i32 @fieldWriteOnReturnedObject() {
+define i32 @"fieldWriteOnReturnedObject$"() {
 entry:
   %temp = alloca %Point, align 8
-  %call = call %Point @makePoint(i32 1)
+  %call = call %Point @"makePoint$i32"(i32 1)
   store %Point %call, ptr %temp, align 4
   %x = getelementptr inbounds nuw %Point, ptr %temp, i32 0, i32 0
   store i32 5, ptr %x, align 4
   ret i32 7
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

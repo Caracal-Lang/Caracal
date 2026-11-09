@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @read({ ptr, i32, i32 } %0) {
+define i32 @"read$[i32; _]"({ ptr, i32, i32 } %0) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %0, ptr %temp, align 8
@@ -22,7 +22,7 @@ entry:
   ret i32 %load1
 }
 
-define i32 @dynamicArrayLiteralAsDefaultValue() {
+define i32 @"dynamicArrayLiteralAsDefaultValue$"() {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   %call = call ptr @calloc(i64 8, i64 4)
@@ -37,6 +37,6 @@ entry:
   %element1 = getelementptr i32, ptr %call, i32 1
   store i32 2, ptr %element1, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  %call2 = call i32 @read({ ptr, i32, i32 } %load)
+  %call2 = call i32 @"read$[i32; _]"({ ptr, i32, i32 } %load)
   ret i32 %call2
 }

@@ -8,19 +8,19 @@ target triple = "x86_64-unknown-none"
 @0 = private unnamed_addr constant [22 x i8] c"path == \22a\\\\b\\n\\\22c\\\22\22\00", align 1
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @describe(i1 %0, %string returned %1) local_unnamed_addr #0 {
+define %string @"describe$bool,string"(i1 %0, %string returned %1) local_unnamed_addr #0 {
 entry:
   ret %string %1
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define %string @caller(%string %0) local_unnamed_addr #0 {
+define %string @"caller$string"(%string %0) local_unnamed_addr #0 {
 entry:
   ret %string { { ptr, i32, i32 } { ptr @0, i32 21, i32 21 } }
 }
 
 ; Function Attrs: nofree norecurse nosync nounwind memory(read, inaccessiblemem: none)
-define noundef i1 @string.equals(%string %0, %string %1) local_unnamed_addr #1 {
+define noundef i1 @"string.equals$string,string"(%string %0, %string %1) local_unnamed_addr #1 {
 entry:
   %.fca.0.0.extract18 = extractvalue %string %0, 0, 0
   %.fca.0.1.extract19 = extractvalue %string %0, 0, 1

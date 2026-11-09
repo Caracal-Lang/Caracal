@@ -13,17 +13,17 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %n = alloca %Number, align 8
-  call void @Number.new(ptr %n, i32 -1)
-  call void @Number.clamp(ptr %n)
+  call void @"Number.new$ref.Number,i32"(ptr %n, i32 -1)
+  call void @"Number.clamp$ref.Number"(ptr %n)
   %value = getelementptr inbounds nuw %Number, ptr %n, i32 0, i32 0
   %load = load i32, ptr %value, align 4
   ret i32 %load
 }
 
-define void @Number.clamp(ptr nonnull %0) {
+define void @"Number.clamp$ref.Number"(ptr nonnull %0) {
 entry:
   %value = getelementptr inbounds nuw %Number, ptr %0, i32 0, i32 0
   %load = load i32, ptr %value, align 4
@@ -39,7 +39,7 @@ if.continuation:                                  ; preds = %if.true, %entry
   ret void
 }
 
-define void @Number.new(ptr nonnull %0, i32 %1) {
+define void @"Number.new$ref.Number,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %value = getelementptr inbounds nuw %Number, ptr %0, i32 0, i32 0
   store i32 %1, ptr %value, align 4

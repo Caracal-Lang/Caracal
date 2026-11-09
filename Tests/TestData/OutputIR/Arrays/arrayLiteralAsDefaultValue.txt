@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define read(%0: [i32; 2] "values") i32
+define read$[i32; 2](%0: [i32; 2] "values") i32
 block entry(0):
     %0 = parameter 0 : [i32; 2] "values"
     %slot0 = allocate_local : [i32; 2] "values"
@@ -17,7 +17,7 @@ block entry(0):
     %4 = load_value %3 : i32
     return %4
 
-define arrayLiteralAsDefaultValue() i32
+define arrayLiteralAsDefaultValue$() i32
 block entry(0):
     %slot0 = allocate_local : [i32; 2] "temp"
     %0 = address_of %slot0 : ref [i32; 2]
@@ -30,5 +30,5 @@ block entry(0):
     %6 = const 2 : i32
     store_value %6, %5 : i32
     %7 = load_value %0 : [i32; 2]
-    %8 = call read(%7) : i32
+    %8 = call read$[i32; 2](%7) : i32
     return %8

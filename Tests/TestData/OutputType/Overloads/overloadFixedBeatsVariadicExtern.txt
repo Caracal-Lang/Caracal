@@ -1,0 +1,103 @@
+FunctionDefinitionStatement: {
+    Type: (cstring, ...) -> i32
+    Name: say
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "printf"
+            }
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: format
+            TypeNameNode: {
+                Type: cstring
+                Lexeme: cstring
+            }
+        }
+        ParameterNode: {
+            Name: varargs
+            TypeNameNode: {
+                Type: ...
+                Lexeme: ...
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (cstring, cstring) -> i32
+    Name: say
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "sayTwo"
+            }
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: format
+            TypeNameNode: {
+                Type: cstring
+                Lexeme: cstring
+            }
+        }
+        ParameterNode: {
+            Name: second
+            TypeNameNode: {
+                Type: cstring
+                Lexeme: cstring
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (cstring, cstring) -> i32
+                NameExpression: {
+                    Type: (cstring, cstring) -> i32
+                    Name: say
+                }
+                ArgumentsNode(2): {
+                    StringLiteral: "a"
+                    StringLiteral: "b"
+                }
+            }
+        }
+    }
+}

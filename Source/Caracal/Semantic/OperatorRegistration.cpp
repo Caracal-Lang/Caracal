@@ -125,7 +125,7 @@ namespace Caracal
             return;
         }
 
-        const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        const auto methodType = module.typeOfNode(NodeIndex{ unit.fileId, methodIndex });
         if (methodType == Type::Undefined())
         {
             return;
@@ -345,7 +345,7 @@ namespace Caracal
             return;
         }
 
-        const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        const auto methodType = module.typeOfNode(NodeIndex{ unit.fileId, methodIndex });
         if (methodType == Type::Undefined())
         {
             return;

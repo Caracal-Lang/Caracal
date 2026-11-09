@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define float @half(float %0) {
+define float @"half$f32"(float %0) {
 entry:
   %divide = fdiv float %0, 2.000000e+00
   ret float %divide

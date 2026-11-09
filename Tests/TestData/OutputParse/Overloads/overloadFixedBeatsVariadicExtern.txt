@@ -1,0 +1,103 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: say
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "printf"
+            }
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: format
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: cstring
+            }
+        }
+        ParameterNode: {
+            Name: varargs
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: ...
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: say
+    Annotation: {
+        Name: extern
+        ArgumentsNode(1): {
+            NamedArgument: {
+                Name: symbol
+                StringLiteral: "sayTwo"
+            }
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: format
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: cstring
+            }
+        }
+        ParameterNode: {
+            Name: second
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: cstring
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: say
+                }
+                ArgumentsNode(2): {
+                    StringLiteral: "a"
+                    StringLiteral: "b"
+                }
+            }
+        }
+    }
+}

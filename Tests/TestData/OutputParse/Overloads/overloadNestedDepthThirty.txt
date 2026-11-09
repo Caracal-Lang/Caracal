@@ -1,0 +1,405 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: step
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: value
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NumberLiteral: 1
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: step
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i64
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: step
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 3
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: step
+                }
+                ArgumentsNode(1): {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: step
+                        }
+                        ArgumentsNode(1): {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: step
+                                }
+                                ArgumentsNode(1): {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: step
+                                        }
+                                        ArgumentsNode(1): {
+                                            FunctionCallExpression: {
+                                                Type: undefined
+                                                Function type: undefined
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: step
+                                                }
+                                                ArgumentsNode(1): {
+                                                    FunctionCallExpression: {
+                                                        Type: undefined
+                                                        Function type: undefined
+                                                        NameExpression: {
+                                                            Type: undefined
+                                                            Name: step
+                                                        }
+                                                        ArgumentsNode(1): {
+                                                            FunctionCallExpression: {
+                                                                Type: undefined
+                                                                Function type: undefined
+                                                                NameExpression: {
+                                                                    Type: undefined
+                                                                    Name: step
+                                                                }
+                                                                ArgumentsNode(1): {
+                                                                    FunctionCallExpression: {
+                                                                        Type: undefined
+                                                                        Function type: undefined
+                                                                        NameExpression: {
+                                                                            Type: undefined
+                                                                            Name: step
+                                                                        }
+                                                                        ArgumentsNode(1): {
+                                                                            FunctionCallExpression: {
+                                                                                Type: undefined
+                                                                                Function type: undefined
+                                                                                NameExpression: {
+                                                                                    Type: undefined
+                                                                                    Name: step
+                                                                                }
+                                                                                ArgumentsNode(1): {
+                                                                                    FunctionCallExpression: {
+                                                                                        Type: undefined
+                                                                                        Function type: undefined
+                                                                                        NameExpression: {
+                                                                                            Type: undefined
+                                                                                            Name: step
+                                                                                        }
+                                                                                        ArgumentsNode(1): {
+                                                                                            FunctionCallExpression: {
+                                                                                                Type: undefined
+                                                                                                Function type: undefined
+                                                                                                NameExpression: {
+                                                                                                    Type: undefined
+                                                                                                    Name: step
+                                                                                                }
+                                                                                                ArgumentsNode(1): {
+                                                                                                    FunctionCallExpression: {
+                                                                                                        Type: undefined
+                                                                                                        Function type: undefined
+                                                                                                        NameExpression: {
+                                                                                                            Type: undefined
+                                                                                                            Name: step
+                                                                                                        }
+                                                                                                        ArgumentsNode(1): {
+                                                                                                            FunctionCallExpression: {
+                                                                                                                Type: undefined
+                                                                                                                Function type: undefined
+                                                                                                                NameExpression: {
+                                                                                                                    Type: undefined
+                                                                                                                    Name: step
+                                                                                                                }
+                                                                                                                ArgumentsNode(1): {
+                                                                                                                    FunctionCallExpression: {
+                                                                                                                        Type: undefined
+                                                                                                                        Function type: undefined
+                                                                                                                        NameExpression: {
+                                                                                                                            Type: undefined
+                                                                                                                            Name: step
+                                                                                                                        }
+                                                                                                                        ArgumentsNode(1): {
+                                                                                                                            FunctionCallExpression: {
+                                                                                                                                Type: undefined
+                                                                                                                                Function type: undefined
+                                                                                                                                NameExpression: {
+                                                                                                                                    Type: undefined
+                                                                                                                                    Name: step
+                                                                                                                                }
+                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                        Type: undefined
+                                                                                                                                        Function type: undefined
+                                                                                                                                        NameExpression: {
+                                                                                                                                            Type: undefined
+                                                                                                                                            Name: step
+                                                                                                                                        }
+                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                Type: undefined
+                                                                                                                                                Function type: undefined
+                                                                                                                                                NameExpression: {
+                                                                                                                                                    Type: undefined
+                                                                                                                                                    Name: step
+                                                                                                                                                }
+                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                        Type: undefined
+                                                                                                                                                        Function type: undefined
+                                                                                                                                                        NameExpression: {
+                                                                                                                                                            Type: undefined
+                                                                                                                                                            Name: step
+                                                                                                                                                        }
+                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                Type: undefined
+                                                                                                                                                                Function type: undefined
+                                                                                                                                                                NameExpression: {
+                                                                                                                                                                    Type: undefined
+                                                                                                                                                                    Name: step
+                                                                                                                                                                }
+                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                        Type: undefined
+                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                            Type: undefined
+                                                                                                                                                                            Name: step
+                                                                                                                                                                        }
+                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                                Type: undefined
+                                                                                                                                                                                Function type: undefined
+                                                                                                                                                                                NameExpression: {
+                                                                                                                                                                                    Type: undefined
+                                                                                                                                                                                    Name: step
+                                                                                                                                                                                }
+                                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                                        Type: undefined
+                                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                                            Type: undefined
+                                                                                                                                                                                            Name: step
+                                                                                                                                                                                        }
+                                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                                                Type: undefined
+                                                                                                                                                                                                Function type: undefined
+                                                                                                                                                                                                NameExpression: {
+                                                                                                                                                                                                    Type: undefined
+                                                                                                                                                                                                    Name: step
+                                                                                                                                                                                                }
+                                                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                                                        Type: undefined
+                                                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                                                            Type: undefined
+                                                                                                                                                                                                            Name: step
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                                                                Type: undefined
+                                                                                                                                                                                                                Function type: undefined
+                                                                                                                                                                                                                NameExpression: {
+                                                                                                                                                                                                                    Type: undefined
+                                                                                                                                                                                                                    Name: step
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                                                                        Type: undefined
+                                                                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                                                                            Type: undefined
+                                                                                                                                                                                                                            Name: step
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                                                                                Type: undefined
+                                                                                                                                                                                                                                Function type: undefined
+                                                                                                                                                                                                                                NameExpression: {
+                                                                                                                                                                                                                                    Type: undefined
+                                                                                                                                                                                                                                    Name: step
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                                                                                        Type: undefined
+                                                                                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                                                                                            Type: undefined
+                                                                                                                                                                                                                                            Name: step
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                                                                                            FunctionCallExpression: {
+                                                                                                                                                                                                                                                Type: undefined
+                                                                                                                                                                                                                                                Function type: undefined
+                                                                                                                                                                                                                                                NameExpression: {
+                                                                                                                                                                                                                                                    Type: undefined
+                                                                                                                                                                                                                                                    Name: step
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                ArgumentsNode(1): {
+                                                                                                                                                                                                                                                    FunctionCallExpression: {
+                                                                                                                                                                                                                                                        Type: undefined
+                                                                                                                                                                                                                                                        Function type: undefined
+                                                                                                                                                                                                                                                        NameExpression: {
+                                                                                                                                                                                                                                                            Type: undefined
+                                                                                                                                                                                                                                                            Name: step
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                        ArgumentsNode(1): {
+                                                                                                                                                                                                                                                            NumberLiteral: 1
+                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                }
+                                                                                                                                                                                                            }
+                                                                                                                                                                                                        }
+                                                                                                                                                                                                    }
+                                                                                                                                                                                                }
+                                                                                                                                                                                            }
+                                                                                                                                                                                        }
+                                                                                                                                                                                    }
+                                                                                                                                                                                }
+                                                                                                                                                                            }
+                                                                                                                                                                        }
+                                                                                                                                                                    }
+                                                                                                                                                                }
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    }
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

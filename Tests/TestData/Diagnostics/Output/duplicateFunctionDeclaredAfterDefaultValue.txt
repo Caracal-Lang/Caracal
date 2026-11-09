@@ -1,0 +1,19 @@
+ Error T0039 Duplicate function declaration
+     ,-[Diagnostics/Input/duplicateFunctionDeclaredAfterDefaultValue.cara:9:5]
+   1 | def limit() i32 {
+     .     -----
+     .       `-- Previous function declaration is here.
+   2 |     return 1;
+   3 | }
+   4 | 
+   6 |     return value;
+   7 | }
+   8 | 
+   9 | def limit() i32 {
+     .     -----
+     .       `-- Function 'limit' is already declared with these parameter types
+  10 |     return 2;
+  11 | }
+  12 | 
+     `----
+  Fix: Change the parameter types, rename this function, or remove the duplicate declaration.

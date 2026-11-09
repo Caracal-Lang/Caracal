@@ -1,0 +1,7 @@
+def value(amount: i32) i32 {
+    return amount;
+}
+
+def value(amount: i32) bool {
+    return true;
+}

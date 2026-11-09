@@ -7,14 +7,14 @@ target triple = "x86_64-unknown-none"
 %string = type { { ptr, i32, i32 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @where(i32 %0, %SourceLocation %1) local_unnamed_addr #0 {
+define i32 @"where$i32,SourceLocation"(i32 %0, %SourceLocation %1) local_unnamed_addr #0 {
 entry:
   %.fca.1.extract = extractvalue %SourceLocation %1, 1
   ret i32 %.fca.1.extract
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @caller() local_unnamed_addr #0 {
+define noundef i32 @"caller$"() local_unnamed_addr #0 {
 entry:
   ret i32 9
 }

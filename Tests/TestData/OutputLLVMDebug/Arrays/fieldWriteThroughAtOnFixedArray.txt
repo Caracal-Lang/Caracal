@@ -13,14 +13,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @fieldWriteThroughAtOnFixedArray() {
+define i32 @"fieldWriteThroughAtOnFixedArray$"() {
 entry:
   %constructed = alloca %Point, align 8
   %constructed1 = alloca %Point, align 8
   %points = alloca [2 x %Point], align 8
-  call void @Point.new(ptr %constructed, i32 1)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 1)
   %load = load %Point, ptr %constructed, align 4
-  call void @Point.new(ptr %constructed1, i32 1)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed1, i32 1)
   %load2 = load %Point, ptr %constructed1, align 4
   %element = getelementptr [2 x %Point], ptr %points, i32 0, i32 0
   store %Point %load, ptr %element, align 4
@@ -40,7 +40,7 @@ entry:
   ret i32 %add
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

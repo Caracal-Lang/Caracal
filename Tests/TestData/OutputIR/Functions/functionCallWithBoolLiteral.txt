@@ -6,13 +6,13 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define inner(%0: bool "x") void
+define inner$bool(%0: bool "x") void
 block entry(0):
     %0 = parameter 0 : bool "x"
     return
 
-define outer() void
+define outer$() void
 block entry(0):
     %0 = const false : bool
-    call inner(%0)
+    call inner$bool(%0)
     return

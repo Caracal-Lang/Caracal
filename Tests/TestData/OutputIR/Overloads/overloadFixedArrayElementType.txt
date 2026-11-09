@@ -1,0 +1,80 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define kind$[i32; 2](%0: [i32; 2] "values") i32
+block entry(0):
+    %0 = parameter 0 : [i32; 2] "values"
+    %slot0 = allocate_local : [i32; 2] "values"
+    %1 = address_of %slot0 : ref [i32; 2]
+    store_value %0, %1 : [i32; 2]
+    %3 = const 1 : i32
+    return %3
+
+define kind$[bool; 2](%0: [bool; 2] "values") i32
+block entry(0):
+    %0 = parameter 0 : [bool; 2] "values"
+    %slot0 = allocate_local : [bool; 2] "values"
+    %1 = address_of %slot0 : ref [bool; 2]
+    store_value %0, %1 : [bool; 2]
+    %3 = const 2 : i32
+    return %3
+
+define kind$[i64; 2](%0: [i64; 2] "values") i32
+block entry(0):
+    %0 = parameter 0 : [i64; 2] "values"
+    %slot0 = allocate_local : [i64; 2] "values"
+    %1 = address_of %slot0 : ref [i64; 2]
+    store_value %0, %1 : [i64; 2]
+    %3 = const 3 : i32
+    return %3
+
+define main() i32
+block entry(0):
+    %slot0 = allocate_local : [i64; 2] "wide"
+    %slot1 = allocate_local : [i32; 2] "temp"
+    %slot2 = allocate_local : [bool; 2] "temp"
+    %0 = address_of %slot0 : ref [i64; 2]
+    %1 = const 0 : i32
+    %2 = element_address %0[%1] : i64
+    %3 = const 1 : i64
+    store_value %3, %2 : i64
+    %4 = const 1 : i32
+    %5 = element_address %0[%4] : i64
+    %6 = const 2 : i64
+    store_value %6, %5 : i64
+    %7 = address_of %slot1 : ref [i32; 2]
+    %8 = const 0 : i32
+    %9 = element_address %7[%8] : i32
+    %10 = const 1 : i32
+    store_value %10, %9 : i32
+    %11 = const 1 : i32
+    %12 = element_address %7[%11] : i32
+    %13 = const 2 : i32
+    store_value %13, %12 : i32
+    %14 = load_value %7 : [i32; 2]
+    %15 = call kind$[i32; 2](%14) : i32
+    %16 = address_of %slot2 : ref [bool; 2]
+    %17 = const 0 : i32
+    %18 = element_address %16[%17] : bool
+    %19 = const true : bool
+    store_value %19, %18 : bool
+    %20 = const 1 : i32
+    %21 = element_address %16[%20] : bool
+    %22 = const false : bool
+    store_value %22, %21 : bool
+    %23 = load_value %16 : [bool; 2]
+    %24 = call kind$[bool; 2](%23) : i32
+    %25 = const 10 : i32
+    %26 = multiply %24, %25 : i32
+    %27 = add %15, %26 : i32
+    %28 = load_value %0 : [i64; 2]
+    %29 = call kind$[i64; 2](%28) : i32
+    %30 = const 50 : i32
+    %31 = multiply %29, %30 : i32
+    %32 = add %27, %31 : i32
+    return %32

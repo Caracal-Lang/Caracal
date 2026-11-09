@@ -1,0 +1,61 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define step$i32(%0: i32 "value") i32
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %1 = const 1 : i32
+    %2 = add %0, %1 : i32
+    return %2
+
+define step$i64(%0: i64 "value") i32
+block entry(0):
+    %0 = parameter 0 : i64 "value"
+    %1 = const 2 : i32
+    return %1
+
+define step$bool(%0: bool "value") i32
+block entry(0):
+    %0 = parameter 0 : bool "value"
+    %1 = const 3 : i32
+    return %1
+
+define main() i32
+block entry(0):
+    %0 = const 1 : i32
+    %1 = call step$i32(%0) : i32
+    %2 = call step$i32(%1) : i32
+    %3 = call step$i32(%2) : i32
+    %4 = call step$i32(%3) : i32
+    %5 = call step$i32(%4) : i32
+    %6 = call step$i32(%5) : i32
+    %7 = call step$i32(%6) : i32
+    %8 = call step$i32(%7) : i32
+    %9 = call step$i32(%8) : i32
+    %10 = call step$i32(%9) : i32
+    %11 = call step$i32(%10) : i32
+    %12 = call step$i32(%11) : i32
+    %13 = call step$i32(%12) : i32
+    %14 = call step$i32(%13) : i32
+    %15 = call step$i32(%14) : i32
+    %16 = call step$i32(%15) : i32
+    %17 = call step$i32(%16) : i32
+    %18 = call step$i32(%17) : i32
+    %19 = call step$i32(%18) : i32
+    %20 = call step$i32(%19) : i32
+    %21 = call step$i32(%20) : i32
+    %22 = call step$i32(%21) : i32
+    %23 = call step$i32(%22) : i32
+    %24 = call step$i32(%23) : i32
+    %25 = call step$i32(%24) : i32
+    %26 = call step$i32(%25) : i32
+    %27 = call step$i32(%26) : i32
+    %28 = call step$i32(%27) : i32
+    %29 = call step$i32(%28) : i32
+    %30 = call step$i32(%29) : i32
+    return %30

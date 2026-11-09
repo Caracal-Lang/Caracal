@@ -1,0 +1,25 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def make(x: i32) Point
+{
+    return Point.new(x);
+}
+
+def make(flag: bool) i32
+{
+    if flag
+    {
+        return 1;
+    }
+    return 2;
+}
+
+def main() i32
+{
+    point := make(7);
+    count := make(true);
+    return point.x %+ count;
+}

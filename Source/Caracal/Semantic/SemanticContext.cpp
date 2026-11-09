@@ -172,12 +172,14 @@ namespace Caracal
         return true;
     }
 
-    Type SemanticContext::tryGetFunctionTypeByName(std::string_view typeName) const noexcept
+    const OverloadSet* SemanticContext::tryGetOverloadSet(std::string_view functionName) const noexcept
     {
-        if (const auto result = m_functionNameToType.find(typeName); result != m_functionNameToType.end())
-            return result->second;
+        if (const auto result = m_overloadSetsByName.find(functionName); result != m_overloadSetsByName.end())
+        {
+            return &result->second;
+        }
 
-        return Type::Undefined();
+        return nullptr;
     }
 
     EnumDefinition& SemanticContext::getEnumDefinition(Type type) noexcept
@@ -331,6 +333,17 @@ namespace Caracal
         }
 
         return false;
+    }
+
+    Type SemanticContext::tryGetMutableSliceType(Type immutableSlice) const noexcept
+    {
+        const auto arrayName = BuildArrayTypeName(*this, TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
+        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        {
+            return existing->second;
+        }
+
+        return Type::Undefined();
     }
 
     Type SemanticContext::getArrayElementType(Type type) const noexcept
@@ -604,9 +617,17 @@ namespace Caracal
         auto isVariadic = !parameters.empty() && parameters.back().type() == Type::CVariadic();
         m_functionDefinitions.emplace_back(functionType, Type::Undefined(), FunctionType::FreeFunction, functionName, functionName, isVariadic, std::move(parameters), std::move(returnTypes));
         m_functionDefinitionIndexById.try_emplace(functionId, m_functionDefinitions.size() - 1);
-        m_functionNameToType.try_emplace(std::move(functionName), functionType);
+        m_overloadSetsByName[std::move(functionName)].overloads.push_back(functionType);
 
         return m_functionDefinitions.back();
+    }
+
+    void SemanticContext::removeOverload(std::string_view functionName, Type functionType) noexcept
+    {
+        if (const auto result = m_overloadSetsByName.find(functionName); result != m_overloadSetsByName.end())
+        {
+            std::erase(result->second.overloads, functionType);
+        }
     }
 
     FunctionDefinition& SemanticContext::createMethod(
@@ -678,15 +699,7 @@ namespace Caracal
     void SemanticContext::createBuiltinType(Type type, std::string_view name, bool addVariants)
     {
         m_nameToTypes.try_emplace(std::string(name), type);
-
-        if (type == Type::CVariadic())
-        {
-            m_typeNames.try_emplace(type.id(), std::string("C Variadic"));
-        }
-        else
-        {
-            m_typeNames.try_emplace(type.id(), std::string(name));
-        }
+        m_typeNames.try_emplace(type.id(), std::string(name));
 
         if (addVariants)
         {

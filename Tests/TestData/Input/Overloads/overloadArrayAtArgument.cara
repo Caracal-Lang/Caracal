@@ -1,0 +1,23 @@
+def bump(value: i32) i32
+{
+    return value;
+}
+
+def bump(value: ref i32) i32
+{
+    value = value %+ 10;
+    return 0;
+}
+
+def bump(flag: bool) i32
+{
+    _ = flag;
+    return 100;
+}
+
+def main() i32
+{
+    numbers := [1, 2, 3];
+    flags := [true];
+    return bump(numbers.at(1)) %+ bump(flags.at(0));
+}

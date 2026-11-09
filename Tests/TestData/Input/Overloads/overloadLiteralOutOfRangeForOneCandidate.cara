@@ -1,0 +1,14 @@
+def fit(value: i8) i32
+{
+    return 1;
+}
+
+def fit(value: i16) i32
+{
+    return 2;
+}
+
+def main() i32
+{
+    return fit(300);
+}

@@ -10,7 +10,7 @@ declare noundef i32 @puts(ptr noundef readonly captures(none) %0) local_unnamed_
 
 declare i32 @clock() local_unnamed_addr
 
-define i32 @func() local_unnamed_addr {
+define i32 @"func$"() local_unnamed_addr {
 entry:
   %call = tail call i32 @puts(ptr nonnull dereferenceable(1) @0)
   %call1 = tail call i32 @clock()

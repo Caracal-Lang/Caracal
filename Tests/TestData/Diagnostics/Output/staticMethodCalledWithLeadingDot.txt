@@ -1,0 +1,13 @@
+ Error T0115 Static methods are called through their type name
+     ,-[Diagnostics/Input/staticMethodCalledWithLeadingDot.cara:10:17]
+   7 | 
+   8 |     def run() i32
+   9 |     {
+  10 |         return .make(1);
+     .                 -------
+     .                    `-- 'make' is a static method of type 'Box'
+  11 |     }
+  12 | }
+  13 | 
+     `----
+  Fix: Write 'Box.make(...)'.

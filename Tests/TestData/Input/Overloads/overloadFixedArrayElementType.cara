@@ -1,0 +1,23 @@
+def kind(values: [i32; 2]) i32
+{
+    _ = values;
+    return 1;
+}
+
+def kind(values: [bool; 2]) i32
+{
+    _ = values;
+    return 2;
+}
+
+def kind(values: [i64; 2]) i32
+{
+    _ = values;
+    return 3;
+}
+
+def main() i32
+{
+    wide : [i64; 2] = [1, 2];
+    return kind([1, 2]) %+ kind([true, false]) %* 10 %+ kind(wide) %* 50;
+}

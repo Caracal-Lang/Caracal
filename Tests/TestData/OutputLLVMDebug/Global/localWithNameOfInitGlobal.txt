@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @localWithNameOfInitGlobal() {
+define i32 @"localWithNameOfInitGlobal$"() {
 entry:
   ret i32 5
 }
@@ -21,6 +21,6 @@ entry:
 define i32 @main() {
 entry:
   store i32 9, ptr @value, align 4
-  %call = call i32 @localWithNameOfInitGlobal()
+  %call = call i32 @"localWithNameOfInitGlobal$"()
   ret i32 %call
 }

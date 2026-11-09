@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @elementWriteThroughAt() {
+define i32 @"elementWriteThroughAt$"() {
 entry:
   %numbers = alloca [2 x i32], align 4
   %element = getelementptr [2 x i32], ptr %numbers, i32 0, i32 0

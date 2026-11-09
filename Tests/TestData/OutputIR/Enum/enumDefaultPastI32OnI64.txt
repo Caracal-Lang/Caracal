@@ -10,7 +10,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define enumDefaultPastI32OnI64() i32
+define enumDefaultPastI32OnI64$() i32
 block entry(0):
     %0 = const Values.B (= 2147483648) : Values
     %1 = const 2147483648 : i64

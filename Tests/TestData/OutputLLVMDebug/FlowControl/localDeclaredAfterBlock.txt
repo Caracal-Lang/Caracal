@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @localDeclaredAfterBlock(i1 %0) {
+define i32 @"localDeclaredAfterBlock$bool"(i1 %0) {
 entry:
   br i1 %0, label %if.true, label %if.continuation
 

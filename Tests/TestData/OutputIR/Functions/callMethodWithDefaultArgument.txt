@@ -9,17 +9,17 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define func() i32
+define func$() i32
 block entry(0):
     %slot0 = allocate_local : Calc "calc"
     %0 = address_of %slot0 : ref Calc
     %1 = const 10 : i32
-    call Calc.new(%0, %1)
+    call Calc.new$ref.Calc,i32(%0, %1)
     %2 = const 5 : i32
-    %3 = call Calc.addToBase(%0, %2) : i32
+    %3 = call Calc.addToBase$ref.Calc,i32(%0, %2) : i32
     return %3
 
-define Calc.addToBase(%0: ref Calc ".this", %1: i32 "amount") i32
+define Calc.addToBase$ref.Calc,i32(%0: ref Calc ".this", %1: i32 "amount") i32
 block entry(0):
     %0 = parameter 0 : ref Calc ".this"
     %1 = parameter 1 : i32 "amount"
@@ -28,7 +28,7 @@ block entry(0):
     %4 = add %3, %1 : i32
     return %4
 
-define Calc.new(%0: ref Calc ".this", %1: i32 "base") void
+define Calc.new$ref.Calc,i32(%0: ref Calc ".this", %1: i32 "base") void
 block entry(0):
     %0 = parameter 0 : ref Calc ".this"
     %1 = parameter 1 : i32 "base"

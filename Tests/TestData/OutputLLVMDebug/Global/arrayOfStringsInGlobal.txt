@@ -18,14 +18,14 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @arrayOfStringsInGlobal() {
+define i32 @"arrayOfStringsInGlobal$"() {
 entry:
-  %call = call i32 @string.length(ptr @names)
+  %call = call i32 @"string.length$ref.string"(ptr @names)
   %add = add i32 %call, 2
   ret i32 %add
 }
 
-define i32 @string.length(ptr nonnull %0) {
+define i32 @"string.length$ref.string"(ptr nonnull %0) {
 entry:
   %_bytes = getelementptr inbounds nuw %string, ptr %0, i32 0, i32 0
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 1

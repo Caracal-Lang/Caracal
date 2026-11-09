@@ -1,0 +1,312 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Painter
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: paint
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: width
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: height
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                    DefaultValue: {
+                        NumberLiteral: 1
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: total
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: total
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: width
+                                        }
+                                    }
+                                    Operation: MultiplicationWrapping
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: height
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: paint
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: label
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: string
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: total
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: total
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: label
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        FunctionCallExpression: {
+                                            Type: undefined
+                                            Function type: undefined
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: length
+                                            }
+                                            ArgumentsNode(0): {
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: painter
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Painter
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: paint
+                        }
+                        ArgumentsNode(2): {
+                            NamedArgument: {
+                                Name: height
+                                NumberLiteral: 3
+                            }
+                            NamedArgument: {
+                                Name: width
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: paint
+                        }
+                        ArgumentsNode(1): {
+                            NamedArgument: {
+                                Name: width
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: paint
+                        }
+                        ArgumentsNode(1): {
+                            NamedArgument: {
+                                Name: label
+                                StringLiteral: "abc"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: total
+                    }
+                }
+            }
+        }
+    }
+}

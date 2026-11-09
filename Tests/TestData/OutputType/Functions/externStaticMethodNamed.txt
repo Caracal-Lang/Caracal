@@ -3,7 +3,7 @@ TypeDefinitionStatement: {
     Name: Box
     BlockNode(1): {
         MethodDefinitionStatement: {
-            Type: (cstring, C Variadic) -> i32
+            Type: (cstring, ...) -> i32
             Modifier: Static
             MethodNameNode: {
                 MethodName: Box.printf
@@ -28,7 +28,7 @@ TypeDefinitionStatement: {
                 ParameterNode: {
                     Name: varargs
                     TypeNameNode: {
-                        Type: C Variadic
+                        Type: ...
                         Lexeme: ...
                     }
                 }
@@ -70,9 +70,9 @@ FunctionDefinitionStatement: {
                 Right: {
                     FunctionCallExpression: {
                         Type: i32
-                        Function type: (cstring, C Variadic) -> i32
+                        Function type: (cstring, ...) -> i32
                         NameExpression: {
-                            Type: (cstring, C Variadic) -> i32
+                            Type: (cstring, ...) -> i32
                             Name: printf
                         }
                         ArgumentsNode(1): {

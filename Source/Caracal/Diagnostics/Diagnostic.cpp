@@ -239,10 +239,20 @@ namespace Caracal
                 return "T0074";
             case DiagnosticKind::T0075_DuplicateMethodDeclaration:
                 return "T0075";
+            case DiagnosticKind::T0111_NoOverloadMatchesCall:
+                return "T0111";
+            case DiagnosticKind::T0112_CallMatchesMoreThanOneOverload:
+                return "T0112";
+            case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
+                return "T0113";
+            case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
+                return "T0114";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
                 return "T0077";
+            case DiagnosticKind::T0115_StaticMethodCalledWithoutTypeName:
+                return "T0115";
             case DiagnosticKind::T0078_ArrayElementTypeMismatch:
                 return "T0078";
             case DiagnosticKind::T0079_EmptyArrayLiteral:
@@ -572,10 +582,20 @@ namespace Caracal
                 return "Field access is missing the leading dot";
             case DiagnosticKind::T0075_DuplicateMethodDeclaration:
                 return "Duplicate method declaration";
+            case DiagnosticKind::T0111_NoOverloadMatchesCall:
+                return "No overload matches this call";
+            case DiagnosticKind::T0112_CallMatchesMoreThanOneOverload:
+                return "This call matches more than one overload";
+            case DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads:
+                return "This function cannot have overloads";
+            case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
+                return "Two extern overloads use one C symbol";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
                 return "Private methods cannot be called from outside their type";
+            case DiagnosticKind::T0115_StaticMethodCalledWithoutTypeName:
+                return "Static methods are called through their type name";
             case DiagnosticKind::T0102_TestsStubMissing:
                 return "The test stub is missing";
             case DiagnosticKind::T0103_StatementLoweringFailed:

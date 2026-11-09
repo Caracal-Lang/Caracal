@@ -1,0 +1,15 @@
+def describe(value: i32) i32
+{
+    return value;
+}
+
+def describe(text: string) i32
+{
+    return text.length() %* 10;
+}
+
+def main() i32
+{
+    text := "abcd";
+    return describe(text.length()) %+ describe(text);
+}

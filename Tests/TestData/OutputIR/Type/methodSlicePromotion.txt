@@ -11,7 +11,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define takeNamed(%0: const [u8] "values") i32
+define takeNamed$[u8](%0: const [u8] "values") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "values"
     %slot0 = allocate_local : const [u8] "temp"
@@ -21,26 +21,26 @@ block entry(0):
     %3 = load_value %2 : i32
     return %3
 
-define relay(%0: const [u8] "bytes") i32
+define relay$[u8](%0: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "bytes"
-    %1 = call Counter.tally(%0) : i32
+    %1 = call Counter.tally$[u8](%0) : i32
     return %1
 
-define relayNamed(%0: const [u8] "bytes") i32
+define relayNamed$[u8](%0: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "bytes"
-    %1 = call takeNamed(%0) : i32
+    %1 = call takeNamed$[u8](%0) : i32
     return %1
 
-define use(%0: Counter "c", %1: const [u8] "bytes") i32
+define use$Counter,[u8](%0: Counter "c", %1: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : Counter "c"
     %slot0 = allocate_local : Counter "c"
     %1 = address_of %slot0 : ref Counter
     store_value %0, %1 : Counter
     %2 = parameter 1 : const [u8] "bytes"
-    %3 = call Counter.count(%1, %2) : i32
+    %3 = call Counter.count$ref.Counter,[u8](%1, %2) : i32
     return %3
 
 define main() i32
@@ -48,7 +48,7 @@ block entry(0):
     %slot0 = allocate_local : Counter "c"
     %slot1 = allocate_local : string "s"
     %0 = address_of %slot0 : ref Counter
-    call Counter.new(%0)
+    call Counter.new$ref.Counter(%0)
     %1 = address_of %slot1 : ref string
     %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
     %3 = const "Hello\0" : cstring
@@ -66,28 +66,28 @@ block entry(0):
     %12 = address_of_field %9.1 : ref i32 "length"
     %13 = load_value %12 : i32
     %14 = make_slice %11, %13 : const [u8]
-    %15 = call Counter.count(%0, %14) : i32
+    %15 = call Counter.count$ref.Counter,[u8](%0, %14) : i32
     %16 = address_of_field %1.0 : ref [u8; _] "_bytes"
     %17 = address_of_field %16.0 : ref u8 "data"
     %18 = load_value %17 : ref u8
     %19 = address_of_field %16.1 : ref i32 "length"
     %20 = load_value %19 : i32
     %21 = make_slice %18, %20 : const [u8]
-    %22 = call Counter.tally(%21) : i32
+    %22 = call Counter.tally$[u8](%21) : i32
     %23 = address_of_field %1.0 : ref [u8; _] "_bytes"
     %24 = address_of_field %23.0 : ref u8 "data"
     %25 = load_value %24 : ref u8
     %26 = address_of_field %23.1 : ref i32 "length"
     %27 = load_value %26 : i32
     %28 = make_slice %25, %27 : const [u8]
-    %29 = call relay(%28) : i32
+    %29 = call relay$[u8](%28) : i32
     %30 = address_of_field %1.0 : ref [u8; _] "_bytes"
     %31 = address_of_field %30.0 : ref u8 "data"
     %32 = load_value %31 : ref u8
     %33 = address_of_field %30.1 : ref i32 "length"
     %34 = load_value %33 : i32
     %35 = make_slice %32, %34 : const [u8]
-    %36 = call relayNamed(%35) : i32
+    %36 = call relayNamed$[u8](%35) : i32
     %37 = load_value %0 : Counter
     %38 = address_of_field %1.0 : ref [u8; _] "_bytes"
     %39 = address_of_field %38.0 : ref u8 "data"
@@ -95,7 +95,7 @@ block entry(0):
     %41 = address_of_field %38.1 : ref i32 "length"
     %42 = load_value %41 : i32
     %43 = make_slice %40, %42 : const [u8]
-    %44 = call use(%37, %43) : i32
+    %44 = call use$Counter,[u8](%37, %43) : i32
     %45 = add %15, %22 : i32
     %46 = add %45, %29 : i32
     %47 = add %46, %36 : i32
@@ -104,7 +104,7 @@ block entry(0):
     %50 = add %48, %49 : i32
     return %50
 
-define Counter.count(%0: ref Counter ".this", %1: const [u8] "bytes") i32
+define Counter.count$ref.Counter,[u8](%0: ref Counter ".this", %1: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : ref Counter ".this"
     %1 = parameter 1 : const [u8] "bytes"
@@ -131,7 +131,7 @@ block while.body(2):
 block while.continuation(3):
     return %6
 
-define Counter.tally(%0: const [u8] "bytes") i32
+define Counter.tally$[u8](%0: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "bytes"
     %slot0 = allocate_local : const [u8] "temp"
@@ -141,7 +141,7 @@ block entry(0):
     %3 = load_value %2 : i32
     return %3
 
-define Counter.new(%0: ref Counter ".this") void
+define Counter.new$ref.Counter(%0: ref Counter ".this") void
 block entry(0):
     %0 = parameter 0 : ref Counter ".this"
     return

@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define sum(%0: i32 "a", %1: i32 "b") i32
+define sum$i32,i32(%0: i32 "a", %1: i32 "b") i32
 block entry(0):
     %0 = parameter 0 : i32 "a"
     %1 = parameter 1 : i32 "b"

@@ -1,0 +1,22 @@
+ Error T0009 Unknown type
+    ,-[Diagnostics/Input/duplicateFunctionWithUnknownParameterType.cara:1:19]
+  1 | def value(amount: Missing) {
+    .                   -------
+    .                      `-- Unknown type 'Missing'
+  2 | }
+  3 | 
+  4 | def value(amount: Missing) {
+    `----
+  Fix: Declare this type before using it, or rename it to an existing type.
+ Error T0009 Unknown type
+    ,-[Diagnostics/Input/duplicateFunctionWithUnknownParameterType.cara:4:19]
+  1 | def value(amount: Missing) {
+  2 | }
+  3 | 
+  4 | def value(amount: Missing) {
+    .                   -------
+    .                      `-- Unknown type 'Missing'
+  5 | }
+  6 | 
+    `----
+  Fix: Declare this type before using it, or rename it to an existing type.

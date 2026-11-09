@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define escapedBackslashes() cstring
+define escapedBackslashes$() cstring
 block entry(0):
     %0 = const "bsn:\\n bst:\\t bsbsn:\\\\n end:\\\0" : cstring
     return %0
@@ -15,7 +15,7 @@ define main() i32
 block entry(0):
     %0 = const "\\n\0" : cstring
     %1 = const "\\\n\0" : cstring
-    %2 = call C.strcmp(%0, %1) : i32
+    %2 = call strcmp(%0, %1) : i32
     %3 = const 0 : i32
     %4 = equal %2, %3 : bool
     branch if %4, if.true(1), if.continuation(2)

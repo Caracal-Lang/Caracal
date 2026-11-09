@@ -1,0 +1,312 @@
+TypeDefinitionStatement: {
+    Type: Painter
+    Name: Painter
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: total
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Painter, i32, i32) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: paint
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: width
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: height
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                    DefaultValue: {
+                        NumberLiteral: 1
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: total
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: width
+                                        }
+                                    }
+                                    Operation: MultiplicationWrapping
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: height
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Painter, string) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: paint
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: label
+                    TypeNameNode: {
+                        Type: string
+                        Lexeme: string
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: total
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: string
+                                            Name: label
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        FunctionCallExpression: {
+                                            Type: i32
+                                            Function type: (ref string) -> i32
+                                            NameExpression: {
+                                                Type: (ref string) -> i32
+                                                Name: length
+                                            }
+                                            ArgumentsNode(0): {
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: Painter
+            Left: {
+                NameExpression: {
+                    Type: Painter
+                    Name: painter
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Painter
+                    Left: {
+                        NameExpression: {
+                            Type: Painter
+                            Name: Painter
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Painter
+                            Function type: (ref Painter) -> void
+                            NameExpression: {
+                                Type: (ref Painter) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Painter
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Painter, i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref Painter, i32, i32) -> void
+                            Name: paint
+                        }
+                        ArgumentsNode(2): {
+                            NamedArgument: {
+                                Name: height
+                                NumberLiteral: 3
+                            }
+                            NamedArgument: {
+                                Name: width
+                                NumberLiteral: 2
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Painter
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Painter, i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref Painter, i32, i32) -> void
+                            Name: paint
+                        }
+                        ArgumentsNode(1): {
+                            NamedArgument: {
+                                Name: width
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Painter
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Painter, string) -> void
+                        NameExpression: {
+                            Type: (ref Painter, string) -> void
+                            Name: paint
+                        }
+                        ArgumentsNode(1): {
+                            NamedArgument: {
+                                Name: label
+                                StringLiteral: "abc"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Painter
+                        Name: painter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: total
+                    }
+                }
+            }
+        }
+    }
+}

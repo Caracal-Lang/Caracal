@@ -1,0 +1,28 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%string = type { { ptr, i32, i32 } }
+
+@0 = private unnamed_addr constant [5 x i8] c"flag\00", align 1
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define %string @"describe$i32,string"(i32 %0, %string returned %1) local_unnamed_addr #0 {
+entry:
+  ret %string %1
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define %string @"describe$bool"(i1 %0) local_unnamed_addr #0 {
+entry:
+  ret %string { { ptr, i32, i32 } { ptr @0, i32 4, i32 4 } }
+}
+
+; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
+define void @"callers$"() local_unnamed_addr #0 {
+entry:
+  ret void
+}
+
+attributes #0 = { mustprogress nofree norecurse nosync nounwind willreturn memory(none) }

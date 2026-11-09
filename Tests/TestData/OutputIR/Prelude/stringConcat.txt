@@ -42,13 +42,13 @@ block entry(0):
     %16 = address_of_field %10.2 : ref i32 "capacity"
     store_value %15, %16 : i32
     %17 = load_value %9 : string
-    %18 = call string.concat(%0, %17) : string
+    %18 = call string.concat$ref.string,string(%0, %17) : string
     store_value %18, %8 : string
     %19 = address_of_field %8.0 : ref [u8; _] "_bytes"
     %20 = address_of_field %19.0 : ref u8 "data"
     %21 = load_value %20 : cstring
-    %22 = call C.puts(%21) : i32
-    %23 = call string.length(%8) : i32
+    %22 = call puts(%21) : i32
+    %23 = call string.length$ref.string(%8) : i32
     %24 = const 11 : i32
     %25 = not_equal %23, %24 : bool
     branch if %25, if.true(1), if.continuation(2)
@@ -70,7 +70,7 @@ block if.continuation(2):
     %35 = address_of_field %29.2 : ref i32 "capacity"
     store_value %34, %35 : i32
     %36 = load_value %28 : string
-    %37 = call string.notEquals(%27, %36) : bool
+    %37 = call string.notEquals$string,string(%27, %36) : bool
     branch if %37, if.true(3), if.continuation(4)
 block if.true(3):
     %38 = const 3 : i32
@@ -108,7 +108,7 @@ block if.continuation(4):
     %57 = address_of_field %51.2 : ref i32 "capacity"
     store_value %56, %57 : i32
     %58 = load_value %50 : string
-    %59 = call string.concat(%49, %58) : string
+    %59 = call string.concat$ref.string,string(%49, %58) : string
     store_value %59, %39 : string
     %60 = load_value %39 : string
     %61 = address_of %slot8 : ref string
@@ -123,7 +123,7 @@ block if.continuation(4):
     %68 = address_of_field %62.2 : ref i32 "capacity"
     store_value %67, %68 : i32
     %69 = load_value %61 : string
-    %70 = call string.notEquals(%60, %69) : bool
+    %70 = call string.notEquals$string,string(%60, %69) : bool
     branch if %70, if.true(5), if.continuation(6)
 block if.true(5):
     %71 = const 4 : i32
@@ -161,7 +161,7 @@ block if.continuation(6):
     %90 = address_of_field %84.2 : ref i32 "capacity"
     store_value %89, %90 : i32
     %91 = load_value %83 : string
-    %92 = call string.concat(%82, %91) : string
+    %92 = call string.concat$ref.string,string(%82, %91) : string
     store_value %92, %72 : string
     %93 = load_value %72 : string
     %94 = address_of %slot13 : ref string
@@ -176,7 +176,7 @@ block if.continuation(6):
     %101 = address_of_field %95.2 : ref i32 "capacity"
     store_value %100, %101 : i32
     %102 = load_value %94 : string
-    %103 = call string.notEquals(%93, %102) : bool
+    %103 = call string.notEquals$string,string(%93, %102) : bool
     branch if %103, if.true(7), if.continuation(8)
 block if.true(7):
     %104 = const 5 : i32
@@ -185,7 +185,7 @@ block if.continuation(8):
     %105 = const 42 : i32
     return %105
 
-define string.concat(%0: ref string ".this", %1: string "other") string
+define string.concat$ref.string,string(%0: ref string ".this", %1: string "other") string
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = parameter 1 : string "other"
@@ -196,7 +196,7 @@ block entry(0):
     %3 = address_of %slot1 : ref [u8; _]
     %4 = const 8 : i64
     %5 = size_of u8 : i64
-    %6 = call C.calloc(%4, %5) : rawptr
+    %6 = call calloc(%4, %5) : rawptr
     %7 = address_of_field %3.0 : ref u8 "data"
     store_value %6, %7 : ref u8
     %8 = const 0 : i32
@@ -249,11 +249,11 @@ block while.continuation(6):
     %slot2 = allocate_local : string "constructed"
     %39 = address_of %slot2 : ref string
     %40 = array_copy %3 : [u8; _]
-    call string.new(%39, %40)
+    call string.new$ref.string,[u8; _](%39, %40)
     %41 = load_value %39 : string
     return %41
 
-define string.length(%0: ref string ".this") i32
+define string.length$ref.string(%0: ref string ".this") i32
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = address_of_field %0.0 : ref [u8; _] "_bytes"
@@ -261,7 +261,7 @@ block entry(0):
     %3 = load_value %2 : i32
     return %3
 
-define string.notEquals(%0: string "lhs", %1: string "rhs") bool
+define string.notEquals$string,string(%0: string "lhs", %1: string "rhs") bool
 block entry(0):
     %0 = parameter 0 : string "lhs"
     %slot0 = allocate_local : string "lhs"
@@ -273,11 +273,11 @@ block entry(0):
     store_value %2, %3 : string
     %4 = load_value %1 : string
     %5 = load_value %3 : string
-    %6 = call string.equals(%4, %5) : bool
+    %6 = call string.equals$string,string(%4, %5) : bool
     %7 = logical_negate %6 : bool
     return %7
 
-define string.new(%0: ref string ".this", %1: [u8; _] "bytes") void
+define string.new$ref.string,[u8; _](%0: ref string ".this", %1: [u8; _] "bytes") void
 block entry(0):
     %0 = parameter 0 : ref string ".this"
     %1 = parameter 1 : [u8; _] "bytes"
@@ -289,7 +289,7 @@ block entry(0):
     store_value %3, %4 : [u8; _]
     return
 
-define string.equals(%0: string "lhs", %1: string "rhs") bool
+define string.equals$string,string(%0: string "lhs", %1: string "rhs") bool
 block entry(0):
     %0 = parameter 0 : string "lhs"
     %slot0 = allocate_local : string "lhs"

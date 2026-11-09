@@ -6,7 +6,7 @@ target triple = "x86_64-unknown-none"
 @shared = local_unnamed_addr constant [4 x i32] [i32 1, i32 2, i32 3, i32 4]
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i32 @scale([2 x i8] %0) local_unnamed_addr #0 {
+define noundef i32 @"scale$[u8; 2]"([2 x i8] %0) local_unnamed_addr #0 {
 entry:
   ret i32 0
 }

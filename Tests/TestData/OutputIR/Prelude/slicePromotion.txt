@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define sum(%0: const [u8] "bytes") i32
+define sum$[u8](%0: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "bytes"
     %1 = const 0 : i32
@@ -35,11 +35,11 @@ block while.body(2):
 block while.continuation(3):
     return %5
 
-define double(%0: const [u8] "bytes") i32
+define double$[u8](%0: const [u8] "bytes") i32
 block entry(0):
     %0 = parameter 0 : const [u8] "bytes"
-    %1 = call sum(%0) : i32
-    %2 = call sum(%0) : i32
+    %1 = call sum$[u8](%0) : i32
+    %2 = call sum$[u8](%0) : i32
     %3 = add %1, %2 : i32
     return %3
 
@@ -50,7 +50,7 @@ block entry(0):
     %0 = address_of %slot0 : ref [u8; _]
     %1 = const 8 : i64
     %2 = size_of u8 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref u8 "data"
     store_value %3, %4 : ref u8
     %5 = const 2 : i32
@@ -83,21 +83,21 @@ block entry(0):
     %25 = address_of_field %0.1 : ref i32 "length"
     %26 = load_value %25 : i32
     %27 = make_slice %24, %26 : [u8]
-    %28 = call sum(%27) : i32
+    %28 = call sum$[u8](%27) : i32
     %29 = address_of_field %15.0 : ref [u8; _] "_bytes"
     %30 = address_of_field %29.0 : ref u8 "data"
     %31 = load_value %30 : ref u8
     %32 = address_of_field %29.1 : ref i32 "length"
     %33 = load_value %32 : i32
     %34 = make_slice %31, %33 : const [u8]
-    %35 = call sum(%34) : i32
+    %35 = call sum$[u8](%34) : i32
     %36 = address_of_field %15.0 : ref [u8; _] "_bytes"
     %37 = address_of_field %36.0 : ref u8 "data"
     %38 = load_value %37 : ref u8
     %39 = address_of_field %36.1 : ref i32 "length"
     %40 = load_value %39 : i32
     %41 = make_slice %38, %40 : const [u8]
-    %42 = call double(%41) : i32
+    %42 = call double$[u8](%41) : i32
     %43 = const 2 : i32
     %44 = not_equal %28, %43 : bool
     branch if %44, if.true(1), if.continuation(2)

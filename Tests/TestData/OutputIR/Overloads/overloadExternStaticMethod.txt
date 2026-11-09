@@ -1,0 +1,35 @@
+type Math
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+extern Math.absolute(%0: i32 "value") i32 symbol "abs"
+
+extern Math.absolute(%0: i64 "value") i64 symbol "labs"
+
+define main() i32
+block entry(0):
+    %0 = const -3 : i32
+    %1 = call abs(%0) : i32
+    %2 = const -4 : i64
+    %3 = call labs(%2) : i64
+    %4 = const 4 : i64
+    %5 = equal %3, %4 : bool
+    branch if %5, if.true(1), if.continuation(2)
+block if.true(1):
+    %6 = const 40 : i32
+    %7 = add %1, %6 : i32
+    return %7
+block if.continuation(2):
+    %8 = const 0 : i32
+    return %8
+
+define Math.new$ref.Math(%0: ref Math ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Math ".this"
+    return

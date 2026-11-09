@@ -17,7 +17,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define makeHolder() Holder
+define makeHolder$() Holder
 block entry(0):
     %slot0 = allocate_local : [i32; _] "items"
     %slot1 = allocate_local : Holder "constructed"
@@ -26,7 +26,7 @@ block entry(0):
     %0 = address_of %slot0 : ref [i32; _]
     %1 = const 8 : i64
     %2 = size_of i32 : i64
-    %3 = call C.calloc(%1, %2) : rawptr
+    %3 = call calloc(%1, %2) : rawptr
     %4 = address_of_field %0.0 : ref i32 "data"
     store_value %3, %4 : ref i32
     %5 = const 2 : i32
@@ -46,7 +46,7 @@ block entry(0):
     %15 = address_of %slot1 : ref Holder
     %16 = address_of %slot2 : ref Inner
     %17 = const 4 : i32
-    call Inner.new(%16, %17)
+    call Inner.new$ref.Inner,i32(%16, %17)
     %18 = load_value %16 : Inner
     %19 = address_of %slot3 : ref string
     %20 = address_of_field %19.0 : ref [u8; _] "_bytes"
@@ -61,15 +61,15 @@ block entry(0):
     store_value %25, %26 : i32
     %27 = load_value %19 : string
     %28 = array_copy %0 : [i32; _]
-    call Holder.new(%15, %18, %28, %27)
+    call Holder.new$ref.Holder,Inner,[i32; _],string(%15, %18, %28, %27)
     %29 = load_value %15 : Holder
     return %29
 
-define nestedFieldWrite() i32
+define nestedFieldWrite$() i32
 block entry(0):
     %slot0 = allocate_local : Holder "holder"
     %0 = address_of %slot0 : ref Holder
-    %1 = call makeHolder() : Holder
+    %1 = call makeHolder$() : Holder
     store_value %1, %0 : Holder
     %2 = const 9 : i32
     %3 = address_of_field %0.0 : ref Inner "inner"
@@ -80,7 +80,7 @@ block entry(0):
     %7 = load_value %6 : i32
     return %7
 
-define Inner.twice(%0: ref Inner ".this") i32
+define Inner.twice$ref.Inner(%0: ref Inner ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Inner ".this"
     %1 = address_of_field %0.0 : ref i32 "size"
@@ -89,7 +89,7 @@ block entry(0):
     %4 = multiply %2, %3 : i32
     return %4
 
-define Inner.new(%0: ref Inner ".this", %1: i32 "size") void
+define Inner.new$ref.Inner,i32(%0: ref Inner ".this", %1: i32 "size") void
 block entry(0):
     %0 = parameter 0 : ref Inner ".this"
     %1 = parameter 1 : i32 "size"
@@ -97,7 +97,7 @@ block entry(0):
     store_value %1, %2 : i32
     return
 
-define Holder.new(%0: ref Holder ".this", %1: Inner "inner", %2: [i32; _] "items", %3: string "name") void
+define Holder.new$ref.Holder,Inner,[i32; _],string(%0: ref Holder ".this", %1: Inner "inner", %2: [i32; _] "items", %3: string "name") void
 block entry(0):
     %0 = parameter 0 : ref Holder ".this"
     %1 = parameter 1 : Inner "inner"

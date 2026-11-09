@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -24,6 +25,14 @@
 
 namespace Caracal
 {
+    enum class ArgumentRank : u8
+    {
+        Variadic,
+        Widened,
+        Contextual,
+        Exact
+    };
+
     class CARACAL_API TypeChecker
     {
     public:
@@ -50,6 +59,12 @@ namespace Caracal
             bool negatedLiteral = false;
             bool wantsAddress = false;
             bool receiverPosition = false;
+        };
+
+        struct ArgumentContext
+        {
+            std::optional<Type> contextualNumberType;
+            bool wantsAddress = false;
         };
 
         struct CheckedValue
@@ -103,6 +118,25 @@ namespace Caracal
             bool loadResult = false;
         };
 
+        class SuspendedEmissionScope
+        {
+        public:
+            explicit SuspendedEmissionScope(TypeChecker& typeChecker) noexcept;
+            ~SuspendedEmissionScope() noexcept;
+            SuspendedEmissionScope(const SuspendedEmissionScope&) = delete;
+            SuspendedEmissionScope& operator=(const SuspendedEmissionScope&) = delete;
+
+            [[nodiscard]] bool addedError() const noexcept;
+            [[nodiscard]] std::vector<Diagnostic> takeDiagnostics();
+
+        private:
+            TypeChecker& m_typeChecker;
+            IREmitter::EmissionPosition m_emissionPosition;
+            size_t m_diagnosticCount = 0;
+            bool m_sawUnfoldedBitwiseCall = false;
+            bool m_leadingDotRootPending = false;
+        };
+
         void collectDeclarations();
         void collectUnitDeclarations(CompilationUnit& unit);
         void collectFunctionDeclaration(const CompilationUnit& unit, u32 index);
@@ -122,16 +156,31 @@ namespace Caracal
         void checkUninitializedInitConstants();
         void typeCheckFunctionSignatures();
         void typeCheckTypeSignatures();
+        void reportInvalidOverloadSets();
+        [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
+        [[nodiscard]] bool rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
+        [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type resolveMethodCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet, bool isStaticCall);
+        [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] bool rankCandidate(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks);
+        [[nodiscard]] bool rankArgument(const CompilationUnit& unit, Type candidate, size_t parameterIndex, u32 argumentValue, Type typeWithoutContext, ArgumentRank& rank);
+        [[nodiscard]] bool acceptsVariadicArgument(const CompilationUnit& unit, u32 argumentValue, bool isExtern);
+        [[nodiscard]] Type checkArgumentWithoutContext(const CompilationUnit& unit, u32 argumentValue, std::vector<Diagnostic>& argumentErrors);
+        [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
+        [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
+        void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
         void validateStaticMethodTypeName(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         void typeCheckConstructorSignature(const CompilationUnit& unit, u32 typeIndex, TypeDefinition& typeDefinition, Type typeType);
         [[nodiscard]] Type typeCheckTypeNameNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] Type typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index);
-        [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index);
+        [[nodiscard]] std::vector<Parameter> typeCheckParametersNode(const CompilationUnit& unit, u32 index, bool checksDefaultValues = true);
+        void typeCheckDefaultValue(const CompilationUnit& unit, u32 parameterIndex, Type parameterType, std::span<const Parameter> earlierParameters);
         [[nodiscard]] bool emitsTestsOf(const CompilationUnit& unit) const noexcept;
-        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters);
+        void typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, std::span<const Parameter> earlierParameters);
         [[nodiscard]] std::vector<Type> typeCheckReturnTypesNode(const CompilationUnit& unit, u32 index);
         [[nodiscard]] i32 convertToI32(const CompilationUnit& unit, u32 numberLiteralIndex);
         void pushScope(ScopeKind kind);
@@ -144,6 +193,7 @@ namespace Caracal
         [[nodiscard]] u32 nameIdOf(const CompilationUnit& unit, u32 index) const noexcept;
         void addVariableBinding(u32 nameId, Type type, std::optional<SourceLocation> location, const SourceTextSharedPtr& source, VariableBindingKind kind, bool referencesConstant = false);
         [[nodiscard]] const LexicalBinding* tryGetBinding(u32 nameId) const noexcept;
+        [[nodiscard]] bool isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept;
         [[nodiscard]] const LexicalBinding* tryGetConflictingBinding(u32 nameId) const noexcept;
         [[nodiscard]] ValueRef addressOfName(const CompilationUnit& unit, u32 nameNode);
         [[nodiscard]] bool nameIsInitConstant(const CompilationUnit& unit, u32 nameNode) const;
@@ -227,6 +277,7 @@ namespace Caracal
         [[nodiscard]] Type coerceConditionType(Type conditionType, const CompilationUnit& unit, u32 conditionIndex);
         [[nodiscard]] bool isAssignableTo(Type sourceType, Type targetType) const noexcept;
         [[nodiscard]] std::optional<Type> contextualTypeForExpectedType(Type expectedType) const noexcept;
+        [[nodiscard]] ArgumentContext argumentContextFor(const CompilationUnit& unit, const Parameter& parameter, u32 argumentValue) const noexcept;
         [[nodiscard]] bool tryAddArrayLengthMismatchError(const CompilationUnit& unit, const SourceLocation& location, Type expectedType, Type actualType);
         [[nodiscard]] bool areComparableTypes(Type leftType, Type rightType);
 
@@ -245,6 +296,7 @@ namespace Caracal
         [[nodiscard]] SourceLine statementLine(const CompilationUnit& unit, u32 index) const;
         [[nodiscard]] SourceLocation annotationLocation(const CompilationUnit& unit, u32 index) const noexcept;
         void locateDefinitionName(NodeIndex definitionNode, SourceTextSharedPtr& source, std::optional<SourceLocation>& location) const noexcept;
+        [[nodiscard]] std::optional<SourceLocation> methodNameLocation(const FunctionDefinition& methodDefinition) const noexcept;
         [[nodiscard]] bool pendingAnnotationsContain(const CompilationUnit& unit, std::string_view name) const noexcept;
 
         Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept
@@ -282,6 +334,8 @@ namespace Caracal
         std::vector<u32> m_annotationScratch;
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
+        std::vector<NodeIndex> m_unresolvedOverloadCalls;
+        u32 m_suspendedEmissionDepth = 0;
         std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;
 

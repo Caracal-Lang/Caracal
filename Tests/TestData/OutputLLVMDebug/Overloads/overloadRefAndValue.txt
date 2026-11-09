@@ -1,0 +1,38 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"read$i32"(i32 %0) {
+entry:
+  ret i32 1
+}
+
+define i32 @"read$ref.i32"(ptr nonnull %0) {
+entry:
+  store i32 5, ptr %0, align 4
+  ret i32 2
+}
+
+define i32 @main() {
+entry:
+  %a = alloca i32, align 4
+  store i32 1, ptr %a, align 4
+  %load = load i32, ptr %a, align 4
+  %call = call i32 @"read$i32"(i32 %load)
+  %call1 = call i32 @"read$ref.i32"(ptr %a)
+  %multiply = mul i32 %call1, 10
+  %add = add i32 %call, %multiply
+  %load2 = load i32, ptr %a, align 4
+  %multiply3 = mul i32 %load2, 10
+  %add4 = add i32 %add, %multiply3
+  ret i32 %add4
+}

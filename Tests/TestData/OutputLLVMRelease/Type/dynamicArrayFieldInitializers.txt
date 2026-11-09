@@ -13,7 +13,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree nounwind willreturn memory(write, inaccessiblemem: readwrite)
-define void @Buffer.new(ptr nonnull writeonly captures(none) initializes((0, 32)) %0) local_unnamed_addr #2 {
+define void @"Buffer.new$ref.Buffer"(ptr nonnull writeonly captures(none) initializes((0, 32)) %0) local_unnamed_addr #2 {
 entry:
   %call = tail call dereferenceable_or_null(8) ptr @calloc(i64 8, i64 1)
   store ptr %call, ptr %0, align 8

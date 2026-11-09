@@ -13,10 +13,10 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @enumI16AsField() {
+define i32 @"enumI16AsField$"() {
 entry:
   %box = alloca %Box, align 8
-  call void @Box.new(ptr %box, i16 1)
+  call void @"Box.new$ref.Box,Values"(ptr %box, i16 1)
   %color = getelementptr inbounds nuw %Box, ptr %box, i32 0, i32 0
   %load = load i16, ptr %color, align 2
   %equal = icmp eq i16 %load, 1
@@ -29,7 +29,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 3
 }
 
-define void @Box.new(ptr nonnull %0, i16 %1) {
+define void @"Box.new$ref.Box,Values"(ptr nonnull %0, i16 %1) {
 entry:
   %color = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   store i16 %1, ptr %color, align 2

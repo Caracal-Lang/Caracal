@@ -10,21 +10,21 @@ target triple = "x86_64-unknown-none"
 @llvm.global_ctors = appending global [0 x { i32, ptr, ptr }] zeroinitializer
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, argmem: none, inaccessiblemem: none)
-define i32 @constructorArgumentInGlobal() local_unnamed_addr #0 {
+define i32 @"constructorArgumentInGlobal$"() local_unnamed_addr #0 {
 entry:
   %load = load i32, ptr @origin, align 8
   ret i32 %load
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Point.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
+define void @"Point.new$ref.Point,i32"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, i32 %1) local_unnamed_addr #1 {
 entry:
   store i32 %1, ptr %0, align 4
   ret void
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @Box.new(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, %Point %1) local_unnamed_addr #1 {
+define void @"Box.new$ref.Box,Point"(ptr nonnull writeonly captures(none) initializes((0, 4)) %0, %Point %1) local_unnamed_addr #1 {
 entry:
   %2 = extractvalue %Point %1, 0
   store i32 %2, ptr %0, align 4

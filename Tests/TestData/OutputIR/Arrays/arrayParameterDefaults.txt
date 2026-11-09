@@ -6,7 +6,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define fill(%0: [u8; 2] "values") i32
+define fill$[u8; 2](%0: [u8; 2] "values") i32
 block entry(0):
     %0 = parameter 0 : [u8; 2] "values"
     %slot0 = allocate_local : [u8; 2] "values"

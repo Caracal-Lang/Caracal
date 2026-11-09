@@ -110,6 +110,7 @@ namespace Caracal
         void addMethodCallMissingDotError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName);
         void addMemberAccessInDefaultParameterError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addPrivateMethodCallOutsideTypeError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName);
+        void addStaticMethodCalledWithoutTypeNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName);
         void addStaticMethodTypeNameMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& declaredTypeName, const std::string& enclosingTypeName, const std::string& methodName);
 
         // Control flow diagnostics
@@ -163,6 +164,13 @@ namespace Caracal
         void addDuplicateFunctionDeclarationError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource = nullptr, std::optional<SourceLocation> otherLocation = std::nullopt);
         void addDuplicateTypeDeclarationError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeName, const SourceTextSharedPtr& otherSource = nullptr, std::optional<SourceLocation> otherLocation = std::nullopt);
         void addDuplicateMethodDeclarationError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName, std::optional<SourceLocation> otherLocation = std::nullopt);
+        void addDuplicateBuiltinMethodDeclarationError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName, std::optional<SourceLocation> otherLocation);
+
+        // Overload diagnostics
+        void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
+        void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
 
         // Literal diagnostics
         void addNumberLiteralOutOfRangeError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& literalText, const std::string& targetTypeName);
@@ -185,6 +193,8 @@ namespace Caracal
 
         const std::vector<Diagnostic>& diagnostics() const;
         void removeDiagnosticsAfter(size_t count);
+        [[nodiscard]] std::vector<Diagnostic> takeDiagnosticsAfter(size_t count);
+        void addDiagnostics(std::vector<Diagnostic> diagnostics);
         [[nodiscard]] bool hasErrors() const noexcept;
         [[nodiscard]] bool hasWarnings() const noexcept;
         [[nodiscard]] int errorCount() const noexcept;

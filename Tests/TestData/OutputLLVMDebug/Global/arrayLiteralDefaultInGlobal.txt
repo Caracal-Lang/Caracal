@@ -16,13 +16,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @arrayLiteralDefaultInGlobal() {
+define i32 @"arrayLiteralDefaultInGlobal$"() {
 entry:
   %load = load i32, ptr getelementptr ([2 x i32], ptr @origin, i32 0, i32 1), align 4
   ret i32 %load
 }
 
-define void @Box.new(ptr nonnull %0, [2 x i32] %1) {
+define void @"Box.new$ref.Box,[i32; 2]"(ptr nonnull %0, [2 x i32] %1) {
 entry:
   %values = alloca [2 x i32], align 4
   store [2 x i32] %1, ptr %values, align 4
@@ -40,6 +40,6 @@ entry:
   %element1 = getelementptr [2 x i32], ptr %temp, i32 0, i32 1
   store i32 2, ptr %element1, align 4
   %load = load [2 x i32], ptr %temp, align 4
-  call void @Box.new(ptr @origin, [2 x i32] %load)
+  call void @"Box.new$ref.Box,[i32; 2]"(ptr @origin, [2 x i32] %load)
   ret void
 }

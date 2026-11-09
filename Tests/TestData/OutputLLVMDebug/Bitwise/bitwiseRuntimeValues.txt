@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @applyI32(i32 %0, i32 %1, i32 %2) {
+define i32 @"applyI32$i32,i32,i32"(i32 %0, i32 %1, i32 %2) {
 entry:
   %bit_and = and i32 %0, %1
   %bit_or = or i32 %bit_and, %1
@@ -24,7 +24,7 @@ entry:
   ret i32 %shift_right
 }
 
-define i8 @applyU8(i8 %0, i8 %1, i32 %2) {
+define i8 @"applyU8$u8,u8,i32"(i8 %0, i8 %1, i32 %2) {
 entry:
   %bit_and = and i8 %0, %1
   %bit_or = or i8 %bit_and, %1

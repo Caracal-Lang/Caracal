@@ -11,19 +11,19 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @one() {
+define i32 @"one$"() {
 entry:
   ret i32 1
 }
 
-define void @inner(i32 %0) {
+define void @"inner$i32"(i32 %0) {
 entry:
   ret void
 }
 
-define void @outer() {
+define void @"outer$"() {
 entry:
-  %call = call i32 @one()
-  call void @inner(i32 %call)
+  %call = call i32 @"one$"()
+  call void @"inner$i32"(i32 %call)
   ret void
 }

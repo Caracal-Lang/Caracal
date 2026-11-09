@@ -1,0 +1,15 @@
+def where(place: SourceLocation = #sourceLocation) i32
+{
+    return place.line;
+}
+
+def where(line: i32) i32
+{
+    return line;
+}
+
+def callers()
+{
+    _ = where();
+    _ = where(7);
+}

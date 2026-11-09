@@ -30,15 +30,25 @@ namespace Caracal
 
     void TypeDefinition::addMethod(Type methodType, const std::string& methodName) noexcept
     {
-        m_methods.try_emplace(methodName, methodType);
+        m_methods[methodName].overloads.push_back(methodType);
     }
 
-    Type TypeDefinition::tryGetMethodTypeByName(std::string_view methodName) const noexcept
+    void TypeDefinition::removeMethod(std::string_view methodName, Type methodType) noexcept
     {
         if (const auto result = m_methods.find(methodName); result != m_methods.end())
-            return result->second;
+        {
+            std::erase(result->second.overloads, methodType);
+        }
+    }
 
-        return Type::Undefined();
+    const OverloadSet* TypeDefinition::tryGetMethodOverloadSet(std::string_view methodName) const noexcept
+    {
+        if (const auto result = m_methods.find(methodName); result != m_methods.end())
+        {
+            return &result->second;
+        }
+
+        return nullptr;
     }
 
     void TypeDefinition::addOperatorSignature(BinaryOperatorKind binaryOperator, const OperatorSignature& signature) noexcept

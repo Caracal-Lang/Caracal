@@ -15,6 +15,33 @@
 
 namespace Caracal
 {
+    // add(x: i32, y: i32) becomes add$i32,i32
+    [[nodiscard]] static std::string SignatureName(const SemanticContext& semanticContext, const FunctionDefinition& definition)
+    {
+        auto signatureName = definition.fullName() + "$";
+        const auto& parameters = definition.parameters();
+        for (size_t index = 0; index < parameters.size(); ++index)
+        {
+            if (index > 0)
+            {
+                signatureName += ",";
+            }
+
+            auto parameterType = parameters[index].type();
+            if (semanticContext.isImmutableSlice(parameterType))
+            {
+                parameterType = semanticContext.tryGetMutableSliceType(parameterType);
+            }
+            if (parameterType.isReference())
+            {
+                signatureName += "ref.";
+            }
+            signatureName += semanticContext.getNameByType(parameterType);
+        }
+
+        return signatureName;
+    }
+
     static TypeDeclaration MakeTypeDeclaration(const TypeDefinition& definition)
     {
         TypeDeclaration typeDeclaration{ definition.name(), definition.type() };
@@ -25,9 +52,12 @@ namespace Caracal
 
         std::vector<TypeDeclaration::Method> methods;
         methods.reserve(definition.methods().size());
-        for (const auto& [methodName, methodType] : definition.methods())
+        for (const auto& [methodName, overloadSet] : definition.methods())
         {
-            methods.push_back(TypeDeclaration::Method{ methodName, methodType.id() });
+            for (const auto methodType : overloadSet.overloads)
+            {
+                methods.push_back(TypeDeclaration::Method{ methodName, methodType.id() });
+            }
         }
 
         std::ranges::sort(methods, {}, &TypeDeclaration::Method::functionId);
@@ -241,17 +271,20 @@ namespace Caracal
         auto* function = &m_pendingFunction.value();
         function->setSourceLine(sourceLine);
         m_currentSourceLine = sourceLine;
-        if (m_emitEntryPoint)
+        if (!definition.isExtern())
         {
-            // caracalMain is emitted as the C symbol main, the user's main as caracal.userMain
-            if (definition.fullName() == EntryPointFunctionName)
-            {
-                function->setSymbolName(CRuntimeEntrySymbolName);
-            }
-            else if (definition.fullName() == UserMainFunctionName)
-            {
-                function->setSymbolName(UserMainSymbolName);
-            }
+            function->setSymbolName(SignatureName(m_semanticContext, definition));
+        }
+        
+        // caracalMain is emitted as the C symbol main
+        // without caracalMain the user's main is the C symbol main
+        if (m_emitEntryPoint && definition.fullName() == EntryPointFunctionName)
+        {
+            function->setSymbolName(CRuntimeEntrySymbolName);
+        }
+        else if (!m_emitEntryPoint && definition.fullName() == UserMainFunctionName)
+        {
+            function->setSymbolName(CRuntimeEntrySymbolName);
         }
 
         const auto blockId = m_nextBlockId++;

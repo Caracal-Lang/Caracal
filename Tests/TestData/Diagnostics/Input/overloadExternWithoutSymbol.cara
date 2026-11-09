@@ -1,0 +1,5 @@
+#extern
+def abs(value: i32) i32 {}
+
+#extern
+def abs(value: i64) i64 {}

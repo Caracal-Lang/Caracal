@@ -13,7 +13,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define constructorInConstructorArgument() i32
+define constructorInConstructorArgument$() i32
 block entry(0):
     %slot0 = allocate_local : Pair "pair"
     %slot1 = allocate_local : Point "constructed"
@@ -21,14 +21,14 @@ block entry(0):
     %0 = address_of %slot0 : ref Pair
     %1 = address_of %slot1 : ref Point
     %2 = const 7 : i32
-    call Point.new(%1, %2)
+    call Point.new$ref.Point,i32(%1, %2)
     %3 = load_value %1 : Point
     %4 = address_of %slot2 : ref Point
     store_value %3, %4 : Point
     %5 = address_of_field %4.0 : ref i32 "x"
     %6 = load_value %5 : i32
     %7 = const 2 : i32
-    call Pair.new(%0, %6, %7)
+    call Pair.new$ref.Pair,i32,i32(%0, %6, %7)
     %8 = address_of_field %0.0 : ref i32 "left"
     %9 = load_value %8 : i32
     %10 = const 10 : i32
@@ -38,7 +38,7 @@ block entry(0):
     %14 = add %11, %13 : i32
     return %14
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"
@@ -46,7 +46,7 @@ block entry(0):
     store_value %1, %2 : i32
     return
 
-define Pair.value(%0: ref Pair ".this") i32
+define Pair.value$ref.Pair(%0: ref Pair ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Pair ".this"
     %1 = address_of_field %0.0 : ref i32 "left"
@@ -58,7 +58,7 @@ block entry(0):
     %7 = add %4, %6 : i32
     return %7
 
-define Pair.new(%0: ref Pair ".this", %1: i32 "left", %2: i32 "right") void
+define Pair.new$ref.Pair,i32,i32(%0: ref Pair ".this", %1: i32 "left", %2: i32 "right") void
 block entry(0):
     %0 = parameter 0 : ref Pair ".this"
     %1 = parameter 1 : i32 "left"

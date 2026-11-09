@@ -1,0 +1,18 @@
+#extern(symbol = "labs")
+def absolute(value: i32) i32 {}
+
+#extern(symbol = "fabs")
+def absolute(value: f64) f64 {}
+
+def main() i32
+{
+    whole : i32 = -5;
+    real : f64 = -2.5;
+    limit : f64 = 2.0;
+    if absolute(real) > limit
+    {
+        return absolute(whole);
+    }
+
+    return 0;
+}

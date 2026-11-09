@@ -214,7 +214,7 @@ static void FunctionWithoutSourceLineGetsNoDebugInformation()
     const auto [irGenerated, output] = Caracal::generateLLVMIRFromModule(module, TestTargetTriple, Caracal::OptimizationLevel::None, true);
 
     CaraTest::isTrue(irGenerated);
-    CaraTest::isTrue(output.find("define i32 @square(i32 %0) {") != std::string::npos);
+    CaraTest::isTrue(output.find("define i32 @\"square$i32\"(i32 %0) {") != std::string::npos);
     CaraTest::isTrue(output.find("name: \"square\"") == std::string::npos);
     CaraTest::isTrue(output.find("name: \"main\"") != std::string::npos);
 }

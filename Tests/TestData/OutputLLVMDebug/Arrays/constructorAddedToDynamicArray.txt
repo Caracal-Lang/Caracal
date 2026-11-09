@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorAddedToDynamicArray() {
+define i32 @"constructorAddedToDynamicArray$"() {
 entry:
   %points = alloca { ptr, i32, i32 }, align 8
   %constructed = alloca %Point, align 8
@@ -24,7 +24,7 @@ entry:
   store i32 0, ptr %length, align 4
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 2
   store i32 8, ptr %capacity, align 4
-  call void @Point.new(ptr %constructed, i32 4)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 4)
   %load = load %Point, ptr %constructed, align 4
   %data1 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 0
   %length2 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %points, i32 0, i32 1
@@ -52,7 +52,7 @@ entry:
   ret i32 %load10
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

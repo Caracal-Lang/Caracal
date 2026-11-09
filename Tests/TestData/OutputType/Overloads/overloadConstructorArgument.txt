@@ -1,0 +1,240 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Size
+    Name: Size
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: width
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: width
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: width
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (Point) -> i32
+    Name: measure
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: point
+            TypeNameNode: {
+                Type: Point
+                Lexeme: Point
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Point
+                        Name: point
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (Size) -> i32
+    Name: measure
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: size
+            TypeNameNode: {
+                Type: Size
+                Lexeme: Size
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: Size
+                                Name: size
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: width
+                            }
+                        }
+                    }
+                }
+                Operation: MultiplicationWrapping
+                Right: {
+                    NumberLiteral: 10
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (Point) -> i32
+                        NameExpression: {
+                            Type: (Point) -> i32
+                            Name: measure
+                        }
+                        ArgumentsNode(1): {
+                            BinaryExpression: {
+                                Type: Point
+                                Left: {
+                                    NameExpression: {
+                                        Type: Point
+                                        Name: Point
+                                    }
+                                }
+                                Operation: ConstructorCall
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: Point
+                                        Function type: (ref Point, i32) -> void
+                                        NameExpression: {
+                                            Type: (ref Point, i32) -> void
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 3
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (Size) -> i32
+                        NameExpression: {
+                            Type: (Size) -> i32
+                            Name: measure
+                        }
+                        ArgumentsNode(1): {
+                            BinaryExpression: {
+                                Type: Size
+                                Left: {
+                                    NameExpression: {
+                                        Type: Size
+                                        Name: Size
+                                    }
+                                }
+                                Operation: ConstructorCall
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: Size
+                                        Function type: (ref Size, i32) -> void
+                                        NameExpression: {
+                                            Type: (ref Size, i32) -> void
+                                            Name: new
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 4
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

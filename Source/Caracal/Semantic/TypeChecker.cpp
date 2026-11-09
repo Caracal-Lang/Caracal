@@ -822,33 +822,14 @@ namespace Caracal
     void TypeChecker::collectFunctionDeclaration(const CompilationUnit& unit, u32 index)
     {
         const auto functionName = nameOf(unit, index);
-        const auto existingFunctionType = m_module.tryGetFunctionTypeByName(functionName);
-        if (existingFunctionType != Type::Undefined())
-        {
-            const auto& existingDefinition = m_module.getFunctionDefinition(existingFunctionType);
-            auto otherSource = SourceTextSharedPtr{};
-            auto otherLocation = std::optional<SourceLocation>{};
-            locateDefinitionName(
-                existingDefinition.definitionNode(),
-                otherSource,
-                otherLocation);
-
-            m_diagnostics.addDuplicateFunctionDeclarationError(
-                unit.source,
-                nameLocation(unit, index),
-                std::string(functionName),
-                otherSource,
-                otherLocation);
-            return;
-        }
-
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
         auto parameters = collectParameterNames(unit, functionLayout.parameters);
         auto& functionDefinition = m_module.createFunction(functionName, std::move(parameters), std::vector<Type>());
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
         m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
-        if (functionName == TestsStubName)
+
+        if (functionName == TestsStubName && m_testsStubDeclaration.index == InvalidNodeIndex)
         {
             m_testsStubDeclaration = NodeIndex{ unit.fileId, index };
         }
@@ -860,7 +841,7 @@ namespace Caracal
 
         // we need to append a number in case the name is already in use
         auto functionName = baseName;
-        for (auto suffix = 1; m_module.tryGetFunctionTypeByName(functionName) != Type::Undefined(); ++suffix)
+        for (auto suffix = 1; m_module.tryGetOverloadSet(functionName) != nullptr; ++suffix)
         {
             functionName = baseName + "_" + std::to_string(suffix);
         }
@@ -1057,6 +1038,9 @@ namespace Caracal
             auto& typeDefinition = m_module.getTypeDefinition(typeType);
             const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, typeIndex);
             const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+            auto annotations = std::vector<u32>{};
+            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, typeIndex, annotations);
+            const auto isBuiltin = NodeLayout::annotationsContain(unit.nodeBuffer, tokens, annotations, BuiltinAnnotationName);
             auto bodyStatements = std::vector<u32>{};
             NodeLayout::collectChildren(unit.nodeBuffer, typeLayout.body, bodyStatements);
             for (const auto bodyStatement : bodyStatements)
@@ -1094,25 +1078,15 @@ namespace Caracal
                 const auto parameterNames = collectParameterNames(unit, methodLayout.parameters);
                 declarationParameters.insert(declarationParameters.end(), parameterNames.begin(), parameterNames.end());
 
-                auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
-                if (methodType != Type::Undefined())
+                const auto existingType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
+                if (isBuiltin && existingType != Type::Undefined())
                 {
-                    auto otherLocation = std::optional<SourceLocation>{};
-                    const auto& existingDefinition = m_module.getFunctionDefinition(methodType);
-                    if (existingDefinition.definitionNode().index != InvalidNodeIndex)
-                    {
-                        const auto otherNode = existingDefinition.definitionNode();
-                        const auto& otherBuffer = m_compilationContext.nodeBuffer(otherNode.fileId);
-                        const auto otherLayout = NodeLayout::methodDefinition(otherBuffer, otherNode.index);
-                        otherLocation = m_compilationContext.sourceLocation(otherNode.fileId, otherBuffer.mainToken(otherLayout.methodName));
-                    }
-
-                    m_diagnostics.addDuplicateMethodDeclarationError(
+                    m_diagnostics.addDuplicateBuiltinMethodDeclarationError(
                         unit.source,
                         nameLocation(unit, methodLayout.methodName),
                         std::string(methodName),
                         typeDefinition.name(),
-                        otherLocation);
+                        methodNameLocation(m_module.getFunctionDefinition(existingType)));
                     continue;
                 }
 
@@ -1121,9 +1095,7 @@ namespace Caracal
                 m_module.setNodeType(NodeIndex{ unit.fileId, bodyStatement }, methodDefinition.type());
             }
 
-            auto annotations = std::vector<u32>{};
-            NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, typeIndex, annotations);
-            if (NodeLayout::annotationsContain(unit.nodeBuffer, tokens, annotations, BuiltinAnnotationName))
+            if (isBuiltin)
             {
                 // builtin types are not constructible, they get no synthesized constructor
                 continue;
@@ -1280,6 +1252,19 @@ namespace Caracal
         const auto nameToken = tokenAt(definitionNode.fileId, buffer.mainToken(definitionNode.index));
         source = m_compilationContext.source(nameToken);
         location = m_compilationContext.sourceLocation(nameToken);
+    }
+
+    std::optional<SourceLocation> TypeChecker::methodNameLocation(const FunctionDefinition& methodDefinition) const noexcept
+    {
+        const auto methodNode = methodDefinition.definitionNode();
+        if (methodNode.index == InvalidNodeIndex)
+        {
+            return std::nullopt;
+        }
+
+        const auto& buffer = m_compilationContext.nodeBuffer(methodNode.fileId);
+        const auto methodLayout = NodeLayout::methodDefinition(buffer, methodNode.index);
+        return m_compilationContext.sourceLocation(methodNode.fileId, buffer.mainToken(methodLayout.methodName));
     }
 
     CompilationUnit& TypeChecker::unitFor(NodeIndex index) const noexcept
@@ -1442,6 +1427,13 @@ namespace Caracal
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionSignature(unit, functionDeclaration.index);
         }
+
+        reportInvalidOverloadSets();
+        for (const auto functionDeclaration : m_functionDeclarations)
+        {
+            const auto& unit = unitFor(functionDeclaration);
+            typeCheckFunctionDefaultValues(unit, functionDeclaration.index);
+        }
     }
 
     void TypeChecker::typeCheckTypeSignatures()
@@ -1461,7 +1453,7 @@ namespace Caracal
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
 
         pushScope(ScopeKind::Function);
-        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters);
+        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters, false);
         auto returns = typeCheckReturnTypesNode(unit, functionLayout.returnTypes);
         popScope(false);
 
@@ -1497,6 +1489,7 @@ namespace Caracal
         functionDefinition.setReturnTypes(std::move(returns));
         functionDefinition.setIsVariadic(isVariadic);
         functionDefinition.setSymbolName(std::move(symbolName));
+        functionDefinition.setIsExtern(isExtern);
     }
 
     void TypeChecker::typeCheckTypeSignature(const CompilationUnit& unit, u32 index)
@@ -1550,6 +1543,10 @@ namespace Caracal
             }
 
             typeCheckMethodSignature(unit, bodyStatement, typeDefinition, typeType);
+            if (!isBuiltin && rejectInvalidMethodOverload(unit, bodyStatement, typeDefinition))
+            {
+                continue;
+            }
 
             if (isBuiltin)
             {
@@ -1573,7 +1570,7 @@ namespace Caracal
         auto returns = typeCheckReturnTypesNode(unit, methodLayout.returnTypes);
         popScope(false);
 
-        auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
+        auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, methodIndex });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -1628,6 +1625,7 @@ namespace Caracal
         methodDefinition.setReturnTypes(std::move(returns));
         methodDefinition.setIsVariadic(isVariadic);
         methodDefinition.setSymbolName(std::move(symbolName));
+        methodDefinition.setIsExtern(isExtern);
     }
 
     void TypeChecker::validateStaticMethodTypeName(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition)
@@ -1656,7 +1654,7 @@ namespace Caracal
 
     void TypeChecker::typeCheckConstructorSignature(const CompilationUnit& unit, u32 typeIndex, TypeDefinition& typeDefinition, Type typeType)
     {
-        auto constructorType = typeDefinition.tryGetMethodTypeByName("new");
+        auto constructorType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet("new"));
         if (constructorType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -1777,7 +1775,7 @@ namespace Caracal
         return recordType(unit, index, arrayType);
     }
 
-    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, const std::vector<Parameter>& earlierParameters)
+    void TypeChecker::typeCheckSourceTextDefault(const CompilationUnit& unit, u32 defaultIndex, std::span<const Parameter> earlierParameters)
     {
         const auto namedParameter = nameOf(unit, defaultIndex);
         for (const auto& parameter : earlierParameters)
@@ -1791,7 +1789,54 @@ namespace Caracal
         m_diagnostics.addSourceTextMustReferToEarlierParameterError(unit.source, nameLocation(unit, defaultIndex), std::string(namedParameter));
     }
 
-    std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index)
+    void TypeChecker::typeCheckDefaultValue(const CompilationUnit& unit, u32 parameterIndex, Type parameterType, std::span<const Parameter> earlierParameters)
+    {
+        const auto parameterLayout = NodeLayout::parameter(unit.nodeBuffer, parameterIndex);
+        auto defaultContext = ExpressionContext{};
+        defaultContext.contextualNumberType = parameterType;
+        const auto checkedDefault = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
+        const auto defaultType = checkedDefault.type;
+        if (checkedDefault.folded.has_value())
+        {
+            m_emitter.recordDefaultArgumentFold(unit.fileId, parameterLayout.defaultValue, checkedDefault.folded.value());
+        }
+        if (defaultType != Type::Undefined() && !isAssignableTo(defaultType, parameterType))
+        {
+            const auto location = ExpressionSourceLocation(m_compilationContext, unit, parameterLayout.defaultValue);
+            if (!tryAddArrayLengthMismatchError(unit, location, parameterType, defaultType))
+            {
+                m_diagnostics.addDefaultParameterTypeMismatchError(
+                    unit.source,
+                    location,
+                    formatTypeName(m_module, parameterType),
+                    formatTypeName(m_module, defaultType));
+            }
+        }
+        if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
+        {
+            typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, earlierParameters);
+        }
+    }
+
+    void TypeChecker::typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index)
+    {
+        const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
+        const auto& parameters = m_module.getFunctionDefinition(m_module.typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
+        auto parameterNodes = std::vector<u32>{};
+        NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
+
+        pushScope(ScopeKind::Function);
+        for (size_t position = 0; position < parameterNodes.size(); ++position)
+        {
+            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue)
+            {
+                typeCheckDefaultValue(unit, parameterNodes[position], parameters[position].type(), std::span<const Parameter>(parameters.data(), position));
+            }
+        }
+        popScope(false);
+    }
+
+    std::vector<Parameter> TypeChecker::typeCheckParametersNode(const CompilationUnit& unit, u32 index, bool checksDefaultValues)
     {
         std::vector<Parameter> parameters{};
         auto seenDefault = false;
@@ -1829,29 +1874,9 @@ namespace Caracal
 
             if (parameterLayout.hasDefaultValue)
             {
-                auto defaultContext = ExpressionContext{};
-                defaultContext.contextualNumberType = parameterType;
-                const auto checkedDefault = typeCheckExpression(unit, parameterLayout.defaultValue, defaultContext);
-                const auto defaultType = checkedDefault.type;
-                if (checkedDefault.folded.has_value())
+                if (checksDefaultValues)
                 {
-                    m_emitter.recordDefaultArgumentFold(unit.fileId, parameterLayout.defaultValue, checkedDefault.folded.value());
-                }
-                if (defaultType != Type::Undefined() && !isAssignableTo(defaultType, parameterType))
-                {
-                    const auto location = ExpressionSourceLocation(m_compilationContext, unit, parameterLayout.defaultValue);
-                    if (!tryAddArrayLengthMismatchError(unit, location, parameterType, defaultType))
-                    {
-                        m_diagnostics.addDefaultParameterTypeMismatchError(
-                            unit.source,
-                            location,
-                            formatTypeName(m_module, parameterType),
-                            formatTypeName(m_module, defaultType));
-                    }
-                }
-                if (unit.nodeBuffer.kind(parameterLayout.defaultValue) == NodeKind::SourceTextDefault)
-                {
-                    typeCheckSourceTextDefault(unit, parameterLayout.defaultValue, parameters);
+                    typeCheckDefaultValue(unit, parameterIndex, parameterType, parameters);
                 }
                 seenDefault = true;
             }
@@ -2573,6 +2598,14 @@ namespace Caracal
         return &m_bindingsByName[nameId].back();
     }
 
+    bool TypeChecker::isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept
+    {
+        const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, expression);
+        return unit.nodeBuffer.kind(stripped) == NodeKind::NameExpression
+            && tryGetBinding(nameIdOf(unit, stripped)) == nullptr
+            && m_module.tryGetTypeByName(nameOf(unit, stripped)) != Type::Undefined();
+    }
+
     const TypeChecker::LexicalBinding* TypeChecker::tryGetConflictingBinding(u32 nameId) const noexcept
     {
         const auto* existing = tryGetBinding(nameId);
@@ -2909,7 +2942,7 @@ namespace Caracal
 
             const auto typeLayout = NodeLayout::typeDefinition(unit.nodeBuffer, index);
             auto& typeDefinition = m_module.getTypeDefinition(typeType);
-            const auto constructorType = typeDefinition.tryGetMethodTypeByName("new");
+            const auto constructorType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet("new"));
             const auto emitConstructor = constructorType != Type::Undefined();
             if (typeLayout.hasConstructorParameters)
             {
@@ -3044,13 +3077,7 @@ namespace Caracal
                     continue;
                 }
 
-                const auto methodType = typeDefinition.tryGetMethodTypeByName(nameOf(unit, methodLayout.methodName));
-                if (methodType == Type::Undefined())
-                {
-                    continue;
-                }
-
-                if (!(m_module.getFunctionDefinition(methodType).definitionNode() == NodeIndex{ unit.fileId, bodyStatement }))
+                if (m_module.typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
                 {
                     continue;
                 }
@@ -3316,7 +3343,14 @@ namespace Caracal
             && unit.nodeBuffer.kind(strippedInitializer) == NodeKind::FunctionCallExpression)
         {
             // a call returning an aggregate stores into a preallocated slot
-            const auto calleeType = m_module.tryGetFunctionTypeByName(nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer)));
+            const auto calleeNameIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, strippedInitializer);
+            auto calleeType = Type::Undefined();
+            if (const auto* calleeSet = m_module.tryGetOverloadSet(nameOf(unit, calleeNameIndex)); calleeSet != nullptr)
+            {
+                const auto diagnosticCount = m_diagnostics.diagnostics().size();
+                calleeType = resolveCallee(unit, strippedInitializer, calleeNameIndex, *calleeSet);
+                m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+            }
             if (calleeType != Type::Undefined())
             {
                 const auto& calleeReturns = m_module.getFunctionDefinition(calleeType).returnTypes();
@@ -3373,8 +3407,15 @@ namespace Caracal
 
                 if (receiverType.kind() == TypeKind::Type)
                 {
-                    const auto methodType = m_module.getTypeDefinition(receiverType).tryGetMethodTypeByName(
-                        nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right)));
+                    const auto methodNameIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right);
+                    auto methodType = Type::Undefined();
+                    if (const auto* methodSet = m_module.getTypeDefinition(receiverType).tryGetMethodOverloadSet(nameOf(unit, methodNameIndex));
+                        methodSet != nullptr && !methodSet->overloads.empty())
+                    {
+                        const auto diagnosticCount = m_diagnostics.diagnostics().size();
+                        methodType = resolveMethodCallee(unit, callLayout.right, methodNameIndex, *methodSet, false);
+                        m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+                    }
                     if (methodType != Type::Undefined())
                     {
                         const auto& methodReturns = m_module.getFunctionDefinition(methodType).returnTypes();
@@ -4352,8 +4393,8 @@ namespace Caracal
         if (!stubParameters.empty() && stubParameters.front().type().toBaseType().kind() == TypeKind::Type)
         {
             const auto& receiverDefinition = m_module.getTypeDefinition(stubParameters.front().type().toBaseType());
-            beginTestType = receiverDefinition.tryGetMethodTypeByName(TestBeginMethodName);
-            endTestType = receiverDefinition.tryGetMethodTypeByName(TestEndMethodName);
+            beginTestType = tryGetOverload(receiverDefinition.tryGetMethodOverloadSet(TestBeginMethodName));
+            endTestType = tryGetOverload(receiverDefinition.tryGetMethodOverloadSet(TestEndMethodName));
             receiver = m_emitter.addressOfLocal(internName(stubParameters.front().name()));
         }
 
@@ -4762,7 +4803,7 @@ namespace Caracal
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, index);
 
-        const auto methodType = m_module.getTypeDefinition(m_currentType).tryGetMethodTypeByName(nameOf(unit, methodLayout.methodName));
+        const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -5401,7 +5442,17 @@ namespace Caracal
                         const auto nameExpressionIndex = NodeLayout::subtreeBegin(buffer, binaryLayout.right);
                         const auto name = std::string(nameOf(unit, nameExpressionIndex));
 
-                        auto methodType = typeDefinition.tryGetMethodTypeByName(name);
+                        const auto* overloadSet = typeDefinition.tryGetMethodOverloadSet(name);
+                        auto methodType = Type::Undefined();
+                        if (overloadSet != nullptr && !overloadSet->overloads.empty())
+                        {
+                            methodType = resolveMethodCallee(unit, binaryLayout.right, nameExpressionIndex, *overloadSet, isTypeNameExpression(unit, binaryLayout.left));
+                            if (methodType == Type::Undefined())
+                            {
+                                return Type::Undefined();
+                            }
+                        }
+
                         if (methodType != Type::Undefined())
                         {
                             auto& methodDefinition = m_module.getFunctionDefinition(methodType);
@@ -5422,6 +5473,16 @@ namespace Caracal
                             if (methodDefinition.functionType() == FunctionType::PrivateMethod && m_currentType != leftType)
                             {
                                 m_diagnostics.addPrivateMethodCallOutsideTypeError(
+                                    unit.source,
+                                    ExpressionSourceLocation(m_compilationContext, unit, binaryLayout.right),
+                                    name,
+                                    typeDefinition.name());
+                                return Type::Undefined();
+                            }
+
+                            if (methodDefinition.functionType() == FunctionType::StaticMethod && !isTypeNameExpression(unit, binaryLayout.left))
+                            {
+                                m_diagnostics.addStaticMethodCalledWithoutTypeNameError(
                                     unit.source,
                                     ExpressionSourceLocation(m_compilationContext, unit, binaryLayout.right),
                                     name,
@@ -5674,7 +5735,7 @@ namespace Caracal
 
                     // only intrinsic methods are callable on builtin types, operator declarations are just signatures
                     auto& typeDefinition = m_module.getTypeDefinition(leftType);
-                    const auto methodType = typeDefinition.tryGetMethodTypeByName(name);
+                    const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(name));
                     auto isIntrinsic = false;
                     if (methodType != Type::Undefined())
                     {
@@ -6011,13 +6072,13 @@ namespace Caracal
         CARACAL_ZONE_DETAIL("expr.call");
         const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, index);
         const auto name = nameOf(unit, nameExpressionIndex);
-        auto functionType = m_module.tryGetFunctionTypeByName(name);
-        if (functionType == Type::Undefined())
+        const auto* overloadSet = m_module.tryGetOverloadSet(name);
+        if (overloadSet == nullptr)
         {
             if (m_currentType != Type::Undefined())
             {
                 auto& typeDefinition = m_module.getTypeDefinition(m_currentType);
-                if (typeDefinition.tryGetMethodTypeByName(name) != Type::Undefined())
+                if (typeDefinition.tryGetMethodOverloadSet(name) != nullptr)
                 {
                     m_diagnostics.addMethodCallMissingDotError(
                         unit.source,
@@ -6035,6 +6096,12 @@ namespace Caracal
             return Type::Undefined();
         }
 
+        const auto functionType = resolveCallee(unit, index, nameExpressionIndex, *overloadSet);
+        if (functionType == Type::Undefined())
+        {
+            return Type::Undefined();
+        }
+
         return typeCheckResolvedFunctionCall(unit, index, functionType, context);
     }
 
@@ -6043,7 +6110,7 @@ namespace Caracal
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
 
         // extern declarations only reach codegen when a call requires them
-        if (functionDefinition.symbolName().has_value())
+        if (functionDefinition.isExtern())
         {
             m_module.markExternRequired(functionType);
         }
@@ -6134,14 +6201,31 @@ namespace Caracal
         {
             const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, inner);
             const auto methodName = nameOf(unit, nameExpressionIndex);
-            const auto methodType = typeDefinition.tryGetMethodTypeByName(methodName);
-            if (methodType == Type::Undefined())
+            const auto* overloadSet = typeDefinition.tryGetMethodOverloadSet(methodName);
+            if (overloadSet == nullptr || overloadSet->overloads.empty())
             {
                 m_diagnostics.addUnknownMethodError(
                     unit.source,
                     ExpressionSourceLocation(m_compilationContext, unit, inner),
                     typeDefinition.name(),
                     std::string(methodName));
+
+                return recordType(unit, index, Type::Undefined());
+            }
+
+            const auto methodType = resolveMethodCallee(unit, inner, nameExpressionIndex, *overloadSet, false);
+            if (methodType == Type::Undefined())
+            {
+                return recordType(unit, index, Type::Undefined());
+            }
+
+            if (m_module.getFunctionDefinition(methodType).functionType() == FunctionType::StaticMethod)
+            {
+                m_diagnostics.addStaticMethodCalledWithoutTypeNameError(
+                    unit.source,
+                    ExpressionSourceLocation(m_compilationContext, unit, inner),
+                    std::string(methodName),
+                    typeDefinition.name());
 
                 return recordType(unit, index, Type::Undefined());
             }
@@ -6155,6 +6239,22 @@ namespace Caracal
         auto result = typeCheckExpression(unit, inner, context);
         result.type = recordType(unit, index, result.type);
         return result;
+    }
+
+    TypeChecker::ArgumentContext TypeChecker::argumentContextFor(const CompilationUnit& unit, const Parameter& parameter, u32 argumentValue) const noexcept
+    {
+        auto argumentContext = ArgumentContext{};
+        argumentContext.contextualNumberType = contextualTypeForExpectedType(parameter.type());
+        argumentContext.wantsAddress = parameter.type().isReference();
+        if (!argumentContext.wantsAddress
+            && parameter.type().kind() == TypeKind::DynamicArray
+            && unit.nodeBuffer.kind(NodeLayout::stripGroupings(unit.nodeBuffer, argumentValue)) == NodeKind::NameExpression)
+        {
+            // a dynamic array passed by name is deep copied
+            argumentContext.wantsAddress = true;
+        }
+
+        return argumentContext;
     }
 
     bool TypeChecker::typeCheckCallArguments(const CompilationUnit& unit, u32 callIndex, Type functionType, const ExpressionContext& context, ValueRef& emittedCallValue, std::optional<FoldValue>& emittedCallFold, std::optional<ValueRef> implicitArgument)
@@ -6172,18 +6272,9 @@ namespace Caracal
             parameterCount = parameterTypes.size() - 1;
         }
 
-        auto isExternCallComputed = false;
-        auto isExternCall = false;
-        // static intrinsics like i32.bitAnd have no receiver, array intrinsics carry an explicit .this parameter
-        const bool hasImplicitThis =
-            functionDefinition.functionType() == FunctionType::SynthesizedConstructor ||
-            functionDefinition.functionType() == FunctionType::PublicMethod ||
-            functionDefinition.functionType() == FunctionType::PrivateMethod ||
-            (functionDefinition.functionType() == FunctionType::Intrinsic
-                && !functionDefinition.parameters().empty()
-                && functionDefinition.parameters().front().name() == ImplicitThisName);
+        const auto isExternCall = functionDefinition.isExtern();
         size_t parameterOffset = 0;
-        if (hasImplicitThis)
+        if (functionDefinition.hasImplicitThis())
         {
             parameterOffset = 1;
         }
@@ -6240,8 +6331,7 @@ namespace Caracal
             // resolve again every iteration, the previous argument's walk may have moved the definition store
             const auto& parameters = m_module.getFunctionDefinition(functionType).parameters();
 
-            auto contextualType = std::optional<Type>{};
-            auto parameterWantsAddress = false;
+            auto argumentContext = ArgumentContext{};
             auto isVariadicArgument = true;
             for (size_t i = 0; i < fixedParameterCount; ++i)
             {
@@ -6250,31 +6340,17 @@ namespace Caracal
                     continue;
                 }
 
-                contextualType = contextualTypeForExpectedType(parameters[i + parameterOffset].type());
-                parameterWantsAddress = parameters[i + parameterOffset].type().isReference();
-                if (!parameterWantsAddress
-                    && parameters[i + parameterOffset].type().kind() == TypeKind::DynamicArray
-                    && unit.nodeBuffer.kind(NodeLayout::stripGroupings(buffer, argumentValue)) == NodeKind::NameExpression)
-                {
-                    // a dynamic array passed by name is deep copied through its address when the call is emitted
-                    // the argument is not loaded
-                    parameterWantsAddress = true;
-                }
+                argumentContext = argumentContextFor(unit, parameters[i + parameterOffset], argumentValue);
                 isVariadicArgument = false;
                 break;
             }
 
             if (isVariadicArgument)
             {
-                if (!isExternCallComputed)
-                {
-                    isExternCallComputed = true;
-                    isExternCall = m_module.tryGetExternFunctionByFullName(m_module.getFunctionDefinition(functionType).fullName()) != Type::Undefined();
-                }
                 if (isExternCall)
                 {
                     // extern calls to C need a cstring
-                    contextualType = m_module.wellKnown().cstring;
+                    argumentContext.contextualNumberType = m_module.wellKnown().cstring;
                 }
             }
 
@@ -6294,17 +6370,17 @@ namespace Caracal
                 }
             }
 
-            auto argumentContext = context;
-            argumentContext.contextualNumberType = contextualType;
-            argumentContext.wantsAddress = parameterWantsAddress;
-            argumentContext.receiverPosition = false;
-            const auto checkedArgument = typeCheckExpression(unit, argumentValue, argumentContext);
+            auto argumentExpressionContext = context;
+            argumentExpressionContext.contextualNumberType = argumentContext.contextualNumberType;
+            argumentExpressionContext.wantsAddress = argumentContext.wantsAddress;
+            argumentExpressionContext.receiverPosition = false;
+            const auto checkedArgument = typeCheckExpression(unit, argumentValue, argumentExpressionContext);
             if (pushedTempDestination)
             {
                 m_constructorDestinations.pop_back();
             }
             auto emittedArgument = checkedArgument.value;
-            if (!parameterWantsAddress && !isVariadicArgument)
+            if (!argumentContext.wantsAddress && !isVariadicArgument)
             {
                 emittedArgument = copyValueIfNeeded(unit, argumentValue, emittedArgument, checkedArgument.type);
             }

@@ -1,0 +1,17 @@
+def describe(value: i32, text: string = #sourceText(value)) string
+{
+    _ = value;
+    return text;
+}
+
+def describe(flag: bool) string
+{
+    _ = flag;
+    return "flag";
+}
+
+def callers()
+{
+    _ = describe(1 %+ 2);
+    _ = describe(true);
+}

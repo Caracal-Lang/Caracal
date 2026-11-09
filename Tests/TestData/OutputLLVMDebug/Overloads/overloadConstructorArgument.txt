@@ -1,0 +1,62 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Point = type { i32 }
+%Size = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"measure$Point"(%Point %0) {
+entry:
+  %point = alloca %Point, align 8
+  store %Point %0, ptr %point, align 4
+  %x = getelementptr inbounds nuw %Point, ptr %point, i32 0, i32 0
+  %load = load i32, ptr %x, align 4
+  ret i32 %load
+}
+
+define i32 @"measure$Size"(%Size %0) {
+entry:
+  %size = alloca %Size, align 8
+  store %Size %0, ptr %size, align 4
+  %width = getelementptr inbounds nuw %Size, ptr %size, i32 0, i32 0
+  %load = load i32, ptr %width, align 4
+  %multiply = mul i32 %load, 10
+  ret i32 %multiply
+}
+
+define i32 @main() {
+entry:
+  %constructed = alloca %Point, align 8
+  %constructed1 = alloca %Size, align 8
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 3)
+  %load = load %Point, ptr %constructed, align 4
+  %call = call i32 @"measure$Point"(%Point %load)
+  call void @"Size.new$ref.Size,i32"(ptr %constructed1, i32 4)
+  %load2 = load %Size, ptr %constructed1, align 4
+  %call3 = call i32 @"measure$Size"(%Size %load2)
+  %add = add i32 %call, %call3
+  ret i32 %add
+}
+
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
+entry:
+  %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %x, align 4
+  ret void
+}
+
+define void @"Size.new$ref.Size,i32"(ptr nonnull %0, i32 %1) {
+entry:
+  %width = getelementptr inbounds nuw %Size, ptr %0, i32 0, i32 0
+  store i32 %1, ptr %width, align 4
+  ret void
+}

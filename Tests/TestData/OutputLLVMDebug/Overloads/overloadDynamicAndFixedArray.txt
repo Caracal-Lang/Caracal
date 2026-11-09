@@ -1,0 +1,81 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"count$[i32; _]"({ ptr, i32, i32 } %0) {
+entry:
+  %temp = alloca { ptr, i32, i32 }, align 8
+  store { ptr, i32, i32 } %0, ptr %temp, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 1
+  %load = load i32, ptr %length, align 4
+  ret i32 %load
+}
+
+define i32 @"count$[i32; 3]"([3 x i32] %0) {
+entry:
+  %values = alloca [3 x i32], align 4
+  store [3 x i32] %0, ptr %values, align 4
+  ret i32 30
+}
+
+define i32 @main() {
+entry:
+  %growing = alloca { ptr, i32, i32 }, align 8
+  %fixed = alloca [3 x i32], align 4
+  %temp = alloca [3 x i32], align 4
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 1
+  store i32 2, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 1, ptr %element, align 4
+  %element1 = getelementptr i32, ptr %call, i32 1
+  store i32 2, ptr %element1, align 4
+  %element2 = getelementptr [3 x i32], ptr %fixed, i32 0, i32 0
+  store i32 1, ptr %element2, align 4
+  %element3 = getelementptr [3 x i32], ptr %fixed, i32 0, i32 1
+  store i32 2, ptr %element3, align 4
+  %element4 = getelementptr [3 x i32], ptr %fixed, i32 0, i32 2
+  store i32 3, ptr %element4, align 4
+  %data5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 0
+  %length6 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 1
+  %capacity7 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %growing, i32 0, i32 2
+  %load = load ptr, ptr %data5, align 8
+  %load8 = load i32, ptr %length6, align 4
+  %load9 = load i32, ptr %capacity7, align 4
+  %widened = sext i32 %load9 to i64
+  %copy = call ptr @calloc(i64 %widened, i64 4)
+  %widened10 = sext i32 %load8 to i64
+  %bytes = mul i64 %widened10, 4
+  %copied = call ptr @memmove(ptr %copy, ptr %load, i64 %bytes)
+  %0 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0
+  %1 = insertvalue { ptr, i32, i32 } %0, i32 %load8, 1
+  %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load9, 2
+  %call11 = call i32 @"count$[i32; _]"({ ptr, i32, i32 } %array_copy)
+  %load12 = load [3 x i32], ptr %fixed, align 4
+  %call13 = call i32 @"count$[i32; 3]"([3 x i32] %load12)
+  %add = add i32 %call11, %call13
+  %element14 = getelementptr [3 x i32], ptr %temp, i32 0, i32 0
+  store i32 7, ptr %element14, align 4
+  %element15 = getelementptr [3 x i32], ptr %temp, i32 0, i32 1
+  store i32 8, ptr %element15, align 4
+  %element16 = getelementptr [3 x i32], ptr %temp, i32 0, i32 2
+  store i32 9, ptr %element16, align 4
+  %load17 = load [3 x i32], ptr %temp, align 4
+  %call18 = call i32 @"count$[i32; 3]"([3 x i32] %load17)
+  %multiply = mul i32 %call18, 2
+  %add19 = add i32 %add, %multiply
+  ret i32 %add19
+}

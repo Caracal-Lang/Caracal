@@ -1,0 +1,12 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/overloadNoExactMatch.cara:13:12]
+  10 | 
+  11 | def caller() i32
+  12 | {
+  13 |     return pick(1.5);
+     .            ---------
+     .                `-- No overload of 'pick' accepts these arguments
+  14 | }
+  15 | 
+     `----
+  Fix: Change the arguments to match one overload.

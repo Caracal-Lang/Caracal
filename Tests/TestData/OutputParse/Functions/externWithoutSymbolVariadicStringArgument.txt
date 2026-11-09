@@ -1,0 +1,65 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: printf
+    Annotation: {
+        Name: extern
+        ArgumentsNode(0): {
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: format
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: cstring
+            }
+        }
+        ParameterNode: {
+            Name: varargs
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: ...
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(0): {
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        ExpressionStatement: {
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: printf
+                }
+                ArgumentsNode(2): {
+                    StringLiteral: "%s\n"
+                    StringLiteral: "hello"
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 0
+        }
+    }
+}

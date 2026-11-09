@@ -10,14 +10,14 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define read(%0: Values "value") i32
+define read$Values(%0: Values "value") i32
 block entry(0):
     %0 = parameter 0 : Values "value"
     %1 = const 7 : i32
     return %1
 
-define enumWithF64BaseType() i32
+define enumWithF64BaseType$() i32
 block entry(0):
     %0 = const Values.Two (= 1.000000) : Values
-    %1 = call read(%0) : i32
+    %1 = call read$Values(%0) : i32
     return %1

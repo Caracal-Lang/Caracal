@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @change(%Holder %0) {
+define void @"change$Holder"(%Holder %0) {
 entry:
   %value = alloca %Holder, align 8
   store %Holder %0, ptr %value, align 8
@@ -25,7 +25,7 @@ entry:
   ret void
 }
 
-define i32 @objectAsArgumentCopiesDynamicField() {
+define i32 @"objectAsArgumentCopiesDynamicField$"() {
 entry:
   %holder = alloca %Holder, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -42,7 +42,7 @@ entry:
   %element2 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element2, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Holder.new(ptr %holder, { ptr, i32, i32 } %load)
+  call void @"Holder.new$ref.Holder,[i32; _]"(ptr %holder, { ptr, i32, i32 } %load)
   %load3 = load %Holder, ptr %holder, align 8
   store %Holder %load3, ptr %temp1, align 8
   %items = getelementptr inbounds nuw %Holder, ptr %temp1, i32 0, i32 0
@@ -62,7 +62,7 @@ entry:
   %array_copy = insertvalue { ptr, i32, i32 } %1, i32 %load9, 2
   store { ptr, i32, i32 } %array_copy, ptr %items, align 8
   %load11 = load %Holder, ptr %temp1, align 8
-  call void @change(%Holder %load11)
+  call void @"change$Holder"(%Holder %load11)
   %items12 = getelementptr inbounds nuw %Holder, ptr %holder, i32 0, i32 0
   %data13 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items12, i32 0, i32 0
   %load14 = load ptr, ptr %data13, align 8
@@ -71,7 +71,7 @@ entry:
   ret i32 %load16
 }
 
-define void @Holder.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"Holder.new$ref.Holder,[i32; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

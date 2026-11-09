@@ -16,7 +16,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @name() {
+define %string @"name$"() {
 entry:
   %temp = alloca %string, align 8
   %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0
@@ -30,10 +30,10 @@ entry:
   ret %string %load
 }
 
-define i32 @stringFromCallCompared() {
+define i32 @"stringFromCallCompared$"() {
 entry:
   %temp = alloca %string, align 8
-  %call = call %string @name()
+  %call = call %string @"name$"()
   %_bytes = getelementptr inbounds nuw %string, ptr %temp, i32 0, i32 0
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 0
   store ptr @1, ptr %data, align 8
@@ -42,7 +42,7 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 1, ptr %capacity, align 4
   %load = load %string, ptr %temp, align 8
-  %call1 = call i1 @string.equals(%string %call, %string %load)
+  %call1 = call i1 @"string.equals$string,string"(%string %call, %string %load)
   br i1 %call1, label %if.true, label %if.continuation
 
 if.true:                                          ; preds = %entry
@@ -52,7 +52,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 0
 }
 
-define i1 @string.equals(%string %0, %string %1) {
+define i1 @"string.equals$string,string"(%string %0, %string %1) {
 entry:
   %lhs = alloca %string, align 8
   %rhs = alloca %string, align 8

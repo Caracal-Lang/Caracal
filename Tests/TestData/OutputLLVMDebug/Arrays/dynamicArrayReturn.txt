@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define { ptr, i32, i32 } @make() {
+define { ptr, i32, i32 } @"make$"() {
 entry:
   %xs = alloca { ptr, i32, i32 }, align 8
   %call = call ptr @calloc(i64 8, i64 4)
@@ -32,7 +32,7 @@ entry:
 define i32 @main() {
 entry:
   %xs = alloca { ptr, i32, i32 }, align 8
-  %call = call { ptr, i32, i32 } @make()
+  %call = call { ptr, i32, i32 } @"make$"()
   store { ptr, i32, i32 } %call, ptr %xs, align 8
   %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %xs, i32 0, i32 1
   %load = load i32, ptr %length, align 4

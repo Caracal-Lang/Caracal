@@ -1,0 +1,24 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+type Size(width: i32)
+{
+    width := width
+}
+
+def measure(point: Point) i32
+{
+    return point.x;
+}
+
+def measure(size: Size) i32
+{
+    return size.width %* 10;
+}
+
+def main() i32
+{
+    return measure(Point.new(3)) %+ measure(Size.new(4));
+}

@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @pick(i1 %0) {
+define i32 @"pick$bool"(i1 %0) {
 entry:
   br i1 %0, label %if.true, label %if.continuation
 
@@ -22,7 +22,7 @@ if.continuation:                                  ; preds = %entry
   ret i32 0
 }
 
-define i32 @elementWriteIndexWithShortCircuit() {
+define i32 @"elementWriteIndexWithShortCircuit$"() {
 entry:
   %numbers = alloca [3 x i32], align 4
   %element = getelementptr [3 x i32], ptr %numbers, i32 0, i32 0
@@ -38,7 +38,7 @@ and.rhs:                                          ; preds = %entry
 
 and.merge:                                        ; preds = %and.rhs, %entry
   %phi = phi i1 [ true, %entry ], [ true, %and.rhs ]
-  %call = call i32 @pick(i1 %phi)
+  %call = call i32 @"pick$bool"(i1 %phi)
   %element3 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 %call
   store i32 9, ptr %element3, align 4
   %element4 = getelementptr [3 x i32], ptr %numbers, i32 0, i32 1

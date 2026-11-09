@@ -9,7 +9,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define counted(%0: ref i32 "counter") Point
+define counted$ref.i32(%0: ref i32 "counter") Point
 block entry(0):
     %0 = parameter 0 : ref i32 "counter"
     %slot0 = allocate_local : Point "constructed"
@@ -19,11 +19,11 @@ block entry(0):
     store_value %3, %0 : i32
     %4 = address_of %slot0 : ref Point
     %5 = const 1 : i32
-    call Point.new(%4, %5)
+    call Point.new$ref.Point,i32(%4, %5)
     %6 = load_value %4 : Point
     return %6
 
-define callInAssignmentTargetRunsOnce() i32
+define callInAssignmentTargetRunsOnce$() i32
 block entry(0):
     %slot0 = allocate_local : i32 "counter"
     %slot1 = allocate_local : Point "temp"
@@ -31,7 +31,7 @@ block entry(0):
     %1 = address_of %slot0 : ref i32
     store_value %0, %1 : i32
     %2 = const 5 : i32
-    %3 = call counted(%1) : Point
+    %3 = call counted$ref.i32(%1) : Point
     %4 = address_of %slot1 : ref Point
     store_value %3, %4 : Point
     %5 = address_of_field %4.0 : ref i32 "x"
@@ -39,7 +39,7 @@ block entry(0):
     %6 = load_value %1 : i32
     return %6
 
-define Point.new(%0: ref Point ".this", %1: i32 "x") void
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
 block entry(0):
     %0 = parameter 0 : ref Point ".this"
     %1 = parameter 1 : i32 "x"

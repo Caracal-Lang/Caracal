@@ -1,0 +1,5 @@
+#extern(symbol = "puts")
+def write(message: cstring) i32 {}
+
+#extern(symbol = "puts")
+def write(count: i32) i32 {}

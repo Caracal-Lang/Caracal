@@ -9,7 +9,7 @@ target triple = "x86_64-unknown-none"
 declare noalias noundef ptr @calloc(i64 noundef %0, i64 noundef %1) local_unnamed_addr #0
 
 ; Function Attrs: mustprogress nofree nounwind willreturn
-define { ptr, i32, i32 } @readNumbers() local_unnamed_addr #1 {
+define { ptr, i32, i32 } @"readNumbers$"() local_unnamed_addr #1 {
 entry:
   %load.unpack = load ptr, ptr @numbers, align 8
   %load.unpack5 = load i32, ptr getelementptr inbounds nuw (i8, ptr @numbers, i64 8), align 8
@@ -26,7 +26,7 @@ entry:
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(read, inaccessiblemem: none)
-define i32 @dynamicArrayReturnedFromInitGlobal() local_unnamed_addr #2 {
+define i32 @"dynamicArrayReturnedFromInitGlobal$"() local_unnamed_addr #2 {
 entry:
   %load.unpack.i = load ptr, ptr @numbers, align 8
   %load3 = load i32, ptr %load.unpack.i, align 4

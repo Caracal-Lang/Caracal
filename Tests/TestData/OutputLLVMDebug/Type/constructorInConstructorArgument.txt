@@ -14,17 +14,17 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @constructorInConstructorArgument() {
+define i32 @"constructorInConstructorArgument$"() {
 entry:
   %pair = alloca %Pair, align 8
   %constructed = alloca %Point, align 8
   %temp = alloca %Point, align 8
-  call void @Point.new(ptr %constructed, i32 7)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 7)
   %load = load %Point, ptr %constructed, align 4
   store %Point %load, ptr %temp, align 4
   %x = getelementptr inbounds nuw %Point, ptr %temp, i32 0, i32 0
   %load1 = load i32, ptr %x, align 4
-  call void @Pair.new(ptr %pair, i32 %load1, i32 2)
+  call void @"Pair.new$ref.Pair,i32,i32"(ptr %pair, i32 %load1, i32 2)
   %left = getelementptr inbounds nuw %Pair, ptr %pair, i32 0, i32 0
   %load2 = load i32, ptr %left, align 4
   %multiply = mul i32 %load2, 10
@@ -34,14 +34,14 @@ entry:
   ret i32 %add
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4
   ret void
 }
 
-define i32 @Pair.value(ptr nonnull %0) {
+define i32 @"Pair.value$ref.Pair"(ptr nonnull %0) {
 entry:
   %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
   %load = load i32, ptr %left, align 4
@@ -52,7 +52,7 @@ entry:
   ret i32 %add
 }
 
-define void @Pair.new(ptr nonnull %0, i32 %1, i32 %2) {
+define void @"Pair.new$ref.Pair,i32,i32"(ptr nonnull %0, i32 %1, i32 %2) {
 entry:
   %left = getelementptr inbounds nuw %Pair, ptr %0, i32 0, i32 0
   store i32 %1, ptr %left, align 4

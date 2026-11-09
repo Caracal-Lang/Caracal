@@ -55,6 +55,7 @@ namespace Caracal
         T0073_MethodCallMissingDot,
         T0076_MemberAccessInDefaultParameter,
         T0077_PrivateMethodCallOutsideType,
+        T0115_StaticMethodCalledWithoutTypeName,
         T0093_MemberAccessInStaticMethod,
         T0094_PrivateFieldAccessOutsideType,
         T0095_MutatingMethodOnImmutableSlice,
@@ -113,6 +114,12 @@ namespace Caracal
         T0039_DuplicateFunctionDeclaration,
         T0040_DuplicateTypeDeclaration,
         T0075_DuplicateMethodDeclaration,
+
+        // Overload diagnostics
+        T0111_NoOverloadMatchesCall,
+        T0112_CallMatchesMoreThanOneOverload,
+        T0113_CompilerCalledFunctionHasOverloads,
+        T0114_ExternOverloadsShareSymbol,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

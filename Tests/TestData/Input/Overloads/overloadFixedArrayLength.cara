@@ -1,0 +1,23 @@
+def size(values: [i32; 2]) i32
+{
+    _ = values;
+    return 2;
+}
+
+def size(values: [i32; 3]) i32
+{
+    _ = values;
+    return 3;
+}
+
+def size(values: [i32; 4]) i32
+{
+    _ = values;
+    return 4;
+}
+
+def main() i32
+{
+    four := [1, 2, 3, 4];
+    return size([1, 2, 3]) %+ size(four) %* 10 %+ size([5, 6]) %* 100;
+}

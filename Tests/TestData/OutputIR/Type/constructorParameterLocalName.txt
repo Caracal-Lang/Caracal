@@ -14,11 +14,11 @@ block entry(0):
     %slot0 = allocate_local : Box "b"
     %0 = address_of %slot0 : ref Box
     %1 = const 40 : i32
-    call Box.new(%0, %1)
-    %2 = call Box.sum(%0) : i32
+    call Box.new$ref.Box,i32(%0, %1)
+    %2 = call Box.sum$ref.Box(%0) : i32
     return %2
 
-define Box.sum(%0: ref Box ".this") i32
+define Box.sum$ref.Box(%0: ref Box ".this") i32
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = const 2 : i32
@@ -27,7 +27,7 @@ block entry(0):
     %4 = add %3, %1 : i32
     return %4
 
-define Box.new(%0: ref Box ".this", %1: i32 "value") void
+define Box.new$ref.Box,i32(%0: ref Box ".this", %1: i32 "value") void
 block entry(0):
     %0 = parameter 0 : ref Box ".this"
     %1 = parameter 1 : i32 "value"

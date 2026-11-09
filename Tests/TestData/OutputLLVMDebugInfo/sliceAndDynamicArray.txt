@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @total({ ptr, i32 } %0) !dbg !4 {
+define i32 @"total$[i32]"({ ptr, i32 } %0) !dbg !4 {
 entry:
   %values = alloca { ptr, i32 }, align 8, !dbg !14
     #dbg_declare(ptr %values, !15, !DIExpression(), !14)
@@ -21,7 +21,7 @@ entry:
   ret i32 %load, !dbg !16
 }
 
-define i32 @count({ ptr, i32, i32 } %0) !dbg !17 {
+define i32 @"count$[i32; _]"({ ptr, i32, i32 } %0) !dbg !17 {
 entry:
   %items = alloca { ptr, i32, i32 }, align 8, !dbg !25
     #dbg_declare(ptr %items, !26, !DIExpression(), !25)
@@ -80,7 +80,7 @@ entry:
   %new_length = add i32 %load9, 1, !dbg !44
   store i32 %new_length, ptr %length7, align 4, !dbg !44
   %load12 = load { ptr, i32 }, ptr %view, align 8, !dbg !45
-  %call13 = call i32 @total({ ptr, i32 } %load12), !dbg !45
+  %call13 = call i32 @"total$[i32]"({ ptr, i32 } %load12), !dbg !45
   %data14 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0, !dbg !45
   %length15 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 1, !dbg !45
   %capacity16 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 2, !dbg !45
@@ -95,7 +95,7 @@ entry:
   %1 = insertvalue { ptr, i32, i32 } poison, ptr %copy, 0, !dbg !45
   %2 = insertvalue { ptr, i32, i32 } %1, i32 %load18, 1, !dbg !45
   %array_copy = insertvalue { ptr, i32, i32 } %2, i32 %load19, 2, !dbg !45
-  %call23 = call i32 @count({ ptr, i32, i32 } %array_copy), !dbg !45
+  %call23 = call i32 @"count$[i32; _]"({ ptr, i32, i32 } %array_copy), !dbg !45
   %add = add i32 %call13, %call23, !dbg !45
   %subtract = sub i32 %add, 7, !dbg !45
   ret i32 %subtract, !dbg !45
@@ -108,7 +108,7 @@ entry:
 !1 = !DIFile(filename: "sliceAndDynamicArray.cara", directory: "InputDebugInfo")
 !2 = !{i32 2, !"Debug Info Version", i32 3}
 !3 = !{i32 2, !"CodeView", i32 1}
-!4 = distinct !DISubprogram(name: "total", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!4 = distinct !DISubprogram(name: "total", linkageName: "total$[i32]", scope: !1, file: !1, line: 1, type: !5, scopeLine: 1, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
 !5 = !DISubroutineType(types: !6)
 !6 = !{!7, !8}
 !7 = !DIBasicType(name: "i32", size: 32, encoding: DW_ATE_signed)
@@ -121,7 +121,7 @@ entry:
 !14 = !DILocation(line: 1, scope: !4)
 !15 = !DILocalVariable(name: "values", arg: 1, scope: !4, file: !1, line: 1, type: !8)
 !16 = !DILocation(line: 3, scope: !4)
-!17 = distinct !DISubprogram(name: "count", scope: !1, file: !1, line: 6, type: !18, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!17 = distinct !DISubprogram(name: "count", linkageName: "count$[i32; _]", scope: !1, file: !1, line: 6, type: !18, scopeLine: 6, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
 !18 = !DISubroutineType(types: !19)
 !19 = !{!7, !20}
 !20 = !DICompositeType(tag: DW_TAG_structure_type, name: "[i32; _]", size: 128, elements: !21)
@@ -132,7 +132,7 @@ entry:
 !25 = !DILocation(line: 6, scope: !17)
 !26 = !DILocalVariable(name: "items", arg: 1, scope: !17, file: !1, line: 6, type: !20)
 !27 = !DILocation(line: 8, scope: !17)
-!28 = distinct !DISubprogram(name: "main", scope: !1, file: !1, line: 11, type: !29, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
+!28 = distinct !DISubprogram(name: "main", linkageName: "main", scope: !1, file: !1, line: 11, type: !29, scopeLine: 11, flags: DIFlagPrototyped, spFlags: DISPFlagDefinition, unit: !0, retainedNodes: !13)
 !29 = !DISubroutineType(types: !30)
 !30 = !{!7}
 !31 = !DILocation(line: 13, scope: !28)

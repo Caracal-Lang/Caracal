@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   br i1 true, label %if.true, label %if.false
 

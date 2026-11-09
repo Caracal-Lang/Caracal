@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @elementWriteThroughField() {
+define i32 @"elementWriteThroughField$"() {
 entry:
   %holder = alloca %Items, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
@@ -29,7 +29,7 @@ entry:
   %element1 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element1, align 4
   %load = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Items.new(ptr %holder, { ptr, i32, i32 } %load)
+  call void @"Items.new$ref.Items,[i32; _]"(ptr %holder, { ptr, i32, i32 } %load)
   %items = getelementptr inbounds nuw %Items, ptr %holder, i32 0, i32 0
   %data2 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %items, i32 0, i32 0
   %load3 = load ptr, ptr %data2, align 8
@@ -50,7 +50,7 @@ entry:
   ret i32 %add
 }
 
-define void @Items.new(ptr nonnull %0, { ptr, i32, i32 } %1) {
+define void @"Items.new$ref.Items,[i32; _]"(ptr nonnull %0, { ptr, i32, i32 } %1) {
 entry:
   %temp = alloca { ptr, i32, i32 }, align 8
   store { ptr, i32, i32 } %1, ptr %temp, align 8

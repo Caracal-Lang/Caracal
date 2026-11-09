@@ -17,7 +17,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %string @describe(i32 %0, i32 %1, i32 %2, %string %3) {
+define %string @"describe$i32,i32,i32,string"(i32 %0, i32 %1, i32 %2, %string %3) {
 entry:
   %text = alloca %string, align 8
   store %string %3, ptr %text, align 8
@@ -25,7 +25,7 @@ entry:
   ret %string %load
 }
 
-define void @callers() {
+define void @"callers$"() {
 entry:
   %temp = alloca %string, align 8
   %box = alloca %Box, align 8
@@ -38,8 +38,8 @@ entry:
   %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes, i32 0, i32 2
   store i32 6, ptr %capacity, align 4
   %load = load %string, ptr %temp, align 8
-  %call = call %string @describe(i32 1, i32 5, i32 4, %string %load)
-  call void @Box.new(ptr %box)
+  %call = call %string @"describe$i32,i32,i32,string"(i32 1, i32 5, i32 4, %string %load)
+  call void @"Box.new$ref.Box"(ptr %box)
   %_bytes2 = getelementptr inbounds nuw %string, ptr %temp1, i32 0, i32 0
   %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 0
   store ptr @1, ptr %data3, align 8
@@ -48,11 +48,11 @@ entry:
   %capacity5 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %_bytes2, i32 0, i32 2
   store i32 6, ptr %capacity5, align 4
   %load6 = load %string, ptr %temp1, align 8
-  %call7 = call %string @Box.measure(ptr %box, i32 5, i32 42, %string %load6)
+  %call7 = call %string @"Box.measure$ref.Box,i32,i32,string"(ptr %box, i32 5, i32 42, %string %load6)
   ret void
 }
 
-define %string @Box.measure(ptr nonnull %0, i32 %1, i32 %2, %string %3) {
+define %string @"Box.measure$ref.Box,i32,i32,string"(ptr nonnull %0, i32 %1, i32 %2, %string %3) {
 entry:
   %text = alloca %string, align 8
   store %string %3, ptr %text, align 8
@@ -60,7 +60,7 @@ entry:
   ret %string %load
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   ret void
 }

@@ -1,4 +1,5 @@
 ﻿#include <Caracal/Debug/IRPrinter.h>
+#include <Caracal/Constants.h>
 #include <Caracal/IR/ExternFunction.h>
 
 #include <algorithm>
@@ -10,15 +11,40 @@
 
 namespace Caracal
 {
-    static const std::string& ResolveFunctionName(const Module& module, FunctionId functionId)
+    static const std::string& ResolveCalleeSymbolName(const Module& module, FunctionId functionId)
     {
         static const std::string unknownFunctionName = "<unknown-function>";
 
-        const auto* functionName = module.tryGetFunctionName(functionId);
-        if (functionName == nullptr)
-            return unknownFunctionName;
+        if (const auto* externFunction = module.tryGetExternFunction(functionId); externFunction != nullptr)
+        {
+            if (externFunction->symbolName().has_value())
+            {
+                return externFunction->symbolName().value();
+            }
+            return externFunction->name();
+        }
 
-        return *functionName;
+        if (const auto* function = module.tryGetFunction(functionId); function != nullptr)
+        {
+            if (function->symbolName().has_value())
+            {
+                return function->symbolName().value();
+            }
+            return function->name();
+        }
+
+        return unknownFunctionName;
+    }
+
+    // caracalMain and main print their source names
+    static const std::string& DefinedFunctionName(const Function& function)
+    {
+        if (function.name() == EntryPointFunctionName || function.name() == UserMainFunctionName || !function.symbolName().has_value())
+        {
+            return function.name();
+        }
+
+        return function.symbolName().value();
     }
 
     static std::string FormatLiteralData(const Module& module, const ConstantValue::LiteralData& value, Type type)
@@ -387,7 +413,7 @@ namespace Caracal
     {
         m_builder
             .append("define ")
-            .append(function.name())
+            .append(DefinedFunctionName(function))
             .append("(");
 
         const auto& parameters = function.parameters();
@@ -673,7 +699,7 @@ namespace Caracal
                     appendValue(ValueRef{ instruction.resultId });
                     m_builder.append(" = ");
                 }
-                m_builder.append("call ").append(ResolveFunctionName(m_module, instruction.a)).append("(");
+                m_builder.append("call ").append(ResolveCalleeSymbolName(m_module, instruction.a)).append("(");
                 const auto arguments = function.operands(static_cast<u32>(instruction.b), static_cast<u32>(instruction.c));
                 for (size_t index = 0; index < arguments.size(); ++index)
                 {

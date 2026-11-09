@@ -7,33 +7,33 @@ target triple = "x86_64-unknown-none"
 %string = type { { ptr, i32, i32 } }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @where(%SourceLocation %0) local_unnamed_addr #0 {
+define i32 @"where$SourceLocation"(%SourceLocation %0) local_unnamed_addr #0 {
 entry:
   %.fca.1.extract = extractvalue %SourceLocation %0, 1
   ret i32 %.fca.1.extract
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @callers() local_unnamed_addr #0 {
+define void @"callers$"() local_unnamed_addr #0 {
 entry:
   ret void
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define i32 @Box.measure(ptr nonnull readnone captures(none) %0, %SourceLocation %1) local_unnamed_addr #0 {
+define i32 @"Box.measure$ref.Box,SourceLocation"(ptr nonnull readnone captures(none) %0, %SourceLocation %1) local_unnamed_addr #0 {
 entry:
   %.fca.1.extract = extractvalue %SourceLocation %1, 1
   ret i32 %.fca.1.extract
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define void @Box.new(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
+define void @"Box.new$ref.Box"(ptr nonnull readnone captures(none) %0) local_unnamed_addr #0 {
 entry:
   ret void
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(argmem: write)
-define void @SourceLocation.new(ptr nonnull writeonly captures(none) initializes((0, 20)) %0, %string %1, i32 %2) local_unnamed_addr #1 {
+define void @"SourceLocation.new$ref.SourceLocation,string,i32"(ptr nonnull writeonly captures(none) initializes((0, 20)) %0, %string %1, i32 %2) local_unnamed_addr #1 {
 entry:
   %3 = extractvalue %string %1, 0
   %.elt = extractvalue { ptr, i32, i32 } %3, 0

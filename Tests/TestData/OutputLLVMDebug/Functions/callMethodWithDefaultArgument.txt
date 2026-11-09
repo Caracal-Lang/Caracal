@@ -13,15 +13,15 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %calc = alloca %Calc, align 8
-  call void @Calc.new(ptr %calc, i32 10)
-  %call = call i32 @Calc.addToBase(ptr %calc, i32 5)
+  call void @"Calc.new$ref.Calc,i32"(ptr %calc, i32 10)
+  %call = call i32 @"Calc.addToBase$ref.Calc,i32"(ptr %calc, i32 5)
   ret i32 %call
 }
 
-define i32 @Calc.addToBase(ptr nonnull %0, i32 %1) {
+define i32 @"Calc.addToBase$ref.Calc,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %base = getelementptr inbounds nuw %Calc, ptr %0, i32 0, i32 0
   %load = load i32, ptr %base, align 4
@@ -29,7 +29,7 @@ entry:
   ret i32 %add
 }
 
-define void @Calc.new(ptr nonnull %0, i32 %1) {
+define void @"Calc.new$ref.Calc,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %base = getelementptr inbounds nuw %Calc, ptr %0, i32 0, i32 0
   store i32 %1, ptr %base, align 4

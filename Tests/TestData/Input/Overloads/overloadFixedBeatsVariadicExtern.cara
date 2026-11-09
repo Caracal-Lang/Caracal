@@ -1,0 +1,10 @@
+#extern(symbol = "printf")
+def say(format: cstring, ...) i32 {}
+
+#extern(symbol = "sayTwo")
+def say(format: cstring, second: cstring) i32 {}
+
+def main() i32
+{
+    return say("a", "b");
+}

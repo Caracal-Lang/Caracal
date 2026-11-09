@@ -10,19 +10,19 @@ target triple = "x86_64-unknown-none"
 @wideSum = local_unnamed_addr constant i64 6
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i64 @readWide() local_unnamed_addr #0 {
+define noundef i64 @"readWide$"() local_unnamed_addr #0 {
 entry:
   ret i64 5
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef double @readWideFloat() local_unnamed_addr #0 {
+define noundef double @"readWideFloat$"() local_unnamed_addr #0 {
 entry:
   ret double 5.000000e-01
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef i64 @readWideSum() local_unnamed_addr #0 {
+define noundef i64 @"readWideSum$"() local_unnamed_addr #0 {
 entry:
   ret i64 6
 }

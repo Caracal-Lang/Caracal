@@ -16,7 +16,7 @@ declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 define i32 @main() {
 entry:
   %b = alloca %Box, align 8
-  call void @Box.new(ptr %b)
+  call void @"Box.new$ref.Box"(ptr %b)
   %x = getelementptr inbounds nuw %Box, ptr %b, i32 0, i32 0
   store i32 42, ptr %x, align 4
   %x1 = getelementptr inbounds nuw %Box, ptr %b, i32 0, i32 0
@@ -24,7 +24,7 @@ entry:
   ret i32 %load
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   %x = getelementptr inbounds nuw %Box, ptr %0, i32 0, i32 0
   store i32 40, ptr %x, align 4

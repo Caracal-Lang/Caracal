@@ -15,13 +15,13 @@ declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
 declare i32 @printf(ptr %0, ...)
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %call = call i32 (ptr, ...) @printf(ptr @0)
   ret i32 %call
 }
 
-define void @Box.new(ptr nonnull %0) {
+define void @"Box.new$ref.Box"(ptr nonnull %0) {
 entry:
   ret void
 }

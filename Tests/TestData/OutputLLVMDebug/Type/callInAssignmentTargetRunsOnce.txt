@@ -13,23 +13,23 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %Point @counted(ptr nonnull %0) {
+define %Point @"counted$ref.i32"(ptr nonnull %0) {
 entry:
   %constructed = alloca %Point, align 8
   %load = load i32, ptr %0, align 4
   %add = add i32 %load, 1
   store i32 %add, ptr %0, align 4
-  call void @Point.new(ptr %constructed, i32 1)
+  call void @"Point.new$ref.Point,i32"(ptr %constructed, i32 1)
   %load1 = load %Point, ptr %constructed, align 4
   ret %Point %load1
 }
 
-define i32 @callInAssignmentTargetRunsOnce() {
+define i32 @"callInAssignmentTargetRunsOnce$"() {
 entry:
   %counter = alloca i32, align 4
   %temp = alloca %Point, align 8
   store i32 0, ptr %counter, align 4
-  %call = call %Point @counted(ptr %counter)
+  %call = call %Point @"counted$ref.i32"(ptr %counter)
   store %Point %call, ptr %temp, align 4
   %x = getelementptr inbounds nuw %Point, ptr %temp, i32 0, i32 0
   store i32 5, ptr %x, align 4
@@ -37,7 +37,7 @@ entry:
   ret i32 %load
 }
 
-define void @Point.new(ptr nonnull %0, i32 %1) {
+define void @"Point.new$ref.Point,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %x = getelementptr inbounds nuw %Point, ptr %0, i32 0, i32 0
   store i32 %1, ptr %x, align 4

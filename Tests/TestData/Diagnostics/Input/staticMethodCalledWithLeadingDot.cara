@@ -1,0 +1,12 @@
+type Box
+{
+    def Box.make(value: i32) i32
+    {
+        return value;
+    }
+
+    def run() i32
+    {
+        return .make(1);
+    }
+}

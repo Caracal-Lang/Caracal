@@ -6,31 +6,31 @@ target triple = "x86_64-unknown-none"
 @wide = local_unnamed_addr constant double 1.000000e-01
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef double @localConstant() local_unnamed_addr #0 {
+define noundef double @"localConstant$"() local_unnamed_addr #0 {
 entry:
   ret double 2.500000e-01
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef double @variable() local_unnamed_addr #0 {
+define noundef double @"variable$"() local_unnamed_addr #0 {
 entry:
   ret double 5.000000e-01
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define double @takesWide(double returned %0) local_unnamed_addr #0 {
+define double @"takesWide$f64"(double returned %0) local_unnamed_addr #0 {
 entry:
   ret double %0
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef double @argument() local_unnamed_addr #0 {
+define noundef double @"argument$"() local_unnamed_addr #0 {
 entry:
   ret double 7.500000e-01
 }
 
 ; Function Attrs: mustprogress nofree norecurse nosync nounwind willreturn memory(none)
-define noundef double @returned() local_unnamed_addr #0 {
+define noundef double @"returned$"() local_unnamed_addr #0 {
 entry:
   ret double 1.250000e-01
 }

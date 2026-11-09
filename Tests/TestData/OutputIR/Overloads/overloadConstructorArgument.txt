@@ -1,0 +1,68 @@
+type Point
+    x: i32
+
+type Size
+    width: i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define measure$Point(%0: Point "point") i32
+block entry(0):
+    %0 = parameter 0 : Point "point"
+    %slot0 = allocate_local : Point "point"
+    %1 = address_of %slot0 : ref Point
+    store_value %0, %1 : Point
+    %2 = address_of_field %1.0 : ref i32 "x"
+    %3 = load_value %2 : i32
+    return %3
+
+define measure$Size(%0: Size "size") i32
+block entry(0):
+    %0 = parameter 0 : Size "size"
+    %slot0 = allocate_local : Size "size"
+    %1 = address_of %slot0 : ref Size
+    store_value %0, %1 : Size
+    %2 = address_of_field %1.0 : ref i32 "width"
+    %3 = load_value %2 : i32
+    %4 = const 10 : i32
+    %5 = multiply %3, %4 : i32
+    return %5
+
+define main() i32
+block entry(0):
+    %slot0 = allocate_local : Point "constructed"
+    %slot1 = allocate_local : Size "constructed"
+    %0 = address_of %slot0 : ref Point
+    %1 = const 3 : i32
+    call Point.new$ref.Point,i32(%0, %1)
+    %2 = load_value %0 : Point
+    %3 = call measure$Point(%2) : i32
+    %4 = address_of %slot1 : ref Size
+    %5 = const 4 : i32
+    call Size.new$ref.Size,i32(%4, %5)
+    %6 = load_value %4 : Size
+    %7 = call measure$Size(%6) : i32
+    %8 = add %3, %7 : i32
+    return %8
+
+define Point.new$ref.Point,i32(%0: ref Point ".this", %1: i32 "x") void
+block entry(0):
+    %0 = parameter 0 : ref Point ".this"
+    %1 = parameter 1 : i32 "x"
+    %2 = address_of_field %0.0 : ref i32 "x"
+    store_value %1, %2 : i32
+    return
+
+define Size.new$ref.Size,i32(%0: ref Size ".this", %1: i32 "width") void
+block entry(0):
+    %0 = parameter 0 : ref Size ".this"
+    %1 = parameter 1 : i32 "width"
+    %2 = address_of_field %0.0 : ref i32 "width"
+    store_value %1, %2 : i32
+    return

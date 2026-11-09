@@ -1,0 +1,23 @@
+type Painter
+{
+    total := 0
+
+    def paint(width: i32, height: i32 = 1)
+    {
+        .total = .total %+ width %* height;
+    }
+
+    def paint(label: string)
+    {
+        .total = .total %+ label.length();
+    }
+}
+
+def main() i32
+{
+    painter := Painter.new();
+    painter.paint(height = 3, width = 2);
+    painter.paint(width = 4);
+    painter.paint(label = "abc");
+    return painter.total;
+}

@@ -8,7 +8,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define compute() bool
+define compute$() bool
 block entry(0):
     %0 = const false : bool
     return %0
@@ -19,7 +19,7 @@ block entry(0):
     %1 = load_value %0 : bool
     branch if %1, and.rhs(1), and.merge(2)
 block and.rhs(1):
-    %2 = call compute() : bool
+    %2 = call compute$() : bool
     jump and.merge(2)
 block and.merge(2):
     %3 = phi [entry(0): %1], [and.rhs(1): %2] : bool

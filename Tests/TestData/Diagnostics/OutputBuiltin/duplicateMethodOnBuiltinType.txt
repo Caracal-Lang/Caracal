@@ -1,0 +1,19 @@
+ Error T0075 Duplicate method declaration
+     ,-[Diagnostics/InputBuiltin/duplicateMethodOnBuiltinType.cara:8:13]
+   1 | #builtin(kind = int, bits = 32, signed = true)
+   2 | type i32
+   3 | {
+   4 |     def i32.add(lhs: i32, rhs: i32) i32
+     .             ---
+     .              `-- Previous method declaration is here.
+   5 |     {
+   6 |     }
+   7 | 
+   8 |     def i32.add(lhs: i32, rhs: i32, extra: i32) i32
+     .             ---
+     .              `-- Method 'add' is already declared in type 'i32'
+   9 |     {
+  10 |     }
+  11 | }
+     `----
+  Fix: Rename this method, or remove the duplicate declaration.

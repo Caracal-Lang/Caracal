@@ -1,0 +1,25 @@
+type Box(value: i32)
+{
+    value := value
+
+    def Box.equals(lhs: Box, rhs: Box) bool
+    {
+        return lhs.value == rhs.value;
+    }
+
+    def Box.equals(value: i32) bool
+    {
+        return value == 0;
+    }
+}
+
+def main() i32
+{
+    first := Box.new(3);
+    second := Box.new(3);
+    if first == second
+    {
+        return 7;
+    }
+    return 1;
+}

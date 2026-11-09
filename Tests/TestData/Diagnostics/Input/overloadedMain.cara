@@ -1,0 +1,6 @@
+def main() {
+}
+
+def main(value: i32) {
+    _ = value;
+}

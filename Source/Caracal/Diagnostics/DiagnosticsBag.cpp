@@ -1,4 +1,5 @@
 #include <Caracal/Diagnostics/DiagnosticsBag.h>
+#include <iterator>
 
 #include <unordered_map>
 
@@ -1114,6 +1115,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addStaticMethodCalledWithoutTypeNameError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& methodName, const std::string& typeName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0115_StaticMethodCalledWithoutTypeName,
+            source,
+            location,
+            "Write '" + typeName + "." + methodName + "(...)'.");
+        diagnostic.addPrimaryLabel(location, "'" + methodName + "' is a static method of type '" + typeName + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addStaticMethodTypeNameMismatchError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& declaredTypeName, const std::string& enclosingTypeName, const std::string& methodName)
     {
         auto diagnostic = Diagnostic(
@@ -2182,8 +2196,8 @@ namespace Caracal
             DiagnosticKind::T0039_DuplicateFunctionDeclaration,
             source,
             location,
-            "Rename this function, or remove the duplicate declaration.");
-        diagnostic.addPrimaryLabel(location, "Function '" + functionName + "' is already declared");
+            "Change the parameter types, rename this function, or remove the duplicate declaration.");
+        diagnostic.addPrimaryLabel(location, "Function '" + functionName + "' is already declared with these parameter types");
         AddPreviousDeclarationLabel(
             diagnostic,
             source,
@@ -2241,12 +2255,113 @@ namespace Caracal
             DiagnosticKind::T0075_DuplicateMethodDeclaration,
             source,
             location,
+            "Change the parameter types, rename this method, or remove the duplicate declaration.");
+        diagnostic.addPrimaryLabel(location, "Method '" + methodName + "' is already declared in type '" + typeName + "' with these parameter types");
+        if (otherLocation.has_value())
+        {
+            diagnostic.addSecondaryLabel(otherLocation.value(), "Previous method declaration is here.");
+        }
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addDuplicateBuiltinMethodDeclarationError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& methodName,
+        const std::string& typeName,
+        std::optional<SourceLocation> otherLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0075_DuplicateMethodDeclaration,
+            source,
+            location,
             "Rename this method, or remove the duplicate declaration.");
         diagnostic.addPrimaryLabel(location, "Method '" + methodName + "' is already declared in type '" + typeName + "'");
         if (otherLocation.has_value())
         {
             diagnostic.addSecondaryLabel(otherLocation.value(), "Previous method declaration is here.");
         }
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0111_NoOverloadMatchesCall,
+            source,
+            location,
+            "Change the arguments to match one overload.");
+        diagnostic.addPrimaryLabel(location, "No overload of '" + functionName + "' accepts these arguments");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0112_CallMatchesMoreThanOneOverload,
+            source,
+            location,
+            "Add a type suffix to a literal or change an argument, so that one overload fits best.");
+        diagnostic.addPrimaryLabel(location, "'" + functionName + "' has more than one equally good overload for these arguments");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addCompilerCalledFunctionHasOverloadsError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const SourceTextSharedPtr& otherSource,
+        std::optional<SourceLocation> otherLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0113_CompilerCalledFunctionHasOverloads,
+            source,
+            location,
+            "Rename this function.");
+        diagnostic.addPrimaryLabel(location, "The compiler calls '" + functionName + "' by name");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            otherSource,
+            otherLocation,
+            "Previous function declaration",
+            "Previous function declaration of '" + functionName + "' is here.",
+            "Previous function declaration is here.");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addExternOverloadsShareSymbolError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const std::string& symbolName,
+        const SourceTextSharedPtr& otherSource,
+        std::optional<SourceLocation> otherLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0114_ExternOverloadsShareSymbol,
+            source,
+            location,
+            "Give each overload its own C symbol, or rename one function.");
+        diagnostic.addPrimaryLabel(location, "Another overload of '" + functionName + "' also uses the C symbol '" + symbolName + "'");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            otherSource,
+            otherLocation,
+            "Other overload",
+            "The other overload of '" + functionName + "' is here.",
+            "The other overload is here.");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }
@@ -2397,6 +2512,19 @@ namespace Caracal
     void DiagnosticsBag::removeDiagnosticsAfter(size_t count)
     {
         m_diagnostics.erase(m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count), m_diagnostics.end());
+    }
+
+    std::vector<Diagnostic> DiagnosticsBag::takeDiagnosticsAfter(size_t count)
+    {
+        const auto first = m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count);
+        auto taken = std::vector<Diagnostic>(std::make_move_iterator(first), std::make_move_iterator(m_diagnostics.end()));
+        m_diagnostics.erase(first, m_diagnostics.end());
+        return taken;
+    }
+
+    void DiagnosticsBag::addDiagnostics(std::vector<Diagnostic> diagnostics)
+    {
+        m_diagnostics.insert(m_diagnostics.end(), std::make_move_iterator(diagnostics.begin()), std::make_move_iterator(diagnostics.end()));
     }
 
     int DiagnosticsBag::errorCount() const noexcept

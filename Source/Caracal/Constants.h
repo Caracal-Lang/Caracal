@@ -11,7 +11,6 @@ namespace Caracal
     inline constexpr const char* EntryPointFunctionName = "caracalMain";
     inline constexpr const char* UserMainFunctionName = "main";
     inline constexpr const char* CRuntimeEntrySymbolName = "main";
-    inline constexpr const char* UserMainSymbolName = "caracal.userMain";
 
     inline constexpr const char* CompilerNamePrefix = "__caracal_";
     inline constexpr const char* TestFunctionNamePrefix = "__caracal_test_";

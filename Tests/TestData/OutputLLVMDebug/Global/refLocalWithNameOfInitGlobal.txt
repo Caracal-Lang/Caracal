@@ -13,7 +13,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @refLocalWithNameOfInitGlobal() {
+define i32 @"refLocalWithNameOfInitGlobal$"() {
 entry:
   %first = alloca i32, align 4
   store i32 1, ptr %first, align 4
@@ -27,6 +27,6 @@ entry:
   %limit = alloca i32, align 4
   store i32 9, ptr %limit, align 4
   store ptr %limit, ptr @shared, align 8
-  %call = call i32 @refLocalWithNameOfInitGlobal()
+  %call = call i32 @"refLocalWithNameOfInitGlobal$"()
   ret i32 %call
 }

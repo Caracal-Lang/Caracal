@@ -13,24 +13,24 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define i32 @twice(i32 %0) {
+define i32 @"twice$i32"(i32 %0) {
 entry:
   %multiply = mul i32 %0, 2
   ret i32 %multiply
 }
 
-define i32 @usesTest() {
+define i32 @"usesTest$"() {
 entry:
   %counter = alloca %Counter, align 8
-  %call = call i32 @twice(i32 3)
-  call void @Counter.new(ptr %counter)
+  %call = call i32 @"twice$i32"(i32 3)
+  call void @"Counter.new$ref.Counter"(ptr %counter)
   %test = getelementptr inbounds nuw %Counter, ptr %counter, i32 0, i32 0
   %load = load i32, ptr %test, align 4
   %add = add i32 %call, %load
   ret i32 %add
 }
 
-define void @Counter.new(ptr nonnull %0) {
+define void @"Counter.new$ref.Counter"(ptr nonnull %0) {
 entry:
   %test = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0
   store i32 4, ptr %test, align 4

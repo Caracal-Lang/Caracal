@@ -14,12 +14,12 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define %Holder @makeHolder() {
+define %Holder @"makeHolder$"() {
 entry:
   %constructed = alloca %Holder, align 8
   %constructed1 = alloca %Inner, align 8
   %temp = alloca { ptr, i32, i32 }, align 8
-  call void @Inner.new(ptr %constructed1, i32 4)
+  call void @"Inner.new$ref.Inner,i32"(ptr %constructed1, i32 4)
   %load = load %Inner, ptr %constructed1, align 4
   %call = call ptr @calloc(i64 8, i64 4)
   %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %temp, i32 0, i32 0
@@ -33,22 +33,22 @@ entry:
   %element2 = getelementptr i32, ptr %call, i32 1
   store i32 6, ptr %element2, align 4
   %load3 = load { ptr, i32, i32 }, ptr %temp, align 8
-  call void @Holder.new(ptr %constructed, %Inner %load, { ptr, i32, i32 } %load3)
+  call void @"Holder.new$ref.Holder,Inner,[i32; _]"(ptr %constructed, %Inner %load, { ptr, i32, i32 } %load3)
   %load4 = load %Holder, ptr %constructed, align 8
   ret %Holder %load4
 }
 
-define i32 @nestedMethodOfReturnedObject() {
+define i32 @"nestedMethodOfReturnedObject$"() {
 entry:
   %temp = alloca %Holder, align 8
-  %call = call %Holder @makeHolder()
+  %call = call %Holder @"makeHolder$"()
   store %Holder %call, ptr %temp, align 8
   %inner = getelementptr inbounds nuw %Holder, ptr %temp, i32 0, i32 0
-  %call1 = call i32 @Inner.twice(ptr %inner)
+  %call1 = call i32 @"Inner.twice$ref.Inner"(ptr %inner)
   ret i32 %call1
 }
 
-define i32 @Inner.twice(ptr nonnull %0) {
+define i32 @"Inner.twice$ref.Inner"(ptr nonnull %0) {
 entry:
   %size = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
   %load = load i32, ptr %size, align 4
@@ -56,14 +56,14 @@ entry:
   ret i32 %multiply
 }
 
-define void @Inner.new(ptr nonnull %0, i32 %1) {
+define void @"Inner.new$ref.Inner,i32"(ptr nonnull %0, i32 %1) {
 entry:
   %size = getelementptr inbounds nuw %Inner, ptr %0, i32 0, i32 0
   store i32 %1, ptr %size, align 4
   ret void
 }
 
-define void @Holder.new(ptr nonnull %0, %Inner %1, { ptr, i32, i32 } %2) {
+define void @"Holder.new$ref.Holder,Inner,[i32; _]"(ptr nonnull %0, %Inner %1, { ptr, i32, i32 } %2) {
 entry:
   %inner = alloca %Inner, align 8
   %temp = alloca { ptr, i32, i32 }, align 8

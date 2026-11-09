@@ -11,13 +11,13 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @inner(i8 %0) {
+define void @"inner$Values"(i8 %0) {
 entry:
   ret void
 }
 
-define void @outer() {
+define void @"outer$"() {
 entry:
-  call void @inner(i8 0)
+  call void @"inner$Values"(i8 0)
   ret void
 }

@@ -1,0 +1,14 @@
+ Error T0114 Two extern overloads use one C symbol
+    ,-[Diagnostics/Input/overloadExternWithoutSymbol.cara:5:5]
+  1 | #extern
+  2 | def abs(value: i32) i32 {}
+    .     ---
+    .      `-- The other overload is here.
+  3 | 
+  4 | #extern
+  5 | def abs(value: i64) i64 {}
+    .     ---
+    .      `-- Another overload of 'abs' also uses the C symbol 'abs'
+  6 | 
+    `----
+  Fix: Give each overload its own C symbol, or rename one function.

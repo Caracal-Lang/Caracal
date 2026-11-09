@@ -1,0 +1,14 @@
+def measure(value: f32) i32
+{
+    return 1;
+}
+
+def measure(value: f64) i32
+{
+    return 2;
+}
+
+def main() i32
+{
+    return measure(1.5);
+}

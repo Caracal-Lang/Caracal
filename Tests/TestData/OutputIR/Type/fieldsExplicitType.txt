@@ -11,7 +11,7 @@ extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
 
 extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
 
-define Fields.new(%0: ref Fields ".this") void
+define Fields.new$ref.Fields(%0: ref Fields ".this") void
 block entry(0):
     %0 = parameter 0 : ref Fields ".this"
     %1 = const 0 : i32

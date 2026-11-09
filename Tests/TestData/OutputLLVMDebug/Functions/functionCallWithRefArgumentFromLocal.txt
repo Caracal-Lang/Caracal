@@ -11,7 +11,7 @@ declare ptr @realloc(ptr %0, i64 %1)
 
 declare ptr @memmove(ptr %0, ptr %1, i64 %2)
 
-define void @double(ptr nonnull %0) {
+define void @"double$ref.i32"(ptr nonnull %0) {
 entry:
   %load = load i32, ptr %0, align 4
   %multiply = mul i32 %load, 2
@@ -19,11 +19,11 @@ entry:
   ret void
 }
 
-define i32 @func() {
+define i32 @"func$"() {
 entry:
   %value = alloca i32, align 4
   store i32 5, ptr %value, align 4
-  call void @double(ptr %value)
+  call void @"double$ref.i32"(ptr %value)
   %load = load i32, ptr %value, align 4
   ret i32 %load
 }
