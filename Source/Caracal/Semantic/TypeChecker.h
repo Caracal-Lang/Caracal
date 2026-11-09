@@ -190,14 +190,36 @@ namespace Caracal
         void emitUnusedVariableWarnings(const ScopeFrame& frame);
         [[nodiscard]] u32 internName(std::string_view lexeme);
         void internUnitIdentifiers(const CompilationUnit& unit);
-        [[nodiscard]] u32 nameIdOf(const CompilationUnit& unit, u32 index) const noexcept;
+
+        [[nodiscard]] u32 nameIdOf(const CompilationUnit& unit, u32 index) const noexcept
+        {
+            return m_tokenNameIds[unit.fileId][unit.nodeBuffer.mainToken(index)];
+        }
+
         void addVariableBinding(u32 nameId, Type type, std::optional<SourceLocation> location, const SourceTextSharedPtr& source, VariableBindingKind kind, bool referencesConstant = false);
-        [[nodiscard]] const LexicalBinding* tryGetBinding(u32 nameId) const noexcept;
+
+        [[nodiscard]] const LexicalBinding* tryGetBinding(u32 nameId) const noexcept
+        {
+            if (nameId >= m_bindingsByName.size() || m_bindingsByName[nameId].empty())
+            {
+                return nullptr;
+            }
+            return &m_bindingsByName[nameId].back();
+        }
+
         [[nodiscard]] bool isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept;
         [[nodiscard]] const LexicalBinding* tryGetConflictingBinding(u32 nameId) const noexcept;
         [[nodiscard]] ValueRef addressOfName(const CompilationUnit& unit, u32 nameNode);
         [[nodiscard]] bool nameIsInitConstant(const CompilationUnit& unit, u32 nameNode) const;
-        [[nodiscard]] LexicalBinding* tryGetBindingMutable(u32 nameId) noexcept;
+
+        [[nodiscard]] LexicalBinding* tryGetBindingMutable(u32 nameId) noexcept
+        {
+            if (nameId >= m_bindingsByName.size() || m_bindingsByName[nameId].empty())
+            {
+                return nullptr;
+            }
+            return &m_bindingsByName[nameId].back();
+        }
 
         void typeCheckGlobalConstants();
         void typeCheckEnumDefinitions();

@@ -8,6 +8,7 @@
 #include <Caracal/Semantic/NumberLiteralParsing.h>
 #include <Caracal/Semantic/OperatorRegistration.h>
 #include <Caracal/Semantic/SliceParameterPromotion.h>
+#include <Caracal/Semantic/TypeCheckerInternal.h>
 #include <Caracal/Syntax/BinaryOperatorKind.h>
 #include <Caracal/Syntax/NodeLayout.h>
 #include <Caracal/Syntax/NodeSpans.h>
@@ -126,19 +127,9 @@ namespace Caracal
         return NodeSpans::typeNameSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), index);
     }
 
-    [[nodiscard]] static SourceLocation ParameterSpan(const CompilationContext& context, const CompilationUnit& unit, u32 parameterIndex)
-    {
-        return NodeSpans::parameterSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), parameterIndex);
-    }
-
     [[nodiscard]] static SourceLocation ParametersNodeSpan(const CompilationContext& context, const CompilationUnit& unit, u32 parametersIndex)
     {
         return NodeSpans::parametersNodeSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), parametersIndex);
-    }
-
-    [[nodiscard]] static SourceLocation ExpressionSourceLocation(const CompilationContext& context, const CompilationUnit& unit, u32 index)
-    {
-        return NodeSpans::expressionSourceLocation(unit.nodeBuffer, context.tokenBuffer(unit.fileId), index);
     }
 
     static bool IsInitConstantAssignmentSite(std::string_view functionName)
@@ -146,98 +137,9 @@ namespace Caracal
         return functionName == EntryPointFunctionName || functionName == UserMainFunctionName;
     }
 
-    [[nodiscard]] static TokenKind TokenKindAt(const TokenBuffer& tokens, u32 tokenIndex) noexcept
-    {
-        return tokens.getToken(static_cast<i32>(tokenIndex)).kind;
-    }
-
     [[nodiscard]] static const SourceLocation& TokenLocationAt(const TokenBuffer& tokens, u32 tokenIndex) noexcept
     {
         return tokens.getSourceLocation(tokens.getToken(static_cast<i32>(tokenIndex)));
-    }
-
-    [[nodiscard]] static bool ContainsRuntimeCall(
-        SemanticContext& module,
-        const CompilationUnit& unit,
-        const TokenBuffer& tokens,
-        u32 index)
-    {
-        switch (unit.nodeBuffer.kind(index))
-        {
-            case NodeKind::FunctionCallExpression:
-            {
-                return true;
-            }
-            case NodeKind::GroupingExpression:
-            case NodeKind::UnaryExpression:
-            case NodeKind::MemberAccessExpression:
-            {
-                return ContainsRuntimeCall(module, unit, tokens, NodeLayout::onlyChild(index));
-            }
-            case NodeKind::BinaryExpression:
-            {
-                const auto binaryLayout = NodeLayout::binary(unit.nodeBuffer, index);
-                const auto isMemberCall = unit.nodeBuffer.isMemberAccessBinary(tokens, index)
-                    && unit.nodeBuffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression;
-                if (!isMemberCall)
-                {
-                    return ContainsRuntimeCall(module, unit, tokens, binaryLayout.left)
-                        || ContainsRuntimeCall(module, unit, tokens, binaryLayout.right);
-                }
-
-                if (ContainsRuntimeCall(module, unit, tokens, binaryLayout.left))
-                {
-                    return true;
-                }
-
-                const auto methodType = module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
-                if (methodType != Type::Undefined())
-                {
-                    const auto* definition = module.tryGetFunctionDefinition(methodType);
-                    if (definition != nullptr && isBitwiseIntrinsicKind(definition->intrinsicKind()))
-                    {
-                        // foldable builtins are fine but arguments can force this into a runtime call
-                        std::vector<u32> arguments;
-                        NodeLayout::collectChildren(unit.nodeBuffer, binaryLayout.right, arguments);
-                        for (size_t argumentIndex = 1; argumentIndex < arguments.size(); ++argumentIndex)
-                        {
-                            auto valueIndex = arguments[argumentIndex];
-                            if (unit.nodeBuffer.kind(valueIndex) == NodeKind::NamedArgument)
-                            {
-                                valueIndex = NodeLayout::namedArgumentValue(valueIndex);
-                            }
-
-                            if (ContainsRuntimeCall(module, unit, tokens, valueIndex))
-                            {
-                                return true;
-                            }
-                        }
-
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-            case NodeKind::ArrayLiteral:
-            {
-                std::vector<u32> elements;
-                NodeLayout::collectChildren(unit.nodeBuffer, index, elements);
-                for (const auto element : elements)
-                {
-                    if (ContainsRuntimeCall(module, unit, tokens, element))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-            default:
-            {
-                return false;
-            }
-        }
     }
 
     [[nodiscard]] static bool IsConstructorCallExpression(
@@ -326,98 +228,6 @@ namespace Caracal
         const auto methodType = module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
         const auto* definition = module.tryGetFunctionDefinition(methodType);
         return definition != nullptr && definition->functionType() == FunctionType::SynthesizedConstructor;
-    }
-
-    static bool ConditionIsLiteralTrue(const NodeBuffer& buffer, const TokenBuffer& tokens, u32 conditionIndex)
-    {
-        const auto condition = NodeLayout::stripGroupings(buffer, conditionIndex);
-        return buffer.kind(condition) == NodeKind::BoolLiteral
-            && TokenKindAt(tokens, buffer.mainToken(condition)) == TokenKind::TrueKeyword;
-    }
-
-    static bool ContainsLoopBreak(const NodeBuffer& buffer, u32 index)
-    {
-        switch (buffer.kind(index))
-        {
-            case NodeKind::BreakStatement:
-            {
-                return true;
-            }
-            case NodeKind::BlockNode:
-            {
-                std::vector<u32> children;
-                NodeLayout::collectChildren(buffer, index, children);
-                for (const auto inner : children)
-                {
-                    if (ContainsLoopBreak(buffer, inner))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-            case NodeKind::IfStatement:
-            {
-                const auto ifLayout = NodeLayout::ifStatement(buffer, index);
-                if (ContainsLoopBreak(buffer, ifLayout.trueStatement))
-                {
-                    return true;
-                }
-
-                return ifLayout.hasFalse && ContainsLoopBreak(buffer, ifLayout.falseStatement);
-            }
-            case NodeKind::TrailingIfStatement:
-            {
-                return ContainsLoopBreak(buffer, NodeLayout::trailingIf(buffer, index).statement);
-            }
-            default:
-            {
-                return false;
-            }
-        }
-    }
-
-    static bool StatementGuaranteesReturn(const NodeBuffer& buffer, const TokenBuffer& tokens, u32 index)
-    {
-        switch (buffer.kind(index))
-        {
-            case NodeKind::ReturnStatement:
-            {
-                return true;
-            }
-            case NodeKind::BlockNode:
-            {
-                std::vector<u32> children;
-                NodeLayout::collectChildren(buffer, index, children);
-                for (const auto inner : children)
-                {
-                    if (StatementGuaranteesReturn(buffer, tokens, inner))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-            case NodeKind::IfStatement:
-            {
-                const auto ifLayout = NodeLayout::ifStatement(buffer, index);
-                return ifLayout.hasFalse
-                    && StatementGuaranteesReturn(buffer, tokens, ifLayout.trueStatement)
-                    && StatementGuaranteesReturn(buffer, tokens, ifLayout.falseStatement);
-            }
-            case NodeKind::WhileStatement:
-            {
-                const auto whileLayout = NodeLayout::whileStatement(buffer, index);
-                return ConditionIsLiteralTrue(buffer, tokens, whileLayout.condition)
-                    && !ContainsLoopBreak(buffer, whileLayout.body);
-            }
-            default:
-            {
-                return false;
-            }
-        }
     }
 
     static bool IsTerminatingStatement(const NodeBuffer& buffer, u32 index)
@@ -580,69 +390,6 @@ namespace Caracal
             default:
             {
                 return UnaryOperatorKind::Invalid;
-            }
-        }
-    }
-
-    [[nodiscard]] static BinaryOperatorKind ConvertToBinaryOperator(TokenKind kind) noexcept
-    {
-        switch (kind)
-        {
-            case TokenKind::Dot:
-            {
-                return BinaryOperatorKind::MemberAccess;
-            }
-            case TokenKind::PercentPlus:
-            {
-                return BinaryOperatorKind::AdditionWrapping;
-            }
-            case TokenKind::PercentMinus:
-            {
-                return BinaryOperatorKind::SubtractionWrapping;
-            }
-            case TokenKind::PercentStar:
-            {
-                return BinaryOperatorKind::MultiplicationWrapping;
-            }
-            case TokenKind::Slash:
-            {
-                return BinaryOperatorKind::Division;
-            }
-            case TokenKind::EqualEqual:
-            {
-                return BinaryOperatorKind::Equal;
-            }
-            case TokenKind::BangEqual:
-            {
-                return BinaryOperatorKind::NotEqual;
-            }
-            case TokenKind::LessThan:
-            {
-                return BinaryOperatorKind::LessThan;
-            }
-            case TokenKind::LessThanEqual:
-            {
-                return BinaryOperatorKind::LessOrEqual;
-            }
-            case TokenKind::GreaterThan:
-            {
-                return BinaryOperatorKind::GreaterThan;
-            }
-            case TokenKind::GreaterThanEqual:
-            {
-                return BinaryOperatorKind::GreaterOrEqual;
-            }
-            case TokenKind::AndKeyword:
-            {
-                return BinaryOperatorKind::LogicalAnd;
-            }
-            case TokenKind::OrKeyword:
-            {
-                return BinaryOperatorKind::LogicalOr;
-            }
-            default:
-            {
-                return BinaryOperatorKind::Invalid;
             }
         }
     }
@@ -2002,11 +1749,6 @@ namespace Caracal
         }
     }
 
-    u32 TypeChecker::nameIdOf(const CompilationUnit& unit, u32 index) const noexcept
-    {
-        return m_tokenNameIds[unit.fileId][unit.nodeBuffer.mainToken(index)];
-    }
-
     Type TypeChecker::tryResolveConstructedType(const CompilationUnit& unit, u32 strippedIndex)
     {
         const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
@@ -2589,15 +2331,6 @@ namespace Caracal
         m_boundNames.push_back(nameId);
     }
 
-    const TypeChecker::LexicalBinding* TypeChecker::tryGetBinding(u32 nameId) const noexcept
-    {
-        if (nameId >= m_bindingsByName.size() || m_bindingsByName[nameId].empty())
-        {
-            return nullptr;
-        }
-        return &m_bindingsByName[nameId].back();
-    }
-
     bool TypeChecker::isTypeNameExpression(const CompilationUnit& unit, u32 expression) const noexcept
     {
         const auto stripped = NodeLayout::stripGroupings(unit.nodeBuffer, expression);
@@ -2638,15 +2371,6 @@ namespace Caracal
     {
         const auto* binding = tryGetBinding(nameIdOf(unit, nameNode));
         return binding != nullptr && binding->scopeIndex == 0 && m_initConstants.contains(std::string(nameOf(unit, nameNode)));
-    }
-
-    TypeChecker::LexicalBinding* TypeChecker::tryGetBindingMutable(u32 nameId) noexcept
-    {
-        if (nameId >= m_bindingsByName.size() || m_bindingsByName[nameId].empty())
-        {
-            return nullptr;
-        }
-        return &m_bindingsByName[nameId].back();
     }
 
     void TypeChecker::pushScope(ScopeKind kind)
