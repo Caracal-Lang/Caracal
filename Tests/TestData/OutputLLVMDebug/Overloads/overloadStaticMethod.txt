@@ -1,0 +1,77 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+%Counter = type { i32 }
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @main() {
+entry:
+  %empty = alloca %Counter, align 8
+  %five = alloca %Counter, align 8
+  %twenty = alloca %Counter, align 8
+  %call = call %Counter @"Counter.start$"()
+  store %Counter %call, ptr %empty, align 4
+  %call1 = call %Counter @"Counter.start$i32"(i32 5)
+  store %Counter %call1, ptr %five, align 4
+  %call2 = call %Counter @"Counter.start$bool"(i1 true)
+  store %Counter %call2, ptr %twenty, align 4
+  %value = getelementptr inbounds nuw %Counter, ptr %empty, i32 0, i32 0
+  %load = load i32, ptr %value, align 4
+  %value3 = getelementptr inbounds nuw %Counter, ptr %five, i32 0, i32 0
+  %load4 = load i32, ptr %value3, align 4
+  %add = add i32 %load, %load4
+  %value5 = getelementptr inbounds nuw %Counter, ptr %twenty, i32 0, i32 0
+  %load6 = load i32, ptr %value5, align 4
+  %add7 = add i32 %add, %load6
+  ret i32 %add7
+}
+
+define %Counter @"Counter.start$"() {
+entry:
+  %constructed = alloca %Counter, align 8
+  call void @"Counter.new$ref.Counter"(ptr %constructed)
+  %load = load %Counter, ptr %constructed, align 4
+  ret %Counter %load
+}
+
+define %Counter @"Counter.start$i32"(i32 %0) {
+entry:
+  %result = alloca %Counter, align 8
+  call void @"Counter.new$ref.Counter"(ptr %result)
+  %value = getelementptr inbounds nuw %Counter, ptr %result, i32 0, i32 0
+  store i32 %0, ptr %value, align 4
+  %load = load %Counter, ptr %result, align 4
+  ret %Counter %load
+}
+
+define %Counter @"Counter.start$bool"(i1 %0) {
+entry:
+  %result = alloca %Counter, align 8
+  call void @"Counter.new$ref.Counter"(ptr %result)
+  br i1 %0, label %if.true, label %if.continuation
+
+if.true:                                          ; preds = %entry
+  %value = getelementptr inbounds nuw %Counter, ptr %result, i32 0, i32 0
+  store i32 20, ptr %value, align 4
+  br label %if.continuation
+
+if.continuation:                                  ; preds = %if.true, %entry
+  %load = load %Counter, ptr %result, align 4
+  ret %Counter %load
+}
+
+define void @"Counter.new$ref.Counter"(ptr nonnull %0) {
+entry:
+  %value = getelementptr inbounds nuw %Counter, ptr %0, i32 0, i32 0
+  store i32 0, ptr %value, align 4
+  ret void
+}

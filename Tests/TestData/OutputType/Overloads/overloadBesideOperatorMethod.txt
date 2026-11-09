@@ -1,0 +1,258 @@
+TypeDefinitionStatement: {
+    Type: Box
+    Name: Box
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (Box, Box) -> bool
+            Modifier: Static
+            MethodNameNode: {
+                MethodName: Box.equals
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: lhs
+                    TypeNameNode: {
+                        Type: Box
+                        Lexeme: Box
+                    }
+                }
+                ParameterNode: {
+                    Name: rhs
+                    TypeNameNode: {
+                        Type: Box
+                        Lexeme: Box
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: bool
+                    Lexeme: bool
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: bool
+                    BinaryExpression: {
+                        Type: bool
+                        Left: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: Box
+                                        Name: lhs
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                        }
+                        Operation: Equal
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: Box
+                                        Name: rhs
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (i32) -> bool
+            Modifier: Static
+            MethodNameNode: {
+                MethodName: Box.equals
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: value
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: bool
+                    Lexeme: bool
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: bool
+                    BinaryExpression: {
+                        Type: bool
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                        Operation: Equal
+                        Right: {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: first
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box, i32) -> void
+                            NameExpression: {
+                                Type: (ref Box, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 3
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Box
+            Left: {
+                NameExpression: {
+                    Type: Box
+                    Name: second
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Box
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: Box
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Box
+                            Function type: (ref Box, i32) -> void
+                            NameExpression: {
+                                Type: (ref Box, i32) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 3
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: Box
+                            Name: first
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NameExpression: {
+                            Type: Box
+                            Name: second
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        NumberLiteral: 7
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}

@@ -11,9 +11,9 @@
    7 | 
    8 |     def value() bool
      .         -----
-     .           `-- Method 'value' is already declared in type 'Counter'
+     .           `-- Method 'value' is already declared in type 'Counter' with these parameter types
    9 |     {
   10 |         return true;
   11 |     }
      `----
-  Fix: Rename this method, or remove the duplicate declaration.
+  Fix: Change the parameter types, rename this method, or remove the duplicate declaration.

@@ -1,0 +1,344 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Maker
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: base
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: make
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: x
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: Point
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: undefined
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: Point
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: new
+                                }
+                                ArgumentsNode(1): {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            NameExpression: {
+                                                Type: undefined
+                                                Name: x
+                                            }
+                                        }
+                                        Operation: AdditionWrapping
+                                        Right: {
+                                            MemberAccessExpression: {
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: base
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: make
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: flag
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: bool
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                ArrayTypeNameNode: {
+                    Type: undefined
+                    Lexeme: [i32; 3]
+                    Kind: Fixed
+                    DataType: {
+                        TypeNameNode: {
+                            Type: undefined
+                            Lexeme: i32
+                        }
+                    }
+                    Length: {
+                        NumberLiteral: 3
+                    }
+                }
+            }
+            BlockNode(2): {
+                IfStatement: {
+                    Condition: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: flag
+                        }
+                    }
+                    True: {
+                        BlockNode(1): {
+                            ReturnStatement: {
+                                Type: undefined
+                                ArrayLiteral(3): {
+                                    Type: undefined
+                                    NumberLiteral: 10
+                                    NumberLiteral: 20
+                                    NumberLiteral: 30
+                                }
+                            }
+                        }
+                    }
+                }
+                ReturnStatement: {
+                    Type: undefined
+                    ArrayLiteral(3): {
+                        Type: undefined
+                        NumberLiteral: 0
+                        NumberLiteral: 0
+                        NumberLiteral: 0
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: maker
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: point
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: make
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: make
+                            }
+                            ArgumentsNode(1): {
+                                BoolLiteral: true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: point
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: x
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,79 @@
+type Counter
+    value: i32
+
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define main() i32
+block entry(0):
+    %slot0 = allocate_local : Counter "empty"
+    %slot1 = allocate_local : Counter "five"
+    %slot2 = allocate_local : Counter "twenty"
+    %0 = call Counter.start$() : Counter
+    %1 = address_of %slot0 : ref Counter
+    store_value %0, %1 : Counter
+    %2 = const 5 : i32
+    %3 = call Counter.start$i32(%2) : Counter
+    %4 = address_of %slot1 : ref Counter
+    store_value %3, %4 : Counter
+    %5 = const true : bool
+    %6 = call Counter.start$bool(%5) : Counter
+    %7 = address_of %slot2 : ref Counter
+    store_value %6, %7 : Counter
+    %8 = address_of_field %1.0 : ref i32 "value"
+    %9 = load_value %8 : i32
+    %10 = address_of_field %4.0 : ref i32 "value"
+    %11 = load_value %10 : i32
+    %12 = add %9, %11 : i32
+    %13 = address_of_field %7.0 : ref i32 "value"
+    %14 = load_value %13 : i32
+    %15 = add %12, %14 : i32
+    return %15
+
+define Counter.start$() Counter
+block entry(0):
+    %slot0 = allocate_local : Counter "constructed"
+    %0 = address_of %slot0 : ref Counter
+    call Counter.new$ref.Counter(%0)
+    %1 = load_value %0 : Counter
+    return %1
+
+define Counter.start$i32(%0: i32 "value") Counter
+block entry(0):
+    %0 = parameter 0 : i32 "value"
+    %slot0 = allocate_local : Counter "result"
+    %1 = address_of %slot0 : ref Counter
+    call Counter.new$ref.Counter(%1)
+    %2 = address_of_field %1.0 : ref i32 "value"
+    store_value %0, %2 : i32
+    %3 = load_value %1 : Counter
+    return %3
+
+define Counter.start$bool(%0: bool "flag") Counter
+block entry(0):
+    %0 = parameter 0 : bool "flag"
+    %slot0 = allocate_local : Counter "result"
+    %1 = address_of %slot0 : ref Counter
+    call Counter.new$ref.Counter(%1)
+    branch if %0, if.true(1), if.continuation(2)
+block if.true(1):
+    %2 = const 20 : i32
+    %3 = address_of_field %1.0 : ref i32 "value"
+    store_value %2, %3 : i32
+    jump if.continuation(2)
+block if.continuation(2):
+    %4 = load_value %1 : Counter
+    return %4
+
+define Counter.new$ref.Counter(%0: ref Counter ".this") void
+block entry(0):
+    %0 = parameter 0 : ref Counter ".this"
+    %1 = const 0 : i32
+    %2 = address_of_field %0.0 : ref i32 "value"
+    store_value %1, %2 : i32
+    return

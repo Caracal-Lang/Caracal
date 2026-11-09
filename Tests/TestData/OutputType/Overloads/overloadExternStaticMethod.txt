@@ -1,0 +1,215 @@
+TypeDefinitionStatement: {
+    Type: Math
+    Name: Math
+    BlockNode(2): {
+        MethodDefinitionStatement: {
+            Type: (i64) -> i64
+            Modifier: Static
+            MethodNameNode: {
+                MethodName: Math.absolute
+            }
+            Annotation: {
+                Name: extern
+                ArgumentsNode(1): {
+                    NamedArgument: {
+                        Name: symbol
+                        StringLiteral: "labs"
+                    }
+                }
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: value
+                    TypeNameNode: {
+                        Type: i64
+                        Lexeme: i64
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i64
+                    Lexeme: i64
+                }
+            }
+            BlockNode(0): {
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (i32) -> i32
+            Modifier: Static
+            MethodNameNode: {
+                MethodName: Math.absolute
+            }
+            Annotation: {
+                Name: extern
+                ArgumentsNode(1): {
+                    NamedArgument: {
+                        Name: symbol
+                        StringLiteral: "abs"
+                    }
+                }
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: value
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: i32
+                    Lexeme: i32
+                }
+            }
+            BlockNode(0): {
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: small
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: Math
+                            Name: Math
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (i32) -> i32
+                            NameExpression: {
+                                Type: (i32) -> i32
+                                Name: absolute
+                            }
+                            ArgumentsNode(1): {
+                                UnaryExpression: {
+                                    Type: i32
+                                    Operation: ValueNegation
+                                    Expression: {
+                                        NumberLiteral: 3
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: i64
+            Left: {
+                NameExpression: {
+                    Type: i64
+                    Name: large
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: i64
+                    Left: {
+                        NameExpression: {
+                            Type: Math
+                            Name: Math
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i64
+                            Function type: (i64) -> i64
+                            NameExpression: {
+                                Type: (i64) -> i64
+                                Name: absolute
+                            }
+                            ArgumentsNode(1): {
+                                UnaryExpression: {
+                                    Type: i64
+                                    Operation: ValueNegation
+                                    Expression: {
+                                        NumberLiteral: 4
+                                        TypeNameNode: {
+                                            Type: i64
+                                            Lexeme: i64
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: i64
+                            Name: large
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 4
+                        TypeNameNode: {
+                            Type: i64
+                            Lexeme: i64
+                        }
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: i32
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: small
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NumberLiteral: 40
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 0
+        }
+    }
+}

@@ -1,0 +1,30 @@
+type Inner
+{
+    value := 0
+
+    def add(amount: i32)
+    {
+        .value = .value %+ amount;
+    }
+
+    def add(flag: bool)
+    {
+        if flag
+        {
+            .value = .value %+ 10;
+        }
+    }
+}
+
+type Outer
+{
+    inner := Inner.new()
+}
+
+def main() i32
+{
+    outer := Outer.new();
+    outer.inner.add(3);
+    outer.inner.add(true);
+    return outer.inner.value;
+}

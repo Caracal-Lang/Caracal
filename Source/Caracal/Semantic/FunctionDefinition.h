@@ -68,6 +68,7 @@ namespace Caracal
         void setDefinitionNode(NodeIndex definitionNode) noexcept { m_definitionNode = definitionNode; }
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
         [[nodiscard]] bool isExtern() const noexcept { return m_isExtern; }
+        [[nodiscard]] bool hasImplicitThis() const noexcept;
 
         void setParameters(std::vector<Parameter> parameters) noexcept;
         void setReturnTypes(std::vector<Type> returnTypes) noexcept;

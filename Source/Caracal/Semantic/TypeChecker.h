@@ -160,6 +160,7 @@ namespace Caracal
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
         [[nodiscard]] bool rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
+        [[nodiscard]] Type resolveMethodCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet, bool isStaticCall);
         [[nodiscard]] Type resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] Type selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
         [[nodiscard]] bool rankCandidate(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext, std::vector<ArgumentRank>& ranks);

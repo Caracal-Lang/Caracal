@@ -1,0 +1,24 @@
+type Counter
+{
+    value := 0
+
+    def add(amount: i32)
+    {
+        .value = .value %+ amount;
+    }
+
+    def add(flag: bool)
+    {
+        if flag
+        {
+            .value = .value %+ 1;
+        }
+    }
+}
+
+def main() i32
+{
+    counter := Counter.new();
+    counter.add(1.5);
+    return counter.value;
+}

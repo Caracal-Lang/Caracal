@@ -59,6 +59,11 @@ namespace Caracal
         return definition.functionType() == FunctionType::StaticMethod;
     }
 
+    [[nodiscard]] static bool IsCalledThroughTypeName(const FunctionDefinition& definition) noexcept
+    {
+        return !definition.hasImplicitThis() || definition.functionType() == FunctionType::SynthesizedConstructor;
+    }
+
     // an extern without a symbol argument uses its name as the C symbol
     [[nodiscard]] static std::optional<std::string> ExternSymbol(const FunctionDefinition& definition)
     {
@@ -186,6 +191,30 @@ namespace Caracal
         return resolveOverload(unit, callIndex, nameExpressionIndex, overloadSet);
     }
 
+    Type TypeChecker::resolveMethodCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet, bool isStaticCall)
+    {
+        if (!overloadSet.isOverloaded())
+        {
+            return overloadSet.firstOverload();
+        }
+
+        auto candidates = OverloadSet{};
+        for (const auto member : overloadSet.overloads)
+        {
+            if (IsCalledThroughTypeName(m_module.getFunctionDefinition(member)) == isStaticCall)
+            {
+                candidates.overloads.push_back(member);
+            }
+        }
+
+        if (candidates.overloads.empty())
+        {
+            return overloadSet.firstOverload();
+        }
+
+        return resolveCallee(unit, callIndex, nameExpressionIndex, candidates);
+    }
+
     Type TypeChecker::resolveOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
     {
         CARACAL_ZONE_NAMED("check.resolveOverload");
@@ -275,13 +304,18 @@ namespace Caracal
         const auto diagnosticCount = m_diagnostics.diagnostics().size();
         const auto& definition = m_module.getFunctionDefinition(candidate);
         const auto isExtern = definition.isExtern();
+        size_t parameterOffset = 0;
+        if (definition.hasImplicitThis())
+        {
+            parameterOffset = 1;
+        }
         const auto binding = bindCallArguments(
             m_compilationContext,
             unit,
             callIndex,
             std::span<const u32>{ m_callArgumentStack }.subspan(argumentsStart, argumentCount),
             definition.parameters(),
-            0,
+            parameterOffset,
             definition.isVariadic(),
             definition.name(),
             m_diagnostics,
@@ -318,7 +352,7 @@ namespace Caracal
             }
             else
             {
-                isAccepted = rankArgument(unit, candidate, parameterIndex, argumentValue, typesWithoutContext[position], rank);
+                isAccepted = rankArgument(unit, candidate, parameterIndex + parameterOffset, argumentValue, typesWithoutContext[position], rank);
             }
             ranks.push_back(rank);
         }

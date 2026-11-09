@@ -1,5 +1,7 @@
 ﻿#include "FunctionDefinition.h"
 
+#include <Caracal/Constants.h>
+
 namespace Caracal
 {
     FunctionDefinition::FunctionDefinition(
@@ -35,6 +37,20 @@ namespace Caracal
     void FunctionDefinition::setIsVariadic(bool isVariadic) noexcept
     {
         m_isVariadic = isVariadic;
+    }
+
+    bool FunctionDefinition::hasImplicitThis() const noexcept
+    {
+        if (m_functionType == FunctionType::SynthesizedConstructor
+            || m_functionType == FunctionType::PublicMethod
+            || m_functionType == FunctionType::PrivateMethod)
+        {
+            return true;
+        }
+
+        return m_functionType == FunctionType::Intrinsic
+            && !m_parameters.empty()
+            && m_parameters.front().name() == ImplicitThisName;
     }
 
     bool isBitwiseIntrinsicKind(IntrinsicKind kind) noexcept

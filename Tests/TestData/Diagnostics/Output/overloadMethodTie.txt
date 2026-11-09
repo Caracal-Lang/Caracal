@@ -1,0 +1,13 @@
+ Error T0112 This call matches more than one overload
+     ,-[Diagnostics/Input/overloadMethodTie.cara:19:13]
+  16 | def main() i32
+  17 | {
+  18 |     counter := Counter.new();
+  19 |     counter.add(1);
+     .             ------
+     .                `-- 'add' has more than one equally good overload for these arguments
+  20 |     return counter.value;
+  21 | }
+  22 | 
+     `----
+  Fix: Add a type suffix to a literal or change an argument, so that one overload fits best.

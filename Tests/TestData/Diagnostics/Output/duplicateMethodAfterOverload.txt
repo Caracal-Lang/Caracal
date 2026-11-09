@@ -13,9 +13,9 @@
   13 | 
   14 |     def value() i32
      .         -----
-     .           `-- Method 'value' is already declared in type 'Counter'
+     .           `-- Method 'value' is already declared in type 'Counter' with these parameter types
   15 |     {
   16 |         return 3;
   17 |     }
      `----
-  Fix: Rename this method, or remove the duplicate declaration.
+  Fix: Change the parameter types, rename this method, or remove the duplicate declaration.

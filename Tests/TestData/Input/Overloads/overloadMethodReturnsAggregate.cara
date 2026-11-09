@@ -1,0 +1,31 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+type Maker
+{
+    base := 1
+
+    def make(x: i32) Point
+    {
+        return Point.new(x %+ .base);
+    }
+
+    def make(flag: bool) [i32; 3]
+    {
+        if flag
+        {
+            return [10, 20, 30];
+        }
+        return [0, 0, 0];
+    }
+}
+
+def main() i32
+{
+    maker := Maker.new();
+    point := maker.make(4);
+    values := maker.make(true);
+    return point.x %+ values.at(2);
+}

@@ -1,0 +1,21 @@
+type Counter
+{
+    value := 0
+
+    def add(amount: i32)
+    {
+        .value = .value %+ amount;
+    }
+
+    def Counter.add(amount: i32) i32
+    {
+        return amount %* 10;
+    }
+}
+
+def main() i32
+{
+    counter := Counter.new();
+    counter.add(2);
+    return counter.value %+ Counter.add(5);
+}

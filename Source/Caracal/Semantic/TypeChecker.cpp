@@ -1081,7 +1081,7 @@ namespace Caracal
                 const auto existingType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
                 if (isBuiltin && existingType != Type::Undefined())
                 {
-                    m_diagnostics.addDuplicateMethodDeclarationError(
+                    m_diagnostics.addDuplicateBuiltinMethodDeclarationError(
                         unit.source,
                         nameLocation(unit, methodLayout.methodName),
                         std::string(methodName),
@@ -3407,8 +3407,15 @@ namespace Caracal
 
                 if (receiverType.kind() == TypeKind::Type)
                 {
-                    const auto methodType = tryGetOverload(m_module.getTypeDefinition(receiverType).tryGetMethodOverloadSet(
-                        nameOf(unit, NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right))));
+                    const auto methodNameIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, callLayout.right);
+                    auto methodType = Type::Undefined();
+                    if (const auto* methodSet = m_module.getTypeDefinition(receiverType).tryGetMethodOverloadSet(nameOf(unit, methodNameIndex));
+                        methodSet != nullptr && !methodSet->overloads.empty())
+                    {
+                        const auto diagnosticCount = m_diagnostics.diagnostics().size();
+                        methodType = resolveMethodCallee(unit, callLayout.right, methodNameIndex, *methodSet, false);
+                        m_diagnostics.removeDiagnosticsAfter(diagnosticCount);
+                    }
                     if (methodType != Type::Undefined())
                     {
                         const auto& methodReturns = m_module.getFunctionDefinition(methodType).returnTypes();
@@ -5435,7 +5442,17 @@ namespace Caracal
                         const auto nameExpressionIndex = NodeLayout::subtreeBegin(buffer, binaryLayout.right);
                         const auto name = std::string(nameOf(unit, nameExpressionIndex));
 
-                        auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(name));
+                        const auto* overloadSet = typeDefinition.tryGetMethodOverloadSet(name);
+                        auto methodType = Type::Undefined();
+                        if (overloadSet != nullptr && !overloadSet->overloads.empty())
+                        {
+                            methodType = resolveMethodCallee(unit, binaryLayout.right, nameExpressionIndex, *overloadSet, isTypeNameExpression(unit, binaryLayout.left));
+                            if (methodType == Type::Undefined())
+                            {
+                                return Type::Undefined();
+                            }
+                        }
+
                         if (methodType != Type::Undefined())
                         {
                             auto& methodDefinition = m_module.getFunctionDefinition(methodType);
@@ -6184,8 +6201,8 @@ namespace Caracal
         {
             const auto nameExpressionIndex = NodeLayout::subtreeBegin(unit.nodeBuffer, inner);
             const auto methodName = nameOf(unit, nameExpressionIndex);
-            const auto methodType = tryGetOverload(typeDefinition.tryGetMethodOverloadSet(methodName));
-            if (methodType == Type::Undefined())
+            const auto* overloadSet = typeDefinition.tryGetMethodOverloadSet(methodName);
+            if (overloadSet == nullptr || overloadSet->overloads.empty())
             {
                 m_diagnostics.addUnknownMethodError(
                     unit.source,
@@ -6193,6 +6210,12 @@ namespace Caracal
                     typeDefinition.name(),
                     std::string(methodName));
 
+                return recordType(unit, index, Type::Undefined());
+            }
+
+            const auto methodType = resolveMethodCallee(unit, inner, nameExpressionIndex, *overloadSet, false);
+            if (methodType == Type::Undefined())
+            {
                 return recordType(unit, index, Type::Undefined());
             }
 
@@ -6250,16 +6273,8 @@ namespace Caracal
         }
 
         const auto isExternCall = functionDefinition.isExtern();
-        // static intrinsics like i32.bitAnd have no receiver, array intrinsics carry an explicit .this parameter
-        const bool hasImplicitThis =
-            functionDefinition.functionType() == FunctionType::SynthesizedConstructor ||
-            functionDefinition.functionType() == FunctionType::PublicMethod ||
-            functionDefinition.functionType() == FunctionType::PrivateMethod ||
-            (functionDefinition.functionType() == FunctionType::Intrinsic
-                && !functionDefinition.parameters().empty()
-                && functionDefinition.parameters().front().name() == ImplicitThisName);
         size_t parameterOffset = 0;
-        if (hasImplicitThis)
+        if (functionDefinition.hasImplicitThis())
         {
             parameterOffset = 1;
         }

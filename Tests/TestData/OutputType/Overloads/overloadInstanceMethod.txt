@@ -1,0 +1,338 @@
+TypeDefinitionStatement: {
+    Type: Counter
+    Name: Counter
+    BlockNode(4): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Counter, i32) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: amount
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: amount
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Counter, bool) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: flag
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                IfStatement: {
+                    Condition: {
+                        NameExpression: {
+                            Type: bool
+                            Name: flag
+                        }
+                    }
+                    True: {
+                        BlockNode(1): {
+                            AssignmentStatement: {
+                                Left: {
+                                    MemberAccessExpression: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                Right: {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            MemberAccessExpression: {
+                                                NameExpression: {
+                                                    Type: i32
+                                                    Name: value
+                                                }
+                                            }
+                                        }
+                                        Operation: AdditionWrapping
+                                        Right: {
+                                            NumberLiteral: 10
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Counter, i32, i32) -> void
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: add
+            }
+            ParametersNode(2): {
+                ParameterNode: {
+                    Name: left
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ParameterNode: {
+                    Name: right
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: i32
+                                Name: value
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: i32
+                                        Name: value
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: i32
+                                    Left: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: left
+                                        }
+                                    }
+                                    Operation: MultiplicationWrapping
+                                    Right: {
+                                        NameExpression: {
+                                            Type: i32
+                                            Name: right
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: Counter
+            Left: {
+                NameExpression: {
+                    Type: Counter
+                    Name: counter
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Counter
+                    Left: {
+                        NameExpression: {
+                            Type: Counter
+                            Name: Counter
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Counter
+                            Function type: (ref Counter) -> void
+                            NameExpression: {
+                                Type: (ref Counter) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Counter
+                        Name: counter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Counter, i32) -> void
+                        NameExpression: {
+                            Type: (ref Counter, i32) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Counter
+                        Name: counter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Counter, bool) -> void
+                        NameExpression: {
+                            Type: (ref Counter, bool) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(1): {
+                            BoolLiteral: true
+                        }
+                    }
+                }
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: void
+                Left: {
+                    NameExpression: {
+                        Type: Counter
+                        Name: counter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: void
+                        Function type: (ref Counter, i32, i32) -> void
+                        NameExpression: {
+                            Type: (ref Counter, i32, i32) -> void
+                            Name: add
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 3
+                            NumberLiteral: 4
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: Counter
+                        Name: counter
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,409 @@
+TypeDefinitionStatement: {
+    Type: undefined
+    Name: Counter
+    BlockNode(4): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+            Right: {
+                NumberLiteral: 0
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Private
+            MethodNameNode: {
+                MethodName: _add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: amount
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: value
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: value
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: amount
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Private
+            MethodNameNode: {
+                MethodName: _add
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: flag
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: bool
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(1): {
+                IfStatement: {
+                    Condition: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: flag
+                        }
+                    }
+                    True: {
+                        BlockNode(1): {
+                            AssignmentStatement: {
+                                Left: {
+                                    MemberAccessExpression: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                }
+                                Right: {
+                                    BinaryExpression: {
+                                        Type: undefined
+                                        Left: {
+                                            MemberAccessExpression: {
+                                                NameExpression: {
+                                                    Type: undefined
+                                                    Name: value
+                                                }
+                                            }
+                                        }
+                                        Operation: AdditionWrapping
+                                        Right: {
+                                            NumberLiteral: 10
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: undefined
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: merge
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: other
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: Counter
+                    }
+                }
+            }
+            ReturnTypesNode(0): {
+            }
+            BlockNode(4): {
+                ExpressionStatement: {
+                    MemberAccessExpression: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: _add
+                            }
+                            ArgumentsNode(1): {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: other
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                VariableDeclaration: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: copy
+                        }
+                    }
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: other
+                        }
+                    }
+                }
+                ExpressionStatement: {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: copy
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: undefined
+                                Function type: undefined
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: _add
+                                }
+                                ArgumentsNode(1): {
+                                    BoolLiteral: true
+                                }
+                            }
+                        }
+                    }
+                }
+                AssignmentStatement: {
+                    Left: {
+                        MemberAccessExpression: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: value
+                            }
+                        }
+                    }
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                MemberAccessExpression: {
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: value
+                                    }
+                                }
+                            }
+                            Operation: AdditionWrapping
+                            Right: {
+                                BinaryExpression: {
+                                    Type: undefined
+                                    Left: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: copy
+                                        }
+                                    }
+                                    Operation: MemberAccess
+                                    Right: {
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: value
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(5): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: first
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Counter
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: second
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: Counter
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: second
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: value
+                        }
+                    }
+                }
+            }
+            Right: {
+                NumberLiteral: 3
+            }
+        }
+        ExpressionStatement: {
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: first
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: merge
+                        }
+                        ArgumentsNode(1): {
+                            NameExpression: {
+                                Type: undefined
+                                Name: second
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: first
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: value
+                    }
+                }
+            }
+        }
+    }
+}

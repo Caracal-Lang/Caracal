@@ -1,0 +1,344 @@
+TypeDefinitionStatement: {
+    Type: Point
+    Name: Point
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    BlockNode(1): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+TypeDefinitionStatement: {
+    Type: Maker
+    Name: Maker
+    BlockNode(3): {
+        TypeFieldDeclaration: {
+            IsConstant: false
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: base
+                }
+            }
+            Right: {
+                NumberLiteral: 1
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Maker, i32) -> Point
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: make
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: x
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                TypeNameNode: {
+                    Type: Point
+                    Lexeme: Point
+                }
+            }
+            BlockNode(1): {
+                ReturnStatement: {
+                    Type: Point
+                    BinaryExpression: {
+                        Type: Point
+                        Left: {
+                            NameExpression: {
+                                Type: Point
+                                Name: Point
+                            }
+                        }
+                        Operation: ConstructorCall
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: Point
+                                Function type: (ref Point, i32) -> void
+                                NameExpression: {
+                                    Type: (ref Point, i32) -> void
+                                    Name: new
+                                }
+                                ArgumentsNode(1): {
+                                    BinaryExpression: {
+                                        Type: i32
+                                        Left: {
+                                            NameExpression: {
+                                                Type: i32
+                                                Name: x
+                                            }
+                                        }
+                                        Operation: AdditionWrapping
+                                        Right: {
+                                            MemberAccessExpression: {
+                                                NameExpression: {
+                                                    Type: i32
+                                                    Name: base
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MethodDefinitionStatement: {
+            Type: (ref Maker, bool) -> [i32; 3]
+            Modifier: Public
+            MethodNameNode: {
+                MethodName: make
+            }
+            ParametersNode(1): {
+                ParameterNode: {
+                    Name: flag
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+            }
+            ReturnTypesNode(1): {
+                ArrayTypeNameNode: {
+                    Type: [i32; 3]
+                    Lexeme: [i32; 3]
+                    Kind: Fixed
+                    DataType: {
+                        TypeNameNode: {
+                            Type: i32
+                            Lexeme: i32
+                        }
+                    }
+                    Length: {
+                        NumberLiteral: 3
+                    }
+                }
+            }
+            BlockNode(2): {
+                IfStatement: {
+                    Condition: {
+                        NameExpression: {
+                            Type: bool
+                            Name: flag
+                        }
+                    }
+                    True: {
+                        BlockNode(1): {
+                            ReturnStatement: {
+                                Type: [i32; 3]
+                                ArrayLiteral(3): {
+                                    Type: [i32; 3]
+                                    NumberLiteral: 10
+                                    NumberLiteral: 20
+                                    NumberLiteral: 30
+                                }
+                            }
+                        }
+                    }
+                }
+                ReturnStatement: {
+                    Type: [i32; 3]
+                    ArrayLiteral(3): {
+                        Type: [i32; 3]
+                        NumberLiteral: 0
+                        NumberLiteral: 0
+                        NumberLiteral: 0
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: main
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: Maker
+            Left: {
+                NameExpression: {
+                    Type: Maker
+                    Name: maker
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Maker
+                    Left: {
+                        NameExpression: {
+                            Type: Maker
+                            Name: Maker
+                        }
+                    }
+                    Operation: ConstructorCall
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Maker
+                            Function type: (ref Maker) -> void
+                            NameExpression: {
+                                Type: (ref Maker) -> void
+                                Name: new
+                            }
+                            ArgumentsNode(0): {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: Point
+            Left: {
+                NameExpression: {
+                    Type: Point
+                    Name: point
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: Point
+                    Left: {
+                        NameExpression: {
+                            Type: Maker
+                            Name: maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: Point
+                            Function type: (ref Maker, i32) -> Point
+                            NameExpression: {
+                                Type: (ref Maker, i32) -> Point
+                                Name: make
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 4
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        VariableDeclaration: {
+            Type: [i32; 3]
+            Left: {
+                NameExpression: {
+                    Type: [i32; 3]
+                    Name: values
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: [i32; 3]
+                    Left: {
+                        NameExpression: {
+                            Type: Maker
+                            Name: maker
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: [i32; 3]
+                            Function type: (ref Maker, bool) -> [i32; 3]
+                            NameExpression: {
+                                Type: (ref Maker, bool) -> [i32; 3]
+                                Name: make
+                            }
+                            ArgumentsNode(1): {
+                                BoolLiteral: true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: Point
+                                Name: point
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            NameExpression: {
+                                Type: i32
+                                Name: x
+                            }
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: [i32; 3]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref [i32; 3], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref [i32; 3], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

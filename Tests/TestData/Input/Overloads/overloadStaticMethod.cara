@@ -1,0 +1,34 @@
+type Counter
+{
+    value := 0
+
+    def Counter.start() Counter
+    {
+        return Counter.new();
+    }
+
+    def Counter.start(value: i32) Counter
+    {
+        result := Counter.new();
+        result.value = value;
+        return result;
+    }
+
+    def Counter.start(flag: bool) Counter
+    {
+        result := Counter.new();
+        if flag
+        {
+            result.value = 20;
+        }
+        return result;
+    }
+}
+
+def main() i32
+{
+    empty := Counter.start();
+    five := Counter.start(5);
+    twenty := Counter.start(true);
+    return empty.value %+ five.value %+ twenty.value;
+}

@@ -38,26 +38,6 @@ namespace Caracal
         return (static_cast<u64>(static_cast<u32>(functionType.id())) << 32) | static_cast<u64>(parameterIndex);
     }
 
-    [[nodiscard]] static size_t ImplicitThisOffset(const FunctionDefinition& functionDefinition)
-    {
-        const auto functionType = functionDefinition.functionType();
-        if (functionType == FunctionType::SynthesizedConstructor
-            || functionType == FunctionType::PublicMethod
-            || functionType == FunctionType::PrivateMethod)
-        {
-            return 1;
-        }
-
-        if (functionType == FunctionType::Intrinsic
-            && !functionDefinition.parameters().empty()
-            && functionDefinition.parameters().front().name() == ImplicitThisName)
-        {
-            return 1;
-        }
-
-        return 0;
-    }
-
     static void AnalyzeSliceParameterUsesInExpression(
         const CompilationContext& context,
         const CompilationUnit& unit,
@@ -265,7 +245,10 @@ namespace Caracal
                                 if (methodType != Type::Undefined())
                                 {
                                     calleeType = methodType;
-                                    parameterOffset = ImplicitThisOffset(module.getFunctionDefinition(methodType));
+                                    if (module.getFunctionDefinition(methodType).hasImplicitThis())
+                                    {
+                                        parameterOffset = 1;
+                                    }
                                 }
                             }
                         }

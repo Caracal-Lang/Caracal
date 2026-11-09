@@ -11,9 +11,9 @@
    7 | 
    8 |     def Counter.make(amount: i32) i32
      .                 ----
-     .                   `-- Method 'make' is already declared in type 'Counter'
+     .                   `-- Method 'make' is already declared in type 'Counter' with these parameter types
    9 |     {
   10 |         return amount;
   11 |     }
      `----
-  Fix: Rename this method, or remove the duplicate declaration.
+  Fix: Change the parameter types, rename this method, or remove the duplicate declaration.
