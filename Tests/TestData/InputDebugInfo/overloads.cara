@@ -1,0 +1,39 @@
+type Counter
+{
+    value := 0
+
+    def add(amount: i32)
+    {
+        .value = .value %+ amount;
+    }
+
+    def add(flag: bool)
+    {
+        if flag
+        {
+            .value = .value %+ 10;
+        }
+    }
+}
+
+def pick(value: i32) i32
+{
+    return value;
+}
+
+def pick(flag: bool) i32
+{
+    if flag
+    {
+        return 2;
+    }
+    return 3;
+}
+
+def main() i32
+{
+    counter := Counter.new();
+    counter.add(1);
+    counter.add(true);
+    return pick(4) %+ pick(true) %+ counter.value;
+}

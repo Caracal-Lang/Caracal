@@ -125,7 +125,7 @@ namespace Caracal
         {
             for (const auto& method : typeDeclaration.methods())
             {
-                m_methodOwners.emplace(method.functionId, MethodOwner{ typeDeclaration.type(), method.name });
+                m_methodOwners.emplace(method.functionId, typeDeclaration.type());
             }
         }
     }
@@ -554,18 +554,17 @@ namespace Caracal
             return nullptr;
         }
 
-        auto* structure = llvm::dyn_cast_or_null<llvm::DICompositeType>(debugType(owner->second.type));
+        auto* structure = llvm::dyn_cast_or_null<llvm::DICompositeType>(debugType(owner->second));
         if (structure == nullptr)
         {
             return nullptr;
         }
 
-        const llvm::StringRef name = owner->second.methodName;
-        const auto line = static_cast<u32>(function.sourceLine().line);
+        const llvm::StringRef linkageName = LinkageName(function);
         for (auto* element : structure->getElements())
         {
             auto* declaration = llvm::dyn_cast_or_null<llvm::DISubprogram>(element);
-            if (declaration != nullptr && declaration->getName() == name && declaration->getLine() == line)
+            if (declaration != nullptr && declaration->getLinkageName() == linkageName)
             {
                 return declaration;
             }

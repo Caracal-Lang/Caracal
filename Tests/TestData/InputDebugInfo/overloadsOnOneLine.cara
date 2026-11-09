@@ -2,20 +2,13 @@ type Counter
 {
     value := 0
 
-    def add(amount: i8)
-    {
-        _ = amount;
-    }
-
-    def add(amount: i64)
-    {
-        _ = amount;
-    }
+    def add(amount: i32) { .value = .value %+ amount; } def add(flag: bool) { _ = flag; }
 }
 
 def main() i32
 {
     counter := Counter.new();
     counter.add(1);
+    counter.add(true);
     return counter.value;
 }

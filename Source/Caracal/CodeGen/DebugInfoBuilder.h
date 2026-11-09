@@ -50,12 +50,6 @@ namespace Caracal
         void finalize();
 
     private:
-        struct MethodOwner final
-        {
-            Type type;
-            std::string_view methodName;
-        };
-
         [[nodiscard]] llvm::DIFile* fileFor(u16 fileId);
         [[nodiscard]] llvm::DIType* debugType(Type type);
         [[nodiscard]] llvm::DIType* basicType(Type type);
@@ -80,7 +74,7 @@ namespace Caracal
         llvm::DICompileUnit* m_compileUnit;
         std::unordered_map<u16, llvm::DIFile*> m_files;
         std::unordered_map<i32, llvm::DIType*> m_types;
-        std::unordered_map<FunctionId, MethodOwner> m_methodOwners;
+        std::unordered_map<FunctionId, Type> m_methodOwners;
         llvm::DISubprogram* m_subprogram = nullptr;
         llvm::DIType* m_thisType = nullptr;
         i32 m_functionLine = -1;

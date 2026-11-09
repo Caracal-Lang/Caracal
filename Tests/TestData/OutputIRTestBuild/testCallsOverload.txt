@@ -48,20 +48,36 @@ define __caracal_tests_stub$ref.TestRun(%0: ref TestRun "Assert") void
 block entry(0):
     %0 = parameter 0 : ref TestRun "Assert"
     %slot0 = allocate_local : string "temp"
+    %slot1 = allocate_local : string "temp"
     %1 = address_of %slot0 : ref string
     %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
-    %3 = const "prints a message\0" : cstring
+    %3 = const "pick with a number\0" : cstring
     %4 = address_of_field %2.0 : ref u8 "data"
     store_value %3, %4 : ref u8
-    %5 = const 16 : i32
+    %5 = const 18 : i32
     %6 = address_of_field %2.1 : ref i32 "length"
     store_value %5, %6 : i32
-    %7 = const 16 : i32
+    %7 = const 18 : i32
     %8 = address_of_field %2.2 : ref i32 "capacity"
     store_value %7, %8 : i32
     %9 = load_value %1 : string
     call TestRun.beginTest$ref.TestRun,string(%0, %9)
-    call __caracal_test_prints_a_message$ref.TestRun(%0)
+    call __caracal_test_pick_with_a_number$ref.TestRun(%0)
+    call TestRun.endTest$ref.TestRun(%0)
+    %10 = address_of %slot1 : ref string
+    %11 = address_of_field %10.0 : ref [u8; _] "_bytes"
+    %12 = const "pick with a bool\0" : cstring
+    %13 = address_of_field %11.0 : ref u8 "data"
+    store_value %12, %13 : ref u8
+    %14 = const 16 : i32
+    %15 = address_of_field %11.1 : ref i32 "length"
+    store_value %14, %15 : i32
+    %16 = const 16 : i32
+    %17 = address_of_field %11.2 : ref i32 "capacity"
+    store_value %16, %17 : i32
+    %18 = load_value %10 : string
+    call TestRun.beginTest$ref.TestRun,string(%0, %18)
+    call __caracal_test_pick_with_a_bool$ref.TestRun(%0)
     call TestRun.endTest$ref.TestRun(%0)
     return
 
@@ -197,28 +213,100 @@ block entry(0):
     %2 = call printf(%1, %0) : i32
     return
 
-define print$cstring(%0: cstring "value") void
+define pick$i32(%0: i32 "value") i32
 block entry(0):
-    %0 = parameter 0 : cstring "value"
-    return
+    %0 = parameter 0 : i32 "value"
+    return %0
 
-define __caracal_test_prints_a_message$ref.TestRun(%0: ref TestRun "Assert") void
+define pick$bool(%0: bool "flag") i32
+block entry(0):
+    %0 = parameter 0 : bool "flag"
+    branch if %0, if.true(1), if.continuation(2)
+block if.true(1):
+    %1 = const 2 : i32
+    return %1
+block if.continuation(2):
+    %2 = const 3 : i32
+    return %2
+
+define __caracal_test_pick_with_a_number$ref.TestRun(%0: ref TestRun "Assert") void
 block entry(0):
     %0 = parameter 0 : ref TestRun "Assert"
     %slot0 = allocate_local : string "temp"
-    %1 = address_of %slot0 : ref string
-    %2 = address_of_field %1.0 : ref [u8; _] "_bytes"
-    %3 = const "message\0" : cstring
-    %4 = address_of_field %2.0 : ref u8 "data"
-    store_value %3, %4 : ref u8
-    %5 = const 7 : i32
-    %6 = address_of_field %2.1 : ref i32 "length"
-    store_value %5, %6 : i32
-    %7 = const 7 : i32
-    %8 = address_of_field %2.2 : ref i32 "capacity"
-    store_value %7, %8 : i32
-    %9 = load_value %1 : string
-    call print$string(%9)
+    %slot1 = allocate_local : SourceLocation "temp"
+    %1 = const 1 : i32
+    %2 = call pick$i32(%1) : i32
+    %3 = const 1 : i32
+    %4 = equal %2, %3 : bool
+    %5 = address_of %slot0 : ref string
+    %6 = address_of_field %5.0 : ref [u8; _] "_bytes"
+    %7 = const "pick(1) == 1\0" : cstring
+    %8 = address_of_field %6.0 : ref u8 "data"
+    store_value %7, %8 : ref u8
+    %9 = const 12 : i32
+    %10 = address_of_field %6.1 : ref i32 "length"
+    store_value %9, %10 : i32
+    %11 = const 12 : i32
+    %12 = address_of_field %6.2 : ref i32 "capacity"
+    store_value %11, %12 : i32
+    %13 = load_value %5 : string
+    %14 = address_of %slot1 : ref SourceLocation
+    %15 = address_of_field %14.0 : ref string "filePath"
+    %16 = address_of_field %15.0 : ref [u8; _] "_bytes"
+    %17 = const "\0" : cstring
+    %18 = address_of_field %16.0 : ref u8 "data"
+    store_value %17, %18 : ref u8
+    %19 = const 0 : i32
+    %20 = address_of_field %16.1 : ref i32 "length"
+    store_value %19, %20 : i32
+    %21 = const 0 : i32
+    %22 = address_of_field %16.2 : ref i32 "capacity"
+    store_value %21, %22 : i32
+    %23 = address_of_field %14.1 : ref i32 "line"
+    %24 = const 17 : i32
+    store_value %24, %23 : i32
+    %25 = load_value %14 : SourceLocation
+    call TestRun.isTrue$ref.TestRun,bool,string,SourceLocation(%0, %4, %13, %25)
+    return
+
+define __caracal_test_pick_with_a_bool$ref.TestRun(%0: ref TestRun "Assert") void
+block entry(0):
+    %0 = parameter 0 : ref TestRun "Assert"
+    %slot0 = allocate_local : string "temp"
+    %slot1 = allocate_local : SourceLocation "temp"
+    %1 = const true : bool
+    %2 = call pick$bool(%1) : i32
+    %3 = const 2 : i32
+    %4 = equal %2, %3 : bool
+    %5 = address_of %slot0 : ref string
+    %6 = address_of_field %5.0 : ref [u8; _] "_bytes"
+    %7 = const "pick(true) == 2\0" : cstring
+    %8 = address_of_field %6.0 : ref u8 "data"
+    store_value %7, %8 : ref u8
+    %9 = const 15 : i32
+    %10 = address_of_field %6.1 : ref i32 "length"
+    store_value %9, %10 : i32
+    %11 = const 15 : i32
+    %12 = address_of_field %6.2 : ref i32 "capacity"
+    store_value %11, %12 : i32
+    %13 = load_value %5 : string
+    %14 = address_of %slot1 : ref SourceLocation
+    %15 = address_of_field %14.0 : ref string "filePath"
+    %16 = address_of_field %15.0 : ref [u8; _] "_bytes"
+    %17 = const "\0" : cstring
+    %18 = address_of_field %16.0 : ref u8 "data"
+    store_value %17, %18 : ref u8
+    %19 = const 0 : i32
+    %20 = address_of_field %16.1 : ref i32 "length"
+    store_value %19, %20 : i32
+    %21 = const 0 : i32
+    %22 = address_of_field %16.2 : ref i32 "capacity"
+    store_value %21, %22 : i32
+    %23 = address_of_field %14.1 : ref i32 "line"
+    %24 = const 22 : i32
+    store_value %24, %23 : i32
+    %25 = load_value %14 : SourceLocation
+    call TestRun.isTrue$ref.TestRun,bool,string,SourceLocation(%0, %4, %13, %25)
     return
 
 define main() i32
