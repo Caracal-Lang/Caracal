@@ -3,7 +3,51 @@ def print(message: string)
     C.printf("%.*s", message.length(), message.toCString());
 }
 
+def print(value: i32)
+{
+    C.printf("%d", value);
+}
+
+def print(value: bool)
+{
+    if value
+    {
+        print("true");
+    }
+    else
+    {
+        print("false");
+    }
+}
+
+def print(value: f32)
+{
+    C.printf("%f", value);
+}
+
 def printLine(message: string)
 {
     C.puts(message.toCString());
+}
+
+def printLine(value: i32)
+{
+    C.printf("%d\n", value);
+}
+
+def printLine(value: bool)
+{
+    if value
+    {
+        printLine("true");
+    }
+    else
+    {
+        printLine("false");
+    }
+}
+
+def printLine(value: f32)
+{
+    C.printf("%f\n", value);
 }

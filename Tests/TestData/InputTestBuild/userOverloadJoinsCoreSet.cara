@@ -1,0 +1,20 @@
+type Point(x: i32)
+{
+    x := x
+}
+
+def print(point: Point)
+{
+    print(point.x);
+}
+
+test "prints a point and a number"
+{
+    print(Point.new(3));
+    print(4);
+}
+
+def main() i32
+{
+    return 0;
+}
