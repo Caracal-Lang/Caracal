@@ -537,6 +537,19 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addMissingCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& calleeText)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0021_MissingCall,
+            source,
+            location,
+            "Add the arguments in parentheses after " + calleeText + ".");
+        diagnostic.addPrimaryLabel(location, "No argument list follows " + calleeText);
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addDanglingAnnotationError(const SourceTextSharedPtr& source, const SourceLocation& location)
     {
         auto diagnostic = Diagnostic(

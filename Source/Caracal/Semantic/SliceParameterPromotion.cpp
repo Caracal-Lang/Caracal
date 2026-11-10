@@ -30,7 +30,7 @@ namespace Caracal
 
     [[nodiscard]] static u32 CallNameExpressionIndex(const NodeBuffer& buffer, u32 callIndex)
     {
-        return NodeLayout::subtreeBegin(buffer, callIndex);
+        return NodeLayout::functionCallee(buffer, callIndex);
     }
 
     [[nodiscard]] static u64 MakeSliceParameterKey(Type functionType, size_t parameterIndex)
@@ -59,14 +59,12 @@ namespace Caracal
         SlicePromotionUsage& usage)
     {
         const auto& buffer = unit.nodeBuffer;
-        auto children = std::vector<u32>{};
-        NodeLayout::collectChildren(buffer, callIndex, children);
+        auto arguments = std::vector<u32>{};
+        NodeLayout::functionCall(buffer, callIndex, arguments);
 
-        // arguments start at 1
         size_t positionalIndex = 0;
-        for (size_t childIndex = 1; childIndex < children.size(); ++childIndex)
+        for (const auto argument : arguments)
         {
-            const auto argument = children[childIndex];
             const auto isNamed = buffer.kind(argument) == NodeKind::NamedArgument;
             auto value = argument;
             if (isNamed)

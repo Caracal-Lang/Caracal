@@ -242,12 +242,9 @@ namespace Caracal
         }
 
         const auto& buffer = unit.nodeBuffer;
-        NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
+        NodeLayout::functionCall(buffer, callIndex, m_childrenScratch);
         const auto argumentsStart = m_callArgumentStack.size();
-        for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
-        {
-            m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
-        }
+        m_callArgumentStack.insert(m_callArgumentStack.end(), m_childrenScratch.begin(), m_childrenScratch.end());
         const auto argumentCount = m_callArgumentStack.size() - argumentsStart;
 
         auto typesWithoutContext = std::vector<Type>{};

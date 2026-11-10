@@ -176,6 +176,22 @@ static void CapacityBoundHoldsOnDegenerateInputs()
         "def f(a: i32 = #sourceText",
         "def f(a: i32 = #sourceText(",
         "def f(a: i32 = #sourceText()",
+        "def f'",
+        "def f'(",
+        "def f'T,",
+        "def f'T,(",
+        "def f'T'U(",
+        "def f(){ g' }",
+        "def f(){ g'( }",
+        "def f(){ g'i32 }",
+        "def f(){ g'i32, }",
+        "def f(){ g'i32,i32 }",
+        "def f(){ g'i32( }",
+        "def f(){ g'[ }",
+        "def f(){ g'ref }",
+        "def f(){ x.g'i32 }",
+        "def f(){ h(g'i32, 5) }",
+        "def f(){ g'i32'i32() }",
     };
 
     for (const auto& input : inputs)

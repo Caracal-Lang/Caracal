@@ -57,6 +57,8 @@ namespace Caracal
                 return "P0019";
             case DiagnosticKind::P0020_UnknownAnnotationExpression:
                 return "P0020";
+            case DiagnosticKind::P0021_MissingCall:
+                return "P0021";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:
@@ -362,6 +364,8 @@ namespace Caracal
                 return "A test needs a name in quotes";
             case DiagnosticKind::P0020_UnknownAnnotationExpression:
                 return "Unknown annotation expression";
+            case DiagnosticKind::P0021_MissingCall:
+                return "Missing call";
 
             // Annotation diagnostics
             case DiagnosticKind::T0001_UnknownAnnotation:

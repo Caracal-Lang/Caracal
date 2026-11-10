@@ -114,16 +114,10 @@ namespace Caracal
         }
 
         std::vector<u32> arguments;
-        NodeLayout::collectChildren(unit.nodeBuffer, NodeLayout::binary(unit.nodeBuffer, stripped).right, arguments);
-        for (size_t argumentIndex = 1; argumentIndex < arguments.size(); ++argumentIndex)
+        NodeLayout::functionCall(unit.nodeBuffer, NodeLayout::binary(unit.nodeBuffer, stripped).right, arguments);
+        for (const auto argument : arguments)
         {
-            auto valueIndex = arguments[argumentIndex];
-            if (unit.nodeBuffer.kind(valueIndex) == NodeKind::NamedArgument)
-            {
-                valueIndex = NodeLayout::namedArgumentValue(valueIndex);
-            }
-
-            if (InitializerCallsFunction(module, unit, tokens, valueIndex))
+            if (InitializerCallsFunction(module, unit, tokens, NodeLayout::argumentValue(unit.nodeBuffer, argument)))
             {
                 return true;
             }

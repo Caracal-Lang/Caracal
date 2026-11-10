@@ -1,0 +1,14 @@
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def take(x: i32, y: i32) i32
+{
+    return x %+ y;
+}
+
+def main() i32
+{
+    return take(keep'i32, 5);
+}

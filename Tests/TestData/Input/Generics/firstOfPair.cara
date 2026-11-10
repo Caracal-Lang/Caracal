@@ -1,0 +1,10 @@
+def first'T,U(x: T, y: U) T
+{
+    _ = y;
+    return x;
+}
+
+def main() i32
+{
+    return first'i32,bool(7, true);
+}

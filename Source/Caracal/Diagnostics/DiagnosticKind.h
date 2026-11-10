@@ -33,6 +33,7 @@ namespace Caracal
         P0018_TestWithParameters,
         P0019_TestNameNotInQuotes,
         P0020_UnknownAnnotationExpression,
+        P0021_MissingCall,
 
         // Annotation diagnostics
         T0001_UnknownAnnotation,

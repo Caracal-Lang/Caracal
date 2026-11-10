@@ -268,12 +268,9 @@ namespace Caracal
             return false;
         }
 
-        NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
+        NodeLayout::functionCall(buffer, callIndex, m_childrenScratch);
         const auto argumentsStart = m_callArgumentStack.size();
-        for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
-        {
-            m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
-        }
+        m_callArgumentStack.insert(m_callArgumentStack.end(), m_childrenScratch.begin(), m_childrenScratch.end());
         const auto argumentsEnd = m_callArgumentStack.size();
         const auto orderedStart = m_orderedSlotStack.size();
         auto popFrames = [&]

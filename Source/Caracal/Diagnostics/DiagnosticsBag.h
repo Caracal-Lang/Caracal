@@ -43,6 +43,7 @@ namespace Caracal
         void addTestWithParametersError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addTestNameNotInQuotesError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addMissingCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& calleeText);
 
         // Annotation diagnostics
         void addDanglingAnnotationError(const SourceTextSharedPtr& source, const SourceLocation& location);

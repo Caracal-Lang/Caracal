@@ -68,12 +68,12 @@ namespace Caracal
                 }
                 case NodeKind::FunctionCallExpression:
                 {
-                    std::vector<u32> children;
-                    NodeLayout::collectChildren(buffer, index, children);
+                    std::vector<u32> arguments;
+                    NodeLayout::functionCall(buffer, index, arguments);
                     auto from = buffer.mainToken(index) + 1;
-                    if (children.size() > 1)
+                    if (!arguments.empty())
                     {
-                        from = lastTokenOf(buffer, tokens, children.back()) + 1;
+                        from = lastTokenOf(buffer, tokens, arguments.back()) + 1;
                     }
 
                     return findCloserToken(tokens, from, TokenKind::CloseParenthesis);
@@ -110,6 +110,11 @@ namespace Caracal
                     }
 
                     return findCloserToken(tokens, from, TokenKind::CloseBracket);
+                }
+                case NodeKind::TypeArgumentsNode:
+                case NodeKind::TypeParametersNode:
+                {
+                    return lastTokenOf(buffer, tokens, NodeLayout::lastChild(index));
                 }
                 default:
                 {
@@ -199,7 +204,7 @@ namespace Caracal
                 }
                 case NodeKind::FunctionCallExpression:
                 {
-                    const auto nameIndex = NodeLayout::subtreeBegin(buffer, index);
+                    const auto nameIndex = NodeLayout::functionCallee(buffer, index);
                     const auto nameLocation = expressionSourceLocation(buffer, tokens, nameIndex);
                     const auto closeToken = findMatchingCloseToken(tokens, mainToken, TokenKind::OpenParenthesis, TokenKind::CloseParenthesis);
                     const auto& closeLocation = TokenLocationAt(tokens, closeToken);
@@ -244,7 +249,7 @@ namespace Caracal
                 }
                 case NodeKind::FunctionCallExpression:
                 {
-                    const auto nameLocation = expressionLocation(buffer, tokens, NodeLayout::firstChild(buffer, index));
+                    const auto nameLocation = expressionLocation(buffer, tokens, NodeLayout::functionCallee(buffer, index));
                     const auto& closeLocation = TokenLocationAt(tokens, lastTokenOf(buffer, tokens, index));
                     return SourceLocation{ nameLocation.startIndex, closeLocation.endIndex };
                 }

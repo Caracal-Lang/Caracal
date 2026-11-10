@@ -508,6 +508,56 @@ namespace Caracal
             m_builder.appendIndentedLine("}");
         }
 
+        void printTypeArguments(u32 index)
+        {
+            const auto childrenStart = collectChildrenOf(index);
+            m_builder
+                .appendIndented(stringify(NodeKind::TypeArgumentsNode))
+                .append("(")
+                .append(std::to_string(m_childrenStack.size() - childrenStart))
+                .appendLine("): {");
+            m_builder.pushIndentation();
+
+            for (auto position = m_childrenStack.size(); position > childrenStart; position--)
+            {
+                printTypeName(m_childrenStack[position - 1]);
+            }
+            m_childrenStack.resize(childrenStart);
+
+            m_builder.popIndentation();
+            m_builder.appendIndentedLine("}");
+        }
+
+        void printTypeParameters(u32 index)
+        {
+            const auto childrenStart = collectChildrenOf(index);
+            m_builder
+                .appendIndented(stringify(NodeKind::TypeParametersNode))
+                .append("(")
+                .append(std::to_string(m_childrenStack.size() - childrenStart))
+                .appendLine("): {");
+            m_builder.pushIndentation();
+
+            for (auto position = m_childrenStack.size(); position > childrenStart; position--)
+            {
+                const auto typeParameter = m_childrenStack[position - 1];
+                m_builder
+                    .appendIndented(stringify(NodeKind::TypeParameterNode))
+                    .appendLine(": {");
+                m_builder.pushIndentation();
+                WriteIndentedTypeName(m_builder, m_module, typeOf(typeParameter));
+                m_builder
+                    .appendIndented("Name: ")
+                    .appendLine(lexeme(m_buffer.mainToken(typeParameter)));
+                m_builder.popIndentation();
+                m_builder.appendIndentedLine("}");
+            }
+            m_childrenStack.resize(childrenStart);
+
+            m_builder.popIndentation();
+            m_builder.appendIndentedLine("}");
+        }
+
         void printBlock(u32 index)
         {
             const auto begin = index - m_buffer.subtreeSize(index) + 1;
@@ -696,6 +746,10 @@ namespace Caracal
                 .appendIndented("Name: ")
                 .appendLine(lexeme(m_buffer.mainToken(index)));
             printPendingAnnotations();
+            if (functionLayout.hasTypeParameters)
+            {
+                printTypeParameters(functionLayout.typeParameters);
+            }
             printParameters(functionLayout.parameters);
             printReturnTypes(functionLayout.returnTypes);
             printBlock(functionLayout.body);
@@ -1059,6 +1113,11 @@ namespace Caracal
 
             // remove the name expression from the stack
             m_childrenStack.pop_back();
+            if (m_childrenStack.size() > childrenStart && m_buffer.kind(m_childrenStack.back()) == NodeKind::TypeArgumentsNode)
+            {
+                printTypeArguments(m_childrenStack.back());
+                m_childrenStack.pop_back();
+            }
             printArgumentList(childrenStart);
             m_childrenStack.resize(childrenStart);
 
