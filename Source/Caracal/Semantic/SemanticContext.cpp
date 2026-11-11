@@ -553,6 +553,40 @@ namespace Caracal
         return m_typeDefinitions.back();
     }
 
+    Type SemanticContext::createTypeParameter(std::string_view name) noexcept
+    {
+        auto typeId = m_nextId += VariantCount;
+        m_typeNames.try_emplace(typeId, std::string(name));
+
+        return Type{ typeId, TypeKind::TypeParameter };
+    }
+
+    void SemanticContext::setTypeParameters(FunctionDefinition& definition, std::vector<Type> typeParameters) noexcept
+    {
+        auto& data = m_genericFunctionData.emplace_back();
+        data.typeParameters = std::move(typeParameters);
+        definition.setGenericData(GenericKind::Template, static_cast<i32>(m_genericFunctionData.size() - 1));
+    }
+
+    void SemanticContext::setSpecialization(FunctionDefinition& definition, Type templateType, std::vector<Type> typeArguments) noexcept
+    {
+        auto& data = m_genericFunctionData.emplace_back();
+        data.templateType = templateType;
+        data.typeArguments = std::move(typeArguments);
+        definition.setGenericData(GenericKind::Specialization, static_cast<i32>(m_genericFunctionData.size() - 1));
+    }
+
+    const GenericFunctionData& SemanticContext::genericFunctionData(const FunctionDefinition& definition) const noexcept
+    {
+        static const auto notGeneric = GenericFunctionData{};
+
+        if (definition.genericDataIndex() < 0)
+        {
+            return notGeneric;
+        }
+        return m_genericFunctionData[static_cast<size_t>(definition.genericDataIndex())];
+    }
+
     TypeDefinition& SemanticContext::createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description) noexcept
     {
         auto typeName = std::string(name);

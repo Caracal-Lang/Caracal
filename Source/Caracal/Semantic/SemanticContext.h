@@ -58,6 +58,10 @@ namespace Caracal
 
         [[nodiscard]] EnumDefinition& createEnum(std::string_view name) noexcept;
         [[nodiscard]] TypeDefinition& createType(std::string_view name) noexcept;
+        [[nodiscard]] Type createTypeParameter(std::string_view name) noexcept;
+        void setTypeParameters(FunctionDefinition& definition, std::vector<Type> typeParameters) noexcept;
+        void setSpecialization(FunctionDefinition& definition, Type templateType, std::vector<Type> typeArguments) noexcept;
+        [[nodiscard]] const GenericFunctionData& genericFunctionData(const FunctionDefinition& definition) const noexcept;
         [[nodiscard]] FunctionDefinition& createFunction(
             std::string_view name,
             std::vector<Parameter> parameters,
@@ -120,6 +124,7 @@ namespace Caracal
         PreludeFunctionPool m_preludeFunctionPool;
         size_t m_preludeTypeDefinitionCount{ 0 };
         std::vector<FunctionDefinition> m_functionDefinitions;
+        std::vector<GenericFunctionData> m_genericFunctionData;
         std::vector<ConstantDefinition> m_constantDefinitions;
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;

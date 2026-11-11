@@ -56,7 +56,7 @@ FunctionDefinitionStatement: {
 }
 FunctionDefinitionStatement: {
     Type: undefined
-    Name: main
+    Name: callFirst
     ParametersNode(0): {
     }
     ReturnTypesNode(1): {

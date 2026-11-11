@@ -34,7 +34,7 @@ FunctionDefinitionStatement: {
 }
 FunctionDefinitionStatement: {
     Type: undefined
-    Name: main
+    Name: callKeep
     ParametersNode(0): {
     }
     ReturnTypesNode(1): {

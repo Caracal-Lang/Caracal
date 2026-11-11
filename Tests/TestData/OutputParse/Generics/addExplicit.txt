@@ -53,7 +53,7 @@ FunctionDefinitionStatement: {
 }
 FunctionDefinitionStatement: {
     Type: undefined
-    Name: main
+    Name: callAdd
     ParametersNode(0): {
     }
     ReturnTypesNode(1): {

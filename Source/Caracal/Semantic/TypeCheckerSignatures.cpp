@@ -30,6 +30,11 @@ namespace Caracal
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionSignature(unit, functionDeclaration.index);
         }
+        for (const auto genericFunctionDeclaration : m_genericFunctionDeclarations)
+        {
+            const auto& unit = unitFor(genericFunctionDeclaration);
+            typeCheckFunctionSignature(unit, genericFunctionDeclaration.index);
+        }
 
         reportInvalidOverloadSets();
         for (const auto functionDeclaration : m_functionDeclarations)
@@ -42,18 +47,25 @@ namespace Caracal
     void TypeChecker::typeCheckFunctionSignature(const CompilationUnit& unit, u32 index)
     {
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
-
-        pushScope(ScopeKind::Function);
-        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters, false);
-        auto returns = typeCheckReturnTypesNode(unit, functionLayout.returnTypes);
-        popScope(false);
-
-        const auto functionName = nameOf(unit, index);
         auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
         if (functionType == Type::Undefined())
         {
             TODO("This shouldn't happen");
         }
+
+        if (functionLayout.hasTypeParameters)
+        {
+            const auto& typeParameters = m_module.genericFunctionData(m_module.getFunctionDefinition(functionType)).typeParameters;
+            bindTypeParameters(unit, functionLayout.typeParameters, typeParameters);
+        }
+
+        pushScope(ScopeKind::Function);
+        auto parameters = typeCheckParametersNode(unit, functionLayout.parameters, false);
+        auto returns = typeCheckReturnTypesNode(unit, functionLayout.returnTypes);
+        popScope(false);
+        m_typeArguments.clear();
+
+        const auto functionName = nameOf(unit, index);
 
         auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         auto annotations = std::vector<u32>{};
@@ -83,6 +95,16 @@ namespace Caracal
         functionDefinition.setIsExtern(isExtern);
     }
 
+    void TypeChecker::bindTypeParameters(const CompilationUnit& unit, u32 typeParametersNode, const std::vector<Type>& types)
+    {
+        m_typeArguments.clear();
+        NodeLayout::collectChildren(unit.nodeBuffer, typeParametersNode, m_childrenScratch);
+        for (size_t position = 0; position < m_childrenScratch.size(); ++position)
+        {
+            m_typeArguments.emplace_back(nameOf(unit, m_childrenScratch[position]), types[position]);
+        }
+    }
+
     Type TypeChecker::typeCheckTypeNameNode(const CompilationUnit& unit, u32 index)
     {
         if (unit.nodeBuffer.kind(index) == NodeKind::ArrayTypeNameNode)
@@ -91,7 +113,20 @@ namespace Caracal
         }
 
         const auto name = nameOf(unit, index);
-        auto type = m_module.tryGetTypeByName(name);
+        auto type = Type::Undefined();
+        for (const auto& [typeParameterName, typeArgument] : m_typeArguments)
+        {
+            if (typeParameterName == name)
+            {
+                type = typeArgument;
+                break;
+            }
+        }
+        if (type == Type::Undefined())
+        {
+            type = m_module.tryGetTypeByName(name);
+        }
+
         if (type != Type::Undefined())
         {
             if (!m_isPreludePass)

@@ -410,9 +410,15 @@ namespace Caracal
     void TypeChecker::reportInvalidOverloadSets()
     {
         CARACAL_ZONE_NAMED("check.overloadSets");
+        removeInvalidOverloads(m_functionDeclarations);
+        removeInvalidOverloads(m_genericFunctionDeclarations);
+    }
+
+    void TypeChecker::removeInvalidOverloads(std::vector<NodeIndex>& declarations)
+    {
         auto acceptedDeclarations = std::vector<NodeIndex>{};
-        acceptedDeclarations.reserve(m_functionDeclarations.size());
-        for (const auto declaration : m_functionDeclarations)
+        acceptedDeclarations.reserve(declarations.size());
+        for (const auto declaration : declarations)
         {
             if (!rejectInvalidOverload(declaration))
             {
@@ -420,7 +426,7 @@ namespace Caracal
             }
         }
 
-        m_functionDeclarations = std::move(acceptedDeclarations);
+        declarations = std::move(acceptedDeclarations);
     }
 
     bool TypeChecker::rejectInvalidOverload(NodeIndex declaration)

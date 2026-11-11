@@ -19,8 +19,10 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Caracal
@@ -157,6 +159,7 @@ namespace Caracal
         void typeCheckFunctionSignatures();
         void typeCheckTypeSignatures();
         void reportInvalidOverloadSets();
+        void removeInvalidOverloads(std::vector<NodeIndex>& declarations);
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
         [[nodiscard]] bool rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
@@ -170,6 +173,7 @@ namespace Caracal
         [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
         [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
+        void bindTypeParameters(const CompilationUnit& unit, u32 typeParametersNode, const std::vector<Type>& types);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
@@ -344,11 +348,13 @@ namespace Caracal
         std::vector<CompilationUnit*> m_units;
         std::vector<NodeIndex> m_globalConstantDeclarations;
         std::vector<NodeIndex> m_functionDeclarations;
+        std::vector<NodeIndex> m_genericFunctionDeclarations;
         std::vector<NodeIndex> m_testDeclarations;
         NodeIndex m_testsStubDeclaration{};
         std::optional<NodeIndex> m_firstLoweringFailure;
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
+        std::vector<std::pair<std::string_view, Type>> m_typeArguments;
 
         std::vector<u32> m_pendingAnnotations;
         std::vector<u32> m_childrenScratch;
