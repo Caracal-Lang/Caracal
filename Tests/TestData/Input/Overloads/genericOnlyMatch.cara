@@ -1,0 +1,16 @@
+def describe(value: i32) i32
+{
+    _ = value;
+    return 1;
+}
+
+def describe'T(value: T) i32
+{
+    _ = value;
+    return 2;
+}
+
+def describeText() i32
+{
+    return describe("text");
+}

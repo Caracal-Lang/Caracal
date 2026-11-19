@@ -116,9 +116,13 @@ namespace Caracal
     {
         const auto* candidateDefinition = module.tryGetFunctionDefinition(candidate);
         const auto* otherDefinition = module.tryGetFunctionDefinition(other);
-        if (!candidateDefinition->isSpecialization() || !otherDefinition->isSpecialization())
+        if (!otherDefinition->isSpecialization())
         {
             return false;
+        }
+        if (!candidateDefinition->isSpecialization())
+        {
+            return true;
         }
 
         const auto& candidateParameters = module.tryGetFunctionDefinition(module.genericFunctionData(*candidateDefinition).templateType)->parameters();
@@ -319,9 +323,10 @@ namespace Caracal
 
         auto viableCandidates = std::vector<Type>{};
         auto ranks = std::vector<ArgumentRank>{};
-        for (const auto candidate : overloadSet.overloads)
+        for (const auto member : overloadSet.overloads)
         {
-            if (rankCandidate(unit, callIndex, candidate, argumentsStart, typesWithoutContext, ranks))
+            const auto candidate = candidateForRanking(unit, callIndex, member, argumentsStart, typesWithoutContext);
+            if (candidate != Type::Undefined() && rankCandidate(unit, callIndex, candidate, argumentsStart, typesWithoutContext, ranks))
             {
                 viableCandidates.push_back(candidate);
             }

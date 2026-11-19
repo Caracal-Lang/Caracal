@@ -195,6 +195,8 @@ namespace Caracal
         void addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex);
         void reportInvalidTypeParameters(const CompilationUnit& unit, u32 typeParametersNode);
         [[nodiscard]] CheckedValue typeCheckInferredGenericFunctionCall(const CompilationUnit& unit, u32 index, Type templateType, const ExpressionContext& context);
+        [[nodiscard]] std::vector<Type> inferTypeArguments(const CompilationUnit& unit, u32 callIndex, Type templateType, std::span<const u32> argumentValues, std::span<const Type> argumentTypes, bool reportsErrors);
+        [[nodiscard]] Type candidateForRanking(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext);
         void reportGenericParameterDefaultValues(const CompilationUnit& unit, const std::vector<Parameter>& parameters, const std::vector<u32>& parameterNodes);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);

@@ -170,6 +170,10 @@ namespace Caracal
         {
             return typeCheckInferredGenericFunctionCall(unit, index, functionType, context);
         }
+        if (functionDefinition.isSpecialization())
+        {
+            addPendingSpecialization(functionType, NodeIndex{ unit.fileId, index });
+        }
 
         // extern declarations only reach codegen when a call requires them
         if (functionDefinition.isExtern())

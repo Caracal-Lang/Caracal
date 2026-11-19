@@ -6,6 +6,7 @@
 #include <Caracal/Syntax/NodeLayout.h>
 
 #include <algorithm>
+#include <span>
 #include <string>
 #include <utility>
 #include <vector>
@@ -96,7 +97,6 @@ namespace Caracal
             }
         }
 
-        addPendingSpecialization(specialization, NodeIndex{ unit.fileId, index });
         return typeCheckResolvedFunctionCall(unit, index, specialization, context);
     }
 
@@ -159,6 +159,33 @@ namespace Caracal
         Type templateType,
         const ExpressionContext& context)
     {
+        auto argumentValues = std::vector<u32>{};
+        NodeLayout::functionCall(unit.nodeBuffer, index, argumentValues);
+        auto argumentTypes = std::vector<Type>{};
+        for (auto& argumentValue : argumentValues)
+        {
+            argumentValue = NodeLayout::argumentValue(unit.nodeBuffer, argumentValue);
+            argumentTypes.push_back(checkArgumentWithoutEmission(unit, argumentValue, ExpressionContext{}));
+        }
+
+        const auto typeArguments = inferTypeArguments(unit, index, templateType, argumentValues, argumentTypes, true);
+        if (typeArguments.empty())
+        {
+            return Type::Undefined();
+        }
+
+        return typeCheckResolvedFunctionCall(unit, index, specializationOf(templateType, typeArguments), context);
+    }
+
+    // empty result means inference failed
+    std::vector<Type> TypeChecker::inferTypeArguments(
+        const CompilationUnit& unit,
+        u32 callIndex,
+        Type templateType,
+        std::span<const u32> argumentValues,
+        std::span<const Type> argumentTypes,
+        bool reportsErrors)
+    {
         const auto& templateDefinition = m_module.getFunctionDefinition(templateType);
         const auto functionName = templateDefinition.name();
         const auto typeParameters = m_module.genericFunctionData(templateDefinition).typeParameters;
@@ -168,10 +195,7 @@ namespace Caracal
             parameterTypes.push_back(parameter.type().toBaseType());
         }
 
-        auto argumentNodes = std::vector<u32>{};
-        NodeLayout::functionCall(unit.nodeBuffer, index, argumentNodes);
-        const auto argumentCount = std::min(argumentNodes.size(), parameterTypes.size());
-
+        const auto argumentCount = std::min(argumentValues.size(), parameterTypes.size());
         auto typeArguments = std::vector<Type>(typeParameters.size(), Type::Undefined());
         auto bindingArguments = std::vector<u32>(typeParameters.size(), InvalidNodeIndex);
         for (const auto bindsLiterals : { false, true })
@@ -179,7 +203,7 @@ namespace Caracal
             for (size_t position = 0; position < argumentCount; ++position)
             {
                 const auto typeParameter = std::ranges::find(typeParameters, parameterTypes[position]);
-                const auto argumentValue = NodeLayout::argumentValue(unit.nodeBuffer, argumentNodes[position]);
+                const auto argumentValue = argumentValues[position];
                 if (typeParameter == typeParameters.end() || IsPlainNumberLiteral(unit.nodeBuffer, argumentValue) != bindsLiterals)
                 {
                     continue;
@@ -187,27 +211,25 @@ namespace Caracal
 
                 const auto typeParameterPosition = static_cast<size_t>(typeParameter - typeParameters.begin());
                 auto& typeArgument = typeArguments[typeParameterPosition];
-                if (bindsLiterals && typeArgument != Type::Undefined())
-                {
-                    continue;
-                }
-
-                const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, ExpressionContext{}).toValue();
-                if (argumentType == Type::Undefined())
+                const auto argumentType = argumentTypes[position].toValue();
+                if ((bindsLiterals && typeArgument != Type::Undefined()) || argumentType == Type::Undefined())
                 {
                     continue;
                 }
                 if (typeArgument != Type::Undefined() && typeArgument != argumentType)
                 {
-                    m_diagnostics.addConflictingTypeInferenceError(
-                        unit.source,
-                        ExpressionSourceLocation(m_compilationContext, unit, argumentValue),
-                        ExpressionSourceLocation(m_compilationContext, unit, bindingArguments[typeParameterPosition]),
-                        functionName,
-                        std::string(m_module.getNameByType(*typeParameter)),
-                        formatTypeName(m_module, typeArgument),
-                        formatTypeName(m_module, argumentType));
-                    return Type::Undefined();
+                    if (reportsErrors)
+                    {
+                        m_diagnostics.addConflictingTypeInferenceError(
+                            unit.source,
+                            ExpressionSourceLocation(m_compilationContext, unit, argumentValue),
+                            ExpressionSourceLocation(m_compilationContext, unit, bindingArguments[typeParameterPosition]),
+                            functionName,
+                            std::string(m_module.getNameByType(*typeParameter)),
+                            formatTypeName(m_module, typeArgument),
+                            formatTypeName(m_module, argumentType));
+                    }
+                    return {};
                 }
 
                 typeArgument = argumentType;
@@ -219,18 +241,46 @@ namespace Caracal
         {
             if (typeArguments[position] == Type::Undefined())
             {
-                m_diagnostics.addCannotInferTypeParameterError(
-                    unit.source,
-                    ExpressionSourceLocation(m_compilationContext, unit, index),
-                    functionName,
-                    std::string(m_module.getNameByType(typeParameters[position])));
-                return Type::Undefined();
+                if (reportsErrors)
+                {
+                    m_diagnostics.addCannotInferTypeParameterError(
+                        unit.source,
+                        ExpressionSourceLocation(m_compilationContext, unit, callIndex),
+                        functionName,
+                        std::string(m_module.getNameByType(typeParameters[position])));
+                }
+                return {};
             }
         }
 
-        const auto specialization = specializationOf(templateType, typeArguments);
-        addPendingSpecialization(specialization, NodeIndex{ unit.fileId, index });
-        return typeCheckResolvedFunctionCall(unit, index, specialization, context);
+        return typeArguments;
+    }
+
+    Type TypeChecker::candidateForRanking(
+        const CompilationUnit& unit,
+        u32 callIndex,
+        Type candidate,
+        size_t argumentsStart,
+        std::span<const Type> typesWithoutContext)
+    {
+        if (!m_module.getFunctionDefinition(candidate).isTemplate())
+        {
+            return candidate;
+        }
+
+        auto argumentValues = std::vector<u32>{};
+        for (size_t position = 0; position < typesWithoutContext.size(); ++position)
+        {
+            argumentValues.push_back(NodeLayout::argumentValue(unit.nodeBuffer, m_callArgumentStack[argumentsStart + position]));
+        }
+
+        const auto typeArguments = inferTypeArguments(unit, callIndex, candidate, argumentValues, typesWithoutContext, false);
+        if (typeArguments.empty())
+        {
+            return Type::Undefined();
+        }
+
+        return specializationOf(candidate, typeArguments);
     }
 
     Type TypeChecker::specializationOf(Type templateType, const std::vector<Type>& typeArguments)

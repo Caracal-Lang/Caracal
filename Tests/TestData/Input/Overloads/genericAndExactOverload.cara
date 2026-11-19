@@ -1,0 +1,26 @@
+def describe(value: i32) i32
+{
+    _ = value;
+    return 1;
+}
+
+def describe'T(value: T) i32
+{
+    _ = value;
+    return 2;
+}
+
+def describeInteger() i32
+{
+    return describe(5);
+}
+
+def describeBool() i32
+{
+    return describe(true);
+}
+
+def describeExplicit() i32
+{
+    return describe'i32(5);
+}
