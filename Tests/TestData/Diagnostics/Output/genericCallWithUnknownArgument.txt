@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+     ,-[Diagnostics/Input/genericCallWithUnknownArgument.cara:8:17]
+   5 | 
+   6 | def callKeep() i32
+   7 | {
+   8 |     return keep(unknownName);
+     .                 -----------
+     .                      `-- Unknown name 'unknownName'
+   9 | }
+  10 | 
+     `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.

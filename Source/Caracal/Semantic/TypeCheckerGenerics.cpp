@@ -162,10 +162,17 @@ namespace Caracal
         auto argumentValues = std::vector<u32>{};
         NodeLayout::functionCall(unit.nodeBuffer, index, argumentValues);
         auto argumentTypes = std::vector<Type>{};
+        auto argumentErrors = std::vector<Diagnostic>{};
         for (auto& argumentValue : argumentValues)
         {
             argumentValue = NodeLayout::argumentValue(unit.nodeBuffer, argumentValue);
-            argumentTypes.push_back(checkArgumentWithoutEmission(unit, argumentValue, ExpressionContext{}));
+            argumentTypes.push_back(checkArgumentWithoutContext(unit, argumentValue, argumentErrors));
+        }
+
+        if (!argumentErrors.empty())
+        {
+            m_diagnostics.addDiagnostics(std::move(argumentErrors));
+            return Type::Undefined();
         }
 
         const auto typeArguments = inferTypeArguments(unit, index, templateType, argumentValues, argumentTypes, true);
