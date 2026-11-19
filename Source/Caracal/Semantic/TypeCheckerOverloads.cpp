@@ -34,7 +34,26 @@ namespace Caracal
         return false;
     }
 
-    [[nodiscard]] static bool HaveSameParameterTypes(const FunctionDefinition& left, const FunctionDefinition& right) noexcept
+    [[nodiscard]] static std::optional<size_t> TypeParameterPosition(const SemanticContext& module, const FunctionDefinition& definition, Type type) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        if (baseType.kind() != TypeKind::TypeParameter)
+        {
+            return std::nullopt;
+        }
+
+        const auto& typeParameters = module.genericFunctionData(definition).typeParameters;
+        const auto found = std::ranges::find(typeParameters, baseType);
+        if (found == typeParameters.end())
+        {
+            return std::nullopt;
+        }
+
+        return static_cast<size_t>(found - typeParameters.begin());
+    }
+
+    // thing'T(x: T) and thing'U(x: U) have the same parameter types
+    [[nodiscard]] static bool HaveSameParameterTypes(const SemanticContext& module, const FunctionDefinition& left, const FunctionDefinition& right) noexcept
     {
         const auto& leftParameters = left.parameters();
         const auto& rightParameters = right.parameters();
@@ -45,7 +64,22 @@ namespace Caracal
 
         for (size_t index = 0; index < leftParameters.size(); ++index)
         {
-            if (leftParameters[index].type() != rightParameters[index].type())
+            const auto leftType = leftParameters[index].type();
+            const auto rightType = rightParameters[index].type();
+            const auto leftPosition = TypeParameterPosition(module, left, leftType);
+            const auto rightPosition = TypeParameterPosition(module, right, rightType);
+            if (!leftPosition.has_value() && !rightPosition.has_value())
+            {
+                if (leftType != rightType)
+                {
+                    return false;
+                }
+                continue;
+            }
+
+            if (leftPosition != rightPosition
+                || leftType.isReference() != rightType.isReference()
+                || leftType.isOptional() != rightType.isOptional())
             {
                 return false;
             }
@@ -537,7 +571,7 @@ namespace Caracal
         auto isRejected = false;
         for (const auto* earlierDefinition : earlierDefinitions)
         {
-            if (HaveSameParameterTypes(definition, *earlierDefinition))
+            if (HaveSameParameterTypes(m_module, definition, *earlierDefinition))
             {
                 locateDefinitionName(earlierDefinition->definitionNode(), otherSource, otherLocation);
                 m_diagnostics.addDuplicateFunctionDeclarationError(
@@ -613,7 +647,7 @@ namespace Caracal
             const auto& memberDefinition = m_module.getFunctionDefinition(memberType);
             if (HasUndefinedParameter(memberDefinition)
                 || IsStaticMethod(memberDefinition) != IsStaticMethod(definition)
-                || !HaveSameParameterTypes(definition, memberDefinition))
+                || !HaveSameParameterTypes(m_module, definition, memberDefinition))
             {
                 continue;
             }
