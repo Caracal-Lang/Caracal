@@ -1,0 +1,157 @@
+FunctionDefinitionStatement: {
+    Type: (T, i32) -> i32
+    Name: repeat
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: count
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+            DefaultValue: {
+                NumberLiteral: 3
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: count
+            }
+        }
+    }
+    Specialization: {
+        Type: (bool, i32) -> i32
+        Name: repeat'bool
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: bool
+                        Name: x
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: count
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: (i32, i32) -> i32
+        Name: repeat'i32
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: count
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callRepeat
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            BinaryExpression: {
+                Type: i32
+                Left: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (bool, i32) -> i32
+                        NameExpression: {
+                            Type: (bool, i32) -> i32
+                            Name: repeat
+                        }
+                        ArgumentsNode(1): {
+                            BoolLiteral: true
+                        }
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    FunctionCallExpression: {
+                        Type: i32
+                        Function type: (i32, i32) -> i32
+                        NameExpression: {
+                            Type: (i32, i32) -> i32
+                            Name: repeat
+                        }
+                        TypeArgumentsNode(1): {
+                            TypeNameNode: {
+                                Type: i32
+                                Lexeme: i32
+                            }
+                        }
+                        ArgumentsNode(2): {
+                            NumberLiteral: 5
+                            NumberLiteral: 4
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -701,7 +701,11 @@ namespace Caracal
         auto parameters = std::vector<Parameter>{};
         for (const auto& parameter : templateDefinition.parameters())
         {
-            parameters.emplace_back(parameter.name(), specializeType(parameter.type(), typeParameters, typeArguments));
+            auto& specialized = parameters.emplace_back(
+                parameter.name(),
+                specializeType(parameter.type(), typeParameters, typeArguments),
+                parameter.defaultValue());
+            specialized.setDefaultValueNode(parameter.defaultValueNode());
         }
 
         auto returnTypes = std::vector<Type>{};

@@ -22,6 +22,22 @@ namespace Caracal
         return NodeSpans::typeNameSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), index);
     }
 
+    // T, ref T and [T; 4] contain a type parameter
+    [[nodiscard]] static bool ContainsTypeParameter(const SemanticContext& module, Type type) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        if (baseType.kind() == TypeKind::TypeParameter)
+        {
+            return true;
+        }
+        if (baseType.kind() == TypeKind::FixedArray || baseType.kind() == TypeKind::DynamicArray || baseType.kind() == TypeKind::Slice)
+        {
+            return ContainsTypeParameter(module, module.getArrayElementType(baseType));
+        }
+
+        return false;
+    }
+
     void TypeChecker::typeCheckFunctionSignatures()
     {
         CARACAL_ZONE_NAMED("check.functionSignatures");
@@ -41,6 +57,11 @@ namespace Caracal
         {
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionDefaultValues(unit, functionDeclaration.index);
+        }
+        for (const auto genericFunctionDeclaration : m_genericFunctionDeclarations)
+        {
+            const auto& unit = unitFor(genericFunctionDeclaration);
+            typeCheckFunctionDefaultValues(unit, genericFunctionDeclaration.index);
         }
     }
 
@@ -277,7 +298,8 @@ namespace Caracal
         pushScope(ScopeKind::Function);
         for (size_t position = 0; position < parameterNodes.size(); ++position)
         {
-            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue)
+            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue
+                && !ContainsTypeParameter(m_module, parameters[position].type()))
             {
                 typeCheckDefaultValue(unit, parameterNodes[position], parameters[position].type(), std::span<const Parameter>(parameters.data(), position));
             }
