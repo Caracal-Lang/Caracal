@@ -306,18 +306,41 @@ namespace Caracal
         return name;
     }
 
+    size_t ArrayTypeKeyHash::operator()(const ArrayTypeKey& key) const noexcept
+    {
+        auto hash = static_cast<size_t>(static_cast<u32>(key.elementId)) * 1000003u;
+        hash ^= static_cast<size_t>(static_cast<u32>(key.length)) + 0x9e3779b9u + (hash << 6) + (hash >> 2);
+        hash ^= static_cast<size_t>(key.kind) * 31u + static_cast<size_t>(key.isImmutableSlice);
+        return hash;
+    }
+
+    [[nodiscard]] static ArrayTypeKey CreateArrayTypeKey(
+        TypeKind arrayKind,
+        Type elementType,
+        i32 length,
+        bool immutableSlice) noexcept
+    {
+        auto keyLength = 0;
+        if (arrayKind == TypeKind::FixedArray)
+        {
+            keyLength = length;
+        }
+
+        return ArrayTypeKey{ arrayKind, elementType.id(), keyLength, immutableSlice };
+    }
+
     Type SemanticContext::getOrCreateArrayType(TypeKind arrayKind, Type elementType, i32 length, bool immutableSlice) noexcept
     {
-        auto arrayName = BuildArrayTypeName(*this, arrayKind, elementType, length, immutableSlice);
-        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        const auto key = CreateArrayTypeKey(arrayKind, elementType, length, immutableSlice);
+        if (const auto existing = m_arrayTypesByKey.find(key); existing != m_arrayTypesByKey.end())
         {
             return existing->second;
         }
 
         auto arrayId = m_nextId += VariantCount;
         auto arrayType = Type{ arrayId, arrayKind };
-        m_typeNames.try_emplace(arrayId, arrayName);
-        m_nameToTypes.try_emplace(arrayName, arrayType);
+        m_typeNames.try_emplace(arrayId, BuildArrayTypeName(*this, arrayKind, elementType, length, immutableSlice));
+        m_arrayTypesByKey.emplace(key, arrayType);
         m_arrayTypeInfoById.try_emplace(arrayId, ArrayTypeInfo{ elementType, length, immutableSlice });
         m_arrayTypes.push_back(arrayType);
 
@@ -337,8 +360,8 @@ namespace Caracal
 
     Type SemanticContext::tryGetMutableSliceType(Type immutableSlice) const noexcept
     {
-        const auto arrayName = BuildArrayTypeName(*this, TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
-        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        const auto key = CreateArrayTypeKey(TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
+        if (const auto existing = m_arrayTypesByKey.find(key); existing != m_arrayTypesByKey.end())
         {
             return existing->second;
         }
@@ -609,30 +632,51 @@ namespace Caracal
         return Type::Undefined();
     }
 
+    [[nodiscard]] static bool IsArrayKind(TypeKind kind) noexcept
+    {
+        return kind == TypeKind::FixedArray || kind == TypeKind::DynamicArray || kind == TypeKind::Slice;
+    }
+
     // for example T turns into i32, ref T turns into ref i32
-    [[nodiscard]] static Type SpecializeType(Type type, const std::vector<Type>& typeParameters, const std::vector<Type>& typeArguments) noexcept
+    // [T; 4] for i32 becomes [i32; 4]
+    Type SemanticContext::specializeType(
+        Type type,
+        const std::vector<Type>& typeParameters,
+        const std::vector<Type>& typeArguments) noexcept
     {
         const auto baseType = type.toBaseType();
-        for (size_t position = 0; position < typeParameters.size(); ++position)
+        auto specialized = baseType;
+        if (baseType.kind() == TypeKind::TypeParameter)
         {
-            if (typeParameters[position] != baseType)
+            const auto found = std::ranges::find(typeParameters, baseType);
+            if (found != typeParameters.end())
             {
-                continue;
+                specialized = typeArguments[static_cast<size_t>(found - typeParameters.begin())];
             }
-
-            auto substituted = typeArguments[position];
-            if (type.isReference())
+        }
+        else if (IsArrayKind(baseType.kind()))
+        {
+            const auto elementType = getArrayElementType(baseType);
+            const auto specializedElement = specializeType(elementType, typeParameters, typeArguments);
+            if (specializedElement != elementType)
             {
-                substituted = substituted.toReference();
+                specialized = getOrCreateArrayType(baseType.kind(), specializedElement, getArrayLength(baseType), isImmutableSlice(baseType));
             }
-            if (type.isOptional())
-            {
-                substituted = substituted.toOptional();
-            }
-            return substituted;
         }
 
-        return type;
+        if (specialized == baseType)
+        {
+            return type;
+        }
+        if (type.isReference())
+        {
+            specialized = specialized.toReference();
+        }
+        if (type.isOptional())
+        {
+            specialized = specialized.toOptional();
+        }
+        return specialized;
     }
 
     Type SemanticContext::createSpecialization(Type templateType, std::vector<Type> typeArguments) noexcept
@@ -653,13 +697,13 @@ namespace Caracal
         auto parameters = std::vector<Parameter>{};
         for (const auto& parameter : templateDefinition.parameters())
         {
-            parameters.emplace_back(parameter.name(), SpecializeType(parameter.type(), typeParameters, typeArguments));
+            parameters.emplace_back(parameter.name(), specializeType(parameter.type(), typeParameters, typeArguments));
         }
 
         auto returnTypes = std::vector<Type>{};
         for (const auto returnType : templateDefinition.returnTypes())
         {
-            returnTypes.push_back(SpecializeType(returnType, typeParameters, typeArguments));
+            returnTypes.push_back(specializeType(returnType, typeParameters, typeArguments));
         }
 
         const auto definitionNode = templateDefinition.definitionNode();

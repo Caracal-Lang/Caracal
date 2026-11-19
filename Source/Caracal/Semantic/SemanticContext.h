@@ -36,6 +36,21 @@ namespace Caracal
         auto operator<=>(const GenericSpecialization&) const = default;
     };
 
+    struct ArrayTypeKey
+    {
+        TypeKind kind;
+        i32 elementId;
+        i32 length;
+        bool isImmutableSlice;
+
+        bool operator==(const ArrayTypeKey&) const = default;
+    };
+
+    struct ArrayTypeKeyHash
+    {
+        [[nodiscard]] size_t operator()(const ArrayTypeKey& key) const noexcept;
+    };
+
     class CARACAL_API SemanticContext
     {
     public:
@@ -129,6 +144,8 @@ namespace Caracal
             bool isImmutableSlice = false;
         };
 
+        [[nodiscard]] Type specializeType(Type type, const std::vector<Type>& typeParameters, const std::vector<Type>& typeArguments) noexcept;
+
         std::vector<TypeDefinition> m_typeDefinitions;
         std::vector<EnumDefinition> m_enumDefinitions;
         std::vector<Type> m_requiredExternFunctions;
@@ -148,6 +165,7 @@ namespace Caracal
         std::unordered_map<i32, std::string> m_typeNames;
         std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_nameToTypes;
         std::unordered_map<i32, ArrayTypeInfo> m_arrayTypeInfoById;
+        std::unordered_map<ArrayTypeKey, Type, ArrayTypeKeyHash> m_arrayTypesByKey;
         std::vector<Type> m_arrayTypes;
         std::unordered_map<std::string, Type> m_arrayIntrinsicsByFullName;
         std::unordered_map<i32, BuiltinTypeDescription> m_builtinTypeDescriptionsById;

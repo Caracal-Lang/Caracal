@@ -1,0 +1,126 @@
+FunctionDefinitionStatement: {
+    Type: ([T; _]) -> i32
+    Name: count
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [T; _]
+                Lexeme: [T; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: T
+                        Lexeme: T
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: ([i32; _]) -> i32
+        Name: count'i32
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i32
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: [i32; _]
+                            Name: values
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        NameExpression: {
+                            Type: i32
+                            Name: length
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callCount
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: values
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: ([i32; _]) -> i32
+                NameExpression: {
+                    Type: ([i32; _]) -> i32
+                    Name: count
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: [i32; _]
+                        Name: values
+                    }
+                }
+            }
+        }
+    }
+}

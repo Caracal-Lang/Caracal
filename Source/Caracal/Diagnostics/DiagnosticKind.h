@@ -132,6 +132,7 @@ namespace Caracal
         T0122_GenericParameterDefaultValue,
         T0123_ReferenceTypeArgument,
         T0124_ConflictingTypeInference,
+        T0125_GenericCallsNestedTooDeeply,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

@@ -2473,6 +2473,33 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addGenericCallsNestedTooDeeplyError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        size_t limit,
+        const SourceTextSharedPtr& firstSource,
+        const SourceLocation& firstLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0125_GenericCallsNestedTooDeeply,
+            source,
+            location,
+            "End the chain of generic calls within " + std::to_string(limit) + " levels.");
+        diagnostic.addPrimaryLabel(location, "This call of " + functionName + " is more than " + std::to_string(limit) + " generic calls deep");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            firstSource,
+            firstLocation,
+            "First call of the chain",
+            "The chain of generic calls starts here.",
+            "The chain of generic calls starts here");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
     {
         auto diagnostic = Diagnostic(
@@ -2696,6 +2723,11 @@ namespace Caracal
         for (auto position = count; position < m_diagnostics.size(); ++position)
         {
             auto& diagnostic = m_diagnostics[position];
+            if (diagnostic.kind() == DiagnosticKind::T0125_GenericCallsNestedTooDeeply)
+            {
+                continue;
+            }
+
             AddPreviousDeclarationLabel(
                 diagnostic,
                 diagnostic.source(),

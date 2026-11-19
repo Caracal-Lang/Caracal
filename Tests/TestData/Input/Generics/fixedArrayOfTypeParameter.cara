@@ -1,0 +1,10 @@
+def first'T(values: [T; 3]) T
+{
+    return values.at(0);
+}
+
+def callFirst() i32
+{
+    values: [i32; 3] = [4, 5, 6];
+    return first(values);
+}

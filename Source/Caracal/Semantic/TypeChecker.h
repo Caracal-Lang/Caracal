@@ -81,6 +81,7 @@ namespace Caracal
             Type specialization;
             NodeIndex call;
             std::optional<size_t> callerIndex;
+            size_t depth;
         };
 
         struct CheckedValue

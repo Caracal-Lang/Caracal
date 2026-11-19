@@ -178,6 +178,7 @@ namespace Caracal
         void addExternGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
         void addGenericParameterDefaultValueError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName, const std::string& typeParameterName);
         void addReferenceTypeArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addGenericCallsNestedTooDeeplyError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, size_t limit, const SourceTextSharedPtr& firstSource, const SourceLocation& firstLocation);
         void addConflictingTypeInferenceError(const SourceTextSharedPtr& source, const SourceLocation& location, const SourceLocation& firstLocation, const std::string& functionName, const std::string& typeParameterName, const std::string& firstType, const std::string& secondType);
         void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
         void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);

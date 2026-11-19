@@ -1,0 +1,9 @@
+def deep'T(x: T) i32
+{
+    return deep'[T; 1]([x]);
+}
+
+def callDeep() i32
+{
+    return deep'i32(1);
+}

@@ -2,10 +2,12 @@
 
 #include <Caracal/Diagnostics/DiagnosticFormatting.h>
 #include <Caracal/Profiling.h>
+#include <Caracal/Semantic/SliceParameterPromotion.h>
 #include <Caracal/Semantic/TypeCheckerInternal.h>
 #include <Caracal/Syntax/NodeLayout.h>
 
 #include <algorithm>
+#include <optional>
 #include <span>
 #include <string>
 #include <utility>
@@ -13,6 +15,8 @@
 
 namespace Caracal
 {
+    static constexpr size_t MaximumSpecializationDepth = 64;
+
     TypeChecker::CheckedValue TypeChecker::typeCheckGenericFunctionCall(
         const CompilationUnit& unit,
         u32 index,
@@ -148,6 +152,44 @@ namespace Caracal
         }
     }
 
+    [[nodiscard]] static std::optional<std::pair<size_t, Type>> MatchTypeParameter(
+        const SemanticContext& module,
+        const std::vector<Type>& typeParameters,
+        Type parameterType,
+        Type argumentType) noexcept
+    {
+        const auto parameterBase = parameterType.toBaseType();
+        const auto argumentValue = argumentType.toValue();
+        if (argumentValue == Type::Undefined())
+        {
+            return std::nullopt;
+        }
+
+        if (parameterBase.kind() == TypeKind::TypeParameter)
+        {
+            const auto found = std::ranges::find(typeParameters, parameterBase);
+            if (found == typeParameters.end())
+            {
+                return std::nullopt;
+            }
+            return std::pair{ static_cast<size_t>(found - typeParameters.begin()), argumentValue };
+        }
+
+        const auto isArray = parameterBase.kind() == TypeKind::FixedArray
+            || parameterBase.kind() == TypeKind::DynamicArray
+            || parameterBase.kind() == TypeKind::Slice;
+        if (!isArray || parameterBase.kind() != argumentValue.kind())
+        {
+            return std::nullopt;
+        }
+        if (parameterBase.kind() == TypeKind::FixedArray && module.getArrayLength(parameterBase) != module.getArrayLength(argumentValue))
+        {
+            return std::nullopt;
+        }
+
+        return MatchTypeParameter(module, typeParameters, module.getArrayElementType(parameterBase), module.getArrayElementType(argumentValue));
+    }
+
     [[nodiscard]] static bool IsPlainNumberLiteral(const NodeBuffer& buffer, u32 index) noexcept
     {
         return buffer.kind(index) == NodeKind::NumberLiteral && buffer.subtreeSize(index) == 1;
@@ -209,17 +251,16 @@ namespace Caracal
         {
             for (size_t position = 0; position < argumentCount; ++position)
             {
-                const auto typeParameter = std::ranges::find(typeParameters, parameterTypes[position]);
                 const auto argumentValue = argumentValues[position];
-                if (typeParameter == typeParameters.end() || IsPlainNumberLiteral(unit.nodeBuffer, argumentValue) != bindsLiterals)
+                const auto match = MatchTypeParameter(m_module, typeParameters, parameterTypes[position], argumentTypes[position]);
+                if (!match.has_value() || IsPlainNumberLiteral(unit.nodeBuffer, argumentValue) != bindsLiterals)
                 {
                     continue;
                 }
 
-                const auto typeParameterPosition = static_cast<size_t>(typeParameter - typeParameters.begin());
+                const auto [typeParameterPosition, argumentType] = match.value();
                 auto& typeArgument = typeArguments[typeParameterPosition];
-                const auto argumentType = argumentTypes[position].toValue();
-                if ((bindsLiterals && typeArgument != Type::Undefined()) || argumentType == Type::Undefined())
+                if (bindsLiterals && typeArgument != Type::Undefined())
                 {
                     continue;
                 }
@@ -232,7 +273,7 @@ namespace Caracal
                             ExpressionSourceLocation(m_compilationContext, unit, argumentValue),
                             ExpressionSourceLocation(m_compilationContext, unit, bindingArguments[typeParameterPosition]),
                             functionName,
-                            std::string(m_module.getNameByType(*typeParameter)),
+                            std::string(m_module.getNameByType(typeParameters[typeParameterPosition])),
                             formatTypeName(m_module, typeArgument),
                             formatTypeName(m_module, argumentType));
                     }
@@ -298,15 +339,52 @@ namespace Caracal
             return existing;
         }
 
-        return m_module.createSpecialization(templateType, typeArguments);
+        const auto specialization = m_module.createSpecialization(templateType, typeArguments);
+        promoteReadOnlySliceParametersOfSpecialization(
+            m_compilationContext,
+            m_module,
+            specialization,
+            m_module.getFunctionDefinition(specialization).definitionNode());
+        return specialization;
     }
 
     void TypeChecker::addPendingSpecialization(Type specialization, NodeIndex call)
     {
-        if (m_pendingSpecializationIds.insert(specialization.id()).second)
+        if (m_pendingSpecializationIds.contains(specialization.id()))
         {
-            m_pendingSpecializations.push_back(PendingSpecialization{ specialization, call, m_checkedPendingIndex });
+            return;
         }
+
+        size_t depth = 1;
+        if (m_checkedPendingIndex.has_value())
+        {
+            depth = m_pendingSpecializations[m_checkedPendingIndex.value()].depth + 1;
+        }
+        if (depth > MaximumSpecializationDepth)
+        {
+            auto firstIndex = m_checkedPendingIndex.value();
+            while (m_pendingSpecializations[firstIndex].callerIndex.has_value())
+            {
+                firstIndex = m_pendingSpecializations[firstIndex].callerIndex.value();
+            }
+
+            const auto& specializationDefinition = m_module.getFunctionDefinition(specialization);
+            const auto templateName = m_module.getFunctionDefinition(m_module.genericFunctionData(specializationDefinition).templateType).name();
+            const auto& unit = unitFor(call);
+            const auto firstCall = m_pendingSpecializations[firstIndex].call;
+            const auto& firstUnit = unitFor(firstCall);
+            m_diagnostics.addGenericCallsNestedTooDeeplyError(
+                unit.source,
+                ExpressionSourceLocation(m_compilationContext, unit, call.index),
+                templateName,
+                MaximumSpecializationDepth,
+                firstUnit.source,
+                ExpressionSourceLocation(m_compilationContext, firstUnit, firstCall.index));
+            return;
+        }
+
+        m_pendingSpecializationIds.insert(specialization.id());
+        m_pendingSpecializations.push_back(PendingSpecialization{ specialization, call, m_checkedPendingIndex, depth });
     }
 
     void TypeChecker::addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex)

@@ -423,6 +423,67 @@ namespace Caracal
         }
     }
 
+    // a candidate that passes its slice to a parameter that is not promotable is not promotable
+    // the parameter of each candidate that stays promotable becomes a const slice
+    static void PromoteCandidates(
+        SemanticContext& module,
+        std::vector<SlicePromotionCandidate>& candidates,
+        const std::unordered_map<u64, size_t>& candidateIndexByKey)
+    {
+        auto changed = true;
+        while (changed)
+        {
+            changed = false;
+            for (auto& candidate : candidates)
+            {
+                if (!candidate.promotable)
+                {
+                    continue;
+                }
+
+                for (const auto& [calleeType, calleeIndex] : candidate.forwards)
+                {
+                    auto forwardIsPromotable = false;
+                    if (const auto found = candidateIndexByKey.find(MakeSliceParameterKey(calleeType, calleeIndex)); found != candidateIndexByKey.end())
+                    {
+                        forwardIsPromotable = candidates[found->second].promotable;
+                    }
+                    else
+                    {
+                        const auto& calleeParameters = module.getFunctionDefinition(calleeType).parameters();
+                        forwardIsPromotable = calleeIndex < calleeParameters.size()
+                            && module.isImmutableSlice(calleeParameters[calleeIndex].type());
+                    }
+
+                    if (!forwardIsPromotable)
+                    {
+                        candidate.promotable = false;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (const auto& candidate : candidates)
+        {
+            if (!candidate.promotable)
+            {
+                continue;
+            }
+
+            auto& functionDefinition = module.getFunctionDefinition(candidate.functionType);
+            auto parameters = functionDefinition.parameters();
+            auto& parameter = parameters[candidate.parameterIndex];
+            const auto elementType = module.getArrayElementType(parameter.type());
+
+            auto promoted = Parameter{ parameter.name(), module.getOrCreateArrayType(TypeKind::Slice, elementType, 0, true), parameter.defaultValue() };
+            promoted.setDefaultValueNode(parameter.defaultValueNode());
+            parameter = std::move(promoted);
+            functionDefinition.setParameters(std::move(parameters));
+        }
+    }
+
     void promoteReadOnlySliceParameters(
         const CompilationContext& context,
         SemanticContext& module,
@@ -479,57 +540,20 @@ namespace Caracal
             }
         }
 
-        auto changed = true;
-        while (changed)
-        {
-            changed = false;
-            for (auto& candidate : candidates)
-            {
-                if (!candidate.promotable)
-                {
-                    continue;
-                }
+        PromoteCandidates(module, candidates, candidateIndexByKey);
+    }
 
-                for (const auto& [calleeType, calleeIndex] : candidate.forwards)
-                {
-                    auto forwardIsPromotable = false;
-                    if (const auto found = candidateIndexByKey.find(MakeSliceParameterKey(calleeType, calleeIndex)); found != candidateIndexByKey.end())
-                    {
-                        forwardIsPromotable = candidates[found->second].promotable;
-                    }
-                    else
-                    {
-                        const auto& calleeParameters = module.getFunctionDefinition(calleeType).parameters();
-                        forwardIsPromotable = calleeIndex < calleeParameters.size()
-                            && module.isImmutableSlice(calleeParameters[calleeIndex].type());
-                    }
-
-                    if (!forwardIsPromotable)
-                    {
-                        candidate.promotable = false;
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        for (const auto& candidate : candidates)
-        {
-            if (!candidate.promotable)
-            {
-                continue;
-            }
-
-            auto& functionDefinition = module.getFunctionDefinition(candidate.functionType);
-            auto parameters = functionDefinition.parameters();
-            auto& parameter = parameters[candidate.parameterIndex];
-            const auto elementType = module.getArrayElementType(parameter.type());
-
-            auto promoted = Parameter{ parameter.name(), module.getOrCreateArrayType(TypeKind::Slice, elementType, 0, true), parameter.defaultValue() };
-            promoted.setDefaultValueNode(parameter.defaultValueNode());
-            parameter = std::move(promoted);
-            functionDefinition.setParameters(std::move(parameters));
-        }
+    void promoteReadOnlySliceParametersOfSpecialization(
+        const CompilationContext& context,
+        SemanticContext& module,
+        Type specialization,
+        NodeIndex templateDeclaration)
+    {
+        auto candidates = std::vector<SlicePromotionCandidate>{};
+        auto candidateIndexByKey = std::unordered_map<u64, size_t>{};
+        const auto& unit = context.units()[templateDeclaration.fileId];
+        const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, templateDeclaration.index);
+        CollectSlicePromotionCandidates(context, unit, specialization, functionLayout.body, module, candidates, candidateIndexByKey);
+        PromoteCandidates(module, candidates, candidateIndexByKey);
     }
 }

@@ -1,0 +1,101 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: count
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: undefined
+                Lexeme: [T; _]
+                Kind: Dynamic
+                DataType: {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: T
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: length
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callCount
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: values
+                }
+            }
+            Right: {
+                ArrayLiteral(2): {
+                    Type: undefined
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: count
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+            }
+        }
+    }
+}
