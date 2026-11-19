@@ -865,4 +865,9 @@ namespace Caracal
 
         found->second.nodeTypes[reference.index] = type;
     }
+
+    void SemanticContext::setBodyNodeTypes(const FunctionDefinition& specialization, std::vector<Type> bodyNodeTypes) noexcept
+    {
+        m_genericFunctionData[static_cast<size_t>(specialization.genericDataIndex())].bodyNodeTypes = std::move(bodyNodeTypes);
+    }
 }

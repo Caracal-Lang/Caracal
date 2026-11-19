@@ -40,16 +40,40 @@ FunctionDefinitionStatement: {
             }
             Right: {
                 NameExpression: {
-                    Type: bool
+                    Type: undefined
                     Name: y
                 }
             }
         }
         ReturnStatement: {
-            Type: i32
+            Type: undefined
             NameExpression: {
-                Type: i32
+                Type: undefined
                 Name: x
+            }
+        }
+    }
+    Specialization: {
+        Type: (i32, bool) -> i32
+        Name: first'i32,bool
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: bool
+                        Name: y
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
             }
         }
     }

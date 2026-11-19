@@ -24,10 +24,23 @@ FunctionDefinitionStatement: {
     }
     BlockNode(1): {
         ReturnStatement: {
-            Type: i32
+            Type: undefined
             NameExpression: {
-                Type: i32
+                Type: undefined
                 Name: x
+            }
+        }
+    }
+    Specialization: {
+        Type: (i32) -> i32
+        Name: keep'i32
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
             }
         }
     }
@@ -58,10 +71,23 @@ FunctionDefinitionStatement: {
     }
     BlockNode(1): {
         ReturnStatement: {
-            Type: bool
+            Type: undefined
             NameExpression: {
-                Type: bool
+                Type: undefined
                 Name: x
+            }
+        }
+    }
+    Specialization: {
+        Type: (bool) -> bool
+        Name: other'bool
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: bool
+                NameExpression: {
+                    Type: bool
+                    Name: x
+                }
             }
         }
     }

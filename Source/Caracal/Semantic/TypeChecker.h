@@ -69,6 +69,13 @@ namespace Caracal
             bool wantsAddress = false;
         };
 
+        struct SpecializationNodeTypes
+        {
+            u16 fileId{ 0 };
+            u32 firstIndex{ 0 };
+            std::vector<Type> types;
+        };
+
         struct PendingSpecialization
         {
             Type specialization;
@@ -338,8 +345,26 @@ namespace Caracal
 
         Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept
         {
+            const auto offset = index - m_specializationNodeTypes.firstIndex;
+            if (unit.fileId == m_specializationNodeTypes.fileId && offset < m_specializationNodeTypes.types.size())
+            {
+                m_specializationNodeTypes.types[offset] = type;
+                return type;
+            }
+
             m_module.setNodeType(NodeIndex{ unit.fileId, index }, type);
             return type;
+        }
+
+        [[nodiscard]] Type typeOfNode(NodeIndex node) const noexcept
+        {
+            const auto offset = node.index - m_specializationNodeTypes.firstIndex;
+            if (node.fileId == m_specializationNodeTypes.fileId && offset < m_specializationNodeTypes.types.size())
+            {
+                return m_specializationNodeTypes.types[offset];
+            }
+
+            return m_module.typeOfNode(node);
         }
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
@@ -376,6 +401,7 @@ namespace Caracal
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
         std::vector<NodeIndex> m_unresolvedOverloadCalls;
+        SpecializationNodeTypes m_specializationNodeTypes;
         u32 m_suspendedEmissionDepth = 0;
         std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;

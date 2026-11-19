@@ -290,7 +290,7 @@ namespace Caracal
 
     Type TypeChecker::selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
     {
-        const auto storedCallee = m_module.typeOfNode(NodeIndex{ unit.fileId, nameExpressionIndex });
+        const auto storedCallee = typeOfNode(NodeIndex{ unit.fileId, nameExpressionIndex });
         if (std::ranges::find(overloadSet.overloads, storedCallee) != overloadSet.overloads.end())
         {
             return storedCallee;
@@ -498,7 +498,7 @@ namespace Caracal
 
     bool TypeChecker::rejectInvalidOverload(NodeIndex declaration)
     {
-        const auto functionType = m_module.typeOfNode(declaration);
+        const auto functionType = typeOfNode(declaration);
         const auto& definition = m_module.getFunctionDefinition(functionType);
         if (HasUndefinedParameter(definition))
         {
@@ -591,7 +591,7 @@ namespace Caracal
     bool TypeChecker::rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition)
     {
         const auto methodNode = NodeIndex{ unit.fileId, methodIndex };
-        const auto methodType = m_module.typeOfNode(methodNode);
+        const auto methodType = typeOfNode(methodNode);
         const auto& definition = m_module.getFunctionDefinition(methodType);
         if (HasUndefinedParameter(definition))
         {

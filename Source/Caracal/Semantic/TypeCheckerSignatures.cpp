@@ -47,7 +47,7 @@ namespace Caracal
     void TypeChecker::typeCheckFunctionSignature(const CompilationUnit& unit, u32 index)
     {
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
-        auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        auto functionType = typeOfNode(NodeIndex{ unit.fileId, index });
         if (functionType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -258,7 +258,7 @@ namespace Caracal
     void TypeChecker::typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index)
     {
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
-        const auto& parameters = m_module.getFunctionDefinition(m_module.typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
+        const auto& parameters = m_module.getFunctionDefinition(typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
         auto parameterNodes = std::vector<u32>{};
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
 
@@ -351,7 +351,7 @@ namespace Caracal
             const auto* existing = tryGetBinding(nameId);
             if (existing == nullptr || existing->scopeIndex != static_cast<u32>(m_scopeFrames.size() - 1))
             {
-                addVariableBinding(nameId, m_module.typeOfNode(NodeIndex{ unit.fileId, parameterIndex }), nameLocation(unit, parameterIndex), unit.source, VariableBindingKind::Parameter);
+                addVariableBinding(nameId, typeOfNode(NodeIndex{ unit.fileId, parameterIndex }), nameLocation(unit, parameterIndex), unit.source, VariableBindingKind::Parameter);
             }
             else
             {

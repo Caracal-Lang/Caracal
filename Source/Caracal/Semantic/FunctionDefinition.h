@@ -52,6 +52,7 @@ namespace Caracal
         std::vector<Type> typeParameters;
         std::vector<Type> typeArguments;
         Type templateType{ Type::Undefined() };
+        std::vector<Type> bodyNodeTypes;
     };
 
     class FunctionDefinition

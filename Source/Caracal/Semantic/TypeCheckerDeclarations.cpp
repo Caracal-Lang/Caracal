@@ -867,7 +867,7 @@ namespace Caracal
             {
                 // taking a ref of a constant is allowed, but assigning through it is not
                 const auto isReferenceOf = TokenKindAt(tokens, unit.nodeBuffer.mainToken(strippedRight)) == TokenKind::RefKeyword;
-                if (isReferenceOf && m_module.typeOfNode(NodeIndex{ unit.fileId, strippedRight }).isReference())
+                if (isReferenceOf && typeOfNode(NodeIndex{ unit.fileId, strippedRight }).isReference())
                 {
                     const auto operand = NodeLayout::stripGroupings(unit.nodeBuffer, NodeLayout::unaryOperand(strippedRight));
                     if (unit.nodeBuffer.kind(operand) == NodeKind::NameExpression)
@@ -896,7 +896,7 @@ namespace Caracal
                     && unit.nodeBuffer.kind(binaryLayout.right) == NodeKind::FunctionCallExpression
                     && unit.nodeBuffer.kind(binaryLayout.left) == NodeKind::NameExpression)
                 {
-                    const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
+                    const auto methodType = typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, binaryLayout.right) });
                     if (methodType != Type::Undefined()
                         && m_module.getFunctionDefinition(methodType).intrinsicKind() == IntrinsicKind::ArraySlice)
                     {

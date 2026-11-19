@@ -1,0 +1,184 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: pick
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: bool
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 2
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: choose
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: pick
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callChooseInteger
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: choose
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i32
+                    }
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 5
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callChooseBool
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: choose
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: bool
+                    }
+                }
+                ArgumentsNode(1): {
+                    BoolLiteral: true
+                }
+            }
+        }
+    }
+}

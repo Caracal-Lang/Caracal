@@ -121,8 +121,16 @@ namespace Caracal
             const auto& unit = unitFor(templateNode);
             const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, templateNode.index);
             bindTypeParameters(unit, functionLayout.typeParameters, m_module.genericFunctionData(definition).typeArguments);
+
+            const auto bodyBegin = NodeLayout::subtreeBegin(unit.nodeBuffer, functionLayout.body);
+            m_specializationNodeTypes.fileId = unit.fileId;
+            m_specializationNodeTypes.firstIndex = bodyBegin;
+            m_specializationNodeTypes.types.assign(functionLayout.body - bodyBegin + 1, Type::Undefined());
+            m_unresolvedOverloadCalls.clear();
             typeCheckFunctionBody(unit, templateNode.index, specialization);
             m_typeArguments.clear();
+            m_module.setBodyNodeTypes(m_module.getFunctionDefinition(specialization), std::move(m_specializationNodeTypes.types));
+            m_specializationNodeTypes.types.clear();
         }
 
         m_pendingSpecializations.clear();

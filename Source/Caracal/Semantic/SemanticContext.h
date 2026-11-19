@@ -119,6 +119,7 @@ namespace Caracal
         UnitSemantics& createUnitSemantics(u16 fileId, u32 nodeCount) noexcept;
         [[nodiscard]] Type typeOfNode(NodeIndex reference) const noexcept;
         void setNodeType(NodeIndex reference, Type type) noexcept;
+        void setBodyNodeTypes(const FunctionDefinition& specialization, std::vector<Type> bodyNodeTypes) noexcept;
 
     private:
         struct ArrayTypeInfo

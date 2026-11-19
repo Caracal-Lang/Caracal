@@ -29,14 +29,35 @@ FunctionDefinitionStatement: {
             }
             Right: {
                 NameExpression: {
-                    Type: bool
+                    Type: undefined
                     Name: x
                 }
             }
         }
         ReturnStatement: {
-            Type: i32
+            Type: undefined
             NumberLiteral: 1
+        }
+    }
+    Specialization: {
+        Type: (bool) -> i32
+        Name: keep'bool
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: bool
+                        Name: x
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NumberLiteral: 1
+            }
         }
     }
 }
@@ -71,14 +92,35 @@ FunctionDefinitionStatement: {
             }
             Right: {
                 NameExpression: {
-                    Type: i32
+                    Type: undefined
                     Name: x
                 }
             }
         }
         ReturnStatement: {
-            Type: i32
+            Type: undefined
             NumberLiteral: 2
+        }
+    }
+    Specialization: {
+        Type: (i32) -> i32
+        Name: keep'i32
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NumberLiteral: 2
+            }
         }
     }
 }
