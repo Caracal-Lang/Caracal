@@ -1,0 +1,19 @@
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def other'T(x: T) T
+{
+    return x;
+}
+
+def callKeep() i32
+{
+    return keep'i32(5);
+}
+
+def callOther() bool
+{
+    return other'bool(true);
+}

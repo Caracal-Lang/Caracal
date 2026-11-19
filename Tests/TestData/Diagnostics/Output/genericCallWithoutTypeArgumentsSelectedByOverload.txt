@@ -1,0 +1,12 @@
+ Error T0118 Cannot infer type parameter
+     ,-[Diagnostics/Input/genericCallWithoutTypeArgumentsSelectedByOverload.cara:13:12]
+  10 | 
+  11 | def callZero() i32
+  12 | {
+  13 |     return zero();
+     .            ------
+     .               `-- The call gives no type for 'T' of 'zero'
+  14 | }
+  15 | 
+     `----
+  Fix: Write the type arguments after the function name, as in zero'i32(...).

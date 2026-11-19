@@ -1,0 +1,9 @@
+def zero'T() i32
+{
+    return 0;
+}
+
+def callZero() i32
+{
+    return zero();
+}

@@ -253,6 +253,8 @@ namespace Caracal
                 return "T0116";
             case DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction:
                 return "T0117";
+            case DiagnosticKind::T0118_CannotInferTypeParameter:
+                return "T0118";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
@@ -602,6 +604,8 @@ namespace Caracal
                 return "Wrong number of type arguments";
             case DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction:
                 return "Type arguments on a non-generic function";
+            case DiagnosticKind::T0118_CannotInferTypeParameter:
+                return "Cannot infer type parameter";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:

@@ -125,6 +125,7 @@ namespace Caracal
         // Generic function diagnostics
         T0116_WrongNumberOfTypeArguments,
         T0117_TypeArgumentsOnNonGenericFunction,
+        T0118_CannotInferTypeParameter,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

@@ -2358,6 +2358,23 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addCannotInferTypeParameterError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const std::string& typeParameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0118_CannotInferTypeParameter,
+            source,
+            location,
+            "Write the type arguments after the function name, as in " + functionName + "'i32(...).");
+        diagnostic.addPrimaryLabel(location, "The call gives no type for '" + typeParameterName + "' of '" + functionName + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
     {
         auto diagnostic = Diagnostic(

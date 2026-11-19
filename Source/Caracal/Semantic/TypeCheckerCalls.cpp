@@ -166,6 +166,16 @@ namespace Caracal
     TypeChecker::CheckedValue TypeChecker::typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context)
     {
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
+        // TODO allow infered generic types
+        if (functionDefinition.isTemplate())
+        {
+            m_diagnostics.addCannotInferTypeParameterError(
+                unit.source,
+                ExpressionSourceLocation(m_compilationContext, unit, index),
+                functionDefinition.name(),
+                std::string(m_module.getNameByType(m_module.genericFunctionData(functionDefinition).typeParameters.front())));
+            return Type::Undefined();
+        }
 
         // extern declarations only reach codegen when a call requires them
         if (functionDefinition.isExtern())
