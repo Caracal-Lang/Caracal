@@ -255,6 +255,16 @@ namespace Caracal
                 return "T0117";
             case DiagnosticKind::T0118_CannotInferTypeParameter:
                 return "T0118";
+            case DiagnosticKind::T0119_DuplicateTypeParameter:
+                return "T0119";
+            case DiagnosticKind::T0120_TypeParameterWithNameOfType:
+                return "T0120";
+            case DiagnosticKind::T0121_ExternGenericFunction:
+                return "T0121";
+            case DiagnosticKind::T0122_GenericParameterDefaultValue:
+                return "T0122";
+            case DiagnosticKind::T0123_ReferenceTypeArgument:
+                return "T0123";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
@@ -606,6 +616,16 @@ namespace Caracal
                 return "Type arguments on a non-generic function";
             case DiagnosticKind::T0118_CannotInferTypeParameter:
                 return "Cannot infer type parameter";
+            case DiagnosticKind::T0119_DuplicateTypeParameter:
+                return "Duplicate type parameter";
+            case DiagnosticKind::T0120_TypeParameterWithNameOfType:
+                return "Type parameter with the name of a type";
+            case DiagnosticKind::T0121_ExternGenericFunction:
+                return "Extern generic function";
+            case DiagnosticKind::T0122_GenericParameterDefaultValue:
+                return "Default value for a generic parameter";
+            case DiagnosticKind::T0123_ReferenceTypeArgument:
+                return "Reference type argument";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:

@@ -1,0 +1,10 @@
+ Error T0122 Default value for a generic parameter
+    ,-[Diagnostics/Input/genericParameterDefaultValue.cara:1:12]
+  1 | def keep'T(x: T = 5) T
+    .            ----
+    .              `-- Parameter 'x' of type 'T' cannot have a default value
+  2 | {
+  3 |     return x;
+  4 | }
+    `----
+  Fix: Remove the default value.

@@ -1,0 +1,11 @@
+ Error T0119 Duplicate type parameter
+    ,-[Diagnostics/Input/genericDuplicateTypeParameter.cara:1:12]
+  1 | def pair'T,T(x: T, y: T) T
+    .          - -
+    .          | `-- 'T' is already a type parameter of this function
+    .          `-- The first 'T' is here
+  2 | {
+  3 |     return x;
+  4 | }
+    `----
+  Fix: Rename one of the type parameters.

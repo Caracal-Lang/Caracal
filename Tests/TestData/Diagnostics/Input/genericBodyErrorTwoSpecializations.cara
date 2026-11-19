@@ -1,0 +1,14 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def callAddBool() bool
+{
+    return add'bool(true, false);
+}
+
+def callAddString() string
+{
+    return add'string("a", "b");
+}

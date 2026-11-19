@@ -80,6 +80,7 @@ namespace Caracal
         {
             Type specialization;
             NodeIndex call;
+            std::optional<size_t> callerIndex;
         };
 
         struct CheckedValue
@@ -191,6 +192,9 @@ namespace Caracal
         [[nodiscard]] Type specializationOf(Type templateType, const std::vector<Type>& typeArguments);
         void addPendingSpecialization(Type specialization, NodeIndex call);
         void typeCheckPendingSpecializations();
+        void addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex);
+        void reportInvalidTypeParameters(const CompilationUnit& unit, u32 typeParametersNode);
+        void reportGenericParameterDefaultValues(const CompilationUnit& unit, const std::vector<Parameter>& parameters, const std::vector<u32>& parameterNodes);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
@@ -393,6 +397,7 @@ namespace Caracal
         std::vector<std::pair<std::string_view, Type>> m_typeArguments;
         std::vector<PendingSpecialization> m_pendingSpecializations;
         std::unordered_set<i32> m_pendingSpecializationIds;
+        std::optional<size_t> m_checkedPendingIndex;
 
         std::vector<u32> m_pendingAnnotations;
         std::vector<u32> m_childrenScratch;

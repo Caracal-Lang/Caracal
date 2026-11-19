@@ -126,6 +126,11 @@ namespace Caracal
         T0116_WrongNumberOfTypeArguments,
         T0117_TypeArgumentsOnNonGenericFunction,
         T0118_CannotInferTypeParameter,
+        T0119_DuplicateTypeParameter,
+        T0120_TypeParameterWithNameOfType,
+        T0121_ExternGenericFunction,
+        T0122_GenericParameterDefaultValue,
+        T0123_ReferenceTypeArgument,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

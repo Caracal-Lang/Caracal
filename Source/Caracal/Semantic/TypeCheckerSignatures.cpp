@@ -55,6 +55,7 @@ namespace Caracal
 
         if (functionLayout.hasTypeParameters)
         {
+            reportInvalidTypeParameters(unit, functionLayout.typeParameters);
             const auto& typeParameters = m_module.genericFunctionData(m_module.getFunctionDefinition(functionType)).typeParameters;
             bindTypeParameters(unit, functionLayout.typeParameters, typeParameters);
         }
@@ -73,7 +74,11 @@ namespace Caracal
         std::optional<std::string> symbolName;
         auto isRequiredExtern = false;
         const auto isExtern = validateCallableAnnotations(unit, annotations, symbolName, isRequiredExtern);
-        if (isExtern && isRequiredExtern)
+        if (isExtern && functionLayout.hasTypeParameters)
+        {
+            m_diagnostics.addExternGenericFunctionError(unit.source, nameLocation(unit, index), std::string(functionName));
+        }
+        else if (isExtern && isRequiredExtern)
         {
             m_module.markExternRequired(functionType);
         }
@@ -81,6 +86,10 @@ namespace Caracal
         auto parameterNodes = std::vector<u32>{};
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
         const auto isVariadic = !parameterNodes.empty() && NodeLayout::isVariadicParameter(unit.nodeBuffer, parameterNodes.back());
+        if (functionLayout.hasTypeParameters)
+        {
+            reportGenericParameterDefaultValues(unit, parameters, parameterNodes);
+        }
         if (isVariadic && !isExtern)
         {
             m_diagnostics.addNonExternVariadicFunctionError(

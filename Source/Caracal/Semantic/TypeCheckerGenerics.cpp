@@ -68,6 +68,13 @@ namespace Caracal
             {
                 return Type::Undefined();
             }
+            if (typeArgument.isReference())
+            {
+                m_diagnostics.addReferenceTypeArgumentError(
+                    unit.source,
+                    NodeSpans::typeNameSpan(unit.nodeBuffer, m_compilationContext.tokenBuffer(unit.fileId), typeArgumentNode));
+                return Type::Undefined();
+            }
             typeArguments.push_back(typeArgument);
         }
 
@@ -91,6 +98,54 @@ namespace Caracal
         return typeCheckResolvedFunctionCall(unit, index, specialization, context);
     }
 
+    void TypeChecker::reportInvalidTypeParameters(const CompilationUnit& unit, u32 typeParametersNode)
+    {
+        auto typeParameterNodes = std::vector<u32>{};
+        NodeLayout::collectChildren(unit.nodeBuffer, typeParametersNode, typeParameterNodes);
+        for (size_t position = 0; position < typeParameterNodes.size(); ++position)
+        {
+            const auto name = nameOf(unit, typeParameterNodes[position]);
+            auto isDuplicate = false;
+            for (size_t earlier = 0; earlier < position && !isDuplicate; ++earlier)
+            {
+                if (nameOf(unit, typeParameterNodes[earlier]) == name)
+                {
+                    m_diagnostics.addDuplicateTypeParameterError(
+                        unit.source,
+                        nameLocation(unit, typeParameterNodes[position]),
+                        std::string(name),
+                        nameLocation(unit, typeParameterNodes[earlier]));
+                    isDuplicate = true;
+                }
+            }
+
+            if (!isDuplicate && m_module.tryGetTypeByName(name) != Type::Undefined())
+            {
+                m_diagnostics.addTypeParameterWithNameOfTypeError(
+                    unit.source,
+                    nameLocation(unit, typeParameterNodes[position]),
+                    std::string(name));
+            }
+        }
+    }
+
+    void TypeChecker::reportGenericParameterDefaultValues(const CompilationUnit& unit, const std::vector<Parameter>& parameters, const std::vector<u32>& parameterNodes)
+    {
+        for (size_t position = 0; position < parameters.size() && position < parameterNodes.size(); ++position)
+        {
+            const auto& parameter = parameters[position];
+            const auto baseType = parameter.type().toBaseType();
+            if (parameter.hasDefaultNode() && baseType.kind() == TypeKind::TypeParameter)
+            {
+                m_diagnostics.addGenericParameterDefaultValueError(
+                    unit.source,
+                    ParameterSpan(m_compilationContext, unit, parameterNodes[position]),
+                    parameter.name(),
+                    std::string(m_module.getNameByType(baseType)));
+            }
+        }
+    }
+
     Type TypeChecker::specializationOf(Type templateType, const std::vector<Type>& typeArguments)
     {
         const auto existing = m_module.tryGetSpecialization(templateType, typeArguments);
@@ -106,7 +161,23 @@ namespace Caracal
     {
         if (m_pendingSpecializationIds.insert(specialization.id()).second)
         {
-            m_pendingSpecializations.push_back(PendingSpecialization{ specialization, call });
+            m_pendingSpecializations.push_back(PendingSpecialization{ specialization, call, m_checkedPendingIndex });
+        }
+    }
+
+    void TypeChecker::addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex)
+    {
+        auto labelIndex = std::optional<size_t>{ pendingIndex };
+        while (labelIndex.has_value())
+        {
+            const auto pending = m_pendingSpecializations[labelIndex.value()];
+            const auto& callUnit = unitFor(pending.call);
+            m_diagnostics.addSpecializationCallLabels(
+                diagnosticCount,
+                callUnit.source,
+                ExpressionSourceLocation(m_compilationContext, callUnit, pending.call.index),
+                m_module.getFunctionDefinition(pending.specialization).fullName());
+            labelIndex = pending.callerIndex;
         }
     }
 
@@ -127,7 +198,11 @@ namespace Caracal
             m_specializationNodeTypes.firstIndex = bodyBegin;
             m_specializationNodeTypes.types.assign(functionLayout.body - bodyBegin + 1, Type::Undefined());
             m_unresolvedOverloadCalls.clear();
+            const auto diagnosticCount = m_diagnostics.diagnostics().size();
+            m_checkedPendingIndex = pendingIndex;
             typeCheckFunctionBody(unit, templateNode.index, specialization);
+            m_checkedPendingIndex.reset();
+            addSpecializationCallLabels(diagnosticCount, pendingIndex);
             m_typeArguments.clear();
             m_module.setBodyNodeTypes(m_module.getFunctionDefinition(specialization), std::move(m_specializationNodeTypes.types));
             m_specializationNodeTypes.types.clear();

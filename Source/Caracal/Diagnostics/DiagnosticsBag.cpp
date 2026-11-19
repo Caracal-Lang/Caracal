@@ -2375,6 +2375,83 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addDuplicateTypeParameterError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& typeParameterName,
+        const SourceLocation& firstLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0119_DuplicateTypeParameter,
+            source,
+            location,
+            "Rename one of the type parameters.");
+        diagnostic.addPrimaryLabel(location, "'" + typeParameterName + "' is already a type parameter of this function");
+        diagnostic.addSecondaryLabel(firstLocation, "The first '" + typeParameterName + "' is here");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTypeParameterWithNameOfTypeError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& typeParameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0120_TypeParameterWithNameOfType,
+            source,
+            location,
+            "Rename the type parameter.");
+        diagnostic.addPrimaryLabel(location, "'" + typeParameterName + "' is already the name of a type");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addExternGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0121_ExternGenericFunction,
+            source,
+            location,
+            "Remove the type parameters or the extern annotation.");
+        diagnostic.addPrimaryLabel(location, "Extern function '" + functionName + "' has type parameters");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addGenericParameterDefaultValueError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& parameterName,
+        const std::string& typeParameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0122_GenericParameterDefaultValue,
+            source,
+            location,
+            "Remove the default value.");
+        diagnostic.addPrimaryLabel(location, "Parameter '" + parameterName + "' of type '" + typeParameterName + "' cannot have a default value");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addReferenceTypeArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0123_ReferenceTypeArgument,
+            source,
+            location,
+            "Remove 'ref' from the type argument.");
+        diagnostic.addPrimaryLabel(location, "A type argument cannot be a reference");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
     {
         auto diagnostic = Diagnostic(
@@ -2587,6 +2664,26 @@ namespace Caracal
     void DiagnosticsBag::removeDiagnosticsAfter(size_t count)
     {
         m_diagnostics.erase(m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count), m_diagnostics.end());
+    }
+
+    void DiagnosticsBag::addSpecializationCallLabels(
+        size_t count,
+        const SourceTextSharedPtr& callSource,
+        const SourceLocation& callLocation,
+        const std::string& specializationName)
+    {
+        for (auto position = count; position < m_diagnostics.size(); ++position)
+        {
+            auto& diagnostic = m_diagnostics[position];
+            AddPreviousDeclarationLabel(
+                diagnostic,
+                diagnostic.source(),
+                callSource,
+                callLocation,
+                "Call of " + specializationName,
+                specializationName + " is called here.",
+                specializationName + " is called here");
+        }
     }
 
     std::vector<Diagnostic> DiagnosticsBag::takeDiagnosticsAfter(size_t count)
