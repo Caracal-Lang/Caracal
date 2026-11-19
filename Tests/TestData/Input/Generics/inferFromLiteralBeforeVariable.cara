@@ -1,0 +1,10 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def callAdd() i8
+{
+    small: i8 = 2;
+    return add(1, small);
+}

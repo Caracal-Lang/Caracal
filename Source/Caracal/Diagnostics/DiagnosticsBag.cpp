@@ -2452,6 +2452,27 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
+    void DiagnosticsBag::addConflictingTypeInferenceError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const SourceLocation& firstLocation,
+        const std::string& functionName,
+        const std::string& typeParameterName,
+        const std::string& firstType,
+        const std::string& secondType)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0124_ConflictingTypeInference,
+            source,
+            location,
+            "Write the type arguments after the function name, as in " + functionName + "'" + firstType + "(...).");
+        diagnostic.addPrimaryLabel(location, "This argument gives '" + typeParameterName + "' the type '" + secondType + "'");
+        diagnostic.addSecondaryLabel(firstLocation, "This argument gives '" + typeParameterName + "' the type '" + firstType + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
     void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
     {
         auto diagnostic = Diagnostic(

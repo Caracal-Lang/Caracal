@@ -131,6 +131,7 @@ namespace Caracal
         T0121_ExternGenericFunction,
         T0122_GenericParameterDefaultValue,
         T0123_ReferenceTypeArgument,
+        T0124_ConflictingTypeInference,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

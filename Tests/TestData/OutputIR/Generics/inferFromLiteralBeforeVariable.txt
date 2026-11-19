@@ -1,0 +1,21 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define callAdd$() i8
+block entry(0):
+    %0 = const 2 : i8
+    %1 = const 1 : i8
+    %2 = call add'i8$i8,i8(%1, %0) : i8
+    return %2
+
+define add'i8$i8,i8(%0: i8 "x", %1: i8 "y") i8
+block entry(0):
+    %0 = parameter 0 : i8 "x"
+    %1 = parameter 1 : i8 "y"
+    %2 = add %0, %1 : i8
+    return %2

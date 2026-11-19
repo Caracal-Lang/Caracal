@@ -1,9 +1,11 @@
 #include <Caracal/Semantic/TypeChecker.h>
 
+#include <Caracal/Diagnostics/DiagnosticFormatting.h>
 #include <Caracal/Profiling.h>
 #include <Caracal/Semantic/TypeCheckerInternal.h>
 #include <Caracal/Syntax/NodeLayout.h>
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
@@ -144,6 +146,91 @@ namespace Caracal
                     std::string(m_module.getNameByType(baseType)));
             }
         }
+    }
+
+    [[nodiscard]] static bool IsPlainNumberLiteral(const NodeBuffer& buffer, u32 index) noexcept
+    {
+        return buffer.kind(index) == NodeKind::NumberLiteral && buffer.subtreeSize(index) == 1;
+    }
+
+    TypeChecker::CheckedValue TypeChecker::typeCheckInferredGenericFunctionCall(
+        const CompilationUnit& unit,
+        u32 index,
+        Type templateType,
+        const ExpressionContext& context)
+    {
+        const auto& templateDefinition = m_module.getFunctionDefinition(templateType);
+        const auto functionName = templateDefinition.name();
+        const auto typeParameters = m_module.genericFunctionData(templateDefinition).typeParameters;
+        auto parameterTypes = std::vector<Type>{};
+        for (const auto& parameter : templateDefinition.parameters())
+        {
+            parameterTypes.push_back(parameter.type().toBaseType());
+        }
+
+        auto argumentNodes = std::vector<u32>{};
+        NodeLayout::functionCall(unit.nodeBuffer, index, argumentNodes);
+        const auto argumentCount = std::min(argumentNodes.size(), parameterTypes.size());
+
+        auto typeArguments = std::vector<Type>(typeParameters.size(), Type::Undefined());
+        auto bindingArguments = std::vector<u32>(typeParameters.size(), InvalidNodeIndex);
+        for (const auto bindsLiterals : { false, true })
+        {
+            for (size_t position = 0; position < argumentCount; ++position)
+            {
+                const auto typeParameter = std::ranges::find(typeParameters, parameterTypes[position]);
+                const auto argumentValue = NodeLayout::argumentValue(unit.nodeBuffer, argumentNodes[position]);
+                if (typeParameter == typeParameters.end() || IsPlainNumberLiteral(unit.nodeBuffer, argumentValue) != bindsLiterals)
+                {
+                    continue;
+                }
+
+                const auto typeParameterPosition = static_cast<size_t>(typeParameter - typeParameters.begin());
+                auto& typeArgument = typeArguments[typeParameterPosition];
+                if (bindsLiterals && typeArgument != Type::Undefined())
+                {
+                    continue;
+                }
+
+                const auto argumentType = checkArgumentWithoutEmission(unit, argumentValue, ExpressionContext{}).toValue();
+                if (argumentType == Type::Undefined())
+                {
+                    continue;
+                }
+                if (typeArgument != Type::Undefined() && typeArgument != argumentType)
+                {
+                    m_diagnostics.addConflictingTypeInferenceError(
+                        unit.source,
+                        ExpressionSourceLocation(m_compilationContext, unit, argumentValue),
+                        ExpressionSourceLocation(m_compilationContext, unit, bindingArguments[typeParameterPosition]),
+                        functionName,
+                        std::string(m_module.getNameByType(*typeParameter)),
+                        formatTypeName(m_module, typeArgument),
+                        formatTypeName(m_module, argumentType));
+                    return Type::Undefined();
+                }
+
+                typeArgument = argumentType;
+                bindingArguments[typeParameterPosition] = argumentValue;
+            }
+        }
+
+        for (size_t position = 0; position < typeArguments.size(); ++position)
+        {
+            if (typeArguments[position] == Type::Undefined())
+            {
+                m_diagnostics.addCannotInferTypeParameterError(
+                    unit.source,
+                    ExpressionSourceLocation(m_compilationContext, unit, index),
+                    functionName,
+                    std::string(m_module.getNameByType(typeParameters[position])));
+                return Type::Undefined();
+            }
+        }
+
+        const auto specialization = specializationOf(templateType, typeArguments);
+        addPendingSpecialization(specialization, NodeIndex{ unit.fileId, index });
+        return typeCheckResolvedFunctionCall(unit, index, specialization, context);
     }
 
     Type TypeChecker::specializationOf(Type templateType, const std::vector<Type>& typeArguments)

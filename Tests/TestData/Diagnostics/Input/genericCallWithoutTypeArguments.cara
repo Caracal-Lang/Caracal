@@ -1,9 +1,0 @@
-def keep'T(x: T) T
-{
-    return x;
-}
-
-def callKeep() i32
-{
-    return keep(5);
-}

@@ -1,0 +1,12 @@
+ Error T0118 Cannot infer type parameter
+     ,-[Diagnostics/Input/genericCannotInfer.cara:8:12]
+   5 | 
+   6 | def callPick() i32
+   7 | {
+   8 |     return pick(5);
+     .            -------
+     .               `-- The call gives no type for 'U' of 'pick'
+   9 | }
+  10 | 
+     `----
+  Fix: Write the type arguments after the function name, as in pick'i32(...).

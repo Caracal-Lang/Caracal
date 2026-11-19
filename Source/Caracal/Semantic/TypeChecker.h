@@ -194,6 +194,7 @@ namespace Caracal
         void typeCheckPendingSpecializations();
         void addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex);
         void reportInvalidTypeParameters(const CompilationUnit& unit, u32 typeParametersNode);
+        [[nodiscard]] CheckedValue typeCheckInferredGenericFunctionCall(const CompilationUnit& unit, u32 index, Type templateType, const ExpressionContext& context);
         void reportGenericParameterDefaultValues(const CompilationUnit& unit, const std::vector<Parameter>& parameters, const std::vector<u32>& parameterNodes);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);

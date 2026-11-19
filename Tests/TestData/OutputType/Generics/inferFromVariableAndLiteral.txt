@@ -1,0 +1,128 @@
+FunctionDefinitionStatement: {
+    Type: (T, T) -> T
+    Name: add
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: y
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: (i8, i8) -> i8
+        Name: add'i8
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i8
+                BinaryExpression: {
+                    Type: i8
+                    Left: {
+                        NameExpression: {
+                            Type: i8
+                            Name: x
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NameExpression: {
+                            Type: i8
+                            Name: y
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i8
+    Name: callAdd
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i8
+            Lexeme: i8
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i8
+            Left: {
+                NameExpression: {
+                    Type: i8
+                    Name: small
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: i8
+                    Lexeme: i8
+                }
+            }
+            Right: {
+                NumberLiteral: 2
+            }
+        }
+        ReturnStatement: {
+            Type: i8
+            FunctionCallExpression: {
+                Type: i8
+                Function type: (i8, i8) -> i8
+                NameExpression: {
+                    Type: (i8, i8) -> i8
+                    Name: add
+                }
+                ArgumentsNode(2): {
+                    NameExpression: {
+                        Type: i8
+                        Name: small
+                    }
+                    NumberLiteral: 1
+                }
+            }
+        }
+    }
+}

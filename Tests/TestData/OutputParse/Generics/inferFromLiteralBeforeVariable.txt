@@ -1,0 +1,103 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: add
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: y
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callAdd
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i8
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: small
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: i8
+                }
+            }
+            Right: {
+                NumberLiteral: 2
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: add
+                }
+                ArgumentsNode(2): {
+                    NumberLiteral: 1
+                    NameExpression: {
+                        Type: undefined
+                        Name: small
+                    }
+                }
+            }
+        }
+    }
+}

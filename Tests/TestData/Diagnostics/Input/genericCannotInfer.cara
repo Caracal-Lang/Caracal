@@ -1,0 +1,9 @@
+def pick'T,U(x: T) T
+{
+    return x;
+}
+
+def callPick() i32
+{
+    return pick(5);
+}

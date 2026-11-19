@@ -265,6 +265,8 @@ namespace Caracal
                 return "T0122";
             case DiagnosticKind::T0123_ReferenceTypeArgument:
                 return "T0123";
+            case DiagnosticKind::T0124_ConflictingTypeInference:
+                return "T0124";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
@@ -626,6 +628,8 @@ namespace Caracal
                 return "Default value for a generic parameter";
             case DiagnosticKind::T0123_ReferenceTypeArgument:
                 return "Reference type argument";
+            case DiagnosticKind::T0124_ConflictingTypeInference:
+                return "Conflicting type inference";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:

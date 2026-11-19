@@ -1,0 +1,11 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def callAdd() i32
+{
+    small: i8 = 2;
+    big: i32 = 3;
+    return add(small, big);
+}
