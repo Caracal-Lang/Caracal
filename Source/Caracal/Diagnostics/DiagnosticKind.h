@@ -122,6 +122,10 @@ namespace Caracal
         T0113_CompilerCalledFunctionHasOverloads,
         T0114_ExternOverloadsShareSymbol,
 
+        // Generic function diagnostics
+        T0116_WrongNumberOfTypeArguments,
+        T0117_TypeArgumentsOnNonGenericFunction,
+
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,
         T0079_EmptyArrayLiteral,

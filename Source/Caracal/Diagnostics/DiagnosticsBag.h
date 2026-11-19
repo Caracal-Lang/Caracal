@@ -170,6 +170,8 @@ namespace Caracal
         // Overload diagnostics
         void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
         void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addWrongNumberOfTypeArgumentsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, size_t typeParameterCount, size_t typeArgumentCount);
+        void addTypeArgumentsOnNonGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
         void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
         void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
 

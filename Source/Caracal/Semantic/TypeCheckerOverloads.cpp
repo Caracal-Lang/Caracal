@@ -112,6 +112,67 @@ namespace Caracal
         return true;
     }
 
+    [[nodiscard]] static bool IsMoreConcreteSpecialization(const SemanticContext& module, Type candidate, Type other) noexcept
+    {
+        const auto* candidateDefinition = module.tryGetFunctionDefinition(candidate);
+        const auto* otherDefinition = module.tryGetFunctionDefinition(other);
+        if (!candidateDefinition->isSpecialization() || !otherDefinition->isSpecialization())
+        {
+            return false;
+        }
+
+        const auto& candidateParameters = module.tryGetFunctionDefinition(module.genericFunctionData(*candidateDefinition).templateType)->parameters();
+        const auto& otherParameters = module.tryGetFunctionDefinition(module.genericFunctionData(*otherDefinition).templateType)->parameters();
+        if (candidateParameters.size() != otherParameters.size())
+        {
+            return false;
+        }
+
+        auto isMoreConcreteForOne = false;
+        for (size_t position = 0; position < candidateParameters.size(); ++position)
+        {
+            const auto candidateIsTypeParameter = candidateParameters[position].type().toBaseType().kind() == TypeKind::TypeParameter;
+            const auto otherIsTypeParameter = otherParameters[position].type().toBaseType().kind() == TypeKind::TypeParameter;
+            if (candidateIsTypeParameter && !otherIsTypeParameter)
+            {
+                return false;
+            }
+            if (!candidateIsTypeParameter && otherIsTypeParameter)
+            {
+                isMoreConcreteForOne = true;
+            }
+        }
+
+        return isMoreConcreteForOne;
+    }
+
+    [[nodiscard]] static Type TryGetBestSpecializationMatch(const SemanticContext& module, std::span<const Type> candidates, std::span<const ArgumentRank> ranks, size_t argumentCount) noexcept
+    {
+        for (size_t candidate = 0; candidate < candidates.size(); ++candidate)
+        {
+            const auto candidateRanks = ranks.subspan(candidate * argumentCount, argumentCount);
+            auto isBest = true;
+            for (size_t other = 0; other < candidates.size() && isBest; ++other)
+            {
+                if (other == candidate)
+                {
+                    continue;
+                }
+
+                const auto otherRanks = ranks.subspan(other * argumentCount, argumentCount);
+                isBest = IsBetterCandidate(candidateRanks, otherRanks)
+                    || (std::ranges::equal(candidateRanks, otherRanks) && IsMoreConcreteSpecialization(module, candidates[candidate], candidates[other]));
+            }
+
+            if (isBest)
+            {
+                return candidates[candidate];
+            }
+        }
+
+        return Type::Undefined();
+    }
+
     TypeChecker::SuspendedEmissionScope::SuspendedEmissionScope(TypeChecker& typeChecker) noexcept
         : m_typeChecker{ typeChecker }
         , m_emissionPosition{ typeChecker.m_emitter.suspendEmission() }
@@ -287,6 +348,12 @@ namespace Caracal
             {
                 return recordType(unit, nameExpressionIndex, viableCandidates[candidate]);
             }
+        }
+
+        const auto bestSpecializationMatch = TryGetBestSpecializationMatch(m_module, viableCandidates, ranks, argumentCount);
+        if (bestSpecializationMatch != Type::Undefined())
+        {
+            return recordType(unit, nameExpressionIndex, bestSpecializationMatch);
         }
 
         m_unresolvedOverloadCalls.push_back(call);

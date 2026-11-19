@@ -249,6 +249,10 @@ namespace Caracal
                 return "T0113";
             case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
                 return "T0114";
+            case DiagnosticKind::T0116_WrongNumberOfTypeArguments:
+                return "T0116";
+            case DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction:
+                return "T0117";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "T0076";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:
@@ -594,6 +598,10 @@ namespace Caracal
                 return "This function cannot have overloads";
             case DiagnosticKind::T0114_ExternOverloadsShareSymbol:
                 return "Two extern overloads use one C symbol";
+            case DiagnosticKind::T0116_WrongNumberOfTypeArguments:
+                return "Wrong number of type arguments";
+            case DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction:
+                return "Type arguments on a non-generic function";
             case DiagnosticKind::T0076_MemberAccessInDefaultParameter:
                 return "Member access is not allowed for default parameters";
             case DiagnosticKind::T0077_PrivateMethodCallOutsideType:

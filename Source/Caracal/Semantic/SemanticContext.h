@@ -18,7 +18,9 @@
 #include <Caracal/Semantic/Parameter.h>
 #include <Caracal/Semantic/PreludeFunctionPool.h>
 #include <Caracal/Text/TransparentStringHash.h>
+#include <compare>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -26,6 +28,14 @@
 
 namespace Caracal
 {
+    struct GenericSpecialization
+    {
+        i32 templateId;
+        std::vector<i32> typeArgumentIds;
+
+        auto operator<=>(const GenericSpecialization&) const = default;
+    };
+
     class CARACAL_API SemanticContext
     {
     public:
@@ -62,6 +72,8 @@ namespace Caracal
         void setTypeParameters(FunctionDefinition& definition, std::vector<Type> typeParameters) noexcept;
         void setSpecialization(FunctionDefinition& definition, Type templateType, std::vector<Type> typeArguments) noexcept;
         [[nodiscard]] const GenericFunctionData& genericFunctionData(const FunctionDefinition& definition) const noexcept;
+        [[nodiscard]] Type tryGetSpecialization(Type templateType, const std::vector<Type>& typeArguments) const noexcept;
+        [[nodiscard]] Type createSpecialization(Type templateType, std::vector<Type> typeArguments) noexcept;
         [[nodiscard]] FunctionDefinition& createFunction(
             std::string_view name,
             std::vector<Parameter> parameters,
@@ -125,6 +137,7 @@ namespace Caracal
         size_t m_preludeTypeDefinitionCount{ 0 };
         std::vector<FunctionDefinition> m_functionDefinitions;
         std::vector<GenericFunctionData> m_genericFunctionData;
+        std::map<GenericSpecialization, Type> m_genericSpecializations;
         std::vector<ConstantDefinition> m_constantDefinitions;
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;

@@ -69,6 +69,12 @@ namespace Caracal
             bool wantsAddress = false;
         };
 
+        struct PendingSpecialization
+        {
+            Type specialization;
+            NodeIndex call;
+        };
+
         struct CheckedValue
         {
             Type type;
@@ -174,6 +180,10 @@ namespace Caracal
         [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
         void bindTypeParameters(const CompilationUnit& unit, u32 typeParametersNode, const std::vector<Type>& types);
+        [[nodiscard]] CheckedValue typeCheckGenericFunctionCall(const CompilationUnit& unit, u32 index, u32 typeArgumentsNode, const OverloadSet& overloadSet, const ExpressionContext& context);
+        [[nodiscard]] Type specializationOf(Type templateType, const std::vector<Type>& typeArguments);
+        void addPendingSpecialization(Type specialization, NodeIndex call);
+        void typeCheckPendingSpecializations();
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
@@ -245,6 +255,7 @@ namespace Caracal
         void typeCheckExpressionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void typeCheckFunctionBody(const CompilationUnit& unit, u32 index, Type functionType);
         void bindParameters(const CompilationUnit& unit, u32 parametersNode, const FunctionDefinition& functionDefinition, bool emitBody);
         void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
         void emitTestsStubBody();
@@ -355,6 +366,8 @@ namespace Caracal
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
         std::vector<std::pair<std::string_view, Type>> m_typeArguments;
+        std::vector<PendingSpecialization> m_pendingSpecializations;
+        std::unordered_set<i32> m_pendingSpecializationIds;
 
         std::vector<u32> m_pendingAnnotations;
         std::vector<u32> m_childrenScratch;

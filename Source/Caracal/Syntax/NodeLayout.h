@@ -3,6 +3,7 @@
 #include <Caracal/API.h>
 #include <Caracal/Defines.h>
 #include <Caracal/Syntax/NodeBuffer.h>
+#include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 
 #include <algorithm>
@@ -265,6 +266,28 @@ namespace Caracal
         [[nodiscard]] inline u32 functionCallee(const NodeBuffer& buffer, u32 index)
         {
             return subtreeBegin(buffer, index);
+        }
+
+        [[nodiscard]] inline bool functionCallHasTypeArguments(const NodeBuffer& buffer, u32 index)
+        {
+            return buffer.mainToken(index) != buffer.mainToken(functionCallee(buffer, index)) + 1;
+        }
+
+        [[nodiscard]] inline u32 functionCallTypeArguments(const NodeBuffer& buffer, u32 index)
+        {
+            const auto callee = functionCallee(buffer, index);
+            auto position = index;
+            while (position > callee + 1)
+            {
+                const auto child = position - 1;
+                position = child - buffer.subtreeSize(child) + 1;
+                if (position == callee + 1 && buffer.kind(child) == NodeKind::TypeArgumentsNode)
+                {
+                    return child;
+                }
+            }
+
+            return InvalidNodeIndex;
         }
 
         inline FunctionCallNodeLayout functionCall(const NodeBuffer& buffer, u32 index, std::vector<u32>& arguments)

@@ -587,6 +587,102 @@ namespace Caracal
         return m_genericFunctionData[static_cast<size_t>(definition.genericDataIndex())];
     }
 
+    [[nodiscard]] static GenericSpecialization CreateGenericSpecialization(Type templateType, const std::vector<Type>& typeArguments) noexcept
+    {
+        auto genericSpecialization = GenericSpecialization{ templateType.id(), {} };
+        genericSpecialization.typeArgumentIds.reserve(typeArguments.size());
+        for (const auto typeArgument : typeArguments)
+        {
+            genericSpecialization.typeArgumentIds.push_back(typeArgument.id());
+        }
+
+        return genericSpecialization;
+    }
+
+    Type SemanticContext::tryGetSpecialization(Type templateType, const std::vector<Type>& typeArguments) const noexcept
+    {
+        if (const auto existing = m_genericSpecializations.find(CreateGenericSpecialization(templateType, typeArguments)); existing != m_genericSpecializations.end())
+        {
+            return existing->second;
+        }
+
+        return Type::Undefined();
+    }
+
+    // for example T turns into i32, ref T turns into ref i32
+    [[nodiscard]] static Type SpecializeType(Type type, const std::vector<Type>& typeParameters, const std::vector<Type>& typeArguments) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        for (size_t position = 0; position < typeParameters.size(); ++position)
+        {
+            if (typeParameters[position] != baseType)
+            {
+                continue;
+            }
+
+            auto substituted = typeArguments[position];
+            if (type.isReference())
+            {
+                substituted = substituted.toReference();
+            }
+            if (type.isOptional())
+            {
+                substituted = substituted.toOptional();
+            }
+            return substituted;
+        }
+
+        return type;
+    }
+
+    Type SemanticContext::createSpecialization(Type templateType, std::vector<Type> typeArguments) noexcept
+    {
+        const auto& templateDefinition = getFunctionDefinition(templateType);
+        const auto& typeParameters = genericFunctionData(templateDefinition).typeParameters;
+
+        auto name = templateDefinition.fullName() + "'";
+        for (size_t position = 0; position < typeArguments.size(); ++position)
+        {
+            if (position > 0)
+            {
+                name += ",";
+            }
+            name += getNameByType(typeArguments[position]);
+        }
+
+        auto parameters = std::vector<Parameter>{};
+        for (const auto& parameter : templateDefinition.parameters())
+        {
+            parameters.emplace_back(parameter.name(), SpecializeType(parameter.type(), typeParameters, typeArguments));
+        }
+
+        auto returnTypes = std::vector<Type>{};
+        for (const auto returnType : templateDefinition.returnTypes())
+        {
+            returnTypes.push_back(SpecializeType(returnType, typeParameters, typeArguments));
+        }
+
+        const auto definitionNode = templateDefinition.definitionNode();
+        auto genericSpecialization = CreateGenericSpecialization(templateType, typeArguments);
+
+        const auto functionType = Type{ m_nextId += VariantCount, TypeKind::Function };
+        auto& definition = m_functionDefinitions.emplace_back(
+            functionType,
+            Type::Undefined(),
+            FunctionType::FreeFunction,
+            name,
+            name,
+            false,
+            std::move(parameters),
+            std::move(returnTypes));
+        m_functionDefinitionIndexById.try_emplace(functionType.id(), m_functionDefinitions.size() - 1);
+        definition.setDefinitionNode(definitionNode);
+        setSpecialization(definition, templateType, std::move(typeArguments));
+        m_genericSpecializations.emplace(std::move(genericSpecialization), functionType);
+
+        return functionType;
+    }
+
     TypeDefinition& SemanticContext::createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description) noexcept
     {
         auto typeName = std::string(name);

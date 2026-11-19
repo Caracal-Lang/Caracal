@@ -1,0 +1,95 @@
+FunctionDefinitionStatement: {
+    Type: (T, U) -> T
+    Name: first
+    TypeParametersNode(2): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+        TypeParameterNode: {
+            Type: U
+            Name: U
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: U
+                Lexeme: U
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: bool
+                    Name: y
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: x
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callFirst
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32, bool) -> i32
+                NameExpression: {
+                    Type: (i32, bool) -> i32
+                    Name: first
+                }
+                TypeArgumentsNode(2): {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+                ArgumentsNode(2): {
+                    NumberLiteral: 7
+                    BoolLiteral: true
+                }
+            }
+        }
+    }
+}

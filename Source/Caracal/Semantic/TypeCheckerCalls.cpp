@@ -148,6 +148,12 @@ namespace Caracal
             return Type::Undefined();
         }
 
+        if (NodeLayout::functionCallHasTypeArguments(unit.nodeBuffer, index))
+        {
+            const auto typeArgumentsNode = NodeLayout::functionCallTypeArguments(unit.nodeBuffer, index);
+            return typeCheckGenericFunctionCall(unit, index, typeArgumentsNode, *overloadSet, context);
+        }
+
         const auto functionType = resolveCallee(unit, index, nameExpressionIndex, *overloadSet);
         if (functionType == Type::Undefined())
         {

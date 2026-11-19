@@ -1,0 +1,12 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/genericCallMatchesNoGenericFunction.cara:14:12]
+  11 | 
+  12 | def callKeep() i32
+  13 | {
+  14 |     return keep'i32(1, 2, 3);
+     .            -----------------
+     .                    `-- No overload of 'keep' accepts these arguments
+  15 | }
+  16 | 
+     `----
+  Fix: Change the arguments to match one overload.

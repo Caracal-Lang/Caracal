@@ -1,0 +1,16 @@
+def keep'T(x: T, y: i32) i32
+{
+    _ = x;
+    return y;
+}
+
+def keep'T(x: i32, y: T) i32
+{
+    _ = y;
+    return x;
+}
+
+def callKeep() i32
+{
+    return keep'i32(1, 2);
+}

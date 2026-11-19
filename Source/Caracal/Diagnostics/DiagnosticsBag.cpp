@@ -45,6 +45,17 @@ namespace Caracal
         }
     }
 
+    static std::string CountOf(size_t count, const std::string& noun)
+    {
+        auto text = std::to_string(count) + " " + noun;
+        if (count != 1)
+        {
+            text += "s";
+        }
+
+        return text;
+    }
+
     static std::string ToTokenSource(TokenKind kind)
     {
         const std::unordered_map<TokenKind, std::string_view> tokenSource{
@@ -2309,6 +2320,40 @@ namespace Caracal
             location,
             "Change the arguments to match one overload.");
         diagnostic.addPrimaryLabel(location, "No overload of '" + functionName + "' accepts these arguments");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addWrongNumberOfTypeArgumentsError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        size_t typeParameterCount,
+        size_t typeArgumentCount)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0116_WrongNumberOfTypeArguments,
+            source,
+            location,
+            "Give one type argument for each type parameter of '" + functionName + "'.");
+        diagnostic.addPrimaryLabel(
+            location,
+            "'" + functionName + "' expects " + CountOf(typeParameterCount, "type argument") + ", but got "
+                + std::to_string(typeArgumentCount));
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTypeArgumentsOnNonGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction,
+            source,
+            location,
+            "Remove the type arguments.");
+        diagnostic.addPrimaryLabel(location, "'" + functionName + "' is not a generic function");
 
         m_diagnostics.push_back(std::move(diagnostic));
     }

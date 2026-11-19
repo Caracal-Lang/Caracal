@@ -1,0 +1,83 @@
+FunctionDefinitionStatement: {
+    Type: (T) -> T
+    Name: keep
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            NameExpression: {
+                Type: i32
+                Name: x
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callKeep
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: i32
+            Left: {
+                NameExpression: {
+                    Type: i32
+                    Name: T
+                }
+            }
+            Right: {
+                NumberLiteral: 5
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32) -> i32
+                NameExpression: {
+                    Type: (i32) -> i32
+                    Name: keep
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ArgumentsNode(1): {
+                    NameExpression: {
+                        Type: i32
+                        Name: T
+                    }
+                }
+            }
+        }
+    }
+}

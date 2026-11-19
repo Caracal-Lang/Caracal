@@ -1,0 +1,21 @@
+def keep'T(x: T) i32
+{
+    _ = x;
+    return 1;
+}
+
+def keep'T(x: i32) i32
+{
+    _ = x;
+    return 2;
+}
+
+def callKeepInteger() i32
+{
+    return keep'i32(5);
+}
+
+def callKeepBool() i32
+{
+    return keep'bool(true);
+}
