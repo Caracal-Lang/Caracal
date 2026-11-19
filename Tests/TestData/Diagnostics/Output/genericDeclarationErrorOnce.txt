@@ -1,0 +1,12 @@
+ Error T0007 Unknown name
+    ,-[Diagnostics/Input/genericDeclarationErrorOnce.cara:3:17]
+  1 | def add'T(x: T, y: T) T
+  2 | {
+  3 |     return x %+ z;
+    .                 -
+    .                 `-- Unknown name 'z'
+  4 | }
+  5 | 
+  6 | def callAddSmall() i8
+    `----
+  Fix: Declare this name before using it, or rename it to an existing symbol.

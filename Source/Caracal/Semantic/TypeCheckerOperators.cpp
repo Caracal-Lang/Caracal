@@ -245,6 +245,10 @@ namespace Caracal
                 receiverContext.receiverPosition = !context.wantsAddress || context.receiverPosition;
                 const auto checkedLeft = typeCheckExpression(unit, binaryLayout.left, receiverContext);
                 auto leftType = checkedLeft.type;
+                if (m_isDeclarationCheck && leftType == Type::Undefined())
+                {
+                    return recordType(unit, index, Type::Undefined());
+                }
                 if (leftType.kind() == TypeKind::Enum)
                 {
                     auto& enumDefinition = m_module.getEnumDefinition(leftType);
@@ -651,6 +655,11 @@ namespace Caracal
                     return recordType(unit, index, Type::Undefined());
                 }
 
+                if (m_isDeclarationCheck && leftType == Type::Undefined())
+                {
+                    return recordType(unit, index, Type::Undefined());
+                }
+
                 const auto* operatorSignature = m_module.tryGetOperatorSignature(leftType, binaryOperator);
                 if (operatorSignature == nullptr)
                 {
@@ -754,6 +763,10 @@ namespace Caracal
                 }
 
                 const auto operation = binaryOperator;
+                if (m_isDeclarationCheck && leftType == Type::Undefined())
+                {
+                    return recordType(unit, index, Type::Undefined());
+                }
 
                 auto lookupType = leftType;
                 if (lookupType.kind() == TypeKind::Enum)

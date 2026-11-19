@@ -256,6 +256,8 @@ namespace Caracal
         void reportTypesThatContainThemselves();
         void reportFieldsThatContainTheirType(const TypeDefinition& definition, const TypeVisit* parent, std::unordered_set<i32>& finishedTypes);
         void typeCheckFunctionDefinitions();
+        void typeCheckGenericFunctionDeclaration(NodeIndex declaration);
+        void checkArgumentsOfUnresolvedCall(const CompilationUnit& unit, u32 callIndex);
         void typeCheckTestDefinitions();
         void typeCheckTestsStub();
         void copyTestsStubParameters();
@@ -411,6 +413,8 @@ namespace Caracal
         std::vector<u32> m_orderedSlotStack;
         std::vector<NodeIndex> m_unresolvedOverloadCalls;
         SpecializationNodeTypes m_specializationNodeTypes;
+        bool m_isDeclarationCheck{ false };
+        std::unordered_set<i32> m_genericFunctionsWithDeclarationErrors;
         u32 m_suspendedEmissionDepth = 0;
         std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;

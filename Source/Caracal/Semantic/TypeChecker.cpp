@@ -334,6 +334,11 @@ namespace Caracal
             const auto& unit = unitFor(declaration);
             typeCheckFunctionDefinitionStatement(unit, declaration.index);
         }
+
+        for (const auto declaration : m_genericFunctionDeclarations)
+        {
+            typeCheckGenericFunctionDeclaration(declaration);
+        }
     }
 
     void TypeChecker::copyTestsStubParameters()
@@ -546,7 +551,7 @@ namespace Caracal
         // annotation errors are reported after the body
         NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, index, m_annotationScratch);
         const auto isExternFunction = NodeLayout::annotationsContain(unit.nodeBuffer, tokens, m_annotationScratch, ExternAnnotationName);
-        const auto emitBody = !isExternFunction;
+        const auto emitBody = !isExternFunction && !m_isDeclarationCheck;
         if (isExternFunction && !m_isPreludePass)
         {
             m_emitter.recordExternDefinition(functionDefinition.type());

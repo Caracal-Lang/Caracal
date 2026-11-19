@@ -658,7 +658,11 @@ namespace Caracal
         {
             const auto elementType = getArrayElementType(baseType);
             const auto specializedElement = specializeType(elementType, typeParameters, typeArguments);
-            if (specializedElement != elementType)
+            if (specializedElement == Type::Undefined())
+            {
+                specialized = Type::Undefined();
+            }
+            else if (specializedElement != elementType)
             {
                 specialized = getOrCreateArrayType(baseType.kind(), specializedElement, getArrayLength(baseType), isImmutableSlice(baseType));
             }

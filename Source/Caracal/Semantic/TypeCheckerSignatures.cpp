@@ -123,15 +123,17 @@ namespace Caracal
 
         const auto name = nameOf(unit, index);
         auto type = Type::Undefined();
+        auto isTypeParameter = false;
         for (const auto& [typeParameterName, typeArgument] : m_typeArguments)
         {
             if (typeParameterName == name)
             {
                 type = typeArgument;
+                isTypeParameter = true;
                 break;
             }
         }
-        if (type == Type::Undefined())
+        if (!isTypeParameter)
         {
             type = m_module.tryGetTypeByName(name);
         }
@@ -156,11 +158,12 @@ namespace Caracal
             // TODO nullable handling
             return recordType(unit, index, type);
         }
-        else
+        else if (!isTypeParameter)
         {
             m_diagnostics.addUnknownTypeError(unit.source, nameLocation(unit, index), std::string(name));
-            return Type::Undefined();
         }
+
+        return Type::Undefined();
     }
 
     Type TypeChecker::typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index)

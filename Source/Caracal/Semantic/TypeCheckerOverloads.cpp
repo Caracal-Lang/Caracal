@@ -376,6 +376,11 @@ namespace Caracal
                 m_diagnostics.addDiagnostics(std::move(argumentErrors));
                 return Type::Undefined();
             }
+            if (m_isDeclarationCheck && std::ranges::find(typesWithoutContext, Type::Undefined()) != typesWithoutContext.end())
+            {
+                checkArgumentsOfUnresolvedCall(unit, callIndex);
+                return Type::Undefined();
+            }
 
             m_diagnostics.addNoOverloadMatchesCallError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
             return Type::Undefined();

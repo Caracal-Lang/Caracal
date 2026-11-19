@@ -73,6 +73,10 @@ namespace Caracal
             const auto typeArgument = typeCheckTypeNameNode(unit, typeArgumentNode);
             if (typeArgument == Type::Undefined())
             {
+                if (m_isDeclarationCheck)
+                {
+                    checkArgumentsOfUnresolvedCall(unit, index);
+                }
                 return Type::Undefined();
             }
             if (typeArgument.isReference())
@@ -216,6 +220,11 @@ namespace Caracal
             m_diagnostics.addDiagnostics(std::move(argumentErrors));
             return Type::Undefined();
         }
+        if (m_isDeclarationCheck && std::ranges::find(argumentTypes, Type::Undefined()) != argumentTypes.end())
+        {
+            checkArgumentsOfUnresolvedCall(unit, index);
+            return Type::Undefined();
+        }
 
         const auto typeArguments = inferTypeArguments(unit, index, templateType, argumentValues, argumentTypes, true);
         if (typeArguments.empty())
@@ -348,9 +357,61 @@ namespace Caracal
         return specialization;
     }
 
+    void TypeChecker::typeCheckGenericFunctionDeclaration(NodeIndex declaration)
+    {
+        const auto templateType = typeOfNode(declaration);
+        if (templateType == Type::Undefined())
+        {
+            return;
+        }
+
+        const auto& unit = unitFor(declaration);
+        const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, declaration.index);
+        const auto typeParameterCount = m_module.genericFunctionData(m_module.getFunctionDefinition(templateType)).typeParameters.size();
+        const auto undefinedTypeArguments = std::vector<Type>(typeParameterCount, Type::Undefined());
+        bindTypeParameters(unit, functionLayout.typeParameters, undefinedTypeArguments);
+
+        // its signature has Type::Undefined() for each T, and it gets no body
+        const auto declarationSignature = specializationOf(templateType, undefinedTypeArguments);
+
+        const auto bodyBegin = NodeLayout::subtreeBegin(unit.nodeBuffer, functionLayout.body);
+        m_specializationNodeTypes.fileId = unit.fileId;
+        m_specializationNodeTypes.firstIndex = bodyBegin;
+        m_specializationNodeTypes.types.assign(functionLayout.body - bodyBegin + 1, Type::Undefined());
+        m_unresolvedOverloadCalls.clear();
+
+        const auto diagnosticCount = m_diagnostics.diagnostics().size();
+        m_isDeclarationCheck = true;
+        typeCheckFunctionBody(unit, declaration.index, declarationSignature);
+        m_isDeclarationCheck = false;
+
+        const auto& diagnostics = m_diagnostics.diagnostics();
+        for (auto position = diagnosticCount; position < diagnostics.size(); ++position)
+        {
+            if (diagnostics[position].level() == DiagnosticLevel::Error)
+            {
+                m_genericFunctionsWithDeclarationErrors.insert(templateType.id());
+                break;
+            }
+        }
+
+        m_typeArguments.clear();
+        m_specializationNodeTypes.types.clear();
+    }
+
+    void TypeChecker::checkArgumentsOfUnresolvedCall(const CompilationUnit& unit, u32 callIndex)
+    {
+        auto argumentNodes = std::vector<u32>{};
+        NodeLayout::functionCall(unit.nodeBuffer, callIndex, argumentNodes);
+        for (const auto argumentNode : argumentNodes)
+        {
+            static_cast<void>(typeCheckExpression(unit, NodeLayout::argumentValue(unit.nodeBuffer, argumentNode), ExpressionContext{}));
+        }
+    }
+
     void TypeChecker::addPendingSpecialization(Type specialization, NodeIndex call)
     {
-        if (m_pendingSpecializationIds.contains(specialization.id()))
+        if (m_isDeclarationCheck || m_pendingSpecializationIds.contains(specialization.id()))
         {
             return;
         }
@@ -410,6 +471,12 @@ namespace Caracal
         {
             const auto specialization = m_pendingSpecializations[pendingIndex].specialization;
             const auto& definition = m_module.getFunctionDefinition(specialization);
+
+            if (m_genericFunctionsWithDeclarationErrors.contains(m_module.genericFunctionData(definition).templateType.id()))
+            {
+                continue;
+            }
+
             const auto templateNode = definition.definitionNode();
             const auto& unit = unitFor(templateNode);
             const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, templateNode.index);

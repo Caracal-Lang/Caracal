@@ -1,0 +1,12 @@
+ Error T0020 Return type mismatch
+    ,-[Diagnostics/Input/genericUnusedFunctionWrongReturn.cara:4:12]
+  1 | def check'T(x: T) i32
+  2 | {
+  3 |     _ = x;
+  4 |     return true;
+    .            ----
+    .              `-- Cannot return 'bool' from a function with return type 'i32'
+  5 | }
+  6 | 
+    `----
+  Fix: Return a value of type 'i32' or change the function's return type.

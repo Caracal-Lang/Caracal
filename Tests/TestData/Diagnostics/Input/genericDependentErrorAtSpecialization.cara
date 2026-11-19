@@ -1,0 +1,9 @@
+def addLarge'T(x: T) T
+{
+    return x %+ 300;
+}
+
+def callAddLarge() i8
+{
+    return addLarge'i8(1);
+}
