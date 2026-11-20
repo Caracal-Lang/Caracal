@@ -1,0 +1,14 @@
+def countDown'T(x: T) T
+{
+    if x == 0
+    {
+        return x;
+    }
+
+    return countDown'T(x %- 1);
+}
+
+def callCountDown() i32
+{
+    return countDown'i32(3);
+}

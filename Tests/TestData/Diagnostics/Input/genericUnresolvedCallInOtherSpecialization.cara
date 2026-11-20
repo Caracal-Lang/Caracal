@@ -1,0 +1,27 @@
+def convert'T(x: i32, y: T) i32
+{
+    _ = y;
+    return x;
+}
+
+def convert'T(x: i64, y: T) i32
+{
+    _ = x;
+    _ = y;
+    return 2;
+}
+
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def outer'U(a: U) i32
+{
+    return keep(convert'U(a, a));
+}
+
+def callOuter() i32
+{
+    return outer(true) %+ outer(5);
+}

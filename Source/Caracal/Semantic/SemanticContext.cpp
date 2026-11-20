@@ -306,18 +306,41 @@ namespace Caracal
         return name;
     }
 
+    size_t ArrayTypeKeyHash::operator()(const ArrayTypeKey& key) const noexcept
+    {
+        auto hash = static_cast<size_t>(static_cast<u32>(key.elementId)) * 1000003u;
+        hash ^= static_cast<size_t>(static_cast<u32>(key.length)) + 0x9e3779b9u + (hash << 6) + (hash >> 2);
+        hash ^= static_cast<size_t>(key.kind) * 31u + static_cast<size_t>(key.isImmutableSlice);
+        return hash;
+    }
+
+    [[nodiscard]] static ArrayTypeKey CreateArrayTypeKey(
+        TypeKind arrayKind,
+        Type elementType,
+        i32 length,
+        bool immutableSlice) noexcept
+    {
+        auto keyLength = 0;
+        if (arrayKind == TypeKind::FixedArray)
+        {
+            keyLength = length;
+        }
+
+        return ArrayTypeKey{ arrayKind, elementType.id(), keyLength, immutableSlice };
+    }
+
     Type SemanticContext::getOrCreateArrayType(TypeKind arrayKind, Type elementType, i32 length, bool immutableSlice) noexcept
     {
-        auto arrayName = BuildArrayTypeName(*this, arrayKind, elementType, length, immutableSlice);
-        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        const auto key = CreateArrayTypeKey(arrayKind, elementType, length, immutableSlice);
+        if (const auto existing = m_arrayTypesByKey.find(key); existing != m_arrayTypesByKey.end())
         {
             return existing->second;
         }
 
         auto arrayId = m_nextId += VariantCount;
         auto arrayType = Type{ arrayId, arrayKind };
-        m_typeNames.try_emplace(arrayId, arrayName);
-        m_nameToTypes.try_emplace(arrayName, arrayType);
+        m_typeNames.try_emplace(arrayId, BuildArrayTypeName(*this, arrayKind, elementType, length, immutableSlice));
+        m_arrayTypesByKey.emplace(key, arrayType);
         m_arrayTypeInfoById.try_emplace(arrayId, ArrayTypeInfo{ elementType, length, immutableSlice });
         m_arrayTypes.push_back(arrayType);
 
@@ -337,8 +360,8 @@ namespace Caracal
 
     Type SemanticContext::tryGetMutableSliceType(Type immutableSlice) const noexcept
     {
-        const auto arrayName = BuildArrayTypeName(*this, TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
-        if (const auto existing = m_nameToTypes.find(arrayName); existing != m_nameToTypes.end())
+        const auto key = CreateArrayTypeKey(TypeKind::Slice, getArrayElementType(immutableSlice), 0, false);
+        if (const auto existing = m_arrayTypesByKey.find(key); existing != m_arrayTypesByKey.end())
         {
             return existing->second;
         }
@@ -553,6 +576,165 @@ namespace Caracal
         return m_typeDefinitions.back();
     }
 
+    Type SemanticContext::createTypeParameter(std::string_view name) noexcept
+    {
+        auto typeId = m_nextId += VariantCount;
+        m_typeNames.try_emplace(typeId, std::string(name));
+
+        return Type{ typeId, TypeKind::TypeParameter };
+    }
+
+    void SemanticContext::setTypeParameters(FunctionDefinition& definition, std::vector<Type> typeParameters) noexcept
+    {
+        auto& data = m_genericFunctionData.emplace_back();
+        data.typeParameters = std::move(typeParameters);
+        definition.setGenericData(GenericKind::Template, static_cast<i32>(m_genericFunctionData.size() - 1));
+    }
+
+    void SemanticContext::setSpecialization(FunctionDefinition& definition, Type templateType, std::vector<Type> typeArguments) noexcept
+    {
+        auto& data = m_genericFunctionData.emplace_back();
+        data.templateType = templateType;
+        data.typeArguments = std::move(typeArguments);
+        definition.setGenericData(GenericKind::Specialization, static_cast<i32>(m_genericFunctionData.size() - 1));
+    }
+
+    const GenericFunctionData& SemanticContext::genericFunctionData(const FunctionDefinition& definition) const noexcept
+    {
+        static const auto notGeneric = GenericFunctionData{};
+
+        if (definition.genericDataIndex() < 0)
+        {
+            return notGeneric;
+        }
+        return m_genericFunctionData[static_cast<size_t>(definition.genericDataIndex())];
+    }
+
+    [[nodiscard]] static GenericSpecialization CreateGenericSpecialization(Type templateType, const std::vector<Type>& typeArguments) noexcept
+    {
+        auto genericSpecialization = GenericSpecialization{ templateType.id(), {} };
+        genericSpecialization.typeArgumentIds.reserve(typeArguments.size());
+        for (const auto typeArgument : typeArguments)
+        {
+            genericSpecialization.typeArgumentIds.push_back(typeArgument.id());
+        }
+
+        return genericSpecialization;
+    }
+
+    Type SemanticContext::tryGetSpecialization(Type templateType, const std::vector<Type>& typeArguments) const noexcept
+    {
+        if (const auto existing = m_genericSpecializations.find(CreateGenericSpecialization(templateType, typeArguments)); existing != m_genericSpecializations.end())
+        {
+            return existing->second;
+        }
+
+        return Type::Undefined();
+    }
+
+    [[nodiscard]] static bool IsArrayKind(TypeKind kind) noexcept
+    {
+        return kind == TypeKind::FixedArray || kind == TypeKind::DynamicArray || kind == TypeKind::Slice;
+    }
+
+    // for example T turns into i32, ref T turns into ref i32
+    // [T; 4] for i32 becomes [i32; 4]
+    Type SemanticContext::specializeType(
+        Type type,
+        const std::vector<Type>& typeParameters,
+        const std::vector<Type>& typeArguments) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        auto specialized = baseType;
+        if (baseType.kind() == TypeKind::TypeParameter)
+        {
+            const auto found = std::ranges::find(typeParameters, baseType);
+            if (found != typeParameters.end())
+            {
+                specialized = typeArguments[static_cast<size_t>(found - typeParameters.begin())];
+            }
+        }
+        else if (IsArrayKind(baseType.kind()))
+        {
+            const auto elementType = getArrayElementType(baseType);
+            const auto specializedElement = specializeType(elementType, typeParameters, typeArguments);
+            if (specializedElement == Type::Undefined())
+            {
+                specialized = Type::Undefined();
+            }
+            else if (specializedElement != elementType)
+            {
+                specialized = getOrCreateArrayType(baseType.kind(), specializedElement, getArrayLength(baseType), isImmutableSlice(baseType));
+            }
+        }
+
+        if (specialized == baseType)
+        {
+            return type;
+        }
+        if (type.isReference())
+        {
+            specialized = specialized.toReference();
+        }
+        if (type.isOptional())
+        {
+            specialized = specialized.toOptional();
+        }
+        return specialized;
+    }
+
+    Type SemanticContext::createSpecialization(Type templateType, std::vector<Type> typeArguments) noexcept
+    {
+        const auto& templateDefinition = getFunctionDefinition(templateType);
+        const auto& typeParameters = genericFunctionData(templateDefinition).typeParameters;
+
+        auto name = templateDefinition.fullName() + "'";
+        for (size_t position = 0; position < typeArguments.size(); ++position)
+        {
+            if (position > 0)
+            {
+                name += ",";
+            }
+            name += getNameByType(typeArguments[position]);
+        }
+
+        auto parameters = std::vector<Parameter>{};
+        for (const auto& parameter : templateDefinition.parameters())
+        {
+            auto& specialized = parameters.emplace_back(
+                parameter.name(),
+                specializeType(parameter.type(), typeParameters, typeArguments),
+                parameter.defaultValue());
+            specialized.setDefaultValueNode(parameter.defaultValueNode());
+        }
+
+        auto returnTypes = std::vector<Type>{};
+        for (const auto returnType : templateDefinition.returnTypes())
+        {
+            returnTypes.push_back(specializeType(returnType, typeParameters, typeArguments));
+        }
+
+        const auto definitionNode = templateDefinition.definitionNode();
+        auto genericSpecialization = CreateGenericSpecialization(templateType, typeArguments);
+
+        const auto functionType = Type{ m_nextId += VariantCount, TypeKind::Function };
+        auto& definition = m_functionDefinitions.emplace_back(
+            functionType,
+            Type::Undefined(),
+            FunctionType::FreeFunction,
+            name,
+            name,
+            false,
+            std::move(parameters),
+            std::move(returnTypes));
+        m_functionDefinitionIndexById.try_emplace(functionType.id(), m_functionDefinitions.size() - 1);
+        definition.setDefinitionNode(definitionNode);
+        setSpecialization(definition, templateType, std::move(typeArguments));
+        m_genericSpecializations.emplace(std::move(genericSpecialization), functionType);
+
+        return functionType;
+    }
+
     TypeDefinition& SemanticContext::createBuiltinTypeFromDescription(std::string_view name, const BuiltinTypeDescription& description) noexcept
     {
         auto typeName = std::string(name);
@@ -734,5 +916,10 @@ namespace Caracal
         }
 
         found->second.nodeTypes[reference.index] = type;
+    }
+
+    void SemanticContext::setBodyNodeTypes(const FunctionDefinition& specialization, std::vector<Type> bodyNodeTypes) noexcept
+    {
+        m_genericFunctionData[static_cast<size_t>(specialization.genericDataIndex())].bodyNodeTypes = std::move(bodyNodeTypes);
     }
 }

@@ -1,0 +1,9 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def callAdd() i32
+{
+    return add'i32(3, 4);
+}

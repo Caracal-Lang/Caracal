@@ -1,0 +1,127 @@
+FunctionDefinitionStatement: {
+    Type: (i32) -> i32
+    Name: describe
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: i32
+                Lexeme: i32
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: i32
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            NumberLiteral: 1
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (T) -> i32
+    Name: describe
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: value
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: value
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 2
+        }
+    }
+    Specialization: {
+        Type: (string) -> i32
+        Name: describe'string
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: string
+                        Name: value
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NumberLiteral: 2
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: describeText
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (string) -> i32
+                NameExpression: {
+                    Type: (string) -> i32
+                    Name: describe
+                }
+                ArgumentsNode(1): {
+                    StringLiteral: "text"
+                }
+            }
+        }
+    }
+}

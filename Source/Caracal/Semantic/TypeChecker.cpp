@@ -78,6 +78,7 @@ namespace Caracal
         typeCheckFunctionDefinitions();
         typeCheckTestDefinitions();
         typeCheckTypeMethodDefinitions();
+        typeCheckPendingSpecializations();
 
         checkUninitializedInitConstants();
         typeCheckTestsStub();
@@ -333,6 +334,11 @@ namespace Caracal
             const auto& unit = unitFor(declaration);
             typeCheckFunctionDefinitionStatement(unit, declaration.index);
         }
+
+        for (const auto declaration : m_genericFunctionDeclarations)
+        {
+            typeCheckGenericFunctionDeclaration(declaration);
+        }
     }
 
     void TypeChecker::copyTestsStubParameters()
@@ -342,10 +348,10 @@ namespace Caracal
             return;
         }
 
-        const auto parameters = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration)).parameters();
+        const auto parameters = m_module.getFunctionDefinition(typeOfNode(m_testsStubDeclaration)).parameters();
         for (const auto declaration : m_testDeclarations)
         {
-            m_module.getFunctionDefinition(m_module.typeOfNode(declaration)).setParameters(parameters);
+            m_module.getFunctionDefinition(typeOfNode(declaration)).setParameters(parameters);
         }
     }
 
@@ -365,7 +371,7 @@ namespace Caracal
         CARACAL_ZONE_NAMED("check.testsStub");
         const auto& unit = unitFor(m_testsStubDeclaration);
         const auto index = m_testsStubDeclaration.index;
-        const auto& functionDefinition = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration));
+        const auto& functionDefinition = m_module.getFunctionDefinition(typeOfNode(m_testsStubDeclaration));
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         pushScope(ScopeKind::Function);
@@ -522,16 +528,21 @@ namespace Caracal
 
     void TypeChecker::typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index)
     {
-        CARACAL_ZONE_NAMED("check.functionBody");
-        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
-        const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
-        pushScope(ScopeKind::Function);
-
-        const auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        const auto functionType = typeOfNode(NodeIndex{ unit.fileId, index });
         if (functionType == Type::Undefined())
         {
             TODO("This shouldn't happen");
         }
+
+        typeCheckFunctionBody(unit, index, functionType);
+    }
+
+    void TypeChecker::typeCheckFunctionBody(const CompilationUnit& unit, u32 index, Type functionType)
+    {
+        CARACAL_ZONE_NAMED("check.functionBody");
+        const auto& tokens = m_compilationContext.tokenBuffer(unit.fileId);
+        const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
+        pushScope(ScopeKind::Function);
 
         auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
@@ -540,7 +551,7 @@ namespace Caracal
         // annotation errors are reported after the body
         NodeLayout::collectAnnotationsBefore(unit.nodeBuffer, index, m_annotationScratch);
         const auto isExternFunction = NodeLayout::annotationsContain(unit.nodeBuffer, tokens, m_annotationScratch, ExternAnnotationName);
-        const auto emitBody = !isExternFunction;
+        const auto emitBody = !isExternFunction && !m_isDeclarationCheck;
         if (isExternFunction && !m_isPreludePass)
         {
             m_emitter.recordExternDefinition(functionDefinition.type());
@@ -629,7 +640,7 @@ namespace Caracal
         CARACAL_ZONE_NAMED("check.testsStubBody");
         const auto stringType = m_module.wellKnown().string;
 
-        const auto& stubParameters = m_module.getFunctionDefinition(m_module.typeOfNode(m_testsStubDeclaration)).parameters();
+        const auto& stubParameters = m_module.getFunctionDefinition(typeOfNode(m_testsStubDeclaration)).parameters();
         auto testArguments = std::vector<ValueRef>{};
         for (const auto& parameter : stubParameters)
         {
@@ -672,7 +683,7 @@ namespace Caracal
                 static_cast<void>(m_emitter.emitCall(beginTestType.id(), beginTestArguments, Type::Void()));
             }
 
-            static_cast<void>(m_emitter.emitCall(m_module.typeOfNode(declaration).id(), testArguments, Type::Void()));
+            static_cast<void>(m_emitter.emitCall(typeOfNode(declaration).id(), testArguments, Type::Void()));
 
             if (endTestType != Type::Undefined())
             {
@@ -694,7 +705,7 @@ namespace Caracal
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         pushScope(ScopeKind::Function);
 
-        const auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        const auto functionType = typeOfNode(NodeIndex{ unit.fileId, index });
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         const auto testLayout = NodeLayout::testDefinition(index);
         const auto emitsTest = emitsTestsOf(unit);

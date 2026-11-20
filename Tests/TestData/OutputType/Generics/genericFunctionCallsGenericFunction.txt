@@ -1,0 +1,199 @@
+FunctionDefinitionStatement: {
+    Type: (T, T) -> T
+    Name: add
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: y
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: (i8, i8) -> i8
+        Name: add'i8
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i8
+                BinaryExpression: {
+                    Type: i8
+                    Left: {
+                        NameExpression: {
+                            Type: i8
+                            Name: x
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        NameExpression: {
+                            Type: i8
+                            Name: y
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (T) -> T
+    Name: twice
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: add
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: T
+                    }
+                }
+                ArgumentsNode(2): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: (i8) -> i8
+        Name: twice'i8
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i8
+                FunctionCallExpression: {
+                    Type: i8
+                    Function type: (i8, i8) -> i8
+                    NameExpression: {
+                        Type: (i8, i8) -> i8
+                        Name: add
+                    }
+                    TypeArgumentsNode(1): {
+                        TypeNameNode: {
+                            Type: i8
+                            Lexeme: T
+                        }
+                    }
+                    ArgumentsNode(2): {
+                        NameExpression: {
+                            Type: i8
+                            Name: x
+                        }
+                        NameExpression: {
+                            Type: i8
+                            Name: x
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i8
+    Name: callTwice
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i8
+            Lexeme: i8
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i8
+            FunctionCallExpression: {
+                Type: i8
+                Function type: (i8) -> i8
+                NameExpression: {
+                    Type: (i8) -> i8
+                    Name: twice
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: i8
+                        Lexeme: i8
+                    }
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 3
+                }
+            }
+        }
+    }
+}

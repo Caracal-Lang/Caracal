@@ -40,6 +40,21 @@ namespace Caracal
 
     [[nodiscard]] CARACAL_API bool isBitwiseIntrinsicKind(IntrinsicKind kind) noexcept;
 
+    enum class GenericKind : u8
+    {
+        None,
+        Template,
+        Specialization
+    };
+
+    struct GenericFunctionData
+    {
+        std::vector<Type> typeParameters;
+        std::vector<Type> typeArguments;
+        Type templateType{ Type::Undefined() };
+        std::vector<Type> bodyNodeTypes;
+    };
+
     class FunctionDefinition
     {
     public:
@@ -69,12 +84,20 @@ namespace Caracal
         [[nodiscard]] const std::optional<std::string>& symbolName() const noexcept { return m_symbolName; }
         [[nodiscard]] bool isExtern() const noexcept { return m_isExtern; }
         [[nodiscard]] bool hasImplicitThis() const noexcept;
+        [[nodiscard]] bool isTemplate() const noexcept { return m_genericKind == GenericKind::Template; }
+        [[nodiscard]] bool isSpecialization() const noexcept { return m_genericKind == GenericKind::Specialization; }
+        [[nodiscard]] i32 genericDataIndex() const noexcept { return m_genericDataIndex; }
 
         void setParameters(std::vector<Parameter> parameters) noexcept;
         void setReturnTypes(std::vector<Type> returnTypes) noexcept;
         void setIsVariadic(bool isVariadic) noexcept;
         void setSymbolName(std::optional<std::string> symbolName) noexcept { m_symbolName = std::move(symbolName); }
         void setIsExtern(bool isExtern) noexcept { m_isExtern = isExtern; }
+        void setGenericData(GenericKind genericKind, i32 genericDataIndex) noexcept
+        {
+            m_genericKind = genericKind;
+            m_genericDataIndex = genericDataIndex;
+        }
 
     private:
         Type m_type;
@@ -86,6 +109,8 @@ namespace Caracal
         std::optional<std::string> m_symbolName;
         bool m_isVariadic;
         bool m_isExtern{ false };
+        GenericKind m_genericKind{ GenericKind::None };
+        i32 m_genericDataIndex{ -1 };
         std::vector<Parameter> m_parameters;
         std::vector<Type> m_returnTypes;
         NodeIndex m_definitionNode{};

@@ -1,0 +1,9 @@
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def keep'U(x: U) U
+{
+    return x;
+}

@@ -1,0 +1,63 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"callSum$"() {
+entry:
+  %values = alloca { ptr, i32, i32 }, align 8
+  %call = call ptr @calloc(i64 8, i64 4)
+  %data = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %values, i32 0, i32 0
+  store ptr %call, ptr %data, align 8
+  %length = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %values, i32 0, i32 1
+  store i32 3, ptr %length, align 4
+  %capacity = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %values, i32 0, i32 2
+  store i32 8, ptr %capacity, align 4
+  %element = getelementptr i32, ptr %call, i32 0
+  store i32 1, ptr %element, align 4
+  %element1 = getelementptr i32, ptr %call, i32 1
+  store i32 2, ptr %element1, align 4
+  %element2 = getelementptr i32, ptr %call, i32 2
+  store i32 3, ptr %element2, align 4
+  %data3 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %values, i32 0, i32 0
+  %load = load ptr, ptr %data3, align 8
+  %length4 = getelementptr inbounds nuw { ptr, i32, i32 }, ptr %values, i32 0, i32 1
+  %load5 = load i32, ptr %length4, align 4
+  %0 = insertvalue { ptr, i32 } poison, ptr %load, 0
+  %slice = insertvalue { ptr, i32 } %0, i32 %load5, 1
+  %call6 = call i32 @"sum'i32$[i32]"({ ptr, i32 } %slice)
+  ret i32 %call6
+}
+
+define i32 @"sum'i32$[i32]"({ ptr, i32 } %0) {
+entry:
+  %temp = alloca { ptr, i32 }, align 8
+  %temp1 = alloca { ptr, i32 }, align 8
+  %temp2 = alloca { ptr, i32 }, align 8
+  store { ptr, i32 } %0, ptr %temp, align 8
+  %data = getelementptr inbounds nuw { ptr, i32 }, ptr %temp, i32 0, i32 0
+  %load = load ptr, ptr %data, align 8
+  %element = getelementptr i32, ptr %load, i32 0
+  %load3 = load i32, ptr %element, align 4
+  store { ptr, i32 } %0, ptr %temp1, align 8
+  %data4 = getelementptr inbounds nuw { ptr, i32 }, ptr %temp1, i32 0, i32 0
+  %load5 = load ptr, ptr %data4, align 8
+  %element6 = getelementptr i32, ptr %load5, i32 1
+  %load7 = load i32, ptr %element6, align 4
+  %add = add i32 %load3, %load7
+  store { ptr, i32 } %0, ptr %temp2, align 8
+  %data8 = getelementptr inbounds nuw { ptr, i32 }, ptr %temp2, i32 0, i32 0
+  %load9 = load ptr, ptr %data8, align 8
+  %element10 = getelementptr i32, ptr %load9, i32 2
+  %load11 = load i32, ptr %element10, align 4
+  %add12 = add i32 %add, %load11
+  ret i32 %add12
+}

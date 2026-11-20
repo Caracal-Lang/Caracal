@@ -1,0 +1,13 @@
+ Error P0021 Missing call
+     ,-[Diagnostics/Input/genericTypeArgumentsWithoutCall.cara:8:14]
+   5 | 
+   6 | def callKeep() i32
+   7 | {
+   8 |     value := keep'i32;
+     .              --------
+     .                  `-- No argument list follows keep'i32
+   9 |     return 0;
+  10 | }
+  11 | 
+     `----
+  Fix: Add the arguments in parentheses after keep'i32.

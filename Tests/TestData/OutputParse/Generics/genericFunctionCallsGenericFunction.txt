@@ -1,0 +1,141 @@
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: add
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+    }
+    ParametersNode(2): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+        ParameterNode: {
+            Name: y
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+                Operation: AdditionWrapping
+                Right: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: y
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: twice
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: add
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: T
+                    }
+                }
+                ArgumentsNode(2): {
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                    NameExpression: {
+                        Type: undefined
+                        Name: x
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: callTwice
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i8
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: twice
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: i8
+                    }
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 3
+                }
+            }
+        }
+    }
+}

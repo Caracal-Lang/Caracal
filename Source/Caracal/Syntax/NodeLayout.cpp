@@ -64,6 +64,7 @@ namespace Caracal
                 case NodeKind::StringLiteral:
                 case NodeKind::TypeNameNode:
                 case NodeKind::MethodNameNode:
+                case NodeKind::TypeParameterNode:
                 {
                     maximumChildren = 0;
                     break;
@@ -189,11 +190,16 @@ namespace Caracal
                 case NodeKind::FunctionDefinitionStatement:
                 {
                     minimumChildren = 3;
-                    maximumChildren = 3;
-                    if (childCount == 3
-                        && (buffer.kind(children[0]) != NodeKind::ParametersNode
-                            || buffer.kind(children[1]) != NodeKind::ReturnTypesNode
-                            || buffer.kind(children[2]) != NodeKind::BlockNode))
+                    maximumChildren = 4;
+                    if (childCount == 4 && buffer.kind(children[0]) != NodeKind::TypeParametersNode)
+                    {
+                        failureMessage = FormatProblem(index, kind, "the first of 4 children is not a type parameters node");
+                        return false;
+                    }
+                    if (childCount >= 3 && childCount <= 4
+                        && (buffer.kind(children[childCount - 3]) != NodeKind::ParametersNode
+                            || buffer.kind(children[childCount - 2]) != NodeKind::ReturnTypesNode
+                            || buffer.kind(children[childCount - 1]) != NodeKind::BlockNode))
                     {
                         failureMessage = FormatProblem(index, kind, "expected parameters, return types and block children");
                         return false;
@@ -262,6 +268,40 @@ namespace Caracal
                     {
                         failureMessage = FormatProblem(index, kind, "the callee child is not a name expression");
                         return false;
+                    }
+                    for (u32 child = 2; child < childCount; child++)
+                    {
+                        if (buffer.kind(children[child]) == NodeKind::TypeArgumentsNode)
+                        {
+                            failureMessage = FormatProblem(index, kind, "the type arguments child is not directly after the callee");
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case NodeKind::TypeArgumentsNode:
+                {
+                    minimumChildren = 1;
+                    for (u32 child = 0; child < childCount; child++)
+                    {
+                        if (!IsTypeNameKind(buffer.kind(children[child])))
+                        {
+                            failureMessage = FormatProblem(index, kind, "unexpected type arguments child kind " + stringify(buffer.kind(children[child])));
+                            return false;
+                        }
+                    }
+                    break;
+                }
+                case NodeKind::TypeParametersNode:
+                {
+                    minimumChildren = 1;
+                    for (u32 child = 0; child < childCount; child++)
+                    {
+                        if (buffer.kind(children[child]) != NodeKind::TypeParameterNode)
+                        {
+                            failureMessage = FormatProblem(index, kind, "unexpected type parameters child kind " + stringify(buffer.kind(children[child])));
+                            return false;
+                        }
                     }
                     break;
                 }

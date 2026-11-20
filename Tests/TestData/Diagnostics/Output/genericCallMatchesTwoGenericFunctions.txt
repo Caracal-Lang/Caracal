@@ -1,0 +1,12 @@
+ Error T0112 This call matches more than one overload
+     ,-[Diagnostics/Input/genericCallMatchesTwoGenericFunctions.cara:15:12]
+  12 | 
+  13 | def callKeep() i32
+  14 | {
+  15 |     return keep'i32(1, 2);
+     .            --------------
+     .                   `-- 'keep' has more than one equally good overload for these arguments
+  16 | }
+  17 | 
+     `----
+  Fix: Rename one of the generic functions or change its parameters.

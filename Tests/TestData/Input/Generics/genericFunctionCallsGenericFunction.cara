@@ -1,0 +1,14 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def twice'T(x: T) T
+{
+    return add'T(x, x);
+}
+
+def callTwice() i8
+{
+    return twice'i8(3);
+}

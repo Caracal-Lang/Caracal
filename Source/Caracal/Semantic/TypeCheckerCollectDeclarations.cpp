@@ -108,7 +108,23 @@ namespace Caracal
         auto& functionDefinition = m_module.createFunction(functionName, std::move(parameters), std::vector<Type>());
         functionDefinition.setDefinitionNode(NodeIndex{ unit.fileId, index });
         m_module.setNodeType(NodeIndex{ unit.fileId, index }, functionDefinition.type());
-        m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
+        if (functionLayout.hasTypeParameters)
+        {
+            m_genericFunctionDeclarations.push_back(NodeIndex{ unit.fileId, index });
+            auto typeParameters = std::vector<Type>{};
+            NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.typeParameters, m_childrenScratch);
+            for (const auto typeParameterIndex : m_childrenScratch)
+            {
+                const auto typeParameter = m_module.createTypeParameter(nameOf(unit, typeParameterIndex));
+                m_module.setNodeType(NodeIndex{ unit.fileId, typeParameterIndex }, typeParameter);
+                typeParameters.push_back(typeParameter);
+            }
+            m_module.setTypeParameters(functionDefinition, std::move(typeParameters));
+        }
+        else
+        {
+            m_functionDeclarations.push_back(NodeIndex{ unit.fileId, index });
+        }
 
         if (functionName == TestsStubName && m_testsStubDeclaration.index == InvalidNodeIndex)
         {

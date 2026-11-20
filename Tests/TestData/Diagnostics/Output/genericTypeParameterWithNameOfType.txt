@@ -1,0 +1,10 @@
+ Error T0120 Type parameter with the name of a type
+    ,-[Diagnostics/Input/genericTypeParameterWithNameOfType.cara:1:10]
+  1 | def keep'i32(x: i32) i32
+    .          ---
+    .           `-- 'i32' is already the name of a type
+  2 | {
+  3 |     return x;
+  4 | }
+    `----
+  Fix: Rename the type parameter.

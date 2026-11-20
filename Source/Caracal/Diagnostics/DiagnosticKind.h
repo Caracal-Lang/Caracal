@@ -33,6 +33,7 @@ namespace Caracal
         P0018_TestWithParameters,
         P0019_TestNameNotInQuotes,
         P0020_UnknownAnnotationExpression,
+        P0021_MissingCall,
 
         // Annotation diagnostics
         T0001_UnknownAnnotation,
@@ -120,6 +121,18 @@ namespace Caracal
         T0112_CallMatchesMoreThanOneOverload,
         T0113_CompilerCalledFunctionHasOverloads,
         T0114_ExternOverloadsShareSymbol,
+
+        // Generic function diagnostics
+        T0116_WrongNumberOfTypeArguments,
+        T0117_TypeArgumentsOnNonGenericFunction,
+        T0118_CannotInferTypeParameter,
+        T0119_DuplicateTypeParameter,
+        T0120_TypeParameterWithNameOfType,
+        T0121_ExternGenericFunction,
+        T0122_GenericParameterDefaultValue,
+        T0123_ReferenceTypeArgument,
+        T0124_ConflictingTypeInference,
+        T0125_GenericCallsNestedTooDeeply,
 
         // Literal diagnostics
         T0041_NumberLiteralOutOfRange,

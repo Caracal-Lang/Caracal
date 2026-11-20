@@ -70,16 +70,10 @@ namespace Caracal
                     {
                         // foldable builtins are fine but arguments can force this into a runtime call
                         std::vector<u32> arguments;
-                        NodeLayout::collectChildren(unit.nodeBuffer, binaryLayout.right, arguments);
-                        for (size_t argumentIndex = 1; argumentIndex < arguments.size(); ++argumentIndex)
+                        NodeLayout::functionCall(unit.nodeBuffer, binaryLayout.right, arguments);
+                        for (const auto argument : arguments)
                         {
-                            auto valueIndex = arguments[argumentIndex];
-                            if (unit.nodeBuffer.kind(valueIndex) == NodeKind::NamedArgument)
-                            {
-                                valueIndex = NodeLayout::namedArgumentValue(valueIndex);
-                            }
-
-                            if (ContainsRuntimeCall(module, unit, tokens, valueIndex))
+                            if (ContainsRuntimeCall(module, unit, tokens, NodeLayout::argumentValue(unit.nodeBuffer, argument)))
                             {
                                 return true;
                             }

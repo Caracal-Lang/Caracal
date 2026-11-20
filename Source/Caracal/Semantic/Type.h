@@ -12,6 +12,7 @@ namespace Caracal
         Builtin,
         Enum,
         Type,
+        TypeParameter,
         Function,
         Method,
         Constructor,

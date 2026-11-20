@@ -78,7 +78,7 @@ namespace Caracal
 
         if (unit.nodeBuffer.kind(strippedLayout.right) == NodeKind::NameExpression)
         {
-            return m_module.typeOfNode(NodeIndex{ unit.fileId, strippedLayout.left }).toValue().kind() == TypeKind::Type;
+            return typeOfNode(NodeIndex{ unit.fileId, strippedLayout.left }).toValue().kind() == TypeKind::Type;
         }
 
         return false;
@@ -86,7 +86,7 @@ namespace Caracal
 
     bool TypeChecker::isArrayAtCall(const CompilationUnit& unit, u32 callIndex) const
     {
-        const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, callIndex) });
+        const auto methodType = typeOfNode(NodeIndex{ unit.fileId, NodeLayout::subtreeBegin(unit.nodeBuffer, callIndex) });
         const auto* definition = m_module.tryGetFunctionDefinition(methodType);
         return definition != nullptr && definition->intrinsicKind() == IntrinsicKind::ArrayAt;
     }
@@ -305,7 +305,7 @@ namespace Caracal
                 }
 
                 const auto memberLayout = NodeLayout::binary(unit.nodeBuffer, stripped);
-                const auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
+                const auto receiverType = typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
                 if (receiverType.kind() != TypeKind::Type || unit.nodeBuffer.kind(memberLayout.right) != NodeKind::NameExpression)
                 {
                     return ValueRef{};

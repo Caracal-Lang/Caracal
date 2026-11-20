@@ -1,0 +1,9 @@
+ Error T0121 Extern generic function
+    ,-[Diagnostics/Input/genericExternFunction.cara:2:5]
+  1 | #extern()
+  2 | def keep'T(x: T) T {}
+    .     ----
+    .       `-- Extern function 'keep' has type parameters
+  3 | 
+    `----
+  Fix: Remove the type parameters or the extern annotation.

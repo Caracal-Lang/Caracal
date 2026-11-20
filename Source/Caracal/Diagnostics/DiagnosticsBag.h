@@ -43,6 +43,7 @@ namespace Caracal
         void addTestWithParametersError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addTestNameNotInQuotesError(const SourceTextSharedPtr& source, const SourceLocation& location);
         void addUnknownAnnotationExpressionError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addMissingCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& calleeText);
 
         // Annotation diagnostics
         void addDanglingAnnotationError(const SourceTextSharedPtr& source, const SourceLocation& location);
@@ -168,7 +169,17 @@ namespace Caracal
 
         // Overload diagnostics
         void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
-        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, bool areGenericFunctions);
+        void addWrongNumberOfTypeArgumentsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, size_t typeParameterCount, size_t typeArgumentCount);
+        void addTypeArgumentsOnNonGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCannotInferTypeParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& typeParameterName, size_t typeParameterCount);
+        void addDuplicateTypeParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeParameterName, const SourceLocation& firstLocation);
+        void addTypeParameterWithNameOfTypeError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeParameterName);
+        void addExternGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addGenericParameterDefaultValueError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& parameterName, const std::string& typeParameterName);
+        void addReferenceTypeArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location);
+        void addGenericCallsNestedTooDeeplyError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, size_t limit, const SourceTextSharedPtr& firstSource, const SourceLocation& firstLocation);
+        void addConflictingTypeInferenceError(const SourceTextSharedPtr& source, const SourceLocation& location, const SourceLocation& firstLocation, const std::string& functionName, const std::string& typeParameterName, const std::string& firstType, const std::string& secondType);
         void addCompilerCalledFunctionHasOverloadsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
         void addExternOverloadsShareSymbolError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& symbolName, const SourceTextSharedPtr& otherSource, std::optional<SourceLocation> otherLocation);
 
@@ -193,6 +204,7 @@ namespace Caracal
 
         const std::vector<Diagnostic>& diagnostics() const;
         void removeDiagnosticsAfter(size_t count);
+        void addSpecializationCallLabels(size_t count, const SourceTextSharedPtr& callSource, const SourceLocation& callLocation, const std::string& specializationName);
         [[nodiscard]] std::vector<Diagnostic> takeDiagnosticsAfter(size_t count);
         void addDiagnostics(std::vector<Diagnostic> diagnostics);
         [[nodiscard]] bool hasErrors() const noexcept;

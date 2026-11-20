@@ -22,6 +22,22 @@ namespace Caracal
         return NodeSpans::typeNameSpan(unit.nodeBuffer, context.tokenBuffer(unit.fileId), index);
     }
 
+    // T, ref T and [T; 4] contain a type parameter
+    [[nodiscard]] static bool ContainsTypeParameter(const SemanticContext& module, Type type) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        if (baseType.kind() == TypeKind::TypeParameter)
+        {
+            return true;
+        }
+        if (baseType.kind() == TypeKind::FixedArray || baseType.kind() == TypeKind::DynamicArray || baseType.kind() == TypeKind::Slice)
+        {
+            return ContainsTypeParameter(module, module.getArrayElementType(baseType));
+        }
+
+        return false;
+    }
+
     void TypeChecker::typeCheckFunctionSignatures()
     {
         CARACAL_ZONE_NAMED("check.functionSignatures");
@@ -30,6 +46,11 @@ namespace Caracal
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionSignature(unit, functionDeclaration.index);
         }
+        for (const auto genericFunctionDeclaration : m_genericFunctionDeclarations)
+        {
+            const auto& unit = unitFor(genericFunctionDeclaration);
+            typeCheckFunctionSignature(unit, genericFunctionDeclaration.index);
+        }
 
         reportInvalidOverloadSets();
         for (const auto functionDeclaration : m_functionDeclarations)
@@ -37,23 +58,36 @@ namespace Caracal
             const auto& unit = unitFor(functionDeclaration);
             typeCheckFunctionDefaultValues(unit, functionDeclaration.index);
         }
+        for (const auto genericFunctionDeclaration : m_genericFunctionDeclarations)
+        {
+            const auto& unit = unitFor(genericFunctionDeclaration);
+            typeCheckFunctionDefaultValues(unit, genericFunctionDeclaration.index);
+        }
     }
 
     void TypeChecker::typeCheckFunctionSignature(const CompilationUnit& unit, u32 index)
     {
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
+        auto functionType = typeOfNode(NodeIndex{ unit.fileId, index });
+        if (functionType == Type::Undefined())
+        {
+            TODO("This shouldn't happen");
+        }
+
+        if (functionLayout.hasTypeParameters)
+        {
+            reportInvalidTypeParameters(unit, functionLayout.typeParameters);
+            const auto& typeParameters = m_module.genericFunctionData(m_module.getFunctionDefinition(functionType)).typeParameters;
+            bindTypeParameters(unit, functionLayout.typeParameters, typeParameters);
+        }
 
         pushScope(ScopeKind::Function);
         auto parameters = typeCheckParametersNode(unit, functionLayout.parameters, false);
         auto returns = typeCheckReturnTypesNode(unit, functionLayout.returnTypes);
         popScope(false);
+        m_typeArguments.clear();
 
         const auto functionName = nameOf(unit, index);
-        auto functionType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
-        if (functionType == Type::Undefined())
-        {
-            TODO("This shouldn't happen");
-        }
 
         auto& functionDefinition = m_module.getFunctionDefinition(functionType);
         auto annotations = std::vector<u32>{};
@@ -61,7 +95,11 @@ namespace Caracal
         std::optional<std::string> symbolName;
         auto isRequiredExtern = false;
         const auto isExtern = validateCallableAnnotations(unit, annotations, symbolName, isRequiredExtern);
-        if (isExtern && isRequiredExtern)
+        if (isExtern && functionLayout.hasTypeParameters)
+        {
+            m_diagnostics.addExternGenericFunctionError(unit.source, nameLocation(unit, index), std::string(functionName));
+        }
+        else if (isExtern && isRequiredExtern)
         {
             m_module.markExternRequired(functionType);
         }
@@ -69,6 +107,10 @@ namespace Caracal
         auto parameterNodes = std::vector<u32>{};
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
         const auto isVariadic = !parameterNodes.empty() && NodeLayout::isVariadicParameter(unit.nodeBuffer, parameterNodes.back());
+        if (functionLayout.hasTypeParameters)
+        {
+            reportGenericParameterDefaultValues(unit, parameters, parameterNodes);
+        }
         if (isVariadic && !isExtern)
         {
             m_diagnostics.addNonExternVariadicFunctionError(
@@ -83,6 +125,16 @@ namespace Caracal
         functionDefinition.setIsExtern(isExtern);
     }
 
+    void TypeChecker::bindTypeParameters(const CompilationUnit& unit, u32 typeParametersNode, const std::vector<Type>& types)
+    {
+        m_typeArguments.clear();
+        NodeLayout::collectChildren(unit.nodeBuffer, typeParametersNode, m_childrenScratch);
+        for (size_t position = 0; position < m_childrenScratch.size(); ++position)
+        {
+            m_typeArguments.emplace_back(nameOf(unit, m_childrenScratch[position]), types[position]);
+        }
+    }
+
     Type TypeChecker::typeCheckTypeNameNode(const CompilationUnit& unit, u32 index)
     {
         if (unit.nodeBuffer.kind(index) == NodeKind::ArrayTypeNameNode)
@@ -91,7 +143,22 @@ namespace Caracal
         }
 
         const auto name = nameOf(unit, index);
-        auto type = m_module.tryGetTypeByName(name);
+        auto type = Type::Undefined();
+        auto isTypeParameter = false;
+        for (const auto& [typeParameterName, typeArgument] : m_typeArguments)
+        {
+            if (typeParameterName == name)
+            {
+                type = typeArgument;
+                isTypeParameter = true;
+                break;
+            }
+        }
+        if (!isTypeParameter)
+        {
+            type = m_module.tryGetTypeByName(name);
+        }
+
         if (type != Type::Undefined())
         {
             if (!m_isPreludePass)
@@ -112,11 +179,12 @@ namespace Caracal
             // TODO nullable handling
             return recordType(unit, index, type);
         }
-        else
+        else if (!isTypeParameter)
         {
             m_diagnostics.addUnknownTypeError(unit.source, nameLocation(unit, index), std::string(name));
-            return Type::Undefined();
         }
+
+        return Type::Undefined();
     }
 
     Type TypeChecker::typeCheckArrayTypeNameNode(const CompilationUnit& unit, u32 index)
@@ -223,14 +291,15 @@ namespace Caracal
     void TypeChecker::typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index)
     {
         const auto functionLayout = NodeLayout::functionDefinition(unit.nodeBuffer, index);
-        const auto& parameters = m_module.getFunctionDefinition(m_module.typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
+        const auto& parameters = m_module.getFunctionDefinition(typeOfNode(NodeIndex{ unit.fileId, index })).parameters();
         auto parameterNodes = std::vector<u32>{};
         NodeLayout::collectChildren(unit.nodeBuffer, functionLayout.parameters, parameterNodes);
 
         pushScope(ScopeKind::Function);
         for (size_t position = 0; position < parameterNodes.size(); ++position)
         {
-            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue)
+            if (NodeLayout::parameter(unit.nodeBuffer, parameterNodes[position]).hasDefaultValue
+                && !ContainsTypeParameter(m_module, parameters[position].type()))
             {
                 typeCheckDefaultValue(unit, parameterNodes[position], parameters[position].type(), std::span<const Parameter>(parameters.data(), position));
             }
@@ -316,7 +385,7 @@ namespace Caracal
             const auto* existing = tryGetBinding(nameId);
             if (existing == nullptr || existing->scopeIndex != static_cast<u32>(m_scopeFrames.size() - 1))
             {
-                addVariableBinding(nameId, m_module.typeOfNode(NodeIndex{ unit.fileId, parameterIndex }), nameLocation(unit, parameterIndex), unit.source, VariableBindingKind::Parameter);
+                addVariableBinding(nameId, typeOfNode(NodeIndex{ unit.fileId, parameterIndex }), nameLocation(unit, parameterIndex), unit.source, VariableBindingKind::Parameter);
             }
             else
             {

@@ -1,0 +1,17 @@
+ Error T0113 This function cannot have overloads
+    ,-[Diagnostics/Input/genericFunctionBeforeMain.cara:6:5]
+  1 | def main'T(x: T) T
+    .     ----
+    .       `-- Previous function declaration is here.
+  2 | {
+  3 |     return x;
+  4 | }
+  5 | 
+  6 | def main() i32
+    .     ----
+    .       `-- The compiler calls 'main' by name
+  7 | {
+  8 |     return 0;
+  9 | }
+    `----
+  Fix: Rename this function.

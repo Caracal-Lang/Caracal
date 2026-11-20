@@ -1,0 +1,381 @@
+FunctionDefinitionStatement: {
+    Type: ([T]) -> T
+    Name: sum
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [T]
+                Lexeme: [T]
+                Kind: Slice
+                DataType: {
+                    TypeNameNode: {
+                        Type: T
+                        Lexeme: T
+                    }
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(4): {
+        VariableDeclaration: {
+            Type: undefined
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            ExplicitType: {
+                TypeNameNode: {
+                    Type: undefined
+                    Lexeme: T
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: values
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: undefined
+                            Function type: undefined
+                            NameExpression: {
+                                Type: undefined
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: total
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: undefined
+                                    Function type: undefined
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 1
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        AssignmentStatement: {
+            Left: {
+                NameExpression: {
+                    Type: undefined
+                    Name: total
+                }
+            }
+            Right: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: total
+                        }
+                    }
+                    Operation: AdditionWrapping
+                    Right: {
+                        BinaryExpression: {
+                            Type: undefined
+                            Left: {
+                                NameExpression: {
+                                    Type: undefined
+                                    Name: values
+                                }
+                            }
+                            Operation: MemberAccess
+                            Right: {
+                                FunctionCallExpression: {
+                                    Type: undefined
+                                    Function type: undefined
+                                    NameExpression: {
+                                        Type: undefined
+                                        Name: at
+                                    }
+                                    ArgumentsNode(1): {
+                                        NumberLiteral: 2
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: total
+            }
+        }
+    }
+    Specialization: {
+        Type: (const [i32]) -> i32
+        Name: sum'i32
+        BlockNode(4): {
+            VariableDeclaration: {
+                Type: i32
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: total
+                    }
+                }
+                ExplicitType: {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: T
+                    }
+                }
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: const [i32]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: i32
+                                Function type: (ref const [i32], i32) -> i32
+                                NameExpression: {
+                                    Type: (ref const [i32], i32) -> i32
+                                    Name: at
+                                }
+                                ArgumentsNode(1): {
+                                    NumberLiteral: 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            AssignmentStatement: {
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: total
+                    }
+                }
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: const [i32]
+                                        Name: values
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (ref const [i32], i32) -> i32
+                                        NameExpression: {
+                                            Type: (ref const [i32], i32) -> i32
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 1
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            AssignmentStatement: {
+                Left: {
+                    NameExpression: {
+                        Type: i32
+                        Name: total
+                    }
+                }
+                Right: {
+                    BinaryExpression: {
+                        Type: i32
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: total
+                            }
+                        }
+                        Operation: AdditionWrapping
+                        Right: {
+                            BinaryExpression: {
+                                Type: i32
+                                Left: {
+                                    NameExpression: {
+                                        Type: const [i32]
+                                        Name: values
+                                    }
+                                }
+                                Operation: MemberAccess
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (ref const [i32], i32) -> i32
+                                        NameExpression: {
+                                            Type: (ref const [i32], i32) -> i32
+                                            Name: at
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 2
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: total
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callSum
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        VariableDeclaration: {
+            Type: [i32; _]
+            Left: {
+                NameExpression: {
+                    Type: [i32; _]
+                    Name: values
+                }
+            }
+            Right: {
+                ArrayLiteral(3): {
+                    Type: [i32; _]
+                    Dynamic: true
+                    NumberLiteral: 1
+                    NumberLiteral: 2
+                    NumberLiteral: 3
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (const [i32]) -> i32
+                NameExpression: {
+                    Type: (const [i32]) -> i32
+                    Name: sum
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: [i32]
+                        Left: {
+                            NameExpression: {
+                                Type: [i32; _]
+                                Name: values
+                            }
+                        }
+                        Operation: MemberAccess
+                        Right: {
+                            FunctionCallExpression: {
+                                Type: [i32]
+                                Function type: (ref [i32; _]) -> [i32]
+                                NameExpression: {
+                                    Type: (ref [i32; _]) -> [i32]
+                                    Name: slice
+                                }
+                                ArgumentsNode(0): {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,35 @@
+; ModuleID = 'CaracalModule'
+source_filename = "CaracalModule"
+target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128"
+target triple = "x86_64-unknown-none"
+
+declare i32 @strcmp(ptr %0, ptr %1)
+
+declare ptr @calloc(i64 %0, i64 %1)
+
+declare ptr @realloc(ptr %0, i64 %1)
+
+declare ptr @memmove(ptr %0, ptr %1, i64 %2)
+
+define i32 @"callFirst$"() {
+entry:
+  %values = alloca [3 x i32], align 4
+  %element = getelementptr [3 x i32], ptr %values, i32 0, i32 0
+  store i32 4, ptr %element, align 4
+  %element1 = getelementptr [3 x i32], ptr %values, i32 0, i32 1
+  store i32 5, ptr %element1, align 4
+  %element2 = getelementptr [3 x i32], ptr %values, i32 0, i32 2
+  store i32 6, ptr %element2, align 4
+  %load = load [3 x i32], ptr %values, align 4
+  %call = call i32 @"first'i32$[i32; 3]"([3 x i32] %load)
+  ret i32 %call
+}
+
+define i32 @"first'i32$[i32; 3]"([3 x i32] %0) {
+entry:
+  %values = alloca [3 x i32], align 4
+  store [3 x i32] %0, ptr %values, align 4
+  %element = getelementptr [3 x i32], ptr %values, i32 0, i32 0
+  %load = load i32, ptr %element, align 4
+  ret i32 %load
+}

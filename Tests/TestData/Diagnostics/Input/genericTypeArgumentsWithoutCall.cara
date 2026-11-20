@@ -1,0 +1,10 @@
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def callKeep() i32
+{
+    value := keep'i32;
+    return 0;
+}

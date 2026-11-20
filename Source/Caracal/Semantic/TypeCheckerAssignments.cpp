@@ -89,7 +89,7 @@ namespace Caracal
                 return true;
             }
 
-            const auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, binaryLayout.left }).toValue();
+            const auto receiverType = typeOfNode(NodeIndex{ unit.fileId, binaryLayout.left }).toValue();
             if (receiverType.kind() != TypeKind::Type)
             {
                 return false;
@@ -168,7 +168,7 @@ namespace Caracal
             && leftType != Type::Undefined())
         {
             const auto memberLayout = NodeLayout::binary(unit.nodeBuffer, assignmentLayout.target);
-            const auto receiverType = m_module.typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
+            const auto receiverType = typeOfNode(NodeIndex{ unit.fileId, memberLayout.left }).toValue();
             const auto isField = unit.nodeBuffer.kind(memberLayout.right) == NodeKind::NameExpression && receiverType.kind() == TypeKind::Type;
             const auto isElement = unit.nodeBuffer.kind(memberLayout.right) == NodeKind::FunctionCallExpression && isArrayAtCall(unit, memberLayout.right);
             if (!isField && !isElement)

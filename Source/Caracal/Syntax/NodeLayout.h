@@ -3,6 +3,7 @@
 #include <Caracal/API.h>
 #include <Caracal/Defines.h>
 #include <Caracal/Syntax/NodeBuffer.h>
+#include <Caracal/Syntax/NodeIndex.h>
 #include <Caracal/Syntax/TokenBuffer.h>
 
 #include <algorithm>
@@ -232,9 +233,11 @@ namespace Caracal
 
         struct FunctionDefinitionNodeLayout
         {
+            u32 typeParameters;
             u32 parameters;
             u32 returnTypes;
             u32 body;
+            bool hasTypeParameters;
         };
 
         [[nodiscard]] inline FunctionDefinitionNodeLayout functionDefinition(const NodeBuffer& buffer, u32 index)
@@ -243,6 +246,72 @@ namespace Caracal
             layout.body = lastChild(index);
             layout.returnTypes = previousSibling(buffer, layout.body);
             layout.parameters = previousSibling(buffer, layout.returnTypes);
+            if (subtreeBegin(buffer, layout.parameters) != subtreeBegin(buffer, index))
+            {
+                layout.hasTypeParameters = true;
+                layout.typeParameters = previousSibling(buffer, layout.parameters);
+            }
+
+            return layout;
+        }
+
+        struct FunctionCallNodeLayout
+        {
+            u32 callee;
+            u32 typeArguments;
+            bool hasTypeArguments;
+        };
+
+        // the callee is a NameExpression leaf at the start of the subtree
+        [[nodiscard]] inline u32 functionCallee(const NodeBuffer& buffer, u32 index)
+        {
+            return subtreeBegin(buffer, index);
+        }
+
+        [[nodiscard]] inline bool functionCallHasTypeArguments(const NodeBuffer& buffer, u32 index)
+        {
+            return buffer.mainToken(index) != buffer.mainToken(functionCallee(buffer, index)) + 1;
+        }
+
+        [[nodiscard]] inline u32 functionCallTypeArguments(const NodeBuffer& buffer, u32 index)
+        {
+            const auto callee = functionCallee(buffer, index);
+            auto position = index;
+            while (position > callee + 1)
+            {
+                const auto child = position - 1;
+                position = child - buffer.subtreeSize(child) + 1;
+                if (position == callee + 1 && buffer.kind(child) == NodeKind::TypeArgumentsNode)
+                {
+                    return child;
+                }
+            }
+
+            return InvalidNodeIndex;
+        }
+
+        inline FunctionCallNodeLayout functionCall(const NodeBuffer& buffer, u32 index, std::vector<u32>& arguments)
+        {
+            FunctionCallNodeLayout layout{};
+            layout.callee = functionCallee(buffer, index);
+            arguments.clear();
+            auto position = index;
+            while (position > layout.callee + 1)
+            {
+                const auto child = position - 1;
+                position = child - buffer.subtreeSize(child) + 1;
+                if (position == layout.callee + 1 && buffer.kind(child) == NodeKind::TypeArgumentsNode)
+                {
+                    layout.hasTypeArguments = true;
+                    layout.typeArguments = child;
+                }
+                else
+                {
+                    arguments.push_back(child);
+                }
+            }
+
+            std::reverse(arguments.begin(), arguments.end());
             return layout;
         }
 

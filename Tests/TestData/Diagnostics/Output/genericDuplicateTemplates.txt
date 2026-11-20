@@ -1,0 +1,17 @@
+ Error T0039 Duplicate function declaration
+    ,-[Diagnostics/Input/genericDuplicateTemplates.cara:6:5]
+  1 | def keep'T(x: T) T
+    .     ----
+    .       `-- Previous function declaration is here.
+  2 | {
+  3 |     return x;
+  4 | }
+  5 | 
+  6 | def keep'U(x: U) U
+    .     ----
+    .       `-- Function 'keep' is already declared with these parameter types
+  7 | {
+  8 |     return x;
+  9 | }
+    `----
+  Fix: Change the parameter types, rename this function, or remove the duplicate declaration.

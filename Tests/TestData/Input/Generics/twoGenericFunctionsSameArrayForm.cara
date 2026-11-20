@@ -1,0 +1,19 @@
+def keep'T(values: [T; 2]) T
+{
+    return values.at(0);
+}
+
+def other'T(values: [T; 2]) T
+{
+    return values.at(1);
+}
+
+def callKeep() i32
+{
+    return keep'i32([1, 2]);
+}
+
+def callOther() bool
+{
+    return other'bool([true, false]);
+}

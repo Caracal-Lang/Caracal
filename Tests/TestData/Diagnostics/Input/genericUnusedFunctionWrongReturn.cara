@@ -1,0 +1,5 @@
+def check'T(x: T) i32
+{
+    _ = x;
+    return true;
+}

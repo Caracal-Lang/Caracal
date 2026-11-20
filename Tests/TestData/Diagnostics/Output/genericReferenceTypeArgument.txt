@@ -1,0 +1,12 @@
+ Error T0123 Reference type argument
+     ,-[Diagnostics/Input/genericReferenceTypeArgument.cara:9:17]
+   6 | def callKeep() i32
+   7 | {
+   8 |     value := 5;
+   9 |     return keep'ref i32(value);
+     .                 -------
+     .                    `-- A type argument cannot be a reference
+  10 | }
+  11 | 
+     `----
+  Fix: Remove 'ref' from the type argument.

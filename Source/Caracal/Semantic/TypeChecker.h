@@ -19,8 +19,10 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Caracal
@@ -65,6 +67,21 @@ namespace Caracal
         {
             std::optional<Type> contextualNumberType;
             bool wantsAddress = false;
+        };
+
+        struct SpecializationNodeTypes
+        {
+            u16 fileId{ 0 };
+            u32 firstIndex{ 0 };
+            std::vector<Type> types;
+        };
+
+        struct PendingSpecialization
+        {
+            Type specialization;
+            NodeIndex call;
+            std::optional<size_t> callerIndex;
+            size_t depth;
         };
 
         struct CheckedValue
@@ -157,6 +174,7 @@ namespace Caracal
         void typeCheckFunctionSignatures();
         void typeCheckTypeSignatures();
         void reportInvalidOverloadSets();
+        void removeInvalidOverloads(std::vector<NodeIndex>& declarations);
         [[nodiscard]] bool rejectInvalidOverload(NodeIndex declaration);
         [[nodiscard]] bool rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition);
         [[nodiscard]] Type resolveCallee(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet);
@@ -170,6 +188,17 @@ namespace Caracal
         [[nodiscard]] Type checkArgumentWithoutEmission(const CompilationUnit& unit, u32 argumentValue, const ExpressionContext& context);
         [[nodiscard]] bool isUnresolvedOverloadCall(NodeIndex call) const noexcept;
         void typeCheckFunctionSignature(const CompilationUnit& unit, u32 index);
+        void bindTypeParameters(const CompilationUnit& unit, u32 typeParametersNode, const std::vector<Type>& types);
+        [[nodiscard]] CheckedValue typeCheckGenericFunctionCall(const CompilationUnit& unit, u32 index, u32 typeArgumentsNode, const OverloadSet& overloadSet, const ExpressionContext& context);
+        [[nodiscard]] Type specializationOf(Type templateType, const std::vector<Type>& typeArguments);
+        void addPendingSpecialization(Type specialization, NodeIndex call);
+        void typeCheckPendingSpecializations();
+        void addSpecializationCallLabels(size_t diagnosticCount, size_t pendingIndex);
+        void reportInvalidTypeParameters(const CompilationUnit& unit, u32 typeParametersNode);
+        [[nodiscard]] CheckedValue typeCheckInferredGenericFunctionCall(const CompilationUnit& unit, u32 index, Type templateType, const ExpressionContext& context);
+        [[nodiscard]] std::vector<Type> inferTypeArguments(const CompilationUnit& unit, u32 callIndex, Type templateType, std::span<const u32> argumentValues, std::span<const Type> argumentTypes, bool reportsErrors);
+        [[nodiscard]] Type candidateForRanking(const CompilationUnit& unit, u32 callIndex, Type candidate, size_t argumentsStart, std::span<const Type> typesWithoutContext);
+        void reportGenericParameterDefaultValues(const CompilationUnit& unit, const std::vector<Parameter>& parameters, const std::vector<u32>& parameterNodes);
         void typeCheckFunctionDefaultValues(const CompilationUnit& unit, u32 index);
         void typeCheckTypeSignature(const CompilationUnit& unit, u32 index);
         void typeCheckMethodSignature(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition, Type typeType);
@@ -227,6 +256,8 @@ namespace Caracal
         void reportTypesThatContainThemselves();
         void reportFieldsThatContainTheirType(const TypeDefinition& definition, const TypeVisit* parent, std::unordered_set<i32>& finishedTypes);
         void typeCheckFunctionDefinitions();
+        void typeCheckGenericFunctionDeclaration(NodeIndex declaration);
+        void checkArgumentsOfUnresolvedCall(const CompilationUnit& unit, u32 callIndex);
         void typeCheckTestDefinitions();
         void typeCheckTestsStub();
         void copyTestsStubParameters();
@@ -241,6 +272,7 @@ namespace Caracal
         void typeCheckExpressionStatement(const CompilationUnit& unit, u32 index);
         void typeCheckAssignmentStatement(const CompilationUnit& unit, u32 index);
         void typeCheckFunctionDefinitionStatement(const CompilationUnit& unit, u32 index);
+        void typeCheckFunctionBody(const CompilationUnit& unit, u32 index, Type functionType);
         void bindParameters(const CompilationUnit& unit, u32 parametersNode, const FunctionDefinition& functionDefinition, bool emitBody);
         void typeCheckTestDefinitionStatement(const CompilationUnit& unit, u32 index);
         void emitTestsStubBody();
@@ -323,8 +355,26 @@ namespace Caracal
 
         Type recordType(const CompilationUnit& unit, u32 index, Type type) noexcept
         {
+            const auto offset = index - m_specializationNodeTypes.firstIndex;
+            if (unit.fileId == m_specializationNodeTypes.fileId && offset < m_specializationNodeTypes.types.size())
+            {
+                m_specializationNodeTypes.types[offset] = type;
+                return type;
+            }
+
             m_module.setNodeType(NodeIndex{ unit.fileId, index }, type);
             return type;
+        }
+
+        [[nodiscard]] Type typeOfNode(NodeIndex node) const noexcept
+        {
+            const auto offset = node.index - m_specializationNodeTypes.firstIndex;
+            if (node.fileId == m_specializationNodeTypes.fileId && offset < m_specializationNodeTypes.types.size())
+            {
+                return m_specializationNodeTypes.types[offset];
+            }
+
+            return m_module.typeOfNode(node);
         }
 
         [[nodiscard]] CompilationUnit& unitFor(NodeIndex index) const noexcept;
@@ -344,11 +394,16 @@ namespace Caracal
         std::vector<CompilationUnit*> m_units;
         std::vector<NodeIndex> m_globalConstantDeclarations;
         std::vector<NodeIndex> m_functionDeclarations;
+        std::vector<NodeIndex> m_genericFunctionDeclarations;
         std::vector<NodeIndex> m_testDeclarations;
         NodeIndex m_testsStubDeclaration{};
         std::optional<NodeIndex> m_firstLoweringFailure;
         std::vector<NodeIndex> m_typeDeclarations;
         std::vector<NodeIndex> m_enumDeclarations;
+        std::vector<std::pair<std::string_view, Type>> m_typeArguments;
+        std::vector<PendingSpecialization> m_pendingSpecializations;
+        std::unordered_set<i32> m_pendingSpecializationIds;
+        std::optional<size_t> m_checkedPendingIndex;
 
         std::vector<u32> m_pendingAnnotations;
         std::vector<u32> m_childrenScratch;
@@ -357,6 +412,9 @@ namespace Caracal
         std::vector<u32> m_callArgumentStack;
         std::vector<u32> m_orderedSlotStack;
         std::vector<NodeIndex> m_unresolvedOverloadCalls;
+        SpecializationNodeTypes m_specializationNodeTypes;
+        bool m_isDeclarationCheck{ false };
+        std::unordered_set<i32> m_genericFunctionsWithDeclarationErrors;
         u32 m_suspendedEmissionDepth = 0;
         std::vector<ValueRef> m_callArgumentValues;
         std::vector<u32> m_addressTakenScratch;

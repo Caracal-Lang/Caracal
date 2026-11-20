@@ -1,0 +1,10 @@
+def count'T(values: [T; _]) i32
+{
+    return values.length;
+}
+
+def callCount() i32
+{
+    values := [1, 2, ...];
+    return count(values);
+}

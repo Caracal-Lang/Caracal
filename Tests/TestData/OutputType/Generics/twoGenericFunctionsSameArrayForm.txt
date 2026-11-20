@@ -1,0 +1,266 @@
+FunctionDefinitionStatement: {
+    Type: ([T; 2]) -> T
+    Name: keep
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [T; 2]
+                Lexeme: [T; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: T
+                        Lexeme: T
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: ([i32; 2]) -> i32
+        Name: keep'i32
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i32
+                BinaryExpression: {
+                    Type: i32
+                    Left: {
+                        NameExpression: {
+                            Type: [i32; 2]
+                            Name: values
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: i32
+                            Function type: (ref [i32; 2], i32) -> i32
+                            NameExpression: {
+                                Type: (ref [i32; 2], i32) -> i32
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: ([T; 2]) -> T
+    Name: other
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: values
+            ArrayTypeNameNode: {
+                Type: [T; 2]
+                Lexeme: [T; 2]
+                Kind: Fixed
+                DataType: {
+                    TypeNameNode: {
+                        Type: T
+                        Lexeme: T
+                    }
+                }
+                Length: {
+                    NumberLiteral: 2
+                }
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            BinaryExpression: {
+                Type: undefined
+                Left: {
+                    NameExpression: {
+                        Type: undefined
+                        Name: values
+                    }
+                }
+                Operation: MemberAccess
+                Right: {
+                    FunctionCallExpression: {
+                        Type: undefined
+                        Function type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: at
+                        }
+                        ArgumentsNode(1): {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: ([bool; 2]) -> bool
+        Name: other'bool
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: bool
+                BinaryExpression: {
+                    Type: bool
+                    Left: {
+                        NameExpression: {
+                            Type: [bool; 2]
+                            Name: values
+                        }
+                    }
+                    Operation: MemberAccess
+                    Right: {
+                        FunctionCallExpression: {
+                            Type: bool
+                            Function type: (ref [bool; 2], i32) -> bool
+                            NameExpression: {
+                                Type: (ref [bool; 2], i32) -> bool
+                                Name: at
+                            }
+                            ArgumentsNode(1): {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callKeep
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: ([i32; 2]) -> i32
+                NameExpression: {
+                    Type: ([i32; 2]) -> i32
+                    Name: keep
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ArgumentsNode(1): {
+                    ArrayLiteral(2): {
+                        Type: [i32; 2]
+                        NumberLiteral: 1
+                        NumberLiteral: 2
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> bool
+    Name: callOther
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: bool
+            Lexeme: bool
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: bool
+            FunctionCallExpression: {
+                Type: bool
+                Function type: ([bool; 2]) -> bool
+                NameExpression: {
+                    Type: ([bool; 2]) -> bool
+                    Name: other
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+                ArgumentsNode(1): {
+                    ArrayLiteral(2): {
+                        Type: [bool; 2]
+                        BoolLiteral: true
+                        BoolLiteral: false
+                    }
+                }
+            }
+        }
+    }
+}

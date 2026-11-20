@@ -1,0 +1,9 @@
+def keep(x: i32) i32
+{
+    return x;
+}
+
+def keep'T(x: i32) i32
+{
+    return x;
+}

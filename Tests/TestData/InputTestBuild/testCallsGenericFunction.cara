@@ -1,0 +1,14 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+test "add with numbers"
+{
+    Assert.isTrue(add'i32(3, 4) == 7);
+}
+
+def main() i32
+{
+    return 0;
+}

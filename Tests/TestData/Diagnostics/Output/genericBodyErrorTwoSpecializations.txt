@@ -1,0 +1,39 @@
+ Error T0065 Binary operator cannot be applied to this type
+     ,-[Diagnostics/Input/genericBodyErrorTwoSpecializations.cara:3:14]
+   1 | def add'T(x: T, y: T) T
+   2 | {
+   3 |     return x %+ y;
+     .              --
+     .               `-- Operator '%+' cannot be applied to 'bool'
+   4 | }
+   5 | 
+   6 | def callAddBool() bool
+   7 | {
+   8 |     return add'bool(true, false);
+     .            ---------------------
+     .                      `-- add'bool is called here
+   9 | }
+  10 | 
+  11 | def callAddString() string
+     `----
+  Fix: Operator '%+' expects numeric operands.
+ Error T0065 Binary operator cannot be applied to this type
+     ,-[Diagnostics/Input/genericBodyErrorTwoSpecializations.cara:3:14]
+   1 | def add'T(x: T, y: T) T
+   2 | {
+   3 |     return x %+ y;
+     .              --
+     .               `-- Operator '%+' cannot be applied to 'string'
+   4 | }
+   5 | 
+   6 | def callAddBool() bool
+  10 | 
+  11 | def callAddString() string
+  12 | {
+  13 |     return add'string("a", "b");
+     .            --------------------
+     .                      `-- add'string is called here
+  14 | }
+  15 | 
+     `----
+  Fix: Operator '%+' expects numeric operands.

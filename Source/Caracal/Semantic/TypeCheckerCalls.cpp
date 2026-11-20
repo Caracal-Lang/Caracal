@@ -100,7 +100,7 @@ namespace Caracal
 
     ValueRef TypeChecker::emitDefaultArgumentExpression(NodeIndex defaultNode, Type parameterType)
     {
-        const auto defaultType = m_module.typeOfNode(defaultNode);
+        const auto defaultType = typeOfNode(defaultNode);
         if (defaultType == Type::Undefined())
         {
             return ValueRef{};
@@ -148,6 +148,12 @@ namespace Caracal
             return Type::Undefined();
         }
 
+        if (NodeLayout::functionCallHasTypeArguments(unit.nodeBuffer, index))
+        {
+            const auto typeArgumentsNode = NodeLayout::functionCallTypeArguments(unit.nodeBuffer, index);
+            return typeCheckGenericFunctionCall(unit, index, typeArgumentsNode, *overloadSet, context);
+        }
+
         const auto functionType = resolveCallee(unit, index, nameExpressionIndex, *overloadSet);
         if (functionType == Type::Undefined())
         {
@@ -160,6 +166,14 @@ namespace Caracal
     TypeChecker::CheckedValue TypeChecker::typeCheckResolvedFunctionCall(const CompilationUnit& unit, u32 index, Type functionType, const ExpressionContext& context)
     {
         const auto& functionDefinition = m_module.getFunctionDefinition(functionType);
+        if (functionDefinition.isTemplate())
+        {
+            return typeCheckInferredGenericFunctionCall(unit, index, functionType, context);
+        }
+        if (functionDefinition.isSpecialization())
+        {
+            addPendingSpecialization(functionType, NodeIndex{ unit.fileId, index });
+        }
 
         // extern declarations only reach codegen when a call requires them
         if (functionDefinition.isExtern())
@@ -268,12 +282,9 @@ namespace Caracal
             return false;
         }
 
-        NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
+        NodeLayout::functionCall(buffer, callIndex, m_childrenScratch);
         const auto argumentsStart = m_callArgumentStack.size();
-        for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
-        {
-            m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
-        }
+        m_callArgumentStack.insert(m_callArgumentStack.end(), m_childrenScratch.begin(), m_childrenScratch.end());
         const auto argumentsEnd = m_callArgumentStack.size();
         const auto orderedStart = m_orderedSlotStack.size();
         auto popFrames = [&]
@@ -385,7 +396,7 @@ namespace Caracal
                 {
                     const auto defaultNode = parameter.defaultValueNode();
                     const auto& defaultUnit = unitFor(defaultNode);
-                    const auto defaultType = m_module.typeOfNode(defaultNode);
+                    const auto defaultType = typeOfNode(defaultNode);
                     const auto expectedType = parameter.type();
                     // either side being undefined means its error was already reported
                     if (defaultType != Type::Undefined() 
@@ -403,7 +414,7 @@ namespace Caracal
                 continue;
             }
 
-            const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode });
+            const auto argumentType = typeOfNode(NodeIndex{ unit.fileId, argumentNode });
             const auto expectedType = checkedParameters[i + parameterOffset].type();
             // either side being undefined means its error was already reported
             if (argumentType != Type::Undefined() 
@@ -422,7 +433,7 @@ namespace Caracal
         for (size_t j = 0; j < binding.variadic.size(); ++j)
         {
             const auto argumentNode = binding.variadic[j];
-            const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode });
+            const auto argumentType = typeOfNode(NodeIndex{ unit.fileId, argumentNode });
             // an undefined argument means its error was already reported
             if (argumentType == Type::Undefined())
             {
@@ -633,7 +644,7 @@ namespace Caracal
                             emittedDefault = m_emitter.emitDefaultArgument(
                                 defaultNode.fileId,
                                 defaultNode.index,
-                                m_module.typeOfNode(defaultNode).toValue(),
+                                typeOfNode(defaultNode).toValue(),
                                 parameter.type().toValue());
                             if (emittedDefault.id() < 0)
                             {
@@ -688,7 +699,7 @@ namespace Caracal
                     continue;
                 }
 
-                const auto argumentType = m_module.typeOfNode(NodeIndex{ unit.fileId, argumentNode }).toValue();
+                const auto argumentType = typeOfNode(NodeIndex{ unit.fileId, argumentNode }).toValue();
 
                 {
                     // a literal argument materializes in a temp slot and loads back
@@ -763,7 +774,7 @@ namespace Caracal
                     variadicRef = argument.value;
                     if (variadicRef.id() < 0 && argument.folded.has_value())
                     {
-                        variadicRef = m_emitter.emitFoldedConstant(argument.folded.value(), m_module.typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
+                        variadicRef = m_emitter.emitFoldedConstant(argument.folded.value(), typeOfNode(NodeIndex{ unit.fileId, variadicNode }).toValue());
                     }
                     break;
                 }

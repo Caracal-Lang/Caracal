@@ -1,0 +1,73 @@
+extern C.strcmp(%0: cstring "left", %1: cstring "right") i32 symbol "strcmp"
+
+extern C.calloc(%0: i64 "count", %1: i64 "size") rawptr symbol "calloc"
+
+extern C.realloc(%0: rawptr "pointer", %1: i64 "size") rawptr symbol "realloc"
+
+extern C.memmove(%0: rawptr "destination", %1: rawptr "source", %2: i64 "size") rawptr symbol "memmove"
+
+define callSum$() i32
+block entry(0):
+    %slot0 = allocate_local : [i32; _] "values"
+    %0 = address_of %slot0 : ref [i32; _]
+    %1 = const 8 : i64
+    %2 = size_of i32 : i64
+    %3 = call calloc(%1, %2) : rawptr
+    %4 = address_of_field %0.0 : ref i32 "data"
+    store_value %3, %4 : ref i32
+    %5 = const 3 : i32
+    %6 = address_of_field %0.1 : ref i32 "length"
+    store_value %5, %6 : i32
+    %7 = const 8 : i32
+    %8 = address_of_field %0.2 : ref i32 "capacity"
+    store_value %7, %8 : i32
+    %9 = const 0 : i32
+    %10 = element_address %3[%9] : i32
+    %11 = const 1 : i32
+    store_value %11, %10 : i32
+    %12 = const 1 : i32
+    %13 = element_address %3[%12] : i32
+    %14 = const 2 : i32
+    store_value %14, %13 : i32
+    %15 = const 2 : i32
+    %16 = element_address %3[%15] : i32
+    %17 = const 3 : i32
+    store_value %17, %16 : i32
+    %18 = address_of_field %0.0 : ref i32 "data"
+    %19 = load_value %18 : ref i32
+    %20 = address_of_field %0.1 : ref i32 "length"
+    %21 = load_value %20 : i32
+    %22 = make_slice %19, %21 : [i32]
+    %23 = call sum'i32$[i32](%22) : i32
+    return %23
+
+define sum'i32$[i32](%0: const [i32] "values") i32
+block entry(0):
+    %0 = parameter 0 : const [i32] "values"
+    %slot0 = allocate_local : const [i32] "temp"
+    %slot1 = allocate_local : const [i32] "temp"
+    %slot2 = allocate_local : const [i32] "temp"
+    %1 = address_of %slot0 : ref const [i32]
+    store_value %0, %1 : const [i32]
+    %2 = const 0 : i32
+    %3 = address_of_field %1.0 : ref i32 "data"
+    %4 = load_value %3 : ref i32
+    %5 = element_address %4[%2] : i32
+    %6 = load_value %5 : i32
+    %7 = address_of %slot1 : ref const [i32]
+    store_value %0, %7 : const [i32]
+    %8 = const 1 : i32
+    %9 = address_of_field %7.0 : ref i32 "data"
+    %10 = load_value %9 : ref i32
+    %11 = element_address %10[%8] : i32
+    %12 = load_value %11 : i32
+    %13 = add %6, %12 : i32
+    %14 = address_of %slot2 : ref const [i32]
+    store_value %0, %14 : const [i32]
+    %15 = const 2 : i32
+    %16 = address_of_field %14.0 : ref i32 "data"
+    %17 = load_value %16 : ref i32
+    %18 = element_address %17[%15] : i32
+    %19 = load_value %18 : i32
+    %20 = add %13, %19 : i32
+    return %20

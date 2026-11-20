@@ -1,0 +1,13 @@
+ Error T0124 Conflicting type inference
+     ,-[Diagnostics/Input/genericLiteralsDisagree.cara:8:19]
+   5 | 
+   6 | def callAdd() f32
+   7 | {
+   8 |     return add(1, 2.5);
+     .                -  ---
+     .                |   `-- This argument gives 'T' the type 'f32'
+     .                `-- This argument gives 'T' the type 'i32'
+   9 | }
+  10 | 
+     `----
+  Fix: Write the type arguments after the function name, as in add'i32(...).

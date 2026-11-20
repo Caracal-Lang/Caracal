@@ -1,0 +1,15 @@
+def keep'T(x: T) T
+{
+    return x;
+}
+
+def keep'T(x: T, y: T) T
+{
+    _ = y;
+    return x;
+}
+
+def callKeep() i32
+{
+    return keep'i32(5);
+}

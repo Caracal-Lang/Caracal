@@ -226,7 +226,7 @@ namespace Caracal
                 continue;
             }
 
-            if (m_module.typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
+            if (typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
             {
                 continue;
             }
@@ -259,7 +259,7 @@ namespace Caracal
         auto returns = typeCheckReturnTypesNode(unit, methodLayout.returnTypes);
         popScope(false);
 
-        auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, methodIndex });
+        auto methodType = typeOfNode(NodeIndex{ unit.fileId, methodIndex });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");
@@ -624,7 +624,7 @@ namespace Caracal
                     continue;
                 }
 
-                if (m_module.typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
+                if (typeOfNode(NodeIndex{ unit.fileId, bodyStatement }) == Type::Undefined())
                 {
                     continue;
                 }
@@ -743,7 +743,7 @@ namespace Caracal
         const ScopedValue<Type> returnTypeScope{ m_currentReturnType, Type::Void() };
         const auto methodLayout = NodeLayout::methodDefinition(unit.nodeBuffer, index);
 
-        const auto methodType = m_module.typeOfNode(NodeIndex{ unit.fileId, index });
+        const auto methodType = typeOfNode(NodeIndex{ unit.fileId, index });
         if (methodType == Type::Undefined())
         {
             TODO("This shouldn't happen");

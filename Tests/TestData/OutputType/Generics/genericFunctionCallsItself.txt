@@ -1,0 +1,187 @@
+FunctionDefinitionStatement: {
+    Type: (T) -> T
+    Name: countDown
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(2): {
+        IfStatement: {
+            Condition: {
+                BinaryExpression: {
+                    Type: undefined
+                    Left: {
+                        NameExpression: {
+                            Type: undefined
+                            Name: x
+                        }
+                    }
+                    Operation: Equal
+                    Right: {
+                        NumberLiteral: 0
+                    }
+                }
+            }
+            True: {
+                BlockNode(1): {
+                    ReturnStatement: {
+                        Type: undefined
+                        NameExpression: {
+                            Type: undefined
+                            Name: x
+                        }
+                    }
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            FunctionCallExpression: {
+                Type: undefined
+                Function type: undefined
+                NameExpression: {
+                    Type: undefined
+                    Name: countDown
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: undefined
+                        Lexeme: T
+                    }
+                }
+                ArgumentsNode(1): {
+                    BinaryExpression: {
+                        Type: undefined
+                        Left: {
+                            NameExpression: {
+                                Type: undefined
+                                Name: x
+                            }
+                        }
+                        Operation: SubtractionWrapping
+                        Right: {
+                            NumberLiteral: 1
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Specialization: {
+        Type: (i32) -> i32
+        Name: countDown'i32
+        BlockNode(2): {
+            IfStatement: {
+                Condition: {
+                    BinaryExpression: {
+                        Type: bool
+                        Left: {
+                            NameExpression: {
+                                Type: i32
+                                Name: x
+                            }
+                        }
+                        Operation: Equal
+                        Right: {
+                            NumberLiteral: 0
+                        }
+                    }
+                }
+                True: {
+                    BlockNode(1): {
+                        ReturnStatement: {
+                            Type: i32
+                            NameExpression: {
+                                Type: i32
+                                Name: x
+                            }
+                        }
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                FunctionCallExpression: {
+                    Type: i32
+                    Function type: (i32) -> i32
+                    NameExpression: {
+                        Type: (i32) -> i32
+                        Name: countDown
+                    }
+                    TypeArgumentsNode(1): {
+                        TypeNameNode: {
+                            Type: i32
+                            Lexeme: T
+                        }
+                    }
+                    ArgumentsNode(1): {
+                        BinaryExpression: {
+                            Type: i32
+                            Left: {
+                                NameExpression: {
+                                    Type: i32
+                                    Name: x
+                                }
+                            }
+                            Operation: SubtractionWrapping
+                            Right: {
+                                NumberLiteral: 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callCountDown
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32) -> i32
+                NameExpression: {
+                    Type: (i32) -> i32
+                    Name: countDown
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 3
+                }
+            }
+        }
+    }
+}

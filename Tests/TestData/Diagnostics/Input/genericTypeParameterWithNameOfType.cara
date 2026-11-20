@@ -1,0 +1,4 @@
+def keep'i32(x: i32) i32
+{
+    return x;
+}

@@ -1,0 +1,4 @@
+def pair'T,T(x: T, y: T) T
+{
+    return x;
+}

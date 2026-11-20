@@ -1,0 +1,5 @@
+def repeat'T(x: T, count: i32 = true) i32
+{
+    _ = x;
+    return count;
+}

@@ -1,0 +1,9 @@
+def add'T(x: T, y: T) T
+{
+    return x %+ y;
+}
+
+def callAdd() bool
+{
+    return add'bool(true, false);
+}

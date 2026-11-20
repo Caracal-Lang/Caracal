@@ -14,4 +14,11 @@ namespace Caracal
         SemanticContext& module,
         const std::vector<NodeIndex>& functionDeclarations,
         const std::vector<NodeIndex>& typeDeclarations);
+
+    // the body of the template decides which slice parameters of the specialization become immutable
+    void promoteReadOnlySliceParametersOfSpecialization(
+        const CompilationContext& context,
+        SemanticContext& module,
+        Type specialization,
+        NodeIndex templateDeclaration);
 }

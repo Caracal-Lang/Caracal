@@ -1,0 +1,12 @@
+ Error P0021 Missing call
+     ,-[Diagnostics/Input/genericTypeArgumentsBeforeNumberArgument.cara:13:17]
+  10 | 
+  11 | def callTake() i32
+  12 | {
+  13 |     return take(keep'i32, 5);
+     .                 --------
+     .                     `-- No argument list follows keep'i32
+  14 | }
+  15 | 
+     `----
+  Fix: Add the arguments in parentheses after keep'i32.

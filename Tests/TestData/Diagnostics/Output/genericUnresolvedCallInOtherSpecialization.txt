@@ -1,0 +1,19 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/genericUnresolvedCallInOtherSpecialization.cara:21:17]
+  18 | 
+  19 | def outer'U(a: U) i32
+  20 | {
+  21 |     return keep(convert'U(a, a));
+     .                 ---------------
+     .                        `-- No overload of 'convert' accepts these arguments
+  22 | }
+  23 | 
+  24 | def callOuter() i32
+  25 | {
+  26 |     return outer(true) %+ outer(5);
+     .            -----------
+     .                 `-- outer'bool is called here
+  27 | }
+  28 | 
+     `----
+  Fix: Change the arguments to match one overload.

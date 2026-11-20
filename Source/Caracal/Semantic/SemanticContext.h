@@ -18,7 +18,9 @@
 #include <Caracal/Semantic/Parameter.h>
 #include <Caracal/Semantic/PreludeFunctionPool.h>
 #include <Caracal/Text/TransparentStringHash.h>
+#include <compare>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -26,6 +28,29 @@
 
 namespace Caracal
 {
+    struct GenericSpecialization
+    {
+        i32 templateId;
+        std::vector<i32> typeArgumentIds;
+
+        auto operator<=>(const GenericSpecialization&) const = default;
+    };
+
+    struct ArrayTypeKey
+    {
+        TypeKind kind;
+        i32 elementId;
+        i32 length;
+        bool isImmutableSlice;
+
+        bool operator==(const ArrayTypeKey&) const = default;
+    };
+
+    struct ArrayTypeKeyHash
+    {
+        [[nodiscard]] size_t operator()(const ArrayTypeKey& key) const noexcept;
+    };
+
     class CARACAL_API SemanticContext
     {
     public:
@@ -58,6 +83,12 @@ namespace Caracal
 
         [[nodiscard]] EnumDefinition& createEnum(std::string_view name) noexcept;
         [[nodiscard]] TypeDefinition& createType(std::string_view name) noexcept;
+        [[nodiscard]] Type createTypeParameter(std::string_view name) noexcept;
+        void setTypeParameters(FunctionDefinition& definition, std::vector<Type> typeParameters) noexcept;
+        void setSpecialization(FunctionDefinition& definition, Type templateType, std::vector<Type> typeArguments) noexcept;
+        [[nodiscard]] const GenericFunctionData& genericFunctionData(const FunctionDefinition& definition) const noexcept;
+        [[nodiscard]] Type tryGetSpecialization(Type templateType, const std::vector<Type>& typeArguments) const noexcept;
+        [[nodiscard]] Type createSpecialization(Type templateType, std::vector<Type> typeArguments) noexcept;
         [[nodiscard]] FunctionDefinition& createFunction(
             std::string_view name,
             std::vector<Parameter> parameters,
@@ -103,6 +134,7 @@ namespace Caracal
         UnitSemantics& createUnitSemantics(u16 fileId, u32 nodeCount) noexcept;
         [[nodiscard]] Type typeOfNode(NodeIndex reference) const noexcept;
         void setNodeType(NodeIndex reference, Type type) noexcept;
+        void setBodyNodeTypes(const FunctionDefinition& specialization, std::vector<Type> bodyNodeTypes) noexcept;
 
     private:
         struct ArrayTypeInfo
@@ -112,6 +144,8 @@ namespace Caracal
             bool isImmutableSlice = false;
         };
 
+        [[nodiscard]] Type specializeType(Type type, const std::vector<Type>& typeParameters, const std::vector<Type>& typeArguments) noexcept;
+
         std::vector<TypeDefinition> m_typeDefinitions;
         std::vector<EnumDefinition> m_enumDefinitions;
         std::vector<Type> m_requiredExternFunctions;
@@ -120,6 +154,8 @@ namespace Caracal
         PreludeFunctionPool m_preludeFunctionPool;
         size_t m_preludeTypeDefinitionCount{ 0 };
         std::vector<FunctionDefinition> m_functionDefinitions;
+        std::vector<GenericFunctionData> m_genericFunctionData;
+        std::map<GenericSpecialization, Type> m_genericSpecializations;
         std::vector<ConstantDefinition> m_constantDefinitions;
         std::unordered_map<i32, size_t> m_typeDefinitionIndexById;
         std::unordered_map<i32, size_t> m_enumDefinitionIndexById;
@@ -129,6 +165,7 @@ namespace Caracal
         std::unordered_map<i32, std::string> m_typeNames;
         std::unordered_map<std::string, Type, TransparentStringHash, std::equal_to<>> m_nameToTypes;
         std::unordered_map<i32, ArrayTypeInfo> m_arrayTypeInfoById;
+        std::unordered_map<ArrayTypeKey, Type, ArrayTypeKeyHash> m_arrayTypesByKey;
         std::vector<Type> m_arrayTypes;
         std::unordered_map<std::string, Type> m_arrayIntrinsicsByFullName;
         std::unordered_map<i32, BuiltinTypeDescription> m_builtinTypeDescriptionsById;

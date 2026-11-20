@@ -8,6 +8,14 @@
 
 namespace Caracal
 {
+    [[nodiscard]] static bool StartsTypeName(TokenKind kind) noexcept
+    {
+        return kind == TokenKind::Identifier
+            || kind == TokenKind::PrivateIdentifier
+            || kind == TokenKind::RefKeyword
+            || kind == TokenKind::OpenBracket;
+    }
+
     Parser::Parser(const TokenBuffer& tokens, DiagnosticsBag& diagnostics)
         : m_tokens{ tokens }
         , m_diagnostics{ diagnostics }
@@ -372,6 +380,11 @@ namespace Caracal
             m_diagnostics.addPrivateFreeFunctionError(
                 m_tokens.source(),
                 m_tokens.getSourceLocation(nameToken));
+        }
+
+        if (currentToken().kind == TokenKind::SingleQuote)
+        {
+            parseTypeParametersNode();
         }
 
         parseParametersNode(StatementScope::Function);
@@ -837,7 +850,8 @@ namespace Caracal
             case TokenKind::TestKeyword:
             case TokenKind::NewKeyword:
             {
-                if (nextToken().kind == TokenKind::OpenParenthesis)
+                const auto nextKind = nextToken().kind;
+                if (nextKind == TokenKind::OpenParenthesis || nextKind == TokenKind::SingleQuote)
                 {
                     parsePrimaryExpression(scope);
                 }
@@ -1038,8 +1052,11 @@ namespace Caracal
 
     void Parser::parseFunctionCallOrNameExpression(StatementScope scope)
     {
-        auto next = nextToken();
-        if (next.kind == TokenKind::OpenParenthesis)
+        const auto currentKind = currentToken().kind;
+        const auto nextKind = nextToken().kind;
+        const auto startsTypeArguments = nextKind == TokenKind::SingleQuote
+            && (currentKind == TokenKind::Identifier || currentKind == TokenKind::PrivateIdentifier);
+        if (nextKind == TokenKind::OpenParenthesis || startsTypeArguments)
         {
             parseFunctionCallExpression(scope);
         }
@@ -1054,11 +1071,55 @@ namespace Caracal
         const auto subtreeStart = m_nodeBuffer.nodeCount();
         parseNameExpression();
 
+        if (currentToken().kind == TokenKind::SingleQuote)
+        {
+            parseTypeArgumentsNode();
+            if (currentToken().kind != TokenKind::OpenParenthesis)
+            {
+                const auto nameToken = static_cast<i32>(m_nodeBuffer.mainToken(subtreeStart));
+                const auto location = tokenRangeLocation(nameToken, m_currentIndex - 1);
+                const auto calleeText = std::string_view(m_tokens.source()->text).substr(location.startIndex, location.endIndex - location.startIndex);
+                m_diagnostics.addMissingCallError(m_tokens.source(), location, std::string(calleeText));
+                append(NodeKind::FunctionCallExpression, tokenIndexOf(currentToken()), subtreeStart);
+                return;
+            }
+        }
+
         auto openParenthesis = advanceOnMatch(TokenKind::OpenParenthesis);
         parseArgumentList(scope);
         static_cast<void>(advanceOnMatch(TokenKind::CloseParenthesis));
 
         append(NodeKind::FunctionCallExpression, tokenIndexOf(openParenthesis), subtreeStart);
+    }
+
+    void Parser::parseTypeArgumentsNode()
+    {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        auto singleQuote = advanceOnMatch(TokenKind::SingleQuote);
+        parseTypeNameNode();
+        while (currentToken().kind == TokenKind::Comma && StartsTypeName(nextToken().kind))
+        {
+            advanceCurrentIndex();
+            parseTypeNameNode();
+        }
+
+        append(NodeKind::TypeArgumentsNode, tokenIndexOf(singleQuote), subtreeStart);
+    }
+
+    void Parser::parseTypeParametersNode()
+    {
+        const auto subtreeStart = m_nodeBuffer.nodeCount();
+        auto singleQuote = advanceOnMatch(TokenKind::SingleQuote);
+        auto nameToken = advanceOnIdentifier();
+        appendNode(NodeKind::TypeParameterNode, tokenIndexOf(nameToken));
+        while (currentToken().kind == TokenKind::Comma)
+        {
+            advanceCurrentIndex();
+            nameToken = advanceOnIdentifier();
+            appendNode(NodeKind::TypeParameterNode, tokenIndexOf(nameToken));
+        }
+
+        append(NodeKind::TypeParametersNode, tokenIndexOf(singleQuote), subtreeStart);
     }
 
     void Parser::parseTypeNameNode()

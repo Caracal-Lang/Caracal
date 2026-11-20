@@ -1,0 +1,13 @@
+def sum'T(values: [T]) T
+{
+    total: T = values.at(0);
+    total = total %+ values.at(1);
+    total = total %+ values.at(2);
+    return total;
+}
+
+def callSum() i32
+{
+    values := [1, 2, 3, ...];
+    return sum(values.slice());
+}

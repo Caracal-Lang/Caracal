@@ -1,0 +1,13 @@
+ Error T0124 Conflicting type inference
+     ,-[Diagnostics/Input/genericConflictingInference.cara:10:23]
+   7 | {
+   8 |     small: i8 = 2;
+   9 |     big: i32 = 3;
+  10 |     return add(small, big);
+     .                -----  ---
+     .                  |     `-- This argument gives 'T' the type 'i32'
+     .                  `-- This argument gives 'T' the type 'i8'
+  11 | }
+  12 | 
+     `----
+  Fix: Write the type arguments after the function name, as in add'i8(...).

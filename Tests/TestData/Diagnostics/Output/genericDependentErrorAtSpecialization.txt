@@ -1,0 +1,18 @@
+ Error T0041 Number literal out of range
+     ,-[Diagnostics/Input/genericDependentErrorAtSpecialization.cara:3:17]
+   1 | def addLarge'T(x: T) T
+   2 | {
+   3 |     return x %+ 300;
+     .                 ---
+     .                  `-- Literal '300' does not fit in type 'i8'
+   4 | }
+   5 | 
+   6 | def callAddLarge() i8
+   7 | {
+   8 |     return addLarge'i8(1);
+     .            --------------
+     .                   `-- addLarge'i8 is called here
+   9 | }
+  10 | 
+     `----
+  Fix: Use a smaller literal that fits in type 'i8', or change the target type.

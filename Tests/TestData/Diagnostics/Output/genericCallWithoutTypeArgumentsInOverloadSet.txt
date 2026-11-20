@@ -1,0 +1,12 @@
+ Error T0111 No overload matches this call
+     ,-[Diagnostics/Input/genericCallWithoutTypeArgumentsInOverloadSet.cara:13:12]
+  10 | 
+  11 | def callZero() i32
+  12 | {
+  13 |     return zero();
+     .            ------
+     .               `-- No overload of 'zero' accepts these arguments
+  14 | }
+  15 | 
+     `----
+  Fix: Change the arguments to match one overload.

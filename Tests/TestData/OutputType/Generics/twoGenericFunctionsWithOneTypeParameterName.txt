@@ -1,0 +1,162 @@
+FunctionDefinitionStatement: {
+    Type: (T) -> T
+    Name: keep
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: x
+            }
+        }
+    }
+    Specialization: {
+        Type: (i32) -> i32
+        Name: keep'i32
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: i32
+                NameExpression: {
+                    Type: i32
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (T) -> T
+    Name: other
+    TypeParametersNode(1): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: T
+            Lexeme: T
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: undefined
+            NameExpression: {
+                Type: undefined
+                Name: x
+            }
+        }
+    }
+    Specialization: {
+        Type: (bool) -> bool
+        Name: other'bool
+        BlockNode(1): {
+            ReturnStatement: {
+                Type: bool
+                NameExpression: {
+                    Type: bool
+                    Name: x
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> i32
+    Name: callKeep
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: i32
+            FunctionCallExpression: {
+                Type: i32
+                Function type: (i32) -> i32
+                NameExpression: {
+                    Type: (i32) -> i32
+                    Name: keep
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: i32
+                        Lexeme: i32
+                    }
+                }
+                ArgumentsNode(1): {
+                    NumberLiteral: 5
+                }
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: () -> bool
+    Name: callOther
+    ParametersNode(0): {
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: bool
+            Lexeme: bool
+        }
+    }
+    BlockNode(1): {
+        ReturnStatement: {
+            Type: bool
+            FunctionCallExpression: {
+                Type: bool
+                Function type: (bool) -> bool
+                NameExpression: {
+                    Type: (bool) -> bool
+                    Name: other
+                }
+                TypeArgumentsNode(1): {
+                    TypeNameNode: {
+                        Type: bool
+                        Lexeme: bool
+                    }
+                }
+                ArgumentsNode(1): {
+                    BoolLiteral: true
+                }
+            }
+        }
+    }
+}

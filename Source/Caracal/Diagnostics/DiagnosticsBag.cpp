@@ -45,6 +45,17 @@ namespace Caracal
         }
     }
 
+    static std::string CountOf(size_t count, const std::string& noun)
+    {
+        auto text = std::to_string(count) + " " + noun;
+        if (count != 1)
+        {
+            text += "s";
+        }
+
+        return text;
+    }
+
     static std::string ToTokenSource(TokenKind kind)
     {
         const std::unordered_map<TokenKind, std::string_view> tokenSource{
@@ -533,6 +544,19 @@ namespace Caracal
             location,
             "Write #sourceText(<parameter>), #sourceLocation or an ordinary value.");
         diagnostic.addPrimaryLabel(location, "This is not a known annotation expression");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addMissingCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& calleeText)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::P0021_MissingCall,
+            source,
+            location,
+            "Add the arguments in parentheses after " + calleeText + ".");
+        diagnostic.addPrimaryLabel(location, "No argument list follows " + calleeText);
 
         m_diagnostics.push_back(std::move(diagnostic));
     }
@@ -2300,14 +2324,208 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
-    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    void DiagnosticsBag::addWrongNumberOfTypeArgumentsError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        size_t typeParameterCount,
+        size_t typeArgumentCount)
     {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0116_WrongNumberOfTypeArguments,
+            source,
+            location,
+            "Give one type argument for each type parameter of '" + functionName + "'.");
+        diagnostic.addPrimaryLabel(
+            location,
+            "'" + functionName + "' expects " + CountOf(typeParameterCount, "type argument") + ", but got "
+                + std::to_string(typeArgumentCount));
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTypeArgumentsOnNonGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0117_TypeArgumentsOnNonGenericFunction,
+            source,
+            location,
+            "Remove the type arguments.");
+        diagnostic.addPrimaryLabel(location, "'" + functionName + "' is not a generic function");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addCannotInferTypeParameterError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        const std::string& typeParameterName,
+        size_t typeParameterCount)
+    {
+        // stuff'T,U shows the example stuff'i32,i32(...)
+        auto exampleTypeArguments = std::string("i32");
+        for (size_t position = 1; position < typeParameterCount; ++position)
+        {
+            exampleTypeArguments += ",i32";
+        }
+
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0118_CannotInferTypeParameter,
+            source,
+            location,
+            "Write the type arguments after the function name, as in " + functionName + "'" + exampleTypeArguments + "(...).");
+        diagnostic.addPrimaryLabel(location, "The call gives no type for '" + typeParameterName + "' of '" + functionName + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addDuplicateTypeParameterError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& typeParameterName,
+        const SourceLocation& firstLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0119_DuplicateTypeParameter,
+            source,
+            location,
+            "Rename one of the type parameters.");
+        diagnostic.addPrimaryLabel(location, "'" + typeParameterName + "' is already a type parameter of this function");
+        diagnostic.addSecondaryLabel(firstLocation, "The first '" + typeParameterName + "' is here");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addTypeParameterWithNameOfTypeError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& typeParameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0120_TypeParameterWithNameOfType,
+            source,
+            location,
+            "Rename the type parameter.");
+        diagnostic.addPrimaryLabel(location, "'" + typeParameterName + "' is already the name of a type");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addExternGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0121_ExternGenericFunction,
+            source,
+            location,
+            "Remove the type parameters or the extern annotation.");
+        diagnostic.addPrimaryLabel(location, "Extern function '" + functionName + "' has type parameters");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addGenericParameterDefaultValueError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& parameterName,
+        const std::string& typeParameterName)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0122_GenericParameterDefaultValue,
+            source,
+            location,
+            "Remove the default value.");
+        diagnostic.addPrimaryLabel(location, "Parameter '" + parameterName + "' of type '" + typeParameterName + "' cannot have a default value");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addReferenceTypeArgumentError(const SourceTextSharedPtr& source, const SourceLocation& location)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0123_ReferenceTypeArgument,
+            source,
+            location,
+            "Remove 'ref' from the type argument.");
+        diagnostic.addPrimaryLabel(location, "A type argument cannot be a reference");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addConflictingTypeInferenceError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const SourceLocation& firstLocation,
+        const std::string& functionName,
+        const std::string& typeParameterName,
+        const std::string& firstType,
+        const std::string& secondType)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0124_ConflictingTypeInference,
+            source,
+            location,
+            "Write the type arguments after the function name, as in " + functionName + "'" + firstType + "(...).");
+        diagnostic.addPrimaryLabel(location, "This argument gives '" + typeParameterName + "' the type '" + secondType + "'");
+        diagnostic.addSecondaryLabel(firstLocation, "This argument gives '" + typeParameterName + "' the type '" + firstType + "'");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addGenericCallsNestedTooDeeplyError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        size_t limit,
+        const SourceTextSharedPtr& firstSource,
+        const SourceLocation& firstLocation)
+    {
+        auto diagnostic = Diagnostic(
+            DiagnosticLevel::Error,
+            DiagnosticKind::T0125_GenericCallsNestedTooDeeply,
+            source,
+            location,
+            "End the chain of generic calls within " + std::to_string(limit) + " levels.");
+        diagnostic.addPrimaryLabel(location, "This call of " + functionName + " is more than " + std::to_string(limit) + " generic calls deep");
+        AddPreviousDeclarationLabel(
+            diagnostic,
+            source,
+            firstSource,
+            firstLocation,
+            "First call of the chain",
+            "The chain of generic calls starts here.",
+            "The chain of generic calls starts here");
+
+        m_diagnostics.push_back(std::move(diagnostic));
+    }
+
+    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        bool areGenericFunctions)
+    {
+        auto fix = std::string("Add a type suffix to a literal or change an argument, so that one overload fits best.");
+        if (areGenericFunctions)
+        {
+            fix = "Rename one of the generic functions or change its parameters.";
+        }
+
         auto diagnostic = Diagnostic(
             DiagnosticLevel::Error,
             DiagnosticKind::T0112_CallMatchesMoreThanOneOverload,
             source,
             location,
-            "Add a type suffix to a literal or change an argument, so that one overload fits best.");
+            fix);
         diagnostic.addPrimaryLabel(location, "'" + functionName + "' has more than one equally good overload for these arguments");
 
         m_diagnostics.push_back(std::move(diagnostic));
@@ -2512,6 +2730,31 @@ namespace Caracal
     void DiagnosticsBag::removeDiagnosticsAfter(size_t count)
     {
         m_diagnostics.erase(m_diagnostics.begin() + static_cast<std::ptrdiff_t>(count), m_diagnostics.end());
+    }
+
+    void DiagnosticsBag::addSpecializationCallLabels(
+        size_t count,
+        const SourceTextSharedPtr& callSource,
+        const SourceLocation& callLocation,
+        const std::string& specializationName)
+    {
+        for (auto position = count; position < m_diagnostics.size(); ++position)
+        {
+            auto& diagnostic = m_diagnostics[position];
+            if (diagnostic.kind() == DiagnosticKind::T0125_GenericCallsNestedTooDeeply)
+            {
+                continue;
+            }
+
+            AddPreviousDeclarationLabel(
+                diagnostic,
+                diagnostic.source(),
+                callSource,
+                callLocation,
+                "Call of " + specializationName,
+                specializationName + " is called here.",
+                specializationName + " is called here");
+        }
     }
 
     std::vector<Diagnostic> DiagnosticsBag::takeDiagnosticsAfter(size_t count)

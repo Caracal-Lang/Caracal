@@ -59,6 +59,8 @@ namespace Caracal
         void parseNameExpression();
         void parseFunctionCallOrNameExpression(StatementScope scope);
         void parseFunctionCallExpression(StatementScope scope);
+        void parseTypeArgumentsNode();
+        void parseTypeParametersNode();
         void parseTypeNameNode();
         void parseArrayTypeNameNode();
         [[nodiscard]] u32 parseMethodNameNode();

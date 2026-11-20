@@ -34,7 +34,27 @@ namespace Caracal
         return false;
     }
 
-    [[nodiscard]] static bool HaveSameParameterTypes(const FunctionDefinition& left, const FunctionDefinition& right) noexcept
+    [[nodiscard]] static std::optional<size_t> TypeParameterPosition(const SemanticContext& module, const FunctionDefinition& definition, Type type) noexcept
+    {
+        const auto baseType = type.toBaseType();
+        if (baseType.kind() != TypeKind::TypeParameter)
+        {
+            return std::nullopt;
+        }
+
+        const auto& typeParameters = module.genericFunctionData(definition).typeParameters;
+        const auto found = std::ranges::find(typeParameters, baseType);
+        if (found == typeParameters.end())
+        {
+            return std::nullopt;
+        }
+
+        return static_cast<size_t>(found - typeParameters.begin());
+    }
+
+    // thing'T(x: T) and thing'U(x: U) have the same parameter types
+    // thing'T(x: T) and thing'T,U(x: T) are different, because their counts of type parameters differ
+    [[nodiscard]] static bool HaveSameParameterTypes(const SemanticContext& module, const FunctionDefinition& left, const FunctionDefinition& right) noexcept
     {
         const auto& leftParameters = left.parameters();
         const auto& rightParameters = right.parameters();
@@ -42,10 +62,31 @@ namespace Caracal
         {
             return false;
         }
+        if (left.isTemplate()
+            && right.isTemplate()
+            && module.genericFunctionData(left).typeParameters.size() != module.genericFunctionData(right).typeParameters.size())
+        {
+            return false;
+        }
 
         for (size_t index = 0; index < leftParameters.size(); ++index)
         {
-            if (leftParameters[index].type() != rightParameters[index].type())
+            const auto leftType = leftParameters[index].type();
+            const auto rightType = rightParameters[index].type();
+            const auto leftPosition = TypeParameterPosition(module, left, leftType);
+            const auto rightPosition = TypeParameterPosition(module, right, rightType);
+            if (!leftPosition.has_value() && !rightPosition.has_value())
+            {
+                if (leftType != rightType)
+                {
+                    return false;
+                }
+                continue;
+            }
+
+            if (leftPosition != rightPosition
+                || leftType.isReference() != rightType.isReference()
+                || leftType.isOptional() != rightType.isOptional())
             {
                 return false;
             }
@@ -110,6 +151,71 @@ namespace Caracal
         }
 
         return true;
+    }
+
+    [[nodiscard]] static bool IsMoreConcreteSpecialization(const SemanticContext& module, Type candidate, Type other) noexcept
+    {
+        const auto* candidateDefinition = module.tryGetFunctionDefinition(candidate);
+        const auto* otherDefinition = module.tryGetFunctionDefinition(other);
+        if (!otherDefinition->isSpecialization())
+        {
+            return false;
+        }
+        if (!candidateDefinition->isSpecialization())
+        {
+            return true;
+        }
+
+        const auto& candidateParameters = module.tryGetFunctionDefinition(module.genericFunctionData(*candidateDefinition).templateType)->parameters();
+        const auto& otherParameters = module.tryGetFunctionDefinition(module.genericFunctionData(*otherDefinition).templateType)->parameters();
+        if (candidateParameters.size() != otherParameters.size())
+        {
+            return false;
+        }
+
+        auto isMoreConcreteForOne = false;
+        for (size_t position = 0; position < candidateParameters.size(); ++position)
+        {
+            const auto candidateIsTypeParameter = candidateParameters[position].type().toBaseType().kind() == TypeKind::TypeParameter;
+            const auto otherIsTypeParameter = otherParameters[position].type().toBaseType().kind() == TypeKind::TypeParameter;
+            if (candidateIsTypeParameter && !otherIsTypeParameter)
+            {
+                return false;
+            }
+            if (!candidateIsTypeParameter && otherIsTypeParameter)
+            {
+                isMoreConcreteForOne = true;
+            }
+        }
+
+        return isMoreConcreteForOne;
+    }
+
+    [[nodiscard]] static Type TryGetBestSpecializationMatch(const SemanticContext& module, std::span<const Type> candidates, std::span<const ArgumentRank> ranks, size_t argumentCount) noexcept
+    {
+        for (size_t candidate = 0; candidate < candidates.size(); ++candidate)
+        {
+            const auto candidateRanks = ranks.subspan(candidate * argumentCount, argumentCount);
+            auto isBest = true;
+            for (size_t other = 0; other < candidates.size() && isBest; ++other)
+            {
+                if (other == candidate)
+                {
+                    continue;
+                }
+
+                const auto otherRanks = ranks.subspan(other * argumentCount, argumentCount);
+                isBest = IsBetterCandidate(candidateRanks, otherRanks)
+                    || (std::ranges::equal(candidateRanks, otherRanks) && IsMoreConcreteSpecialization(module, candidates[candidate], candidates[other]));
+            }
+
+            if (isBest)
+            {
+                return candidates[candidate];
+            }
+        }
+
+        return Type::Undefined();
     }
 
     TypeChecker::SuspendedEmissionScope::SuspendedEmissionScope(TypeChecker& typeChecker) noexcept
@@ -229,7 +335,7 @@ namespace Caracal
 
     Type TypeChecker::selectOverload(const CompilationUnit& unit, u32 callIndex, u32 nameExpressionIndex, const OverloadSet& overloadSet)
     {
-        const auto storedCallee = m_module.typeOfNode(NodeIndex{ unit.fileId, nameExpressionIndex });
+        const auto storedCallee = typeOfNode(NodeIndex{ unit.fileId, nameExpressionIndex });
         if (std::ranges::find(overloadSet.overloads, storedCallee) != overloadSet.overloads.end())
         {
             return storedCallee;
@@ -242,12 +348,9 @@ namespace Caracal
         }
 
         const auto& buffer = unit.nodeBuffer;
-        NodeLayout::collectChildren(buffer, callIndex, m_childrenScratch);
+        NodeLayout::functionCall(buffer, callIndex, m_childrenScratch);
         const auto argumentsStart = m_callArgumentStack.size();
-        for (size_t childIndex = 1; childIndex < m_childrenScratch.size(); ++childIndex)
-        {
-            m_callArgumentStack.push_back(m_childrenScratch[childIndex]);
-        }
+        m_callArgumentStack.insert(m_callArgumentStack.end(), m_childrenScratch.begin(), m_childrenScratch.end());
         const auto argumentCount = m_callArgumentStack.size() - argumentsStart;
 
         auto typesWithoutContext = std::vector<Type>{};
@@ -261,9 +364,10 @@ namespace Caracal
 
         auto viableCandidates = std::vector<Type>{};
         auto ranks = std::vector<ArgumentRank>{};
-        for (const auto candidate : overloadSet.overloads)
+        for (const auto member : overloadSet.overloads)
         {
-            if (rankCandidate(unit, callIndex, candidate, argumentsStart, typesWithoutContext, ranks))
+            const auto candidate = candidateForRanking(unit, callIndex, member, argumentsStart, typesWithoutContext);
+            if (candidate != Type::Undefined() && rankCandidate(unit, callIndex, candidate, argumentsStart, typesWithoutContext, ranks))
             {
                 viableCandidates.push_back(candidate);
             }
@@ -279,6 +383,11 @@ namespace Caracal
                 m_diagnostics.addDiagnostics(std::move(argumentErrors));
                 return Type::Undefined();
             }
+            if (m_isDeclarationCheck && std::ranges::find(typesWithoutContext, Type::Undefined()) != typesWithoutContext.end())
+            {
+                checkArgumentsOfUnresolvedCall(unit, callIndex);
+                return Type::Undefined();
+            }
 
             m_diagnostics.addNoOverloadMatchesCallError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
             return Type::Undefined();
@@ -292,8 +401,28 @@ namespace Caracal
             }
         }
 
+        const auto bestSpecializationMatch = TryGetBestSpecializationMatch(m_module, viableCandidates, ranks, argumentCount);
+        if (bestSpecializationMatch != Type::Undefined())
+        {
+            return recordType(unit, nameExpressionIndex, bestSpecializationMatch);
+        }
+
+        auto areGenericFunctions = true;
+        for (const auto candidate : viableCandidates)
+        {
+            if (!m_module.getFunctionDefinition(candidate).isSpecialization())
+            {
+                areGenericFunctions = false;
+                break;
+            }
+        }
+
         m_unresolvedOverloadCalls.push_back(call);
-        m_diagnostics.addCallMatchesMoreThanOneOverloadError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
+        m_diagnostics.addCallMatchesMoreThanOneOverloadError(
+            unit.source,
+            location,
+            std::string(nameOf(unit, nameExpressionIndex)),
+            areGenericFunctions);
         return Type::Undefined();
     }
 
@@ -413,9 +542,15 @@ namespace Caracal
     void TypeChecker::reportInvalidOverloadSets()
     {
         CARACAL_ZONE_NAMED("check.overloadSets");
+        removeInvalidOverloads(m_functionDeclarations);
+        removeInvalidOverloads(m_genericFunctionDeclarations);
+    }
+
+    void TypeChecker::removeInvalidOverloads(std::vector<NodeIndex>& declarations)
+    {
         auto acceptedDeclarations = std::vector<NodeIndex>{};
-        acceptedDeclarations.reserve(m_functionDeclarations.size());
-        for (const auto declaration : m_functionDeclarations)
+        acceptedDeclarations.reserve(declarations.size());
+        for (const auto declaration : declarations)
         {
             if (!rejectInvalidOverload(declaration))
             {
@@ -423,12 +558,12 @@ namespace Caracal
             }
         }
 
-        m_functionDeclarations = std::move(acceptedDeclarations);
+        declarations = std::move(acceptedDeclarations);
     }
 
     bool TypeChecker::rejectInvalidOverload(NodeIndex declaration)
     {
-        const auto functionType = m_module.typeOfNode(declaration);
+        const auto functionType = typeOfNode(declaration);
         const auto& definition = m_module.getFunctionDefinition(functionType);
         if (HasUndefinedParameter(definition))
         {
@@ -462,7 +597,7 @@ namespace Caracal
         auto isRejected = false;
         for (const auto* earlierDefinition : earlierDefinitions)
         {
-            if (HaveSameParameterTypes(definition, *earlierDefinition))
+            if (HaveSameParameterTypes(m_module, definition, *earlierDefinition))
             {
                 locateDefinitionName(earlierDefinition->definitionNode(), otherSource, otherLocation);
                 m_diagnostics.addDuplicateFunctionDeclarationError(
@@ -521,7 +656,7 @@ namespace Caracal
     bool TypeChecker::rejectInvalidMethodOverload(const CompilationUnit& unit, u32 methodIndex, TypeDefinition& typeDefinition)
     {
         const auto methodNode = NodeIndex{ unit.fileId, methodIndex };
-        const auto methodType = m_module.typeOfNode(methodNode);
+        const auto methodType = typeOfNode(methodNode);
         const auto& definition = m_module.getFunctionDefinition(methodType);
         if (HasUndefinedParameter(definition))
         {
@@ -538,7 +673,7 @@ namespace Caracal
             const auto& memberDefinition = m_module.getFunctionDefinition(memberType);
             if (HasUndefinedParameter(memberDefinition)
                 || IsStaticMethod(memberDefinition) != IsStaticMethod(definition)
-                || !HaveSameParameterTypes(definition, memberDefinition))
+                || !HaveSameParameterTypes(m_module, definition, memberDefinition))
             {
                 continue;
             }

@@ -1,0 +1,10 @@
+def repeat'T(x: T, count: i32 = 3) i32
+{
+    _ = x;
+    return count;
+}
+
+def callRepeat() i32
+{
+    return repeat(true) %+ repeat'i32(5, 4);
+}

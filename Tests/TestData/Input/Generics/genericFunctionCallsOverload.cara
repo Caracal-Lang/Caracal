@@ -1,0 +1,26 @@
+def pick(x: i32) i32
+{
+    _ = x;
+    return 1;
+}
+
+def pick(x: bool) i32
+{
+    _ = x;
+    return 2;
+}
+
+def choose'T(x: T) i32
+{
+    return pick(x);
+}
+
+def callChooseInteger() i32
+{
+    return choose'i32(5);
+}
+
+def callChooseBool() i32
+{
+    return choose'bool(true);
+}

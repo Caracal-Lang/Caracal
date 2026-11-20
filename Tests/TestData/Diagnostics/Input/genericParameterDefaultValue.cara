@@ -1,0 +1,4 @@
+def keep'T(x: T = 5) T
+{
+    return x;
+}

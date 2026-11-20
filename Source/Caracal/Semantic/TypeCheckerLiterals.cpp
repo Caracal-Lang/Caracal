@@ -74,7 +74,7 @@ namespace Caracal
             if (element.folded.has_value())
             {
                 // the checked value is reused unless it has another type than the array's elements
-                const auto checkedType = m_module.typeOfNode(NodeIndex{ unit.fileId, element.node }).toValue();
+                const auto checkedType = typeOfNode(NodeIndex{ unit.fileId, element.node }).toValue();
                 if (elementValue.id() < 0 || checkedType != elementType.toValue())
                 {
                     elementValue = m_emitter.emitFoldedConstant(element.folded.value(), elementType.toValue());

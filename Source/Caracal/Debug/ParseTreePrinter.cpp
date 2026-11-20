@@ -314,6 +314,13 @@ namespace Caracal
                 return Type::Undefined();
             }
 
+            if (m_specializationNodeTypes != nullptr
+                && index >= m_specializationFirstIndex
+                && index - m_specializationFirstIndex < m_specializationNodeTypes->size())
+            {
+                return (*m_specializationNodeTypes)[index - m_specializationFirstIndex];
+            }
+
             return m_module->typeOfNode(NodeIndex{ m_fileId, index });
         }
 
@@ -501,6 +508,56 @@ namespace Caracal
             for (auto position = m_childrenStack.size(); position > childrenStart; position--)
             {
                 printTypeName(m_childrenStack[position - 1]);
+            }
+            m_childrenStack.resize(childrenStart);
+
+            m_builder.popIndentation();
+            m_builder.appendIndentedLine("}");
+        }
+
+        void printTypeArguments(u32 index)
+        {
+            const auto childrenStart = collectChildrenOf(index);
+            m_builder
+                .appendIndented(stringify(NodeKind::TypeArgumentsNode))
+                .append("(")
+                .append(std::to_string(m_childrenStack.size() - childrenStart))
+                .appendLine("): {");
+            m_builder.pushIndentation();
+
+            for (auto position = m_childrenStack.size(); position > childrenStart; position--)
+            {
+                printTypeName(m_childrenStack[position - 1]);
+            }
+            m_childrenStack.resize(childrenStart);
+
+            m_builder.popIndentation();
+            m_builder.appendIndentedLine("}");
+        }
+
+        void printTypeParameters(u32 index)
+        {
+            const auto childrenStart = collectChildrenOf(index);
+            m_builder
+                .appendIndented(stringify(NodeKind::TypeParametersNode))
+                .append("(")
+                .append(std::to_string(m_childrenStack.size() - childrenStart))
+                .appendLine("): {");
+            m_builder.pushIndentation();
+
+            for (auto position = m_childrenStack.size(); position > childrenStart; position--)
+            {
+                const auto typeParameter = m_childrenStack[position - 1];
+                m_builder
+                    .appendIndented(stringify(NodeKind::TypeParameterNode))
+                    .appendLine(": {");
+                m_builder.pushIndentation();
+                WriteIndentedTypeName(m_builder, m_module, typeOf(typeParameter));
+                m_builder
+                    .appendIndented("Name: ")
+                    .appendLine(lexeme(m_buffer.mainToken(typeParameter)));
+                m_builder.popIndentation();
+                m_builder.appendIndentedLine("}");
             }
             m_childrenStack.resize(childrenStart);
 
@@ -696,12 +753,55 @@ namespace Caracal
                 .appendIndented("Name: ")
                 .appendLine(lexeme(m_buffer.mainToken(index)));
             printPendingAnnotations();
+            if (functionLayout.hasTypeParameters)
+            {
+                printTypeParameters(functionLayout.typeParameters);
+            }
             printParameters(functionLayout.parameters);
             printReturnTypes(functionLayout.returnTypes);
             printBlock(functionLayout.body);
+            if (functionLayout.hasTypeParameters)
+            {
+                printSpecializations(typeOf(index), functionLayout.body);
+            }
 
             m_builder.popIndentation();
             m_builder.appendIndentedLine("}");
+        }
+
+        void printSpecializations(Type templateType, u32 body)
+        {
+            if (m_module == nullptr)
+            {
+                return;
+            }
+
+            for (const auto& definition : m_module->functionDefinitions())
+            {
+                if (!definition.isSpecialization())
+                {
+                    continue;
+                }
+
+                const auto& genericData = m_module->genericFunctionData(definition);
+                if (genericData.templateType != templateType || genericData.bodyNodeTypes.empty())
+                {
+                    continue;
+                }
+
+                m_builder.appendIndentedLine("Specialization: {");
+                m_builder.pushIndentation();
+                WriteIndentedTypeName(m_builder, m_module, definition.type());
+                m_builder
+                    .appendIndented("Name: ")
+                    .appendLine(definition.fullName());
+                m_specializationNodeTypes = &genericData.bodyNodeTypes;
+                m_specializationFirstIndex = NodeLayout::subtreeBegin(m_buffer, body);
+                printBlock(body);
+                m_specializationNodeTypes = nullptr;
+                m_builder.popIndentation();
+                m_builder.appendIndentedLine("}");
+            }
         }
 
         void printTestDefinitionStatement(u32 index)
@@ -1059,6 +1159,11 @@ namespace Caracal
 
             // remove the name expression from the stack
             m_childrenStack.pop_back();
+            if (m_childrenStack.size() > childrenStart && m_buffer.kind(m_childrenStack.back()) == NodeKind::TypeArgumentsNode)
+            {
+                printTypeArguments(m_childrenStack.back());
+                m_childrenStack.pop_back();
+            }
             printArgumentList(childrenStart);
             m_childrenStack.resize(childrenStart);
 
@@ -1290,6 +1395,8 @@ namespace Caracal
         StringBuilder m_builder;
         std::vector<u32> m_childrenStack;
         std::vector<u32> m_pendingAnnotations;
+        const std::vector<Type>* m_specializationNodeTypes{ nullptr };
+        u32 m_specializationFirstIndex{ 0 };
     };
 
     std::string prettyPrint(const NodeBuffer& buffer, const TokenBuffer& tokens, SemanticContext* module, u16 fileId)
