@@ -82,7 +82,57 @@ FunctionDefinitionStatement: {
         }
         ReturnStatement: {
             Type: undefined
-            NumberLiteral: 2
+            NumberLiteral: 10
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: undefined
+    Name: keep
+    TypeParametersNode(3): {
+        TypeParameterNode: {
+            Type: undefined
+            Name: T
+        }
+        TypeParameterNode: {
+            Type: undefined
+            Name: U
+        }
+        TypeParameterNode: {
+            Type: undefined
+            Name: V
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: undefined
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: undefined
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 100
         }
     }
 }
@@ -106,15 +156,40 @@ FunctionDefinitionStatement: {
                     BinaryExpression: {
                         Type: undefined
                         Left: {
-                            FunctionCallExpression: {
+                            BinaryExpression: {
                                 Type: undefined
-                                Function type: undefined
-                                NameExpression: {
-                                    Type: undefined
-                                    Name: keep
+                                Left: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: keep
+                                        }
+                                        ArgumentsNode(1): {
+                                            BoolLiteral: true
+                                        }
+                                    }
                                 }
-                                ArgumentsNode(1): {
-                                    BoolLiteral: true
+                                Operation: AdditionWrapping
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: undefined
+                                        Function type: undefined
+                                        NameExpression: {
+                                            Type: undefined
+                                            Name: keep
+                                        }
+                                        TypeArgumentsNode(1): {
+                                            TypeNameNode: {
+                                                Type: undefined
+                                                Lexeme: i32
+                                            }
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 5
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -127,10 +202,14 @@ FunctionDefinitionStatement: {
                                     Type: undefined
                                     Name: keep
                                 }
-                                TypeArgumentsNode(1): {
+                                TypeArgumentsNode(2): {
                                     TypeNameNode: {
                                         Type: undefined
                                         Lexeme: i32
+                                    }
+                                    TypeNameNode: {
+                                        Type: undefined
+                                        Lexeme: bool
                                     }
                                 }
                                 ArgumentsNode(1): {
@@ -149,7 +228,7 @@ FunctionDefinitionStatement: {
                             Type: undefined
                             Name: keep
                         }
-                        TypeArgumentsNode(2): {
+                        TypeArgumentsNode(3): {
                             TypeNameNode: {
                                 Type: undefined
                                 Lexeme: i32
@@ -157,6 +236,10 @@ FunctionDefinitionStatement: {
                             TypeNameNode: {
                                 Type: undefined
                                 Lexeme: bool
+                            }
+                            TypeNameNode: {
+                                Type: undefined
+                                Lexeme: u8
                             }
                         }
                         ArgumentsNode(1): {

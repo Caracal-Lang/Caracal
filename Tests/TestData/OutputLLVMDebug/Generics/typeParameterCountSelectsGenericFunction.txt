@@ -18,7 +18,9 @@ entry:
   %add = add i32 %call, %call1
   %call2 = call i32 @"keep'i32,bool$i32"(i32 5)
   %add3 = add i32 %add, %call2
-  ret i32 %add3
+  %call4 = call i32 @"keep'i32,bool,u8$i32"(i32 5)
+  %add5 = add i32 %add3, %call4
+  ret i32 %add5
 }
 
 define i32 @"keep'bool$bool"(i1 %0) {
@@ -33,5 +35,10 @@ entry:
 
 define i32 @"keep'i32,bool$i32"(i32 %0) {
 entry:
-  ret i32 2
+  ret i32 10
+}
+
+define i32 @"keep'i32,bool,u8$i32"(i32 %0) {
+entry:
+  ret i32 100
 }

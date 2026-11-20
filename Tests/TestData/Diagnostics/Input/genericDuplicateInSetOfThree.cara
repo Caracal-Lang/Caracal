@@ -1,0 +1,23 @@
+def keep'T(x: T) i32
+{
+    _ = x;
+    return 1;
+}
+
+def keep'T,U(x: T) i32
+{
+    _ = x;
+    return 10;
+}
+
+def keep'T,U,V(x: T) i32
+{
+    _ = x;
+    return 100;
+}
+
+def keep'A,B(x: A) i32
+{
+    _ = x;
+    return 1000;
+}

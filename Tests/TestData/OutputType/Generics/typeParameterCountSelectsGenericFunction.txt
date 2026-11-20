@@ -124,7 +124,7 @@ FunctionDefinitionStatement: {
         }
         ReturnStatement: {
             Type: undefined
-            NumberLiteral: 2
+            NumberLiteral: 10
         }
     }
     Specialization: {
@@ -144,7 +144,78 @@ FunctionDefinitionStatement: {
             }
             ReturnStatement: {
                 Type: i32
-                NumberLiteral: 2
+                NumberLiteral: 10
+            }
+        }
+    }
+}
+FunctionDefinitionStatement: {
+    Type: (T) -> i32
+    Name: keep
+    TypeParametersNode(3): {
+        TypeParameterNode: {
+            Type: T
+            Name: T
+        }
+        TypeParameterNode: {
+            Type: U
+            Name: U
+        }
+        TypeParameterNode: {
+            Type: V
+            Name: V
+        }
+    }
+    ParametersNode(1): {
+        ParameterNode: {
+            Name: x
+            TypeNameNode: {
+                Type: T
+                Lexeme: T
+            }
+        }
+    }
+    ReturnTypesNode(1): {
+        TypeNameNode: {
+            Type: i32
+            Lexeme: i32
+        }
+    }
+    BlockNode(2): {
+        AssignmentStatement: {
+            Left: {
+                Discard: _
+            }
+            Right: {
+                NameExpression: {
+                    Type: undefined
+                    Name: x
+                }
+            }
+        }
+        ReturnStatement: {
+            Type: undefined
+            NumberLiteral: 100
+        }
+    }
+    Specialization: {
+        Type: (i32) -> i32
+        Name: keep'i32,bool,u8
+        BlockNode(2): {
+            AssignmentStatement: {
+                Left: {
+                    Discard: _
+                }
+                Right: {
+                    NameExpression: {
+                        Type: i32
+                        Name: x
+                    }
+                }
+            }
+            ReturnStatement: {
+                Type: i32
+                NumberLiteral: 100
             }
         }
     }
@@ -169,15 +240,40 @@ FunctionDefinitionStatement: {
                     BinaryExpression: {
                         Type: i32
                         Left: {
-                            FunctionCallExpression: {
+                            BinaryExpression: {
                                 Type: i32
-                                Function type: (bool) -> i32
-                                NameExpression: {
-                                    Type: (bool) -> i32
-                                    Name: keep
+                                Left: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (bool) -> i32
+                                        NameExpression: {
+                                            Type: (bool) -> i32
+                                            Name: keep
+                                        }
+                                        ArgumentsNode(1): {
+                                            BoolLiteral: true
+                                        }
+                                    }
                                 }
-                                ArgumentsNode(1): {
-                                    BoolLiteral: true
+                                Operation: AdditionWrapping
+                                Right: {
+                                    FunctionCallExpression: {
+                                        Type: i32
+                                        Function type: (i32) -> i32
+                                        NameExpression: {
+                                            Type: (i32) -> i32
+                                            Name: keep
+                                        }
+                                        TypeArgumentsNode(1): {
+                                            TypeNameNode: {
+                                                Type: i32
+                                                Lexeme: i32
+                                            }
+                                        }
+                                        ArgumentsNode(1): {
+                                            NumberLiteral: 5
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -190,10 +286,14 @@ FunctionDefinitionStatement: {
                                     Type: (i32) -> i32
                                     Name: keep
                                 }
-                                TypeArgumentsNode(1): {
+                                TypeArgumentsNode(2): {
                                     TypeNameNode: {
                                         Type: i32
                                         Lexeme: i32
+                                    }
+                                    TypeNameNode: {
+                                        Type: bool
+                                        Lexeme: bool
                                     }
                                 }
                                 ArgumentsNode(1): {
@@ -212,7 +312,7 @@ FunctionDefinitionStatement: {
                             Type: (i32) -> i32
                             Name: keep
                         }
-                        TypeArgumentsNode(2): {
+                        TypeArgumentsNode(3): {
                             TypeNameNode: {
                                 Type: i32
                                 Lexeme: i32
@@ -220,6 +320,10 @@ FunctionDefinitionStatement: {
                             TypeNameNode: {
                                 Type: bool
                                 Lexeme: bool
+                            }
+                            TypeNameNode: {
+                                Type: u8
+                                Lexeme: u8
                             }
                         }
                         ArgumentsNode(1): {
