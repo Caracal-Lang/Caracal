@@ -400,8 +400,22 @@ namespace Caracal
             return recordType(unit, nameExpressionIndex, bestSpecializationMatch);
         }
 
+        auto areGenericFunctions = true;
+        for (const auto candidate : viableCandidates)
+        {
+            if (!m_module.getFunctionDefinition(candidate).isSpecialization())
+            {
+                areGenericFunctions = false;
+                break;
+            }
+        }
+
         m_unresolvedOverloadCalls.push_back(call);
-        m_diagnostics.addCallMatchesMoreThanOneOverloadError(unit.source, location, std::string(nameOf(unit, nameExpressionIndex)));
+        m_diagnostics.addCallMatchesMoreThanOneOverloadError(
+            unit.source,
+            location,
+            std::string(nameOf(unit, nameExpressionIndex)),
+            areGenericFunctions);
         return Type::Undefined();
     }
 

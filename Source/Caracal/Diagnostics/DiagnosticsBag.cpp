@@ -2362,14 +2362,22 @@ namespace Caracal
         const SourceTextSharedPtr& source,
         const SourceLocation& location,
         const std::string& functionName,
-        const std::string& typeParameterName)
+        const std::string& typeParameterName,
+        size_t typeParameterCount)
     {
+        // stuff'T,U shows the example stuff'i32,i32(...)
+        auto exampleTypeArguments = std::string("i32");
+        for (size_t position = 1; position < typeParameterCount; ++position)
+        {
+            exampleTypeArguments += ",i32";
+        }
+
         auto diagnostic = Diagnostic(
             DiagnosticLevel::Error,
             DiagnosticKind::T0118_CannotInferTypeParameter,
             source,
             location,
-            "Write the type arguments after the function name, as in " + functionName + "'i32(...).");
+            "Write the type arguments after the function name, as in " + functionName + "'" + exampleTypeArguments + "(...).");
         diagnostic.addPrimaryLabel(location, "The call gives no type for '" + typeParameterName + "' of '" + functionName + "'");
 
         m_diagnostics.push_back(std::move(diagnostic));
@@ -2500,14 +2508,24 @@ namespace Caracal
         m_diagnostics.push_back(std::move(diagnostic));
     }
 
-    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName)
+    void DiagnosticsBag::addCallMatchesMoreThanOneOverloadError(
+        const SourceTextSharedPtr& source,
+        const SourceLocation& location,
+        const std::string& functionName,
+        bool areGenericFunctions)
     {
+        auto fix = std::string("Add a type suffix to a literal or change an argument, so that one overload fits best.");
+        if (areGenericFunctions)
+        {
+            fix = "Rename one of the generic functions or change its parameters.";
+        }
+
         auto diagnostic = Diagnostic(
             DiagnosticLevel::Error,
             DiagnosticKind::T0112_CallMatchesMoreThanOneOverload,
             source,
             location,
-            "Add a type suffix to a literal or change an argument, so that one overload fits best.");
+            fix);
         diagnostic.addPrimaryLabel(location, "'" + functionName + "' has more than one equally good overload for these arguments");
 
         m_diagnostics.push_back(std::move(diagnostic));

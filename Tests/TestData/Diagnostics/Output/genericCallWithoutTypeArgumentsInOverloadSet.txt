@@ -1,5 +1,5 @@
  Error T0111 No overload matches this call
-     ,-[Diagnostics/Input/genericCallWithoutTypeArgumentsSelectedByOverload.cara:13:12]
+     ,-[Diagnostics/Input/genericCallWithoutTypeArgumentsInOverloadSet.cara:13:12]
   10 | 
   11 | def callZero() i32
   12 | {

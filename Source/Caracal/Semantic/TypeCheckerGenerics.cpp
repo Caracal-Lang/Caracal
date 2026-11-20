@@ -304,7 +304,8 @@ namespace Caracal
                         unit.source,
                         ExpressionSourceLocation(m_compilationContext, unit, callIndex),
                         functionName,
-                        std::string(m_module.getNameByType(typeParameters[position])));
+                        std::string(m_module.getNameByType(typeParameters[position])),
+                        typeParameters.size());
                 }
                 return {};
             }

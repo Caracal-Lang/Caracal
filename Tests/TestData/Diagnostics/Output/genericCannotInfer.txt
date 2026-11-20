@@ -9,4 +9,4 @@
    9 | }
   10 | 
      `----
-  Fix: Write the type arguments after the function name, as in pick'i32(...).
+  Fix: Write the type arguments after the function name, as in pick'i32,i32(...).

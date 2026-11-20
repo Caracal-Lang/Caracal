@@ -169,10 +169,10 @@ namespace Caracal
 
         // Overload diagnostics
         void addNoOverloadMatchesCallError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
-        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
+        void addCallMatchesMoreThanOneOverloadError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, bool areGenericFunctions);
         void addWrongNumberOfTypeArgumentsError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, size_t typeParameterCount, size_t typeArgumentCount);
         void addTypeArgumentsOnNonGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);
-        void addCannotInferTypeParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& typeParameterName);
+        void addCannotInferTypeParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName, const std::string& typeParameterName, size_t typeParameterCount);
         void addDuplicateTypeParameterError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeParameterName, const SourceLocation& firstLocation);
         void addTypeParameterWithNameOfTypeError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& typeParameterName);
         void addExternGenericFunctionError(const SourceTextSharedPtr& source, const SourceLocation& location, const std::string& functionName);

@@ -9,4 +9,4 @@
   16 | }
   17 | 
      `----
-  Fix: Add a type suffix to a literal or change an argument, so that one overload fits best.
+  Fix: Rename one of the generic functions or change its parameters.
