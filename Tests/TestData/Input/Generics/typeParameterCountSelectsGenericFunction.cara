@@ -1,0 +1,16 @@
+def keep'T(x: T) i32
+{
+    _ = x;
+    return 1;
+}
+
+def keep'T,U(x: T) i32
+{
+    _ = x;
+    return 2;
+}
+
+def callKeep() i32
+{
+    return keep(true) %+ keep'i32(5) %+ keep'i32,bool(5);
+}

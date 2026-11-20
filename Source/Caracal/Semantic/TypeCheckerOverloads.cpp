@@ -53,11 +53,18 @@ namespace Caracal
     }
 
     // thing'T(x: T) and thing'U(x: U) have the same parameter types
+    // thing'T(x: T) and thing'T,U(x: T) are different, because their counts of type parameters differ
     [[nodiscard]] static bool HaveSameParameterTypes(const SemanticContext& module, const FunctionDefinition& left, const FunctionDefinition& right) noexcept
     {
         const auto& leftParameters = left.parameters();
         const auto& rightParameters = right.parameters();
         if (leftParameters.size() != rightParameters.size())
+        {
+            return false;
+        }
+        if (left.isTemplate()
+            && right.isTemplate()
+            && module.genericFunctionData(left).typeParameters.size() != module.genericFunctionData(right).typeParameters.size())
         {
             return false;
         }

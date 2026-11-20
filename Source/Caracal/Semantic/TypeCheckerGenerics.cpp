@@ -269,7 +269,8 @@ namespace Caracal
 
                 const auto [typeParameterPosition, argumentType] = match.value();
                 auto& typeArgument = typeArguments[typeParameterPosition];
-                if (bindsLiterals && typeArgument != Type::Undefined())
+                // skip a literal if a non-literal argument set the type argument
+                if (bindsLiterals && typeArgument != Type::Undefined() && !IsPlainNumberLiteral(unit.nodeBuffer, bindingArguments[typeParameterPosition]))
                 {
                     continue;
                 }
